@@ -63,8 +63,9 @@ const CSS = `
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
 .de-shell{max-width:1120px;margin:0 auto;padding:0 0 120px;}
 .de-shell-inner{padding:0 28px;}
-.de-headcard{background:#fff;padding:36px 44px 32px;margin:0 0 28px;border-bottom:1px solid rgba(20,20,20,0.06);position:relative;width:100vw;margin-left:calc(50% - 50vw);}
+.de-headcard{background:#fff;padding:36px 0 32px;margin:0 0 28px;border-bottom:1px solid rgba(20,20,20,0.06);position:relative;width:100vw;margin-left:calc(50% - 50vw);overflow:hidden;}
 .de-headcard-inner{max-width:1120px;margin:0 auto;padding:0 28px;}
+
 
 .de-headcard::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:#DCE07A;}
 .de-headtop{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-top:6px;}
