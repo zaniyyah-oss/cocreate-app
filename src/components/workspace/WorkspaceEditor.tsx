@@ -78,9 +78,13 @@ export function WorkspaceEditor({
 
   useEffect(() => {
     if (!editor) return;
-    // Only reset content if the incoming JSON is a truly different document
+    // Never sync while the user is actively typing — that would collapse the
+    // selection to doc end (on mobile this looks like the cursor jumping to a
+    // new line after dictation / IME composition ends).
+    if (editor.isFocused) return;
+    if (!initialJSON || !Object.keys(initialJSON).length) return;
     const current = editor.getJSON();
-    if (JSON.stringify(current) !== JSON.stringify(initialJSON) && initialJSON && Object.keys(initialJSON).length) {
+    if (JSON.stringify(current) !== JSON.stringify(initialJSON)) {
       editor.commands.setContent(initialJSON, { emitUpdate: false });
     }
   }, [editor, initialJSON]);
