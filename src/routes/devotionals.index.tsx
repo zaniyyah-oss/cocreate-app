@@ -300,7 +300,7 @@ function DevotionalsPage() {
             ) : topical.length === 0 ? (
               <div className="dv-empty">
                 <h3>No topical devotionals yet</h3>
-                <p>Save a devotional from Explore to layer it on top of your Default Devotional. Everything you write stays private to you.</p>
+                <p>Save a devotional from Explore to layer it on top of your daily Abide practice. Everything you write stays private to you.</p>
                 <Link to="/explore">Browse devotionals</Link>
               </div>
             ) : (
