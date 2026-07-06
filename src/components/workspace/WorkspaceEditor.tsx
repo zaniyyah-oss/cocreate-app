@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
+import { Indent } from "./indent-extension";
 
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
@@ -36,6 +37,7 @@ export function WorkspaceEditor({
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: "ws-link" } }),
       LinkCard,
       Placeholder.configure({ placeholder: placeholder ?? "Write, paste a link, or drop in an image…" }),
+      Indent,
     ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
@@ -140,6 +142,14 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}
       {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}
       {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}
+      {btn("⇥", () => {
+        if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
+        else editor.chain().focus().indent().run();
+      })}
+      {btn("⇤", () => {
+        if (editor.isActive("listItem")) editor.chain().focus().liftListItem("listItem").run();
+        else editor.chain().focus().outdent().run();
+      })}
       <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()}>Image</button>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
       <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={addLinkCard}>Link card</button>
