@@ -407,8 +407,16 @@ const MOBILE_NAV: { key: Screen; label: string; icon: ReactNode }[] = [
 ];
 
 function Mockup() {
+  const navigate = useNavigate();
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [screen, setScreen] = useState<Screen>("home");
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const s = SCREENS[screen];
   const desktopMain = useMemo(() => s.build(false), [screen]);
