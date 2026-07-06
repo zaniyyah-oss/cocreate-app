@@ -154,6 +154,22 @@ export function ContentForm({
           apply_prompt: state.apply_prompt || null,
           status: targetStatus,
         };
+
+        if (state.is_default && targetStatus !== "published") {
+          throw new Error("The platform default must be published. Publish this template or turn off the Default toggle.");
+        }
+        // If turning is_default ON, clear any existing default first (unique index enforces one).
+        if (state.is_default) {
+          const excludeId = existingTemplate?.id ?? "00000000-0000-0000-0000-000000000000";
+          const { error: clearErr } = await supabase
+            .from("devotional_templates")
+            .update({ is_default: false } as any)
+            .eq("is_default" as any, true)
+            .neq("id", excludeId);
+          if (clearErr) throw clearErr;
+        }
+        (payload as any).is_default = state.is_default;
+
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
           if (error) throw error;
