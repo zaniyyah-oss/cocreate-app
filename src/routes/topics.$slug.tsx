@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { AppShell } from "@/components/AppShell";
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 type PreviewRow = Database["public"]["Views"]["content_items_public"]["Row"];
