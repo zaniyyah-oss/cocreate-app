@@ -257,7 +257,7 @@ export function WorkspaceSection({
       </div>
       <p className="ws-intro">
         A place to work things out — quotes to sit with, links to come back to, images that
-        strike you, rough thoughts. Items you start today stay under today. Close one to file it
+        strike you, rough thoughts. Items you start today stay under today. Save one to file it
         into your gallery for later.
       </p>
 
@@ -369,7 +369,7 @@ function ClosedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string
   return (
     <div className="ws-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div className="ws-item-head">
-        <span className="ws-status-pill closed">Closed</span>
+        <span className="ws-status-pill closed">Saved</span>
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.title || "Untitled"}
         </div>
@@ -491,7 +491,7 @@ function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string })
       />
 
       <div className="ws-actions">
-        <button className="ws-btn primary" onClick={() => close.mutate()}>Close & file away</button>
+        <button className="ws-btn primary" onClick={() => close.mutate()}>Save & file away</button>
         <button className="ws-btn danger" onClick={() => { if (confirm("Delete this workspace item?")) removeItem.mutate(); }}>Delete</button>
       </div>
     </div>
