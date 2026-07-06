@@ -62,9 +62,8 @@ const CSS = `
 .dv-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
 .dv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 .dv-skel{height:180px;background:#fff;border-radius:16px;animation:dvp 1.4s infinite;}
-.dv-setdef{margin-top:12px;align-self:flex-start;background:transparent;color:#0F4A42;border:1px solid rgba(15,74,66,0.25);font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;cursor:pointer;transition:background .15s ease;}
-.dv-setdef:hover:not(:disabled){background:rgba(15,74,66,0.08);}
-.dv-setdef:disabled{color:#8a8678;border-color:rgba(20,20,20,0.1);cursor:default;}
+.dv-pill{display:inline-flex;align-items:center;gap:6px;background:#FBF8ED;color:#0F4A42;font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-left:10px;vertical-align:middle;}
+.dv-sec-desc{font-size:12.5px;color:#8a8678;margin:-8px 0 18px;line-height:1.55;max-width:560px;}
 @keyframes dvp{0%,100%{opacity:1}50%{opacity:.55}}
 `;
 
@@ -82,28 +81,25 @@ function useAuth() {
 function DevotionalsPage() {
   const { userId, ready } = useAuth();
   const navigate = useNavigate();
-  const qc = useQueryClient();
-
-  const defaultQ = useQuery({
-    queryKey: ["profile-default-template", userId],
-    enabled: ready && !!userId,
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("default_template_id" as any).eq("id", userId!).maybeSingle();
-      return (data as any)?.default_template_id as string | null | undefined;
-    },
-  });
-
-  async function setDefault(templateId: string) {
-    if (!userId) return;
-    await supabase.from("profiles").update({ default_template_id: templateId } as any).eq("id", userId);
-    qc.invalidateQueries({ queryKey: ["profile-default-template", userId] });
-    qc.invalidateQueries({ queryKey: ["continue-practice"] });
-  }
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
   }, []);
+
+  // Platform default devotional (always active for every user)
+  const defaultTplQ = useQuery({
+    queryKey: ["platform-default-template"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("devotional_templates")
+        .select("*")
+        .eq("is_default" as any, true)
+        .eq("status", "published")
+        .maybeSingle();
+      return (data ?? null) as Template | null;
+    },
+  });
 
   // Templates saved by the user
   const savedQ = useQuery({
@@ -132,7 +128,10 @@ function DevotionalsPage() {
     },
   });
 
-  const templateIds = Array.from(new Set([...(savedQ.data ?? []), ...Object.keys(entryTemplatesQ.data ?? {})]));
+  const defaultId = defaultTplQ.data?.id ?? null;
+  const templateIds = Array.from(
+    new Set([...(savedQ.data ?? []), ...Object.keys(entryTemplatesQ.data ?? {})])
+  ).filter((id) => id !== defaultId);
 
   const templatesQ = useQuery({
     queryKey: ["dev-templates", templateIds.sort().join(",")],
@@ -176,80 +175,94 @@ function DevotionalsPage() {
     );
   }
 
-  const loading = savedQ.isLoading || entryTemplatesQ.isLoading || templatesQ.isLoading;
-  const templates = templatesQ.data ?? [];
+  const topicalLoading = savedQ.isLoading || entryTemplatesQ.isLoading || templatesQ.isLoading;
+  const topical = templatesQ.data ?? [];
   const entryMap = entryTemplatesQ.data ?? {};
+
+  const renderCard = (t: Template, opts: { isDefault?: boolean } = {}) => {
+    const topic = t.topic_id ? topicsQ.data?.[t.topic_id] : undefined;
+    const color = opts.isDefault ? "#0F4A42" : topicColor(topic?.color_key);
+    const days = entryMap[t.id]?.size ?? 0;
+    const label = days === 0 ? "Not started yet" : `Day ${days} of an open practice`;
+    const pct = Math.min(100, days === 0 ? 4 : Math.min(100, days * 8));
+    return (
+      <div key={t.id} className="dv-card" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}>
+        <div className="dv-accent" style={{ background: color }} />
+        <div className="dv-card-body" style={{ display: "flex", flexDirection: "column", minHeight: 180 }}>
+          {opts.isDefault ? (
+            <div className="dv-topic" style={{ color: "#0F4A42" }}>Always active</div>
+          ) : topic ? (
+            <Link
+              to="/topics/$slug"
+              params={{ slug: topic.slug }}
+              className="dv-topic"
+              style={{ color, textDecoration: "none" }}
+              onClick={(e) => e.stopPropagation()}
+            >{topic.name} →</Link>
+          ) : null}
+          <h3>{t.title}</h3>
+          <div className="dv-progress">
+            <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>
+            <div className="dv-plabel">{label}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <AppShell current="devotionals">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="dv-root">
+        <div className="dv-shell">
+          <div className="dv-head">
+            <h1>Devotionals</h1>
+            <p>A calm, repeatable practice space. Pick up where you left off, or explore a new template.</p>
+          </div>
 
+          <div className="dv-section">
+            <h2>
+              Your Default Devotional
+              <span className="dv-pill">Always active</span>
+            </h2>
+            <p className="dv-sec-desc">Every CoCreate member shares one daily anchor. This practice is always here for you and can't be removed.</p>
 
-      <div className="dv-shell">
-        <div className="dv-head">
-          <h1>Devotionals</h1>
-          <p>A calm, repeatable practice space. Pick up where you left off, or explore a new template.</p>
+            {defaultTplQ.isLoading ? (
+              <div className="dv-grid"><div className="dv-skel" /></div>
+            ) : defaultTplQ.data ? (
+              <div className="dv-grid">{renderCard(defaultTplQ.data, { isDefault: true })}</div>
+            ) : (
+              <div className="dv-empty">
+                <h3>No default is set yet</h3>
+                <p>A platform default devotional hasn't been configured. Check back soon.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="dv-section dv-block">
+            <h2>Topical &amp; Temporary Devotionals</h2>
+            <p className="dv-sec-desc">Layer additional devotionals on top of your daily anchor — for a topic you're focused on or a season you're walking through. Add or remove these anytime.</p>
+
+            {topicalLoading ? (
+              <div className="dv-grid">
+                <div className="dv-skel" /><div className="dv-skel" /><div className="dv-skel" />
+              </div>
+            ) : topical.length === 0 ? (
+              <div className="dv-empty">
+                <h3>No topical devotionals yet</h3>
+                <p>Save a devotional from Explore to layer it on top of your Default Devotional. Everything you write stays private to you.</p>
+                <Link to="/explore">Browse devotionals</Link>
+              </div>
+            ) : (
+              <div className="dv-grid">
+                {topical.map((t) => renderCard(t))}
+              </div>
+            )}
+          </div>
         </div>
-
-        <div className="dv-section">
-          <h2>Your templates</h2>
-
-          {loading ? (
-            <div className="dv-grid">
-              <div className="dv-skel" /><div className="dv-skel" /><div className="dv-skel" />
-            </div>
-          ) : templates.length === 0 ? (
-            <div className="dv-empty">
-              <h3>No templates yet</h3>
-              <p>Save a devotional template from Explore to begin a practice. Everything you write stays private to you.</p>
-              <Link to="/explore">Browse devotionals</Link>
-            </div>
-          ) : (
-            <div className="dv-grid">
-              {templates.map((t) => {
-                const topic = t.topic_id ? topicsQ.data?.[t.topic_id] : undefined;
-                const color = topicColor(topic?.color_key);
-                const days = entryMap[t.id]?.size ?? 0;
-                const label = days === 0 ? "Not started yet" : `Day ${days} of an open practice`;
-                const pct = Math.min(100, days === 0 ? 4 : Math.min(100, days * 8));
-                return (
-                  <div key={t.id} className="dv-card" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}>
-                    <div className="dv-accent" style={{ background: color }} />
-                    <div className="dv-card-body" style={{ display: "flex", flexDirection: "column", minHeight: 180 }}>
-                      {topic && (
-                        <Link
-                          to="/topics/$slug"
-                          params={{ slug: topic.slug }}
-                          className="dv-topic"
-                          style={{ color, textDecoration: "none" }}
-                          onClick={(e) => e.stopPropagation()}
-                        >{topic.name} →</Link>
-                      )}
-                      <h3>{t.title}</h3>
-                      <div className="dv-progress">
-                        <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>
-                        <div className="dv-plabel">{label}</div>
-                      </div>
-                      <button
-                        type="button"
-                        className="dv-setdef"
-                        onClick={(e) => { e.stopPropagation(); setDefault(t.id); }}
-                        disabled={defaultQ.data === t.id}
-                        title="Use this as your daily practice on Home"
-                      >
-                        {defaultQ.data === t.id ? "✓ Default" : "Set as default"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
       </div>
     </AppShell>
   );
 }
+
 
