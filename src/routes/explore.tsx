@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -185,7 +186,10 @@ function ExplorePage() {
           <Link to="/explore" className="ex-navlink active">Explore</Link>
         </div>
         {userId ? (
-          <button className="ex-signout" onClick={signOut}>Sign out</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <NotificationBell />
+            <button className="ex-signout" onClick={signOut}>Sign out</button>
+          </div>
         ) : (
           <Link to="/auth" className="ex-signin">Sign in</Link>
         )}
