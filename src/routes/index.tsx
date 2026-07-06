@@ -83,6 +83,64 @@ const HOME_CSS = `
 
 `;
 
+function localToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function WorkspaceReturnBanner() {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [today, setToday] = useState<string>(() => localToday());
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const t = localToday();
+      setToday((prev) => (prev === t ? prev : t));
+    }, 60_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const q = useQuery({
+    queryKey: ["workspace-return", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_templates")
+        .select("id, title")
+        .eq("is_default" as any, true)
+        .eq("status", "published")
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; title: string } | null;
+    },
+  });
+
+  if (!userId || !q.data?.id) return null;
+
+  return (
+    <Link
+      to="/devotionals/$id"
+      params={{ id: q.data.id }}
+      search={{ date: today }}
+      className="hp-workspace"
+    >
+      <span className="hp-workspace-text">Return to today's workspace</span>
+      <svg viewBox="0 0 24 24" className="hp-workspace-arrow" aria-hidden>
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </svg>
+    </Link>
+  );
+}
+
 function HomePage() {
   const navigate = useNavigate();
 
