@@ -13,10 +13,10 @@ import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevotionalsIndexRouteImport } from './routes/devotionals.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
@@ -48,11 +48,6 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevotionalsRoute = DevotionalsRouteImport.update({
-  id: '/devotionals',
-  path: '/devotionals',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -66,6 +61,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevotionalsIndexRoute = DevotionalsIndexRouteImport.update({
+  id: '/devotionals/',
+  path: '/devotionals/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -94,9 +94,9 @@ const EssaysIdRoute = EssaysIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DevotionalsRoute,
+  id: '/devotionals/$id',
+  path: '/devotionals/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminNewRoute = AdminNewRouteImport.update({
   id: '/new',
@@ -123,7 +123,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -137,12 +136,12 @@ export interface FileRoutesByFullPath {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -156,6 +155,7 @@ export interface FileRoutesByTo {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/devotionals': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesById {
@@ -163,7 +163,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -177,6 +176,7 @@ export interface FileRoutesById {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRouteTypes {
@@ -185,7 +185,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -199,12 +198,12 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/devotionals/'
     | '/admin/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -218,13 +217,13 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin'
+    | '/devotionals'
     | '/admin/edit/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
-    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -238,6 +237,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/devotionals/'
     | '/admin/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -245,15 +245,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   NotesRoute: typeof NotesRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
+  DevotionalsIdRoute: typeof DevotionalsIdRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
+  DevotionalsIndexRoute: typeof DevotionalsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -286,13 +287,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/devotionals': {
-      id: '/devotionals'
-      path: '/devotionals'
-      fullPath: '/devotionals'
-      preLoaderRoute: typeof DevotionalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -312,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devotionals/': {
+      id: '/devotionals/'
+      path: '/devotionals'
+      fullPath: '/devotionals/'
+      preLoaderRoute: typeof DevotionalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -351,10 +352,10 @@ declare module '@tanstack/react-router' {
     }
     '/devotionals/$id': {
       id: '/devotionals/$id'
-      path: '/$id'
+      path: '/devotionals/$id'
       fullPath: '/devotionals/$id'
       preLoaderRoute: typeof DevotionalsIdRouteImport
-      parentRoute: typeof DevotionalsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/admin/new': {
       id: '/admin/new'
@@ -405,42 +406,21 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface DevotionalsRouteChildren {
-  DevotionalsIdRoute: typeof DevotionalsIdRoute
-}
-
-const DevotionalsRouteChildren: DevotionalsRouteChildren = {
-  DevotionalsIdRoute: DevotionalsIdRoute,
-}
-
-const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
-  DevotionalsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   NotesRoute: NotesRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
+  DevotionalsIdRoute: DevotionalsIdRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,
+  DevotionalsIndexRoute: DevotionalsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

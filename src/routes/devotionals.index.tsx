@@ -8,7 +8,7 @@ import { AppShell } from "@/components/AppShell";
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"] & { is_default?: boolean };
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
-export const Route = createFileRoute("/devotionals")({
+export const Route = createFileRoute("/devotionals/")({
   component: DevotionalsPage,
   head: () => ({
     meta: [
