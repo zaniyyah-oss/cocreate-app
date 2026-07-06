@@ -215,6 +215,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_default: boolean
           is_seed: boolean
           pray_prompt: string | null
           reflect_prompt: string | null
@@ -229,6 +230,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_default?: boolean
           is_seed?: boolean
           pray_prompt?: string | null
           reflect_prompt?: string | null
@@ -243,6 +245,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_default?: boolean
           is_seed?: boolean
           pray_prompt?: string | null
           reflect_prompt?: string | null
@@ -431,7 +434,6 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
-          default_template_id: string | null
           id: string
           member_since: string
           name: string | null
@@ -441,7 +443,6 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          default_template_id?: string | null
           id: string
           member_since?: string
           name?: string | null
@@ -451,22 +452,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
-          default_template_id?: string | null
           id?: string
           member_since?: string
           name?: string | null
           streak_count?: number
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_default_template_id_fkey"
-            columns: ["default_template_id"]
-            isOneToOne: false
-            referencedRelation: "devotional_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       saved_items: {
         Row: {
