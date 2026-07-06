@@ -325,6 +325,25 @@ export function ContentForm({
           </>
         )}
 
+        {kind === "devotional" && (
+          <div style={{ background: "#FBF8ED", border: "1px solid rgba(15,74,66,0.15)", borderRadius: 10, padding: "14px 16px" }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, textTransform: "none", letterSpacing: 0, fontSize: 13.5, fontWeight: 700, color: "#181A4D", cursor: "pointer", margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={state.is_default}
+                onChange={(e) => set("is_default", e.target.checked)}
+                style={{ width: "auto", marginTop: 3 }}
+              />
+              <span>
+                Platform Default Devotional
+                <div className="cf-note" style={{ marginTop: 4, fontWeight: 500 }}>
+                  Every user automatically has this template active. Only one template can be the default at a time — turning this on will remove the flag from the current default. The default must be published.
+                </div>
+              </span>
+            </label>
+          </div>
+        )}
+
         {showThumb && (
           <div>
             <label>Thumbnail image</label>
