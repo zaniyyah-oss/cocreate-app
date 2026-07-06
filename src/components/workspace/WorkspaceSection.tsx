@@ -101,15 +101,27 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function isToday(iso: string) {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
+
+const GALLERY_DEFAULT_LIMIT = 5;
+
 export function WorkspaceSection({
   userId,
   ensureEntry,
   currentEntryId,
+  isFocused,
+  onToggleFocus,
 }: {
   userId: string;
   /** Creates today's devotional_entries row if needed and returns its id. */
   ensureEntry: () => Promise<string | null>;
   currentEntryId: string | null;
+  isFocused?: boolean;
+  onToggleFocus?: () => void;
 }) {
   const qc = useQueryClient();
   const itemsQ = useQuery({
