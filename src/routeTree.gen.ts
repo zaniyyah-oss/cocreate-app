@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SavedRouteImport } from './routes/saved'
+import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -18,6 +20,16 @@ import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
@@ -64,6 +76,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/notes': typeof NotesRoute
+  '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -74,6 +88,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/notes': typeof NotesRoute
+  '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -85,6 +101,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/notes': typeof NotesRoute
+  '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -97,6 +115,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/devotionals'
     | '/explore'
+    | '/notes'
+    | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -107,6 +127,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/devotionals'
     | '/explore'
+    | '/notes'
+    | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -117,6 +139,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/devotionals'
     | '/explore'
+    | '/notes'
+    | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -128,6 +152,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
+  NotesRoute: typeof NotesRoute
+  SavedRoute: typeof SavedRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
@@ -135,6 +161,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore': {
       id: '/explore'
       path: '/explore'
@@ -211,6 +251,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
+  NotesRoute: NotesRoute,
+  SavedRoute: SavedRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
