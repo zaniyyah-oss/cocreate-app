@@ -1,0 +1,1 @@
+ALTER TABLE public.devotional_entries ADD COLUMN IF NOT EXISTS entry_title TEXT, ADD COLUMN IF NOT EXISTS entry_subtitle TEXT;
