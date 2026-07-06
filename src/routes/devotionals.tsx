@@ -219,6 +219,7 @@ function DevotionalsPage() {
           )}
         </div>
       </div>
+      </div>
     </AppShell>
   );
 }
