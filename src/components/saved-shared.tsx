@@ -201,11 +201,15 @@ export function useTemplateLookup(ids: string[]) {
 
 // ─── Section components ─────────────────────────────────────────────
 
-export function QuotesSection({ pins, contentMap, onOpen }: { pins: Pin[]; contentMap: Record<string, PreviewRow>; onOpen: (c: PreviewRow) => void }) {
+export function QuotesSection({ pins, contentMap, onOpen, loading }: { pins: Pin[]; contentMap: Record<string, PreviewRow>; onOpen: (c: PreviewRow) => void; loading?: boolean }) {
   return (
     <div className="sv-section">
-      <h2>Pinned quotes <span className="count">{pins.length}</span></h2>
-      {pins.length === 0 ? (
+      <h2>Pinned quotes {!loading && <span className="count">{pins.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-quotes">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-tall" style={{ height: 130 }} />)}
+        </div>
+      ) : pins.length === 0 ? (
         <div className="sv-empty"><strong>Nothing pinned yet</strong>Highlight a line in any essay and tap "Pin as quote" to keep it here.</div>
       ) : (
         <div className="sv-quotes">
