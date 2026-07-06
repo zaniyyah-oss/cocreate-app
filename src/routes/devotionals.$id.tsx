@@ -175,6 +175,7 @@ function EntryPage() {
           reflect_text: patch.reflect_text ?? null, pray_text: patch.pray_text ?? null, apply_text: patch.apply_text ?? null,
         });
         if (error) throw error;
+        trackEvent("devotional_entry_created", { template_id: id });
       }
     },
     onSuccess: (_r, vars) => {
