@@ -13,6 +13,7 @@ import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -48,6 +49,11 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevotionalsRoute = DevotionalsRouteImport.update({
+  id: '/devotionals',
+  path: '/devotionals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -64,9 +70,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevotionalsIndexRoute = DevotionalsIndexRouteImport.update({
-  id: '/devotionals/',
-  path: '/devotionals/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DevotionalsRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -94,9 +100,9 @@ const EssaysIdRoute = EssaysIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
-  id: '/devotionals/$id',
-  path: '/devotionals/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DevotionalsRoute,
 } as any)
 const AdminNewRoute = AdminNewRouteImport.update({
   id: '/new',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -163,6 +170,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -185,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -245,16 +255,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   NotesRoute: typeof NotesRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
-  DevotionalsIdRoute: typeof DevotionalsIdRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
-  DevotionalsIndexRoute: typeof DevotionalsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -287,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devotionals': {
+      id: '/devotionals'
+      path: '/devotionals'
+      fullPath: '/devotionals'
+      preLoaderRoute: typeof DevotionalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -310,10 +326,10 @@ declare module '@tanstack/react-router' {
     }
     '/devotionals/': {
       id: '/devotionals/'
-      path: '/devotionals'
+      path: '/'
       fullPath: '/devotionals/'
       preLoaderRoute: typeof DevotionalsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DevotionalsRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -352,10 +368,10 @@ declare module '@tanstack/react-router' {
     }
     '/devotionals/$id': {
       id: '/devotionals/$id'
-      path: '/devotionals/$id'
+      path: '/$id'
       fullPath: '/devotionals/$id'
       preLoaderRoute: typeof DevotionalsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DevotionalsRoute
     }
     '/admin/new': {
       id: '/admin/new'
@@ -406,21 +422,44 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface DevotionalsRouteChildren {
+  DevotionalsIdRoute: typeof DevotionalsIdRoute
+  DevotionalsIndexRoute: typeof DevotionalsIndexRoute
+}
+
+const DevotionalsRouteChildren: DevotionalsRouteChildren = {
+  DevotionalsIdRoute: DevotionalsIdRoute,
+  DevotionalsIndexRoute: DevotionalsIndexRoute,
+}
+
+const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
+  DevotionalsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   NotesRoute: NotesRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
-  DevotionalsIdRoute: DevotionalsIdRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,
-  DevotionalsIndexRoute: DevotionalsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
