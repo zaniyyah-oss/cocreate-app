@@ -48,6 +48,7 @@ type FormState = {
   pray_prompt: string;
   apply_prompt: string;
   status: "draft" | "published";
+  is_default: boolean;
 };
 
 const emptyState = (): FormState => ({
@@ -55,7 +56,7 @@ const emptyState = (): FormState => ({
   scripture_reference: "", scripture_focus: "", author_name: "",
   media_url: "", thumbnail_url: "", published_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
-  status: "draft",
+  status: "draft", is_default: false,
 });
 
 const stateFromContent = (r: Content): FormState => ({
@@ -82,6 +83,7 @@ const stateFromTemplate = (r: Template): FormState => ({
   pray_prompt: r.pray_prompt ?? "",
   apply_prompt: r.apply_prompt ?? "",
   status: r.status,
+  is_default: !!(r as any).is_default,
 });
 
 export function ContentForm({
