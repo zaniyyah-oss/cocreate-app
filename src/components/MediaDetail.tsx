@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { trackEvent } from "@/lib/track";
 
 type PreviewRow = Database["public"]["Views"]["content_items_public"]["Row"];
 
