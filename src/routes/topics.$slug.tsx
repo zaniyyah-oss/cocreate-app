@@ -254,9 +254,11 @@ function TopicPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }
+
 
 function TypeSection({ title, items, onOpen }: { title: string; items: PreviewRow[]; onOpen: (c: PreviewRow) => void }) {
   return (
