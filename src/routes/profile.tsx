@@ -218,9 +218,9 @@ function ProfilePage() {
 
   if (ready && !userId) {
     return (
-      <div className="pf-root">
+      <AppShell current="profile">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <Nav userId={null} />
+        <div className="pf-root">
         <div className="pf-shell">
           <div className="pf-signgate">
             <h3>Sign in to see your profile</h3>
@@ -228,7 +228,8 @@ function ProfilePage() {
             <Link to="/auth" className="pf-signin">Sign in</Link>
           </div>
         </div>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
@@ -238,9 +239,10 @@ function ProfilePage() {
   const subbedIds = new Set(subs.map((s) => s.topic_id));
 
   return (
-    <div className="pf-root">
+    <AppShell current="profile">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <Nav userId={userId} />
+      <div className="pf-root">
+
 
       <div className="pf-shell">
         <header className="pf-header">
