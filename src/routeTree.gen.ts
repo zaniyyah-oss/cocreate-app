@@ -10,15 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
+import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevotionalsRoute = DevotionalsRouteImport.update({
+  id: '/devotionals',
+  path: '/devotionals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -46,11 +53,18 @@ const EssaysIdRoute = EssaysIdRouteImport.update({
   path: '/essays/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -58,7 +72,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -67,7 +83,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
+  '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -77,7 +95,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/devotionals'
     | '/explore'
+    | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
@@ -85,7 +105,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/devotionals'
     | '/explore'
+    | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
@@ -93,7 +115,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/devotionals'
     | '/explore'
+    | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
@@ -102,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
@@ -115,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devotionals': {
+      id: '/devotionals'
+      path: '/devotionals'
+      fullPath: '/devotionals'
+      preLoaderRoute: typeof DevotionalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -152,12 +184,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EssaysIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devotionals/$id': {
+      id: '/devotionals/$id'
+      path: '/$id'
+      fullPath: '/devotionals/$id'
+      preLoaderRoute: typeof DevotionalsIdRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
   }
 }
+
+interface DevotionalsRouteChildren {
+  DevotionalsIdRoute: typeof DevotionalsIdRoute
+}
+
+const DevotionalsRouteChildren: DevotionalsRouteChildren = {
+  DevotionalsIdRoute: DevotionalsIdRoute,
+}
+
+const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
+  DevotionalsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
