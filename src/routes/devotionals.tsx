@@ -137,9 +137,9 @@ function DevotionalsPage() {
 
   if (ready && !userId) {
     return (
-      <div className="dv-root">
+      <AppShell current="devotionals">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <Nav userId={null} />
+        <div className="dv-root">
         <div className="dv-shell">
           <div className="dv-head">
             <h1>Devotionals</h1>
@@ -151,7 +151,8 @@ function DevotionalsPage() {
             <Link to="/auth" className="dv-signin">Sign in</Link>
           </div>
         </div>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
@@ -160,9 +161,10 @@ function DevotionalsPage() {
   const entryMap = entryTemplatesQ.data ?? {};
 
   return (
-    <div className="dv-root">
+    <AppShell current="devotionals">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <Nav userId={userId} />
+      <div className="dv-root">
+
 
       <div className="dv-shell">
         <div className="dv-head">
