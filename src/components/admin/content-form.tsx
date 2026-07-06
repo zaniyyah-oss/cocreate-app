@@ -379,6 +379,11 @@ export function ContentForm({
           </div>
         )}
 
+        {kind === "devotional" && !state.is_default && (
+          <AutoFillEditor state={state} setState={setState} />
+        )}
+
+
         {showThumb && (
           <div>
             <label>Thumbnail image</label>
