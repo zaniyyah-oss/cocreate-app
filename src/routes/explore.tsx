@@ -244,7 +244,7 @@ function ExplorePage() {
                 const meta = TYPE_META[t];
                 return (
                   <div key={c.id ?? ""} className="ex-card"
-                    onClick={() => requireAuth("read this essay") && navigate({ to: "/" })}>
+                    onClick={() => c.id && navigate({ to: "/essays/$id", params: { id: c.id } })}>
                     <div className={`ex-thumb ${meta.cls}`}>
                       <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} />
                       <span className={`ex-tag ${meta.cls}`}>{meta.label}</span>
