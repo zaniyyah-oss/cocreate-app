@@ -619,6 +619,8 @@ function EntryPage() {
                   userId={userId}
                   ensureEntry={ensureEntry}
                   currentEntryId={currentEntry?.id ?? null}
+                  isFocused={focusSection === "workspace"}
+                  onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                 />
               )}
 
