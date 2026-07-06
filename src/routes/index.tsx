@@ -1,9 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { ContinuePractice } from "@/components/ContinuePractice";
+
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -72,7 +74,72 @@ const HOME_CSS = `
 .hp-hero{background:#fff;border:1px solid rgba(20,20,20,0.06);border-left:5px solid #0F4A42;border-radius:16px;padding:22px 24px;margin-bottom:34px;}
 .hp-hero .lbl{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;margin-bottom:6px;}
 .hp-hero p{font-size:14px;color:#181A4D;font-weight:600;line-height:1.5;margin:0;}
+
+/* Today's workspace banner */
+.hp-workspace{display:flex;align-items:center;justify-content:space-between;background:#DCE07A;border-radius:12px;padding:13px 18px;color:#181A4D;text-decoration:none;margin-bottom:24px;transition:transform .18s ease, box-shadow .18s ease;}
+.hp-workspace:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.07);}
+.hp-workspace-text{font-weight:800;font-size:14px;letter-spacing:-0.01em;}
+.hp-workspace-arrow{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
 `;
+
+function localToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function WorkspaceReturnBanner() {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [today, setToday] = useState<string>(() => localToday());
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const t = localToday();
+      setToday((prev) => (prev === t ? prev : t));
+    }, 60_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const q = useQuery({
+    queryKey: ["workspace-return", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_templates")
+        .select("id, title")
+        .eq("is_default" as any, true)
+        .eq("status", "published")
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; title: string } | null;
+    },
+  });
+
+  if (!userId || !q.data?.id) return null;
+
+  return (
+    <Link
+      to="/devotionals/$id"
+      params={{ id: q.data.id }}
+      search={{ date: today }}
+      className="hp-workspace"
+    >
+      <span className="hp-workspace-text">Return to today's workspace</span>
+      <svg viewBox="0 0 24 24" className="hp-workspace-arrow" aria-hidden>
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </svg>
+    </Link>
+  );
+}
 
 function HomePage() {
   const navigate = useNavigate();
@@ -96,6 +163,7 @@ function HomePage() {
     <AppShell current="home">
       <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
       <div className="hp-page">
+        <WorkspaceReturnBanner />
         <h1 className="hp-h1">Slow spiritual formation, daily.</h1>
         <p className="hp-sub">Essays, teachings, podcasts, and devotional practices — the content changes, the practice doesn't.</p>
         <ContinuePractice />
