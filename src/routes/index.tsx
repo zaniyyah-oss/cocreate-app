@@ -98,6 +98,8 @@ function HomePage() {
       <div className="hp-page">
         <h1 className="hp-h1">Slow spiritual formation, daily.</h1>
         <p className="hp-sub">Essays, teachings, podcasts, and devotional practices — the content changes, the practice doesn't.</p>
+        <ContinuePractice />
+
 
         <div className="hp-hero">
           <div className="lbl">A reminder</div>
