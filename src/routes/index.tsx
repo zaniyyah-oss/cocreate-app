@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { ContinuePractice } from "@/components/ContinuePractice";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
