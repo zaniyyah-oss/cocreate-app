@@ -270,17 +270,22 @@ export function NotesSection({ notes, contentMap, templateMap, onOpenContent, on
   );
 }
 
-export function SavedContentSection({ saved, contentMap, templateMap, onOpenContent, onOpenTemplate }: {
+export function SavedContentSection({ saved, contentMap, templateMap, onOpenContent, onOpenTemplate, loading }: {
   saved: Saved[];
   contentMap: Record<string, PreviewRow>;
   templateMap: Record<string, Template>;
   onOpenContent: (c: PreviewRow) => void;
   onOpenTemplate: (t: Template) => void;
+  loading?: boolean;
 }) {
   return (
     <div className="sv-section">
-      <h2>Saved content <span className="count">{saved.length}</span></h2>
-      {saved.length === 0 ? (
+      <h2>Saved content {!loading && <span className="count">{saved.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-grid">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="sv-skel-tall" />)}
+        </div>
+      ) : saved.length === 0 ? (
         <div className="sv-empty"><strong>Nothing saved yet</strong>Tap Save on anything you'd like to return to. It will land here.</div>
       ) : (
         <div className="sv-cards">
