@@ -32,6 +32,8 @@ const FORM_CSS = `
 .cf-note{font-size:11.5px;color:#8a8678;margin-top:6px;}
 `;
 
+type ScriptureItem = { reference: string; note: string };
+
 type FormState = {
   title: string;
   excerpt: string;
@@ -49,7 +51,13 @@ type FormState = {
   apply_prompt: string;
   status: "draft" | "published";
   is_default: boolean;
+  fill_mode: "pool" | "sequence";
+  duration_days: string; // stored as string in the form
+  scripture_items: ScriptureItem[];
+  pray_items: string[];
+  todo_items_pool: string[];
 };
+
 
 const emptyState = (): FormState => ({
   title: "", excerpt: "", body: "", description: "", topic_id: "",
@@ -57,7 +65,10 @@ const emptyState = (): FormState => ({
   media_url: "", thumbnail_url: "", published_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
   status: "draft", is_default: false,
+  fill_mode: "pool", duration_days: "",
+  scripture_items: [], pray_items: [], todo_items_pool: [],
 });
+
 
 const stateFromContent = (r: Content): FormState => ({
   ...emptyState(),
