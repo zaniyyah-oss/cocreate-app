@@ -13,18 +13,23 @@ function localToday(): string {
 }
 
 const CSS = `
-.cp-wrap{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
-.cp-card{background:#fff;border:1px solid rgba(20,20,20,0.06);border-top:5px solid #0F4A42;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:14px;transition:transform .18s ease, box-shadow .18s ease;}
-.cp-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,0.06);}
-.cp-lbl{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;display:flex;align-items:center;gap:8px;}
-.cp-pill{background:#FBF8ED;color:#0F4A42;font-size:9.5px;font-weight:800;letter-spacing:0.1em;padding:2px 8px;border-radius:99px;}
-.cp-title{font-size:20px;font-weight:800;color:#181A4D;letter-spacing:-0.015em;margin:0;line-height:1.3;}
-.cp-meta{font-size:12.5px;color:#8a8678;font-weight:600;display:flex;gap:12px;flex-wrap:wrap;}
-.cp-meta .scr{color:#0F4A42;}
-.cp-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
-.cp-btn{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:10px 18px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
-.cp-btn:hover{background:#0F4A42;}
+.cp-wrap{display:flex;flex-direction:column;gap:14px;margin-bottom:34px;}
 
+/* Default devotional hero card */
+.cp-hero{background:#fff;border:1px solid rgba(20,20,20,0.06);border-radius:20px;padding:32px 34px 28px;display:flex;flex-direction:column;gap:18px;transition:transform .18s ease, box-shadow .18s ease;}
+.cp-hero:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,0.06);}
+.cp-hero-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.cp-hero-label{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;}
+.cp-hero-pill{background:#FBF8ED;color:#0F4A42;font-size:9.5px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px;border:1px solid rgba(15,74,66,0.10);}
+.cp-hero-title{font-size:32px;font-weight:900;color:#181A4D;letter-spacing:-0.03em;margin:0;line-height:1.15;}
+.cp-hero-scripture{border-left:4px solid #DCE07A;padding:14px 18px;margin:0;font-size:15.5px;color:#181A4D;font-style:italic;line-height:1.65;font-weight:500;}
+.cp-hero-scripture .ref{display:inline-block;margin-left:6px;color:#8a8678;font-style:normal;font-weight:700;font-size:14px;}
+.cp-hero-sub{font-size:14px;color:#8a8678;font-weight:500;margin:0;line-height:1.6;}
+.cp-hero-btn{align-self:flex-start;background:transparent;color:#181A4D;font-weight:800;font-size:13px;padding:11px 22px;border-radius:999px;border:1.5px solid rgba(24,26,77,0.22);cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .15s, color .15s, border-color .15s;}
+.cp-hero-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+.cp-hero-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Secondary/topical prompts */
 .cp-sec{background:#fff;border:1px solid rgba(20,20,20,0.06);border-left:3px solid #DCE07A;border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .cp-sec .info{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .cp-sec .k{font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8678;font-weight:800;}
@@ -136,25 +141,26 @@ export function ContinuePractice() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="cp-wrap">
         {primary && (
-          <div className="cp-card">
-            <div className="cp-lbl">
-              Continue your practice
-              <span className="cp-pill">Default</span>
+          <div className="cp-hero">
+            <div className="cp-hero-header">
+              <span className="cp-hero-label">A moment to abide</span>
+              <span className="cp-hero-pill">Default</span>
             </div>
-            <h2 className="cp-title">{primary.title}</h2>
-            <div className="cp-meta">
-              {primary.topicName && <span>{primary.topicName}</span>}
-              {primary.scripture_focus && <span className="scr">{primary.scripture_focus}</span>}
-            </div>
-            <div className="cp-row">
-              <span style={{ fontSize: 12.5, color: "#8a8678", fontWeight: 600 }}>Today's entry is waiting for you.</span>
-              <button
-                className="cp-btn"
-                onClick={() => navigate({ to: "/devotionals/$id", params: { id: primary.id } })}
-              >
-                Begin today's practice
-              </button>
-            </div>
+            <h2 className="cp-hero-title">{primary.title}</h2>
+            {primary.scripture_focus && (
+              <blockquote className="cp-hero-scripture">
+                "Abide in me, and I in you. As the branch cannot bear fruit of itself, except it abide in the vine; no more can ye, except ye abide in me."
+                <span className="ref">{primary.scripture_focus}</span>
+              </blockquote>
+            )}
+            <p className="cp-hero-sub">No rush — abide is here whenever you find a moment today.</p>
+            <button
+              className="cp-hero-btn"
+              onClick={() => navigate({ to: "/devotionals/$id", params: { id: primary.id } })}
+            >
+              I'm ready to abide
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
           </div>
         )}
 
