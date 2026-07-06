@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { RecommendedRow } from "@/components/RecommendedRow";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
