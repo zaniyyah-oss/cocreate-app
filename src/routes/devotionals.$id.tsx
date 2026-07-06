@@ -59,12 +59,14 @@ const CSS = `
 .de-back:hover{color:#181A4D;}
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
 .de-shell{max-width:720px;margin:0 auto;padding:44px 28px 120px;}
-.de-headcard{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.05);margin-bottom:32px;}
-.de-headaccent{height:6px;width:100%;}
-.de-headbody{padding:32px 34px 34px;}
-.de-topic{font-size:10.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px;}
-.de-title{font-size:32px;font-weight:900;letter-spacing:-0.03em;color:#181A4D;line-height:1.15;margin:0 0 18px;}
-.de-scr{font-size:14px;font-weight:700;color:#0F4A42;padding-top:16px;border-top:1px solid rgba(20,20,20,0.06);}
+.de-headcard{background:#fff;border-radius:24px;padding:32px 36px;margin-bottom:32px;border:1px solid rgba(20,20,20,0.06);}
+.de-headtop{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.de-headtitle{font-size:28px;font-weight:900;color:#181A4D;letter-spacing:-0.02em;margin:0;line-height:1;}
+.de-headarrow{color:#A8A59A;font-size:22px;font-weight:400;}
+.de-headdate{font-size:17px;font-weight:500;color:#8a8678;letter-spacing:-0.01em;}
+.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:0 0 22px;}
+.de-headquote{font-size:18px;font-style:italic;color:#181A4D;line-height:1.6;margin:0 0 10px;font-weight:500;}
+.de-headref{font-size:13px;font-weight:700;color:#8a8678;margin:0;}
 .de-date{font-size:11px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;text-align:center;margin-bottom:22px;}
 
 .de-block{background:#fff;border-radius:16px;padding:28px 30px;margin-bottom:22px;border:1px solid rgba(20,20,20,0.05);}
@@ -377,15 +379,21 @@ function EntryPage() {
         ) : (
           <>
             <div className="de-headcard">
-              <div className="de-headaccent" style={{ background: color }} />
-              <div className="de-headbody">
-                {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="de-topic" style={{ color, textDecoration: "none" }}>{topic.name} →</Link>}
-                <h1 className="de-title">{t.title}</h1>
-                {t.scripture_focus && <div className="de-scr">Scripture focus · {t.scripture_focus}</div>}
+              <div className="de-headtop">
+                <h1 className="de-headtitle">{t.title}</h1>
+                <span className="de-headarrow">→</span>
+                <span className="de-headdate">{formatDate(selectedDate)}</span>
               </div>
+              <div className="de-headrule" />
+              {scriptureText ? (
+                <>
+                  <p className="de-headquote">"{scriptureText}"</p>
+                  <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
+                </>
+              ) : t.scripture_focus ? (
+                <p className="de-headref">{t.scripture_focus}</p>
+              ) : null}
             </div>
-
-            <div className="de-date">{formatDate(selectedDate)}{selectedDate === todayISO() ? " · Today" : ""}</div>
 
             {/* 1. Where Are You */}
             <div className="de-block">
