@@ -189,7 +189,10 @@ function EntryPage() {
   const { userId, ready } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<string>(todayISO());
+  const search = Route.useSearch();
+  const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
+  useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
+
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
