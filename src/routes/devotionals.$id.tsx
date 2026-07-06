@@ -214,20 +214,47 @@ function EntryPage() {
 
   // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
   // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
+  // For topical/temporary devotionals (non-default) with no existing entry for the day,
+  // pre-fill Read/Pray/To-Do from the template's configured content.
   useEffect(() => {
-    const key = `${selectedDate}:${currentEntry?.id ?? "new"}`;
+    const key = `${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
     const e = currentEntry;
+    const t = templateQ.data;
+
+    // Compute prefill values for a brand-new entry on a non-default template.
+    let prefillScrRef = "";
+    let prefillScrText = "";
+    let prefillPray = "";
+    let prefillTodo = "";
+    if (!e && t && !(t as any).is_default) {
+      const scr = Array.isArray((t as any).scripture_items) ? (t as any).scripture_items as Array<{ reference?: string; note?: string }> : [];
+      const pray = Array.isArray((t as any).pray_items) ? (t as any).pray_items as string[] : [];
+      const todo = Array.isArray((t as any).todo_items_pool) ? (t as any).todo_items_pool as string[] : [];
+      const mode = (t as any).fill_mode === "sequence" ? "sequence" : "pool";
+      const pastCount = (pastQ.data ?? []).length; // 0-based day index for today
+      const pick = <T,>(arr: T[]): T | undefined => {
+        if (arr.length === 0) return undefined;
+        if (mode === "sequence") return arr[Math.min(pastCount, arr.length - 1)];
+        return arr[pastCount % arr.length];
+      };
+      const s = pick(scr);
+      if (s) { prefillScrRef = s.reference ?? ""; prefillScrText = s.note ?? ""; }
+      prefillPray = pick(pray) ?? "";
+      prefillTodo = pick(todo) ?? "";
+    }
+
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
-    setScriptureRef(e?.scripture_reference ?? "");
-    setScriptureText(e?.scripture_text ?? "");
+    setScriptureRef(e?.scripture_reference ?? prefillScrRef);
+    setScriptureText(e?.scripture_text ?? prefillScrText);
     setFurtherReading(e?.further_reading_text ?? "");
-    setPrayText(e?.pray_text ?? "");
-    setTodoText(e?.todo_text ?? e?.apply_text ?? "");
+    setPrayText(e?.pray_text ?? prefillPray);
+    setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(items);
-  }, [selectedDate, currentEntry?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const upsert = useMutation({
     mutationFn: async (patch: Record<string, unknown>) => {
