@@ -244,7 +244,12 @@ function ExplorePage() {
                 const meta = TYPE_META[t];
                 return (
                   <div key={c.id ?? ""} className="ex-card"
-                    onClick={() => c.id && navigate({ to: "/essays/$id", params: { id: c.id } })}>
+                    onClick={() => {
+                      if (!c.id) return;
+                      const route = t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
+                      navigate({ to: route, params: { id: c.id } });
+                    }}>
+
                     <div className={`ex-thumb ${meta.cls}`}>
                       <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} />
                       <span className={`ex-tag ${meta.cls}`}>{meta.label}</span>
