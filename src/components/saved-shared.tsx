@@ -10,6 +10,8 @@ type Pin = Database["public"]["Tables"]["pinned_quotes"]["Row"];
 type Note = Database["public"]["Tables"]["notes"]["Row"];
 type Saved = Database["public"]["Tables"]["saved_items"]["Row"];
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
+type AbideEntry = Database["public"]["Tables"]["devotional_entries"]["Row"];
+
 
 export const SAVED_CSS = `
 .sv-root *{box-sizing:border-box;}
