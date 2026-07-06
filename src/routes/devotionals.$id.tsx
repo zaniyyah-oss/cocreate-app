@@ -574,7 +574,8 @@ function EntryPage() {
                 </div>
 
                 {/* To-Do */}
-                <div className="de-block">
+                <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                  {focusBtn("todo")}
                   <div className="de-label">
                     <span className="dot" style={{ background: color }} />
                     <span className="name">To-Do</span>
