@@ -14,7 +14,10 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
   further_reading_text?: string | null;
   todo_text?: string | null;
   todo_items?: TodoItem[] | null;
+  entry_title?: string | null;
+  entry_subtitle?: string | null;
 };
+
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
 type TodoItem = { id: string; text: string; done: boolean };
