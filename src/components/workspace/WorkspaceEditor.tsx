@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
+import { Indent } from "./indent-extension";
 
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
@@ -36,7 +37,7 @@ export function WorkspaceEditor({
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: "ws-link" } }),
       LinkCard,
       Placeholder.configure({ placeholder: placeholder ?? "Write, paste a link, or drop in an image…" }),
-    ],
+      Indent,
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
       attributes: { class: "ws-editor-content" },
