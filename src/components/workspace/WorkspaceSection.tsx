@@ -49,8 +49,9 @@ const CSS = `
 .ws-status-pill.closed{background:#FBF8ED;color:#8a8678;}
 
 /* Editor */
-.ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:hidden;background:#fff;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid rgba(20,20,20,0.06);background:#FBF8ED;}
+.ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:visible;background:#fff;}
+.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid rgba(20,20,20,0.06);background:#FBF8ED;position:sticky;top:56px;z-index:60;border-top-left-radius:10px;border-top-right-radius:10px;}
+.ws-root.is-full .ws-toolbar{top:0;}
 .ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins';font-weight:700;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;}
 .ws-tb-btn:hover{background:#fff;}
 .ws-tb-btn.on{background:#181A4D;color:#fff;}
