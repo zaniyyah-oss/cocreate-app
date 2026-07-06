@@ -110,6 +110,7 @@ export type Database = {
           created_at: string
           excerpt: string | null
           id: string
+          is_seed: boolean
           media_url: string | null
           published_at: string | null
           scripture_reference: string | null
@@ -126,6 +127,7 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
           scripture_reference?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           created_at?: string
           excerpt?: string | null
           id?: string
+          is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
           scripture_reference?: string | null
@@ -212,6 +215,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_seed: boolean
           pray_prompt: string | null
           reflect_prompt: string | null
           scripture_focus: string | null
@@ -225,6 +229,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_seed?: boolean
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
@@ -238,6 +243,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_seed?: boolean
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
