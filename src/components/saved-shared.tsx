@@ -10,6 +10,8 @@ type Pin = Database["public"]["Tables"]["pinned_quotes"]["Row"];
 type Note = Database["public"]["Tables"]["notes"]["Row"];
 type Saved = Database["public"]["Tables"]["saved_items"]["Row"];
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
+type AbideEntry = Database["public"]["Tables"]["devotional_entries"]["Row"];
+
 
 export const SAVED_CSS = `
 .sv-root *{box-sizing:border-box;}
@@ -27,8 +29,9 @@ export const SAVED_CSS = `
 .sv-sub{font-size:15px;color:#8a8678;margin:0 0 32px;max-width:520px;line-height:1.6;}
 
 /* Mobile segmented tabs */
-.sv-tabs{display:none;background:#fff;border-radius:99px;padding:5px;margin-bottom:26px;border:1px solid rgba(20,20,20,0.06);}
-.sv-tabs button{flex:1;background:transparent;border:none;font-family:'Poppins';font-weight:700;font-size:13px;color:#8a8678;padding:10px 14px;border-radius:99px;cursor:pointer;}
+.sv-tabs{display:flex;background:#fff;border-radius:99px;padding:5px;margin-bottom:26px;border:1px solid rgba(20,20,20,0.06);gap:4px;max-width:520px;}
+.sv-tabs button{flex:1;background:transparent;border:none;font-family:'Poppins';font-weight:700;font-size:13px;color:#8a8678;padding:10px 14px;border-radius:99px;cursor:pointer;white-space:nowrap;}
+
 .sv-tabs button.on{background:#181A4D;color:#fff;}
 
 .sv-section{margin-bottom:56px;}
@@ -75,10 +78,11 @@ export const SAVED_CSS = `
 .sv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 
 @media (max-width:720px){
-  .sv-tabs{display:flex;}
   .sv-h1{font-size:28px;}
+  .sv-tabs{max-width:none;}
 }
 `;
+
 
 const TYPE_META: Record<string, { label: string; bg: string; fg: string }> = {
   teaching: { label: "Teaching", bg: "#F5B301", fg: "#20201c" },
@@ -321,6 +325,7 @@ export function useSavedData(userId: string | null, ready: boolean) {
   const pins = usePinnedQuotes(userId, ready);
   const notes = useNotes(userId, ready);
   const saved = useSavedItems(userId, ready);
+  const abideEntries = useAbideEntries(userId, ready);
 
   const contentIds = useMemo(() => {
     const s = new Set<string>();
@@ -333,15 +338,16 @@ export function useSavedData(userId: string | null, ready: boolean) {
   const templateIds = useMemo(() => {
     const s = new Set<string>();
     (saved.data ?? []).forEach((r) => { if (r.devotional_template_id) s.add(r.devotional_template_id); });
-    // notes with a content_item_id that isn't a content row may actually reference a template — try both
+    (abideEntries.data ?? []).forEach((e) => { if (e.template_id) s.add(e.template_id); });
     return Array.from(s);
-  }, [saved.data]);
+  }, [saved.data, abideEntries.data]);
 
   const contentMap = useContentLookup(contentIds);
   const templateMap = useTemplateLookup(templateIds);
 
-  return { pins, notes, saved, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
+  return { pins, notes, saved, abideEntries, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
 }
+
 
 export function openContent(navigate: ReturnType<typeof useNavigate>, c: PreviewRow) {
   if (!c.id) return;
@@ -351,3 +357,82 @@ export function openContent(navigate: ReturnType<typeof useNavigate>, c: Preview
 export function openTemplate(navigate: ReturnType<typeof useNavigate>, t: Template) {
   navigate({ to: "/devotionals/$id", params: { id: t.id } });
 }
+
+// ─── Abide entry history ────────────────────────────────────────────
+
+export function useAbideEntries(userId: string | null, ready: boolean) {
+  return useQuery({
+    queryKey: ["abide-entries-all", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("*")
+        .eq("user_id", userId!)
+        .order("entry_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as AbideEntry[];
+    },
+  });
+}
+
+const entryPreview = (e: AbideEntry) => {
+  const parts = [e.where_text, e.reflect_text, e.pray_text, e.apply_text].filter((x): x is string => !!x && x.trim().length > 0);
+  return parts[0]?.slice(0, 220) ?? "";
+};
+
+const hasContent = (e: AbideEntry) => {
+  return !!(e.entry_title || e.entry_subtitle || e.where_text || e.reflect_text || e.pray_text || e.apply_text || (Array.isArray(e.todo_items) && (e.todo_items as unknown[]).length > 0));
+};
+
+export function AbideEntriesSection({
+  entries,
+  templateMap,
+  loading,
+  onOpen,
+}: {
+  entries: AbideEntry[];
+  templateMap: Record<string, Template>;
+  loading?: boolean;
+  onOpen: (templateId: string, date: string) => void;
+}) {
+  const visible = entries.filter(hasContent);
+  return (
+    <div className="sv-section">
+      <h2>Abide history {!loading && <span className="count">{visible.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-row">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      ) : visible.length === 0 ? (
+        <div className="sv-empty"><strong>No Abide entries yet</strong>Every day you write in Abide, your entry lands here so you can revisit it.</div>
+      ) : (
+        <div className="sv-notes">
+          {visible.map((e) => {
+            const t = e.template_id ? templateMap[e.template_id] : undefined;
+            const meta = TYPE_META.devotional;
+            const title = e.entry_title?.trim() || t?.title || "Abide";
+            const preview = entryPreview(e);
+            return (
+              <div
+                key={e.id}
+                className="sv-note"
+                onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
+                style={{ cursor: e.template_id ? "pointer" : "default" }}
+              >
+                <div className="top">
+                  <span className="kind" style={{ background: meta.bg, color: meta.fg }}>Abide</span>
+                  <span className="ctx">{title}</span>
+                  <span className="when">{formatWhen(e.entry_date)}</span>
+                </div>
+                {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
+                {preview && <p>{preview}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+

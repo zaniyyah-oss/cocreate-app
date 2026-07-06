@@ -3,36 +3,38 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import {
   SAVED_CSS, SignGate,
-  QuotesSection, NotesSection, SavedContentSection,
+  QuotesSection, NotesSection, SavedContentSection, AbideEntriesSection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
 
 export const Route = createFileRoute("/saved")({
-  component: SavedPage,
+  component: LibraryPage,
   head: () => ({
     meta: [
-      { title: "Saved — CoCreate" },
-      { name: "description", content: "Your pinned quotes, notes, and saved content on CoCreate." },
-      { property: "og:title", content: "Saved — CoCreate" },
-      { property: "og:description", content: "The lines that stayed with you, in one calm place." },
+      { title: "Library — CoCreate" },
+      { name: "description", content: "Your saved content, notes, pinned quotes, and Abide entry history on CoCreate." },
+      { property: "og:title", content: "Library — CoCreate" },
+      { property: "og:description", content: "Everything you've saved, written, and practiced — in one calm place." },
     ],
   }),
 });
 
-function SavedPage() {
+type Tab = "saved" | "notes" | "abide";
+
+function LibraryPage() {
   const { userId, ready } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"saved" | "notes">("saved");
+  const [tab, setTab] = useState<Tab>("saved");
 
-  const { pins, notes, saved, contentMap, templateMap } = useSavedData(userId, ready);
+  const { pins, notes, saved, abideEntries, contentMap, templateMap } = useSavedData(userId, ready);
 
   if (ready && !userId) {
     return (
-      <AppShell current="saved">
+      <AppShell current="library">
         <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
         <div className="sv-shell">
-          <h1 className="sv-h1">Saved</h1>
-          <p className="sv-sub">The lines that stayed with you, notes you took, and everything you've saved to return to.</p>
+          <h1 className="sv-h1">Library</h1>
+          <p className="sv-sub">Saved content, notes, pinned quotes, and your Abide entry history — all in one place.</p>
           <SignGate />
         </div>
       </AppShell>
@@ -40,36 +42,38 @@ function SavedPage() {
   }
 
   return (
-    <AppShell current="saved">
+    <AppShell current="library">
       <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
       <div className="sv-shell">
-        <h1 className="sv-h1">Saved</h1>
-        <p className="sv-sub">The lines that stayed with you, notes you took, and everything you've saved to return to.</p>
+        <h1 className="sv-h1">Library</h1>
+        <p className="sv-sub">Saved content, notes, pinned quotes, and your Abide entry history — all in one place.</p>
 
-        {/* Mobile-only segmented tabs — folds Notes into Saved on small screens */}
         <div className="sv-tabs" role="tablist">
           <button className={tab === "saved" ? "on" : ""} onClick={() => setTab("saved")}>Saved</button>
           <button className={tab === "notes" ? "on" : ""} onClick={() => setTab("notes")}>Notes</button>
+          <button className={tab === "abide" ? "on" : ""} onClick={() => setTab("abide")}>Abide history</button>
         </div>
 
-        <MobileFilter tab={tab}>
-          <QuotesSection
-            pins={pins.data ?? []}
-            contentMap={contentMap}
-            onOpen={(c) => openContent(navigate, c)}
-            loading={pins.isLoading}
-          />
-          <SavedContentSection
-            saved={saved.data ?? []}
-            contentMap={contentMap}
-            templateMap={templateMap}
-            onOpenContent={(c) => openContent(navigate, c)}
-            onOpenTemplate={(t) => openTemplate(navigate, t)}
-            loading={saved.isLoading}
-          />
-        </MobileFilter>
+        {tab === "saved" && (
+          <>
+            <QuotesSection
+              pins={pins.data ?? []}
+              contentMap={contentMap}
+              onOpen={(c) => openContent(navigate, c)}
+              loading={pins.isLoading}
+            />
+            <SavedContentSection
+              saved={saved.data ?? []}
+              contentMap={contentMap}
+              templateMap={templateMap}
+              onOpenContent={(c) => openContent(navigate, c)}
+              onOpenTemplate={(t) => openTemplate(navigate, t)}
+              loading={saved.isLoading}
+            />
+          </>
+        )}
 
-        <MobileFilter tab={tab} show="notes">
+        {tab === "notes" && (
           <NotesSection
             notes={notes.data ?? []}
             contentMap={contentMap}
@@ -78,18 +82,19 @@ function SavedPage() {
             onOpenTemplate={(t) => openTemplate(navigate, t)}
             loading={notes.isLoading}
           />
-        </MobileFilter>
+        )}
+
+        {tab === "abide" && (
+          <AbideEntriesSection
+            entries={abideEntries.data ?? []}
+            templateMap={templateMap}
+            loading={abideEntries.isLoading}
+            onOpen={(templateId, date) =>
+              navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date } })
+            }
+          />
+        )}
       </div>
     </AppShell>
-  );
-}
-
-function MobileFilter({ tab, show = "saved", children }: { tab: "saved" | "notes"; show?: "saved" | "notes"; children: React.ReactNode }) {
-  const hideOnMobile = tab !== show;
-  return (
-    <div className={hideOnMobile ? "sv-mobile-hide" : ""}>
-      <style>{`@media (max-width:720px){.sv-mobile-hide{display:none;}}`}</style>
-      {children}
-    </div>
   );
 }

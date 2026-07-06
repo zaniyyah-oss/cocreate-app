@@ -15,15 +15,15 @@ const ICON = {
   profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
 };
 
-// Desktop sidebar: Saved and Notes are separate items.
-const DESKTOP_NAV: { key: NavKey; label: string; to: string; icon: ReactNode }[] = [
+// Desktop sidebar: Saved and Notes now fold into a single "Library" item.
+const DESKTOP_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; matchPaths?: string[] }[] = [
   { key: "home",        label: "Home",        to: "/",            icon: ICON.home },
   { key: "explore",     label: "Explore",     to: "/explore",     icon: ICON.explore },
   { key: "devotionals", label: "Devotionals", to: "/devotionals", icon: ICON.devotionals },
-  { key: "saved",       label: "Saved",       to: "/saved",       icon: ICON.saved },
-  { key: "notes",       label: "Notes",       to: "/notes",       icon: ICON.notes },
+  { key: "library",     label: "Library",     to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
   { key: "profile",     label: "Profile",     to: "/profile",     icon: ICON.profile },
 ];
+
 
 // Mobile bottom nav: Saved + Notes fold into "Library" to keep bar uncluttered.
 const MOBILE_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; matchPaths?: string[] }[] = [
