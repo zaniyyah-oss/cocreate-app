@@ -512,7 +512,8 @@ function EntryPage() {
               {/* 2/3/4 row */}
               <div className="de-cols">
                 {/* Read */}
-                <div className="de-block read">
+                <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                  {focusBtn("read")}
                   <div className="de-read-head">
                     <div className="de-label">
                       <span className="dot" style={{ background: color }} />
