@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { AppShell } from "@/components/AppShell";
 import {
-  SAVED_CSS, SavedNav, SignGate,
+  SAVED_CSS, SignGate,
   QuotesSection, NotesSection, SavedContentSection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
@@ -23,31 +24,24 @@ function SavedPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"saved" | "notes">("saved");
 
-  useEffect(() => {
-    document.body.style.background = "#eee9d9";
-    return () => { document.body.style.background = ""; };
-  }, []);
-
   const { pins, notes, saved, contentMap, templateMap } = useSavedData(userId, ready);
 
   if (ready && !userId) {
     return (
-      <div className="sv-root">
+      <AppShell current="saved">
         <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
-        <SavedNav current="saved" />
         <div className="sv-shell">
           <h1 className="sv-h1">Saved</h1>
           <p className="sv-sub">The lines that stayed with you, notes you took, and everything you've saved to return to.</p>
           <SignGate />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="sv-root">
+    <AppShell current="saved">
       <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
-      <SavedNav current="saved" />
       <div className="sv-shell">
         <h1 className="sv-h1">Saved</h1>
         <p className="sv-sub">The lines that stayed with you, notes you took, and everything you've saved to return to.</p>
@@ -58,7 +52,6 @@ function SavedPage() {
           <button className={tab === "notes" ? "on" : ""} onClick={() => setTab("notes")}>Notes</button>
         </div>
 
-        {/* Desktop: always show everything. Mobile: hide other tab via inline flag. */}
         <MobileFilter tab={tab}>
           <QuotesSection
             pins={pins.data ?? []}
@@ -87,14 +80,10 @@ function SavedPage() {
           />
         </MobileFilter>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
-/**
- * Renders children always on desktop (>720px). On mobile shows only when the
- * active tab matches `show` (default "saved").
- */
 function MobileFilter({ tab, show = "saved", children }: { tab: "saved" | "notes"; show?: "saved" | "notes"; children: React.ReactNode }) {
   const hideOnMobile = tab !== show;
   return (
