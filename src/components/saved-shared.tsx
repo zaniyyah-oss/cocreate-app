@@ -42,8 +42,15 @@ export const SAVED_CSS = `
 .sv-quote .src{font-size:11px;color:#8a8678;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
 
 .sv-notes{display:flex;flex-direction:column;gap:14px;}
-.sv-note{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.06);padding:18px 22px;cursor:pointer;transition:background .18s ease;}
-.sv-note:hover{background:#FBF8ED;}
+.sv-note{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.06);padding:18px 22px;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;}
+.sv-note:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.05);}
+.sv-skel-row{display:flex;flex-direction:column;gap:14px;}
+.sv-skel-card{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.05);height:110px;position:relative;overflow:hidden;}
+.sv-skel-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);animation:sv-shim 1.4s infinite;}
+.sv-skel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
+.sv-skel-tall{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.05);height:280px;position:relative;overflow:hidden;}
+.sv-skel-tall::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);animation:sv-shim 1.4s infinite;}
+@keyframes sv-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
 .sv-note .top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .sv-note .kind{font-size:9.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border-radius:12px;}
 .sv-note .ctx{font-size:12px;font-weight:700;color:#181A4D;}
@@ -194,11 +201,15 @@ export function useTemplateLookup(ids: string[]) {
 
 // ─── Section components ─────────────────────────────────────────────
 
-export function QuotesSection({ pins, contentMap, onOpen }: { pins: Pin[]; contentMap: Record<string, PreviewRow>; onOpen: (c: PreviewRow) => void }) {
+export function QuotesSection({ pins, contentMap, onOpen, loading }: { pins: Pin[]; contentMap: Record<string, PreviewRow>; onOpen: (c: PreviewRow) => void; loading?: boolean }) {
   return (
     <div className="sv-section">
-      <h2>Pinned quotes <span className="count">{pins.length}</span></h2>
-      {pins.length === 0 ? (
+      <h2>Pinned quotes {!loading && <span className="count">{pins.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-quotes">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-tall" style={{ height: 130 }} />)}
+        </div>
+      ) : pins.length === 0 ? (
         <div className="sv-empty"><strong>Nothing pinned yet</strong>Highlight a line in any essay and tap "Pin as quote" to keep it here.</div>
       ) : (
         <div className="sv-quotes">
@@ -217,17 +228,22 @@ export function QuotesSection({ pins, contentMap, onOpen }: { pins: Pin[]; conte
   );
 }
 
-export function NotesSection({ notes, contentMap, templateMap, onOpenContent, onOpenTemplate }: {
+export function NotesSection({ notes, contentMap, templateMap, onOpenContent, onOpenTemplate, loading }: {
   notes: Note[];
   contentMap: Record<string, PreviewRow>;
   templateMap: Record<string, Template>;
   onOpenContent: (c: PreviewRow) => void;
   onOpenTemplate: (t: Template) => void;
+  loading?: boolean;
 }) {
   return (
     <div className="sv-section">
-      <h2>Your notes <span className="count">{notes.length}</span></h2>
-      {notes.length === 0 ? (
+      <h2>Your notes {!loading && <span className="count">{notes.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-row">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      ) : notes.length === 0 ? (
         <div className="sv-empty"><strong>No notes yet</strong>Add a note on any essay, teaching, podcast, or devotional and it will show up here.</div>
       ) : (
         <div className="sv-notes">
@@ -254,17 +270,22 @@ export function NotesSection({ notes, contentMap, templateMap, onOpenContent, on
   );
 }
 
-export function SavedContentSection({ saved, contentMap, templateMap, onOpenContent, onOpenTemplate }: {
+export function SavedContentSection({ saved, contentMap, templateMap, onOpenContent, onOpenTemplate, loading }: {
   saved: Saved[];
   contentMap: Record<string, PreviewRow>;
   templateMap: Record<string, Template>;
   onOpenContent: (c: PreviewRow) => void;
   onOpenTemplate: (t: Template) => void;
+  loading?: boolean;
 }) {
   return (
     <div className="sv-section">
-      <h2>Saved content <span className="count">{saved.length}</span></h2>
-      {saved.length === 0 ? (
+      <h2>Saved content {!loading && <span className="count">{saved.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-grid">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="sv-skel-tall" />)}
+        </div>
+      ) : saved.length === 0 ? (
         <div className="sv-empty"><strong>Nothing saved yet</strong>Tap Save on anything you'd like to return to. It will land here.</div>
       ) : (
         <div className="sv-cards">

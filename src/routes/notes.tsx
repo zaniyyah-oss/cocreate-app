@@ -56,6 +56,7 @@ function NotesPage() {
           templateMap={templateMap}
           onOpenContent={(c) => openContent(navigate, c)}
           onOpenTemplate={(t) => openTemplate(navigate, t)}
+          loading={notes.isLoading}
         />
       </div>
     </div>
