@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DevotionalsRouteImport } from './routes/devotionals'
@@ -23,6 +24,11 @@ import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesRoute = NotesRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/devotionals'
     | '/explore'
     | '/notes'
+    | '/profile'
     | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/devotionals'
     | '/explore'
     | '/notes'
+    | '/profile'
     | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/devotionals'
     | '/explore'
     | '/notes'
+    | '/profile'
     | '/saved'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   NotesRoute: typeof NotesRoute
+  ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/saved'
       fullPath: '/saved'
       preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes': {
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   NotesRoute: NotesRoute,
+  ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
