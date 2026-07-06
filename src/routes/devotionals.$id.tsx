@@ -61,19 +61,26 @@ const CSS = `
 .de-back{color:#8a8678;font-weight:700;font-size:12.5px;text-decoration:none;}
 .de-back:hover{color:#181A4D;}
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
-.de-shell{max-width:720px;margin:0 auto;padding:44px 28px 120px;}
-.de-headcard{background:#fff;border-radius:24px;padding:32px 36px;margin-bottom:32px;border:1px solid rgba(20,20,20,0.06);}
-.de-headtop{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
-.de-headtitle{font-size:28px;font-weight:900;color:#181A4D;letter-spacing:-0.02em;margin:0;line-height:1;}
-.de-headarrow{color:#A8A59A;font-size:22px;font-weight:400;}
-.de-headdate{font-size:17px;font-weight:500;color:#8a8678;letter-spacing:-0.01em;}
-.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:0 0 22px;}
-.de-headquote{font-size:18px;font-style:italic;color:#181A4D;line-height:1.6;margin:0 0 10px;font-weight:500;}
+.de-shell{max-width:1120px;margin:0 auto;padding:0 0 120px;}
+.de-shell-inner{padding:0 28px;}
+.de-headcard{background:#fff;padding:36px 44px 32px;margin:0 0 28px;border-bottom:1px solid rgba(20,20,20,0.06);position:relative;}
+.de-headcard::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:#DCE07A;}
+.de-headtop{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-top:6px;}
+.de-headtitle-brand{font-size:15px;font-weight:900;color:#181A4D;letter-spacing:-0.01em;}
+.de-headarrow{color:#A8A59A;font-size:16px;font-weight:400;}
+.de-headdate{font-size:15px;font-weight:600;color:#8a8678;letter-spacing:-0.005em;}
+.de-title-input{width:100%;border:none;background:transparent;font-family:'Poppins';font-size:44px;font-weight:900;color:#181A4D;letter-spacing:-0.03em;line-height:1.05;padding:4px 0;outline:none;}
+.de-title-input::placeholder{color:#C9C3B0;}
+.de-subtitle-input{width:100%;border:none;background:transparent;font-family:'Poppins';font-size:18px;font-style:italic;color:#181A4D;padding:8px 0 4px;outline:none;margin-top:6px;}
+.de-subtitle-input::placeholder{color:#C9C3B0;font-style:italic;}
+.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:22px 0 18px;}
+.de-headquote{font-size:16px;font-style:italic;color:#181A4D;line-height:1.6;margin:0 0 8px;font-weight:500;}
 .de-headref{font-size:13px;font-weight:700;color:#8a8678;margin:0;}
 .de-date{font-size:11px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;text-align:center;margin-bottom:22px;}
 
 .de-block{background:#fff;border-radius:16px;padding:28px 30px;margin-bottom:22px;border:1px solid rgba(20,20,20,0.05);}
 .de-block.read{padding:0;overflow:hidden;}
+
 .de-read-head{padding:26px 30px 4px;}
 .de-read-part{padding:14px 30px 24px;border-top:1px solid rgba(20,20,20,0.05);}
 .de-read-part:first-of-type{border-top:none;}
