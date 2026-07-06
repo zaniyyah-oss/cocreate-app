@@ -417,6 +417,142 @@ export function ContentForm({
   );
 }
 
+function AutoFillEditor({
+  state,
+  setState,
+}: {
+  state: FormState;
+  setState: React.Dispatch<React.SetStateAction<FormState>>;
+}) {
+  const patch = (p: Partial<FormState>) => setState((s) => ({ ...s, ...p }));
+
+  const updateScr = (idx: number, key: keyof ScriptureItem, v: string) =>
+    patch({ scripture_items: state.scripture_items.map((it, i) => (i === idx ? { ...it, [key]: v } : it)) });
+  const addScr = () => patch({ scripture_items: [...state.scripture_items, { reference: "", note: "" }] });
+  const removeScr = (idx: number) => patch({ scripture_items: state.scripture_items.filter((_, i) => i !== idx) });
+  const moveScr = (idx: number, dir: -1 | 1) => {
+    const next = [...state.scripture_items];
+    const j = idx + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[idx], next[j]] = [next[j], next[idx]];
+    patch({ scripture_items: next });
+  };
+
+  const updateStr = (key: "pray_items" | "todo_items_pool") => (idx: number, v: string) =>
+    patch({ [key]: state[key].map((s, i) => (i === idx ? v : s)) } as any);
+  const addStr = (key: "pray_items" | "todo_items_pool") => () =>
+    patch({ [key]: [...state[key], ""] } as any);
+  const removeStr = (key: "pray_items" | "todo_items_pool") => (idx: number) =>
+    patch({ [key]: state[key].filter((_, i) => i !== idx) } as any);
+  const moveStr = (key: "pray_items" | "todo_items_pool") => (idx: number, dir: -1 | 1) => {
+    const next = [...state[key]];
+    const j = idx + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[idx], next[j]] = [next[j], next[idx]];
+    patch({ [key]: next } as any);
+  };
+
+  const rowBtnStyle: React.CSSProperties = {
+    background: "none", border: "1px solid rgba(20,20,20,0.14)", borderRadius: 6,
+    padding: "4px 8px", fontSize: 11, cursor: "pointer", color: "#181A4D", fontFamily: "Poppins", fontWeight: 700,
+  };
+
+  const StringList = ({
+    label, items, placeholder, onUpdate, onAdd, onRemove, onMove,
+  }: {
+    label: string; items: string[]; placeholder: string;
+    onUpdate: (idx: number, v: string) => void;
+    onAdd: () => void; onRemove: (idx: number) => void;
+    onMove: (idx: number, dir: -1 | 1) => void;
+  }) => (
+    <div>
+      <label>{label}</label>
+      {items.length === 0 && <div className="cf-note" style={{ marginBottom: 8 }}>No items yet.</div>}
+      {items.map((v, i) => (
+        <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "flex-start" }}>
+          <textarea rows={2} value={v} placeholder={placeholder} onChange={(e) => onUpdate(i, e.target.value)} style={{ flex: 1 }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <button type="button" style={rowBtnStyle} onClick={() => onMove(i, -1)} aria-label="Move up">↑</button>
+            <button type="button" style={rowBtnStyle} onClick={() => onMove(i, 1)} aria-label="Move down">↓</button>
+            <button type="button" style={{ ...rowBtnStyle, color: "#8f2600" }} onClick={() => onRemove(i)} aria-label="Remove">×</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" className="ad-btn ghost sm" onClick={onAdd}>+ Add</button>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#FBF8ED", border: "1px solid rgba(15,74,66,0.15)", borderRadius: 10, padding: "18px 20px", display: "grid", gap: 18 }}>
+      <div>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: "#181A4D", marginBottom: 4 }}>Daily auto-fill content</div>
+        <div className="cf-note" style={{ marginTop: 0 }}>
+          When a user opens today's entry for this devotional, Read and Pray pre-populate from these lists. To-do pre-fills too when a prompt is configured for the day. Everything remains editable — this is a starting point, not a locked field.
+        </div>
+      </div>
+
+      <div className="grid two">
+        <div>
+          <label>Fill mode</label>
+          <select value={state.fill_mode} onChange={(e) => patch({ fill_mode: e.target.value as "pool" | "sequence" })}>
+            <option value="pool">Rotating pool (open-ended topical)</option>
+            <option value="sequence">Fixed sequence (multi-day series)</option>
+          </select>
+          <div className="cf-note">Pool rotates through items day by day. Sequence walks the list in order and stops at the last item.</div>
+        </div>
+        {state.fill_mode === "sequence" && (
+          <div>
+            <label>Duration (days, optional)</label>
+            <input type="number" min={1} value={state.duration_days} onChange={(e) => patch({ duration_days: e.target.value })} placeholder="e.g. 7" />
+            <div className="cf-note">Leave blank to run for as many days as items provided.</div>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label>Scripture readings</label>
+        <div className="cf-note" style={{ marginBottom: 8 }}>Each item: a passage reference and an optional short reading note.</div>
+        {state.scripture_items.length === 0 && <div className="cf-note">No scripture items yet.</div>}
+        {state.scripture_items.map((it, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, marginBottom: 8, alignItems: "flex-start" }}>
+            <div style={{ flex: 1, display: "grid", gap: 6 }}>
+              <input placeholder="Reference — e.g. Matthew 4:1–11" value={it.reference} onChange={(e) => updateScr(i, "reference", e.target.value)} />
+              <textarea rows={2} placeholder="Short reading note (optional)" value={it.note} onChange={(e) => updateScr(i, "note", e.target.value)} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <button type="button" style={rowBtnStyle} onClick={() => moveScr(i, -1)}>↑</button>
+              <button type="button" style={rowBtnStyle} onClick={() => moveScr(i, 1)}>↓</button>
+              <button type="button" style={{ ...rowBtnStyle, color: "#8f2600" }} onClick={() => removeScr(i)}>×</button>
+            </div>
+          </div>
+        ))}
+        <button type="button" className="ad-btn ghost sm" onClick={addScr}>+ Add scripture</button>
+      </div>
+
+      <StringList
+        label="Prayer prompts"
+        placeholder="e.g. Ask God where you're avoiding surrender today."
+        items={state.pray_items}
+        onUpdate={updateStr("pray_items")}
+        onAdd={addStr("pray_items")}
+        onRemove={removeStr("pray_items")}
+        onMove={moveStr("pray_items")}
+      />
+
+      <StringList
+        label="To-do prompts (optional)"
+        placeholder="e.g. Fast from one meal today and give what you'd have spent."
+        items={state.todo_items_pool}
+        onUpdate={updateStr("todo_items_pool")}
+        onAdd={addStr("todo_items_pool")}
+        onRemove={removeStr("todo_items_pool")}
+        onMove={moveStr("todo_items_pool")}
+      />
+    </div>
+  );
+}
+
+
 // util for callers to import kind list
 export const KIND_LIST: Kind[] = ["teaching", "essay", "podcast", "blog", "devotional"];
 export type { Kind };
