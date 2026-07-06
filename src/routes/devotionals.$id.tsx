@@ -252,6 +252,33 @@ function EntryPage() {
     },
   });
 
+  // Ensure a devotional_entries row exists for today; return its id.
+  // Used by the Workspace section, which needs an entry to attach items to.
+  const ensureEntry = async (): Promise<string | null> => {
+    if (!userId) return null;
+    if (currentEntry?.id) return currentEntry.id;
+    const { data, error } = await supabase
+      .from("devotional_entries")
+      .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
+      .select("id")
+      .single();
+    if (error) {
+      // If a row was created concurrently, refetch and use whichever exists
+      await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+      const { data: existing } = await supabase
+        .from("devotional_entries")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("template_id", id)
+        .eq("entry_date", selectedDate)
+        .maybeSingle();
+      return existing?.id ?? null;
+    }
+    trackEvent("devotional_entry_created", { template_id: id });
+    qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+    return data.id;
+  };
+
   const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const scheduleSave = (field: SaveField, value: unknown) => {
     if (!userId || !ready) return;
