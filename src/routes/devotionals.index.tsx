@@ -228,6 +228,44 @@ function DevotionalsPage() {
     );
   };
 
+  const renderDefaultBanner = (t: Template) => {
+    const days = entryMap[t.id]?.size ?? 0;
+    const label = days === 0 ? "Not started yet" : `Day ${days} of an open practice`;
+    const pct = Math.min(100, days === 0 ? 4 : Math.min(100, days * 8));
+    return (
+      <div
+        key={t.id}
+        className="dv-banner"
+        onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}
+      >
+        <div className="dv-banner-top" />
+        <div className="dv-banner-body">
+          <div className="dv-banner-main">
+            <div className="dv-banner-header">
+              <span className="dv-banner-eyebrow">Daily</span>
+              <span className="dv-banner-pill">Always active</span>
+            </div>
+            <h2 className="dv-banner-title">Abide</h2>
+            <p className="dv-banner-sub">A simple daily anchor — open, honest, and always here for you.</p>
+          </div>
+          <button
+            className="dv-banner-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate({ to: "/devotionals/$id", params: { id: t.id } });
+            }}
+          >
+            Open today's entry
+          </button>
+        </div>
+        <div className="dv-banner-foot">
+          <div className="dv-banner-bar"><div style={{ width: `${pct}%` }} /></div>
+          <div className="dv-banner-label">{label}</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AppShell current="devotionals">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
