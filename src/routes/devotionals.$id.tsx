@@ -491,7 +491,8 @@ function EntryPage() {
 
             <div className="de-shell-inner">
               {/* 1. Where Are You */}
-              <div className="de-block">
+              <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
+                {focusBtn("where")}
                 <div className="de-label">
                   <span className="dot" style={{ background: color }} />
                   <span className="name">Where are you</span>
@@ -506,6 +507,7 @@ function EntryPage() {
                 />
                 {statusRow("where_text")}
               </div>
+
 
               {/* 2/3/4 row */}
               <div className="de-cols">
