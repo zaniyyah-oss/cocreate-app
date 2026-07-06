@@ -198,14 +198,13 @@ function TopicPage() {
   };
 
   return (
-    <div className="tp-root">
+    <AppShell>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-
-      <nav className="tp-nav">
-        <Link to="/" className="tp-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
+      <div className="tp-root">
+      <div style={{ padding: "16px 24px 0", maxWidth: 1200, margin: "0 auto" }}>
         <Link to="/explore" className="tp-back">← Back to Explore</Link>
-        <div style={{ width: 60 }} />
-      </nav>
+      </div>
+
 
       <div className="tp-hero">
         <div className="tp-hero-inner">
