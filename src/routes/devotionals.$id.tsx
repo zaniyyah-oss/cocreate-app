@@ -556,7 +556,8 @@ function EntryPage() {
                 </div>
 
                 {/* Pray */}
-                <div className="de-block">
+                <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                  {focusBtn("pray")}
                   <div className="de-label">
                     <span className="dot" style={{ background: color }} />
                     <span className="name">Pray</span>
