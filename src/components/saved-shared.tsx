@@ -385,7 +385,7 @@ const hasContent = (e: AbideEntry) => {
   return !!(e.entry_title || e.entry_subtitle || e.where_text || e.reflect_text || e.pray_text || e.apply_text || (Array.isArray(e.todo_items) && (e.todo_items as unknown[]).length > 0));
 };
 
-export function AbideEntriesSection({
+export function DevotionalHistorySection({
   entries,
   templateMap,
   loading,
@@ -397,42 +397,74 @@ export function AbideEntriesSection({
   onOpen: (templateId: string, date: string) => void;
 }) {
   const visible = entries.filter(hasContent);
-  return (
-    <div className="sv-section">
-      <h2>Abide history {!loading && <span className="count">{visible.length}</span>}</h2>
-      {loading ? (
+
+  if (loading) {
+    return (
+      <div className="sv-section">
+        <h2>Devotional history</h2>
         <div className="sv-skel-row">
           {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
         </div>
-      ) : visible.length === 0 ? (
-        <div className="sv-empty"><strong>No Abide entries yet</strong>Every day you write in Abide, your entry lands here so you can revisit it.</div>
-      ) : (
-        <div className="sv-notes">
-          {visible.map((e) => {
-            const t = e.template_id ? templateMap[e.template_id] : undefined;
-            const meta = TYPE_META.devotional;
-            const title = e.entry_title?.trim() || t?.title || "Abide";
-            const preview = entryPreview(e);
-            return (
-              <div
-                key={e.id}
-                className="sv-note"
-                onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
-                style={{ cursor: e.template_id ? "pointer" : "default" }}
-              >
-                <div className="top">
-                  <span className="kind" style={{ background: meta.bg, color: meta.fg }}>Abide</span>
-                  <span className="ctx">{title}</span>
-                  <span className="when">{formatWhen(e.entry_date)}</span>
-                </div>
-                {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
-                {preview && <p>{preview}</p>}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+      </div>
+    );
+  }
+
+  if (visible.length === 0) {
+    return (
+      <div className="sv-section">
+        <h2>Devotional history</h2>
+        <div className="sv-empty"><strong>No devotional entries yet</strong>Every day you write in a devotional, your entry lands here so you can revisit it.</div>
+      </div>
+    );
+  }
+
+  // Group by template_id, preserving newest-first order from `entries`
+  const groups = new Map<string, AbideEntry[]>();
+  const orderedKeys: string[] = [];
+  for (const e of visible) {
+    const key = e.template_id ?? "__standalone__";
+    if (!groups.has(key)) { groups.set(key, []); orderedKeys.push(key); }
+    groups.get(key)!.push(e);
+  }
+
+  const meta = TYPE_META.devotional;
+
+  return (
+    <>
+      {orderedKeys.map((key) => {
+        const bucket = groups.get(key)!;
+        const template = key === "__standalone__" ? undefined : templateMap[key];
+        const heading = `${(template?.title ?? "Devotional")} history`;
+        return (
+          <div className="sv-section" key={key}>
+            <h2>{heading} <span className="count">{bucket.length}</span></h2>
+            <div className="sv-notes">
+              {bucket.map((e) => {
+                const title = e.entry_title?.trim() || template?.title || "Entry";
+                const preview = entryPreview(e);
+                return (
+                  <div
+                    key={e.id}
+                    className="sv-note"
+                    onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
+                    style={{ cursor: e.template_id ? "pointer" : "default" }}
+                  >
+                    <div className="top">
+                      <span className="kind" style={{ background: meta.bg, color: meta.fg }}>{template?.title ?? "Devotional"}</span>
+                      <span className="ctx">{title}</span>
+                      <span className="when">{formatWhen(e.entry_date)}</span>
+                    </div>
+                    {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
+                    {preview && <p>{preview}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 }
+
 
