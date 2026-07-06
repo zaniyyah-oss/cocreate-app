@@ -109,7 +109,7 @@ export function SavedNav({ current }: { current: "saved" | "notes" }) {
         <Link to="/saved" className={`sv-navlink ${current === "saved" ? "active" : ""}`}>Saved</Link>
         <Link to="/notes" className={`sv-navlink ${current === "notes" ? "active" : ""}`}>Notes</Link>
       </div>
-      <div style={{ width: 60 }} />
+      <NotificationBell />
     </nav>
   );
 }
