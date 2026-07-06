@@ -271,6 +271,8 @@ function EntryPage() {
       prefillTodo = pick(todo) ?? "";
     }
 
+    setEntryTitle(e?.entry_title ?? "");
+    setEntrySubtitle(e?.entry_subtitle ?? "");
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
     setScriptureRef(e?.scripture_reference ?? prefillScrRef);
     setScriptureText(e?.scripture_text ?? prefillScrText);
@@ -280,6 +282,7 @@ function EntryPage() {
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(items);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
 
   const upsert = useMutation({
