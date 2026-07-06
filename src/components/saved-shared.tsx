@@ -78,10 +78,11 @@ export const SAVED_CSS = `
 .sv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 
 @media (max-width:720px){
-  .sv-tabs{display:flex;}
   .sv-h1{font-size:28px;}
+  .sv-tabs{max-width:none;}
 }
 `;
+
 
 const TYPE_META: Record<string, { label: string; bg: string; fg: string }> = {
   teaching: { label: "Teaching", bg: "#F5B301", fg: "#20201c" },
