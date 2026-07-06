@@ -46,7 +46,7 @@ const CSS = `
 .ws-btn.primary{background:#0F4A42;color:#fff;border-color:#0F4A42;}
 .ws-btn.primary:hover{background:#181A4D;border-color:#181A4D;}
 .ws-status-pill{font-size:9.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#DCE07A;color:#181A4D;}
-.ws-status-pill.closed{background:#FBF8ED;color:#8a8678;}
+.ws-status-pill.saved{background:#FBF8ED;color:#8a8678;}
 
 /* Editor */
 .ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:visible;background:#fff;}
@@ -139,7 +139,7 @@ export function WorkspaceSection({
   });
 
   const items = itemsQ.data ?? [];
-  // Today = anything created today (even if closed). Open items always show first.
+  // Today = anything created today (even if saved). Open items always show first.
   const todayItems = useMemo(
     () =>
       items
@@ -257,7 +257,7 @@ export function WorkspaceSection({
       </div>
       <p className="ws-intro">
         A place to work things out — quotes to sit with, links to come back to, images that
-        strike you, rough thoughts. Items you start today stay under today. Close one to file it
+        strike you, rough thoughts. Items you start today stay under today. Save one to file it
         into your gallery for later.
       </p>
 
@@ -279,7 +279,7 @@ export function WorkspaceSection({
           item.status === "open" ? (
             <OpenItemCard key={item.id} item={item} userId={userId} />
           ) : (
-            <ClosedTodayCard key={item.id} item={item} userId={userId} />
+            <SavedTodayCard key={item.id} item={item} userId={userId} />
           )
         )
       )}
@@ -357,7 +357,7 @@ export function WorkspaceSection({
   );
 }
 
-function ClosedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
+function SavedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
   const qc = useQueryClient();
   const reopen = useMutation({
     mutationFn: async () => {
@@ -369,7 +369,7 @@ function ClosedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string
   return (
     <div className="ws-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div className="ws-item-head">
-        <span className="ws-status-pill closed">Closed</span>
+        <span className="ws-status-pill saved">Saved</span>
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.title || "Untitled"}
         </div>
@@ -491,7 +491,7 @@ function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string })
       />
 
       <div className="ws-actions">
-        <button className="ws-btn primary" onClick={() => close.mutate()}>Close & file away</button>
+        <button className="ws-btn primary" onClick={() => close.mutate()}>Save & file away</button>
         <button className="ws-btn danger" onClick={() => { if (confirm("Delete this workspace item?")) removeItem.mutate(); }}>Delete</button>
       </div>
     </div>
