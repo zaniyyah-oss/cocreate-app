@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import {
   SAVED_CSS, SignGate,
-  QuotesSection, NotesSection, SavedContentSection, AbideEntriesSection,
+  QuotesSection, NotesSection, SavedContentSection, DevotionalHistorySection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
 
@@ -51,7 +51,7 @@ function LibraryPage() {
         <div className="sv-tabs" role="tablist">
           <button className={tab === "saved" ? "on" : ""} onClick={() => setTab("saved")}>Saved</button>
           <button className={tab === "notes" ? "on" : ""} onClick={() => setTab("notes")}>Notes</button>
-          <button className={tab === "abide" ? "on" : ""} onClick={() => setTab("abide")}>Abide history</button>
+          <button className={tab === "abide" ? "on" : ""} onClick={() => setTab("abide")}>Devotional history</button>
         </div>
 
         {tab === "saved" && (
@@ -85,15 +85,16 @@ function LibraryPage() {
         )}
 
         {tab === "abide" && (
-          <AbideEntriesSection
+          <DevotionalHistorySection
             entries={abideEntries.data ?? []}
             templateMap={templateMap}
             loading={abideEntries.isLoading}
-            onOpen={(templateId, date) =>
+            onOpen={(templateId: string, date: string) =>
               navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date } })
             }
           />
         )}
+
       </div>
     </AppShell>
   );
