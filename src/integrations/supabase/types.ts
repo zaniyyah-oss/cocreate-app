@@ -44,6 +44,65 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          content_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          template_id: string | null
+          topic_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          template_id?: string | null
+          topic_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          template_id?: string | null
+          topic_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           author_name: string | null
@@ -502,6 +561,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_recommendations: {
+        Row: {
+          computed_at: string
+          content_ids: string[]
+          is_cold_start: boolean
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          content_ids?: string[]
+          is_cold_start?: boolean
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          content_ids?: string[]
+          is_cold_start?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -571,6 +651,8 @@ export type Database = {
       }
     }
     Functions: {
+      compute_user_recommendations: { Args: never; Returns: undefined }
+      get_popular_content_ids: { Args: { _limit?: number }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

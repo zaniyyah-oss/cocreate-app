@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { RecommendedRow } from "@/components/RecommendedRow";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -184,6 +185,8 @@ function ExplorePage() {
             <Link to="/auth" className="ex-signin">Sign in</Link>
           </div>
         )}
+
+        <RecommendedRow />
 
         <div className="ex-flabel">Topics</div>
         <div className="ex-pills">

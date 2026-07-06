@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { trackEvent } from "@/lib/track";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"];
@@ -174,6 +175,7 @@ function EntryPage() {
           reflect_text: patch.reflect_text ?? null, pray_text: patch.pray_text ?? null, apply_text: patch.apply_text ?? null,
         });
         if (error) throw error;
+        trackEvent("devotional_entry_created", { template_id: id });
       }
     },
     onSuccess: (_r, vars) => {

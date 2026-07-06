@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { trackEvent } from "@/lib/track";
 
 export const Route = createFileRoute("/essays/$id")({
   component: EssayPage,
@@ -153,6 +154,11 @@ function EssayPage() {
     },
   });
 
+  useEffect(() => {
+    if (previewQ.data?.id) trackEvent("content_view", { content_id: previewQ.data.id, topic_id: previewQ.data.topic_id ?? null });
+  }, [previewQ.data?.id, previewQ.data?.topic_id]);
+
+
   // Full row (auth-gated by RLS).
   const fullQ = useQuery({
     queryKey: ["essay-full", id, userId],
@@ -227,6 +233,7 @@ function EssayPage() {
       }
       const { error } = await supabase.from("saved_items").insert({ user_id: userId, content_item_id: id });
       if (error) throw error;
+      trackEvent("content_save", { content_id: id, topic_id: previewQ.data?.topic_id ?? null });
       return "saved";
     },
     onSuccess: (r) => { qc.invalidateQueries({ queryKey: ["saved", id, userId] }); setToast(r === "saved" ? "Saved" : "Removed from saved"); },
@@ -241,6 +248,7 @@ function EssayPage() {
       } else {
         const { error } = await supabase.from("notes").insert({ user_id: userId, content_item_id: id, body });
         if (error) throw error;
+        trackEvent("note_created", { content_id: id, topic_id: previewQ.data?.topic_id ?? null });
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["note", id, userId] }); setToast("Note saved"); },
@@ -251,6 +259,7 @@ function EssayPage() {
       if (!userId) return;
       const { error } = await supabase.from("pinned_quotes").insert({ user_id: userId, content_item_id: id, quote_text });
       if (error) throw error;
+      trackEvent("quote_pinned", { content_id: id, topic_id: previewQ.data?.topic_id ?? null });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["pinned", id, userId] }); setToast("Quote pinned"); setPinBtn(null); window.getSelection()?.removeAllRanges(); },
   });
