@@ -64,6 +64,7 @@ function SavedPage() {
             pins={pins.data ?? []}
             contentMap={contentMap}
             onOpen={(c) => openContent(navigate, c)}
+            loading={pins.isLoading}
           />
           <SavedContentSection
             saved={saved.data ?? []}
@@ -71,6 +72,7 @@ function SavedPage() {
             templateMap={templateMap}
             onOpenContent={(c) => openContent(navigate, c)}
             onOpenTemplate={(t) => openTemplate(navigate, t)}
+            loading={saved.isLoading}
           />
         </MobileFilter>
 
@@ -81,6 +83,7 @@ function SavedPage() {
             templateMap={templateMap}
             onOpenContent={(c) => openContent(navigate, c)}
             onOpenTemplate={(t) => openTemplate(navigate, t)}
+            loading={notes.isLoading}
           />
         </MobileFilter>
       </div>
