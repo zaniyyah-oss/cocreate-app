@@ -85,15 +85,16 @@ function LibraryPage() {
         )}
 
         {tab === "abide" && (
-          <AbideEntriesSection
+          <DevotionalHistorySection
             entries={abideEntries.data ?? []}
             templateMap={templateMap}
             loading={abideEntries.isLoading}
-            onOpen={(templateId, date) =>
+            onOpen={(templateId: string, date: string) =>
               navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date } })
             }
           />
         )}
+
       </div>
     </AppShell>
   );
