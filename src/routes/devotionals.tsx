@@ -229,7 +229,7 @@ function Nav({ userId }: { userId: string | null }) {
         <Link to="/explore" className="dv-navlink">Explore</Link>
         <Link to="/devotionals" className="dv-navlink active">Devotionals</Link>
       </div>
-      {userId ? <div style={{ width: 60 }} /> : <Link to="/auth" className="dv-signin">Sign in</Link>}
+      {userId ? <NotificationBell /> : <Link to="/auth" className="dv-signin">Sign in</Link>}
     </nav>
   );
 }

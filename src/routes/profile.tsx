@@ -362,7 +362,7 @@ function Nav({ userId }: { userId: string | null }) {
         <Link to="/saved" className="pf-navlink">Saved</Link>
         <Link to="/profile" className="pf-navlink active">Profile</Link>
       </div>
-      {userId ? <div style={{ width: 60 }} /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
+      {userId ? <NotificationBell /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
     </nav>
   );
 }
