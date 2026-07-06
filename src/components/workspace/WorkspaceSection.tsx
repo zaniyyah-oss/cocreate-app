@@ -46,7 +46,7 @@ const CSS = `
 .ws-btn.primary{background:#0F4A42;color:#fff;border-color:#0F4A42;}
 .ws-btn.primary:hover{background:#181A4D;border-color:#181A4D;}
 .ws-status-pill{font-size:9.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#DCE07A;color:#181A4D;}
-.ws-status-pill.closed{background:#FBF8ED;color:#8a8678;}
+.ws-status-pill.saved{background:#FBF8ED;color:#8a8678;}
 
 /* Editor */
 .ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:visible;background:#fff;}
@@ -369,7 +369,7 @@ function SavedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string 
   return (
     <div className="ws-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div className="ws-item-head">
-        <span className="ws-status-pill closed">Saved</span>
+        <span className="ws-status-pill saved">Saved</span>
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.title || "Untitled"}
         </div>
