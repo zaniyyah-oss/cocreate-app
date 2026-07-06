@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS default_template_id uuid REFERENCES public.devotional_templates(id) ON DELETE SET NULL;

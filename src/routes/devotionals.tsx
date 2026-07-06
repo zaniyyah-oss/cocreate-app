@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -62,6 +63,9 @@ const CSS = `
 .dv-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
 .dv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 .dv-skel{height:180px;background:#fff;border-radius:16px;animation:dvp 1.4s infinite;}
+.dv-setdef{margin-top:12px;align-self:flex-start;background:transparent;color:#0F4A42;border:1px solid rgba(15,74,66,0.25);font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;cursor:pointer;transition:background .15s ease;}
+.dv-setdef:hover:not(:disabled){background:rgba(15,74,66,0.08);}
+.dv-setdef:disabled{color:#8a8678;border-color:rgba(20,20,20,0.1);cursor:default;}
 @keyframes dvp{0%,100%{opacity:1}50%{opacity:.55}}
 `;
 
@@ -79,6 +83,23 @@ function useAuth() {
 function DevotionalsPage() {
   const { userId, ready } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const defaultQ = useQuery({
+    queryKey: ["profile-default-template", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("default_template_id" as any).eq("id", userId!).maybeSingle();
+      return (data as any)?.default_template_id as string | null | undefined;
+    },
+  });
+
+  async function setDefault(templateId: string) {
+    if (!userId) return;
+    await supabase.from("profiles").update({ default_template_id: templateId } as any).eq("id", userId);
+    qc.invalidateQueries({ queryKey: ["profile-default-template", userId] });
+    qc.invalidateQueries({ queryKey: ["continue-practice"] });
+  }
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
@@ -211,6 +232,15 @@ function DevotionalsPage() {
                         <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>
                         <div className="dv-plabel">{label}</div>
                       </div>
+                      <button
+                        type="button"
+                        className="dv-setdef"
+                        onClick={(e) => { e.stopPropagation(); setDefault(t.id); }}
+                        disabled={defaultQ.data === t.id}
+                        title="Use this as your daily practice on Home"
+                      >
+                        {defaultQ.data === t.id ? "✓ Default" : "Set as default"}
+                      </button>
                     </div>
                   </div>
                 );
