@@ -139,7 +139,7 @@ export function WorkspaceSection({
   });
 
   const items = itemsQ.data ?? [];
-  // Today = anything created today (even if closed). Open items always show first.
+  // Today = anything created today (even if saved). Open items always show first.
   const todayItems = useMemo(
     () =>
       items
