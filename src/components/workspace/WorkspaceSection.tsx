@@ -138,28 +138,46 @@ export function WorkspaceSection({
   });
 
   const items = itemsQ.data ?? [];
-  const openForToday = useMemo(
-    () => items.filter((i) => i.status === "open" && i.devotional_entry_id && i.devotional_entry_id === currentEntryId),
-    [items, currentEntryId]
+  // Today = anything created today (even if closed). Open items always show first.
+  const todayItems = useMemo(
+    () =>
+      items
+        .filter((i) => isToday(i.created_at))
+        .sort((a, b) => {
+          if (a.status !== b.status) return a.status === "open" ? -1 : 1;
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        }),
+    [items]
   );
-  const closed = useMemo(() => items.filter((i) => i.status === "closed"), [items]);
+  // Gallery = everything NOT created today, sorted by most recently edited.
+  const galleryPool = useMemo(
+    () =>
+      items
+        .filter((i) => !isToday(i.created_at))
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+    [items]
+  );
 
   const allTags = useMemo(() => {
     const s = new Set<string>();
-    closed.forEach((i) => i.tags.forEach((t) => s.add(t)));
+    galleryPool.forEach((i) => i.tags.forEach((t) => s.add(t)));
     return Array.from(s).sort();
-  }, [closed]);
+  }, [galleryPool]);
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const isFiltering = !!activeTag || search.trim().length > 0;
 
-  const filteredClosed = useMemo(() => {
-    return closed.filter((i) => {
+  const filteredGallery = useMemo(() => {
+    const filtered = galleryPool.filter((i) => {
       if (activeTag && !i.tags.includes(activeTag)) return false;
-      if (search && !i.title.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !(i.title.toLowerCase().includes(search.toLowerCase()) || i.body_text.toLowerCase().includes(search.toLowerCase()))) return false;
       return true;
     });
-  }, [closed, activeTag, search]);
+    return isFiltering ? filtered : filtered.slice(0, GALLERY_DEFAULT_LIMIT);
+  }, [galleryPool, activeTag, search, isFiltering]);
+  const hiddenCount = isFiltering ? 0 : Math.max(0, galleryPool.length - filteredGallery.length);
+
 
   const createItem = useMutation({
     mutationFn: async () => {
