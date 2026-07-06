@@ -49,8 +49,9 @@ const CSS = `
 .ws-status-pill.closed{background:#FBF8ED;color:#8a8678;}
 
 /* Editor */
-.ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:hidden;background:#fff;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid rgba(20,20,20,0.06);background:#FBF8ED;}
+.ws-editor{border:1px solid rgba(20,20,20,0.08);border-radius:10px;overflow:visible;background:#fff;}
+.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid rgba(20,20,20,0.06);background:#FBF8ED;position:sticky;top:56px;z-index:60;border-top-left-radius:10px;border-top-right-radius:10px;}
+.ws-root.is-full .ws-toolbar{top:0;}
 .ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins';font-weight:700;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;}
 .ws-tb-btn:hover{background:#fff;}
 .ws-tb-btn.on{background:#181A4D;color:#fff;}
@@ -101,15 +102,27 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function isToday(iso: string) {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
+
+const GALLERY_DEFAULT_LIMIT = 5;
+
 export function WorkspaceSection({
   userId,
   ensureEntry,
   currentEntryId,
+  isFocused,
+  onToggleFocus,
 }: {
   userId: string;
   /** Creates today's devotional_entries row if needed and returns its id. */
   ensureEntry: () => Promise<string | null>;
   currentEntryId: string | null;
+  isFocused?: boolean;
+  onToggleFocus?: () => void;
 }) {
   const qc = useQueryClient();
   const itemsQ = useQuery({
@@ -126,28 +139,46 @@ export function WorkspaceSection({
   });
 
   const items = itemsQ.data ?? [];
-  const openForToday = useMemo(
-    () => items.filter((i) => i.status === "open" && i.devotional_entry_id && i.devotional_entry_id === currentEntryId),
-    [items, currentEntryId]
+  // Today = anything created today (even if closed). Open items always show first.
+  const todayItems = useMemo(
+    () =>
+      items
+        .filter((i) => isToday(i.created_at))
+        .sort((a, b) => {
+          if (a.status !== b.status) return a.status === "open" ? -1 : 1;
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        }),
+    [items]
   );
-  const closed = useMemo(() => items.filter((i) => i.status === "closed"), [items]);
+  // Gallery = everything NOT created today, sorted by most recently edited.
+  const galleryPool = useMemo(
+    () =>
+      items
+        .filter((i) => !isToday(i.created_at))
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+    [items]
+  );
 
   const allTags = useMemo(() => {
     const s = new Set<string>();
-    closed.forEach((i) => i.tags.forEach((t) => s.add(t)));
+    galleryPool.forEach((i) => i.tags.forEach((t) => s.add(t)));
     return Array.from(s).sort();
-  }, [closed]);
+  }, [galleryPool]);
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const isFiltering = !!activeTag || search.trim().length > 0;
 
-  const filteredClosed = useMemo(() => {
-    return closed.filter((i) => {
+  const filteredGallery = useMemo(() => {
+    const filtered = galleryPool.filter((i) => {
       if (activeTag && !i.tags.includes(activeTag)) return false;
-      if (search && !i.title.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !(i.title.toLowerCase().includes(search.toLowerCase()) || i.body_text.toLowerCase().includes(search.toLowerCase()))) return false;
       return true;
     });
-  }, [closed, activeTag, search]);
+    return isFiltering ? filtered : filtered.slice(0, GALLERY_DEFAULT_LIMIT);
+  }, [galleryPool, activeTag, search, isFiltering]);
+  const hiddenCount = isFiltering ? 0 : Math.max(0, galleryPool.length - filteredGallery.length);
+
 
   const createItem = useMutation({
     mutationFn: async () => {
@@ -207,8 +238,18 @@ export function WorkspaceSection({
   });
 
   return (
-    <div className="ws-root">
+    <div className={`ws-root ${isFocused ? "is-full" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {onToggleFocus && (
+        <button
+          type="button"
+          className="de-focus-btn"
+          onClick={onToggleFocus}
+          aria-label={isFocused ? "Exit focus mode" : "Focus this section"}
+        >
+          {isFocused ? "✕ Exit focus" : "⛶ Focus"}
+        </button>
+      )}
       <div className="ws-head">
         <span className="dot" />
         <span className="name">Workspace</span>
@@ -216,13 +257,13 @@ export function WorkspaceSection({
       </div>
       <p className="ws-intro">
         A place to work things out — quotes to sit with, links to come back to, images that
-        strike you, rough thoughts. Open items live under today's entry. Close one to file
-        it into your gallery for later.
+        strike you, rough thoughts. Items you start today stay under today. Close one to file it
+        into your gallery for later.
       </p>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#0F4A42" }}>
-          Open today · {openForToday.length}
+          Today · {todayItems.length}
         </div>
         <button className="ws-new-btn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
           {createItem.isPending ? "Creating…" : "+ New workspace item"}
@@ -231,20 +272,26 @@ export function WorkspaceSection({
 
       {itemsQ.isLoading ? (
         <div className="ws-empty">Loading…</div>
-      ) : openForToday.length === 0 ? (
-        <div className="ws-empty">Nothing open today yet. Start a new item, or reopen a past one from the gallery below.</div>
+      ) : todayItems.length === 0 ? (
+        <div className="ws-empty">Nothing started today yet. Start a new item, or reopen one from the gallery below.</div>
       ) : (
-        openForToday.map((item) => (
-          <OpenItemCard key={item.id} item={item} userId={userId} />
-        ))
+        todayItems.map((item) =>
+          item.status === "open" ? (
+            <OpenItemCard key={item.id} item={item} userId={userId} />
+          ) : (
+            <ClosedTodayCard key={item.id} item={item} userId={userId} />
+          )
+        )
       )}
 
       {/* Gallery */}
       <div className="ws-gallery-head">
-        <h4 className="ws-gallery-title">Gallery · {closed.length} closed</h4>
+        <h4 className="ws-gallery-title">
+          Gallery · {isFiltering ? `${filteredGallery.length} match` : `${galleryPool.length} total`}
+        </h4>
         <input
           className="ws-search"
-          placeholder="Search by title…"
+          placeholder="Search title or content…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -265,43 +312,84 @@ export function WorkspaceSection({
         </div>
       )}
 
-      {filteredClosed.length === 0 ? (
+      {filteredGallery.length === 0 ? (
         <div className="ws-empty">
-          {closed.length === 0
-            ? "Closed items you file away will appear here for later browsing."
+          {galleryPool.length === 0
+            ? "Items from previous days will collect here."
             : "No items match this filter."}
         </div>
       ) : (
-        <div className="ws-grid">
-          {filteredClosed.map((item) => (
-            <div key={item.id} className="ws-card" onClick={() => reopen.mutate(item)}>
-              <h4>{item.title || "Untitled"}</h4>
-              {item.tags.length > 0 && (
-                <div className="taglist">
-                  {item.tags.slice(0, 4).map((t) => <span key={t}>#{t}</span>)}
-                </div>
-              )}
-              <div className="snippet">{toPreview(item.body_text) || "—"}</div>
-              <div className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>Edited {formatDate(item.updated_at)}</span>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button
-                    className="ws-btn"
-                    onClick={(e) => { e.stopPropagation(); reopen.mutate(item); }}
-                  >Reopen</button>
-                  <button
-                    className="ws-btn primary"
-                    onClick={(e) => { e.stopPropagation(); attachCopy.mutate(item); }}
-                  >Attach to today</button>
+        <>
+          <div className="ws-grid">
+            {filteredGallery.map((item) => (
+              <div key={item.id} className="ws-card" onClick={() => reopen.mutate(item)}>
+                <h4>{item.title || "Untitled"}</h4>
+                {item.tags.length > 0 && (
+                  <div className="taglist">
+                    {item.tags.slice(0, 4).map((t) => <span key={t}>#{t}</span>)}
+                  </div>
+                )}
+                <div className="snippet">{toPreview(item.body_text) || "—"}</div>
+                <div className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span>Created {formatDate(item.created_at)} · edited {formatDate(item.updated_at)}</span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      className="ws-btn"
+                      onClick={(e) => { e.stopPropagation(); reopen.mutate(item); }}
+                    >Reopen</button>
+                    <button
+                      className="ws-btn primary"
+                      onClick={(e) => { e.stopPropagation(); attachCopy.mutate(item); }}
+                    >Attach to today</button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+          {hiddenCount > 0 && (
+            <div className="ws-empty" style={{ marginTop: 12 }}>
+              {hiddenCount} more in the gallery — search or filter by tag to find them.
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+function ClosedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
+  const qc = useQueryClient();
+  const reopen = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("workspace_items" as any).update({ status: "open" }).eq("id", item.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-items", userId] }),
+  });
+  return (
+    <div className="ws-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="ws-item-head">
+        <span className="ws-status-pill closed">Closed</span>
+        <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {item.title || "Untitled"}
+        </div>
+        <button className="ws-btn" onClick={() => reopen.mutate()}>Reopen</button>
+      </div>
+      {item.tags.length > 0 && (
+        <div className="ws-tags">
+          {item.tags.map((t) => <span key={t} className="ws-tag">#{t}</span>)}
+        </div>
+      )}
+      <div style={{ fontSize: 12.5, color: "#8a8678", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        {toPreview(item.body_text) || "—"}
+      </div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: "#8a8678", letterSpacing: "0.04em" }}>
+        Created {formatDate(item.created_at)} · edited {formatDate(item.updated_at)}
+      </div>
+    </div>
+  );
+}
+
 
 function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
   const qc = useQueryClient();

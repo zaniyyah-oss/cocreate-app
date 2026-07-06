@@ -149,6 +149,20 @@ const CSS = `
 @media (min-width:768px){
   .de-cols{grid-template-columns:1fr 1fr 1fr;gap:20px;}
 }
+
+/* Focus / fullscreen for a section */
+.de-block, .ws-root { position: relative; }
+.de-focus-btn{position:absolute;top:14px;right:16px;background:transparent;border:1px solid rgba(20,20,20,0.15);color:#181A4D;font-family:'Poppins';font-weight:700;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
+.de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+.de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
+@media (min-width:768px){
+  .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
+  .de-block.is-full > *, .ws-root.is-full > *{max-width:820px;margin-left:auto;margin-right:auto;}
+}
+.de-block.is-full .de-textarea{min-height:55vh;}
+.de-block.is-full.read .de-read-head,
+.de-block.is-full.read .de-read-part{padding-left:0;padding-right:0;}
+.de-block.is-full .de-cols{grid-template-columns:1fr;}
 `;
 
 
@@ -193,11 +207,28 @@ function EntryPage() {
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
 
+  const [focusSection, setFocusSection] = useState<string | null>(null);
+  // Lock body scroll when a section is focused
+  useEffect(() => {
+    if (focusSection) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [focusSection]);
+  // ESC to exit fullscreen
+  useEffect(() => {
+    if (!focusSection) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFocusSection(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusSection]);
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
   }, []);
+
 
   const templateQ = useQuery({
     queryKey: ["dev-template", id],
@@ -398,6 +429,17 @@ function EntryPage() {
   const statusRow = (field: string) => (
     <div className={`de-status ${savedField === field ? "on" : ""}`}>{statusText(field)}</div>
   );
+  const focusBtn = (key: string) => (
+    <button
+      type="button"
+      className="de-focus-btn"
+      onClick={() => setFocusSection((cur) => (cur === key ? null : key))}
+      aria-label={focusSection === key ? "Exit focus mode" : "Focus this section"}
+    >
+      {focusSection === key ? "✕ Exit focus" : "⛶ Focus"}
+    </button>
+  );
+
 
   return (
     <div className="de-root">
@@ -449,7 +491,8 @@ function EntryPage() {
 
             <div className="de-shell-inner">
               {/* 1. Where Are You */}
-              <div className="de-block">
+              <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
+                {focusBtn("where")}
                 <div className="de-label">
                   <span className="dot" style={{ background: color }} />
                   <span className="name">Where are you</span>
@@ -465,10 +508,12 @@ function EntryPage() {
                 {statusRow("where_text")}
               </div>
 
+
               {/* 2/3/4 row */}
               <div className="de-cols">
                 {/* Read */}
-                <div className="de-block read">
+                <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                  {focusBtn("read")}
                   <div className="de-read-head">
                     <div className="de-label">
                       <span className="dot" style={{ background: color }} />
@@ -511,7 +556,8 @@ function EntryPage() {
                 </div>
 
                 {/* Pray */}
-                <div className="de-block">
+                <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                  {focusBtn("pray")}
                   <div className="de-label">
                     <span className="dot" style={{ background: color }} />
                     <span className="name">Pray</span>
@@ -528,7 +574,8 @@ function EntryPage() {
                 </div>
 
                 {/* To-Do */}
-                <div className="de-block">
+                <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                  {focusBtn("todo")}
                   <div className="de-label">
                     <span className="dot" style={{ background: color }} />
                     <span className="name">To-Do</span>
@@ -572,6 +619,8 @@ function EntryPage() {
                   userId={userId}
                   ensureEntry={ensureEntry}
                   currentEntryId={currentEntry?.id ?? null}
+                  isFocused={focusSection === "workspace"}
+                  onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                 />
               )}
 
