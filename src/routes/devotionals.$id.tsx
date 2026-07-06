@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
+import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
@@ -251,6 +252,33 @@ function EntryPage() {
     },
   });
 
+  // Ensure a devotional_entries row exists for today; return its id.
+  // Used by the Workspace section, which needs an entry to attach items to.
+  const ensureEntry = async (): Promise<string | null> => {
+    if (!userId) return null;
+    if (currentEntry?.id) return currentEntry.id;
+    const { data, error } = await supabase
+      .from("devotional_entries")
+      .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
+      .select("id")
+      .single();
+    if (error) {
+      // If a row was created concurrently, refetch and use whichever exists
+      await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+      const { data: existing } = await supabase
+        .from("devotional_entries")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("template_id", id)
+        .eq("entry_date", selectedDate)
+        .maybeSingle();
+      return existing?.id ?? null;
+    }
+    trackEvent("devotional_entry_created", { template_id: id });
+    qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+    return data.id;
+  };
+
   const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const scheduleSave = (field: SaveField, value: unknown) => {
     if (!userId || !ready) return;
@@ -449,18 +477,13 @@ function EntryPage() {
             </div>
 
             {/* 5. Workspace */}
-            <div className="de-workspace">
-              <div className="de-label">
-                <span className="dot" style={{ background: color }} />
-                <span className="name">Workspace</span>
-                <span className="num">· 05</span>
-              </div>
-              <p>Continue this practice in your workspace — pinned quotes, notes, and everything you've saved that touches on today's reflection.</p>
-              <div className="row">
-                <Link to="/notes" className="de-ws-btn">Open notes</Link>
-                <Link to="/saved" className="de-ws-btn ghost">Saved &amp; pinned</Link>
-              </div>
-            </div>
+            {userId && (
+              <WorkspaceSection
+                userId={userId}
+                ensureEntry={ensureEntry}
+                currentEntryId={currentEntry?.id ?? null}
+              />
+            )}
 
             <div className="de-past">
               <h3>Past entries</h3>
