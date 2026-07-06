@@ -74,6 +74,13 @@ const HOME_CSS = `
 .hp-hero{background:#fff;border:1px solid rgba(20,20,20,0.06);border-left:5px solid #0F4A42;border-radius:16px;padding:22px 24px;margin-bottom:34px;}
 .hp-hero .lbl{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;margin-bottom:6px;}
 .hp-hero p{font-size:14px;color:#181A4D;font-weight:600;line-height:1.5;margin:0;}
+
+/* Today's workspace banner */
+.hp-workspace{display:flex;align-items:center;justify-content:space-between;background:#DCE07A;border-radius:12px;padding:13px 18px;color:#181A4D;text-decoration:none;margin-bottom:24px;transition:transform .18s ease, box-shadow .18s ease;}
+.hp-workspace:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.07);}
+.hp-workspace-text{font-weight:800;font-size:14px;letter-spacing:-0.01em;}
+.hp-workspace-arrow{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
 `;
 
 function HomePage() {
