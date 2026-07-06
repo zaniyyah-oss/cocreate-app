@@ -616,6 +616,53 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_items: {
+        Row: {
+          body: Json
+          body_text: string
+          created_at: string
+          devotional_entry_id: string | null
+          id: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: Json
+          body_text?: string
+          created_at?: string
+          devotional_entry_id?: string | null
+          id?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: Json
+          body_text?: string
+          created_at?: string
+          devotional_entry_id?: string | null
+          id?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_items_devotional_entry_id_fkey"
+            columns: ["devotional_entry_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       content_items_public: {
