@@ -207,11 +207,28 @@ function EntryPage() {
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
 
+  const [focusSection, setFocusSection] = useState<string | null>(null);
+  // Lock body scroll when a section is focused
+  useEffect(() => {
+    if (focusSection) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [focusSection]);
+  // ESC to exit fullscreen
+  useEffect(() => {
+    if (!focusSection) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFocusSection(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusSection]);
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
   }, []);
+
 
   const templateQ = useQuery({
     queryKey: ["dev-template", id],
