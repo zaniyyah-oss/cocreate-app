@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 
 export const Route = createFileRoute("/")({
   component: Mockup,
