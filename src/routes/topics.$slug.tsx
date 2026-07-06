@@ -284,6 +284,7 @@ function TypeSection({ title, items, onOpen }: { title: string; items: PreviewRo
           })}
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   );
 }
