@@ -42,8 +42,15 @@ export const SAVED_CSS = `
 .sv-quote .src{font-size:11px;color:#8a8678;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
 
 .sv-notes{display:flex;flex-direction:column;gap:14px;}
-.sv-note{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.06);padding:18px 22px;cursor:pointer;transition:background .18s ease;}
-.sv-note:hover{background:#FBF8ED;}
+.sv-note{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.06);padding:18px 22px;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;}
+.sv-note:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.05);}
+.sv-skel-row{display:flex;flex-direction:column;gap:14px;}
+.sv-skel-card{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.05);height:110px;position:relative;overflow:hidden;}
+.sv-skel-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);animation:sv-shim 1.4s infinite;}
+.sv-skel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
+.sv-skel-tall{background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.05);height:280px;position:relative;overflow:hidden;}
+.sv-skel-tall::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);animation:sv-shim 1.4s infinite;}
+@keyframes sv-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
 .sv-note .top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .sv-note .kind{font-size:9.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border-radius:12px;}
 .sv-note .ctx{font-size:12px;font-weight:700;color:#181A4D;}
