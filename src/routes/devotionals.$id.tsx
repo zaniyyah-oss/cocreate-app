@@ -24,6 +24,9 @@ type TodoItem = { id: string; text: string; done: boolean };
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    date: typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
+  }),
   errorComponent: ({ error }) => (
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins,sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This devotional didn't load</h1>
@@ -44,6 +47,7 @@ export const Route = createFileRoute("/devotionals/$id")({
     ],
   }),
 });
+
 
 const TOPIC_COLORS: Record<string, string> = {
   amber: "#F5B301", teal: "#0F4A42", lime: "#DCE07A", "light-green": "#C7E39B",
