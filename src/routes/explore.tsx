@@ -174,27 +174,9 @@ function ExplorePage() {
   };
 
   return (
-    <div className="ex-root">
+    <AppShell current="explore">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-
-      <nav className="ex-nav">
-        <Link to="/" className="ex-brand">
-          <div className="mark">C</div><div className="word">CoCreate</div>
-        </Link>
-        <div className="ex-navlinks">
-          <Link to="/" className="ex-navlink">Home</Link>
-          <Link to="/explore" className="ex-navlink active">Explore</Link>
-        </div>
-        {userId ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <NotificationBell />
-            <button className="ex-signout" onClick={signOut}>Sign out</button>
-          </div>
-        ) : (
-          <Link to="/auth" className="ex-signin">Sign in</Link>
-        )}
-      </nav>
-
+      <div className="ex-root">
       <div className="ex-shell">
         <h1 className="ex-h1">Explore</h1>
         <p className="ex-sub">Browse essays, teachings, podcasts, and devotionals across every topic.</p>
