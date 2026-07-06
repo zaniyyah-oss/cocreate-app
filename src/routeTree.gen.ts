@@ -17,6 +17,7 @@ import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevotionalsIndexRouteImport } from './routes/devotionals.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DevotionalsIndexRoute = DevotionalsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DevotionalsRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -137,12 +143,12 @@ export interface FileRoutesByFullPath {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
@@ -156,6 +162,7 @@ export interface FileRoutesByTo {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/devotionals': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesById {
@@ -177,6 +184,7 @@ export interface FileRoutesById {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRouteTypes {
@@ -199,12 +207,12 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/devotionals/'
     | '/admin/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
@@ -218,6 +226,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin'
+    | '/devotionals'
     | '/admin/edit/$id'
   id:
     | '__root__'
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/devotionals/'
     | '/admin/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -313,6 +323,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/devotionals/': {
+      id: '/devotionals/'
+      path: '/'
+      fullPath: '/devotionals/'
+      preLoaderRoute: typeof DevotionalsIndexRouteImport
+      parentRoute: typeof DevotionalsRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -407,10 +424,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DevotionalsRouteChildren {
   DevotionalsIdRoute: typeof DevotionalsIdRoute
+  DevotionalsIndexRoute: typeof DevotionalsIndexRoute
 }
 
 const DevotionalsRouteChildren: DevotionalsRouteChildren = {
   DevotionalsIdRoute: DevotionalsIdRoute,
+  DevotionalsIndexRoute: DevotionalsIndexRoute,
 }
 
 const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
