@@ -163,9 +163,6 @@ function ExplorePage() {
 
   const clearAll = () => { setSelectedTopics(new Set()); setSelectedTypes(new Set()); };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   const requireAuth = (action: string) => {
     if (userId) return true;
