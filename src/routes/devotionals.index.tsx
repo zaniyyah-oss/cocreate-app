@@ -277,20 +277,14 @@ function DevotionalsPage() {
           </div>
 
           <div className="dv-section">
-            <h2>
-              Your Default Devotional
-              <span className="dv-pill">Always active</span>
-            </h2>
-            <p className="dv-sec-desc">Every CoCreate member shares one daily anchor. This practice is always here for you and can't be removed.</p>
-
             {defaultTplQ.isLoading ? (
-              <div className="dv-grid"><div className="dv-skel" /></div>
+              <div className="dv-skel" style={{ height: 180 }} />
             ) : defaultTplQ.data ? (
-              <div className="dv-grid">{renderCard(defaultTplQ.data, { isDefault: true })}</div>
+              renderDefaultBanner(defaultTplQ.data)
             ) : (
               <div className="dv-empty">
-                <h3>No default is set yet</h3>
-                <p>A platform default devotional hasn't been configured. Check back soon.</p>
+                <h3>No daily anchor is set yet</h3>
+                <p>Check back soon.</p>
               </div>
             )}
           </div>
