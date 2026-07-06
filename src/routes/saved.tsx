@@ -51,7 +51,7 @@ function LibraryPage() {
         <div className="sv-tabs" role="tablist">
           <button className={tab === "saved" ? "on" : ""} onClick={() => setTab("saved")}>Saved</button>
           <button className={tab === "notes" ? "on" : ""} onClick={() => setTab("notes")}>Notes</button>
-          <button className={tab === "abide" ? "on" : ""} onClick={() => setTab("abide")}>Abide history</button>
+          <button className={tab === "abide" ? "on" : ""} onClick={() => setTab("abide")}>Devotional history</button>
         </div>
 
         {tab === "saved" && (
