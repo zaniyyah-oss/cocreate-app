@@ -355,3 +355,82 @@ export function openContent(navigate: ReturnType<typeof useNavigate>, c: Preview
 export function openTemplate(navigate: ReturnType<typeof useNavigate>, t: Template) {
   navigate({ to: "/devotionals/$id", params: { id: t.id } });
 }
+
+// ─── Abide entry history ────────────────────────────────────────────
+
+export function useAbideEntries(userId: string | null, ready: boolean) {
+  return useQuery({
+    queryKey: ["abide-entries-all", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("*")
+        .eq("user_id", userId!)
+        .order("entry_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as AbideEntry[];
+    },
+  });
+}
+
+const entryPreview = (e: AbideEntry) => {
+  const parts = [e.where_text, e.reflect_text, e.pray_text, e.apply_text].filter((x): x is string => !!x && x.trim().length > 0);
+  return parts[0]?.slice(0, 220) ?? "";
+};
+
+const hasContent = (e: AbideEntry) => {
+  return !!(e.entry_title || e.entry_subtitle || e.where_text || e.reflect_text || e.pray_text || e.apply_text || (Array.isArray(e.todo_items) && (e.todo_items as unknown[]).length > 0));
+};
+
+export function AbideEntriesSection({
+  entries,
+  templateMap,
+  loading,
+  onOpen,
+}: {
+  entries: AbideEntry[];
+  templateMap: Record<string, Template>;
+  loading?: boolean;
+  onOpen: (templateId: string, date: string) => void;
+}) {
+  const visible = entries.filter(hasContent);
+  return (
+    <div className="sv-section">
+      <h2>Abide history {!loading && <span className="count">{visible.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-row">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      ) : visible.length === 0 ? (
+        <div className="sv-empty"><strong>No Abide entries yet</strong>Every day you write in Abide, your entry lands here so you can revisit it.</div>
+      ) : (
+        <div className="sv-notes">
+          {visible.map((e) => {
+            const t = e.template_id ? templateMap[e.template_id] : undefined;
+            const meta = TYPE_META.devotional;
+            const title = e.entry_title?.trim() || t?.title || "Abide";
+            const preview = entryPreview(e);
+            return (
+              <div
+                key={e.id}
+                className="sv-note"
+                onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
+                style={{ cursor: e.template_id ? "pointer" : "default" }}
+              >
+                <div className="top">
+                  <span className="kind" style={{ background: meta.bg, color: meta.fg }}>Abide</span>
+                  <span className="ctx">{title}</span>
+                  <span className="when">{formatWhen(e.entry_date)}</span>
+                </div>
+                {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
+                {preview && <p>{preview}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
