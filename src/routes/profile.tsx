@@ -190,6 +190,15 @@ function ProfilePage() {
     },
   });
 
+  const isAdminQ = useQuery({
+    queryKey: ["is-admin", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", { _user_id: userId!, _role: "admin" });
+      return !!data;
+    },
+  });
+
   const toggleTopic = useMutation({
     mutationFn: async ({ topicId, on }: { topicId: string; on: boolean }) => {
       if (!userId) return;
