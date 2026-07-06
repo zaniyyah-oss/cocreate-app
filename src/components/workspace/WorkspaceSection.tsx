@@ -289,7 +289,7 @@ export function WorkspaceSection({
       {itemsQ.isLoading ? (
         <div className="ws-empty">Loading…</div>
       ) : todayItems.length === 0 ? (
-        <div className="ws-empty">Nothing started today yet. Start a new item, or reopen one from the gallery below.</div>
+        <div className="ws-empty">Nothing started today yet. Start a new item, or edit one from the gallery below.</div>
       ) : (
         todayItems.map((item) =>
           item.status === "open" ? (
@@ -352,7 +352,7 @@ export function WorkspaceSection({
                     <button
                       className="ws-btn"
                       onClick={(e) => { e.stopPropagation(); reopen.mutate(item); }}
-                    >Reopen</button>
+                    >Edit</button>
                     <button
                       className="ws-btn primary"
                       onClick={(e) => { e.stopPropagation(); attachCopy.mutate(item); }}
@@ -389,7 +389,7 @@ function SavedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string 
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.title || "Untitled"}
         </div>
-        <button className="ws-btn" onClick={() => reopen.mutate()}>Reopen</button>
+        <button className="ws-btn" onClick={() => reopen.mutate()}>Edit</button>
       </div>
       {item.tags.length > 0 && (
         <div className="ws-tags">
