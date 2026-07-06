@@ -350,22 +350,8 @@ function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
-function Nav({ userId }: { userId: string | null }) {
-  return (
-    <nav className="pf-nav">
-      <Link to="/" className="pf-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-      <div className="pf-navlinks">
-        <Link to="/" className="pf-navlink">Home</Link>
-        <Link to="/explore" className="pf-navlink">Explore</Link>
-        <Link to="/devotionals" className="pf-navlink">Devotionals</Link>
-        <Link to="/saved" className="pf-navlink">Saved</Link>
-        <Link to="/profile" className="pf-navlink active">Profile</Link>
-      </div>
-      {userId ? <NotificationBell /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
-    </nav>
-  );
-}
