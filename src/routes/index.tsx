@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/")({
   component: Mockup,
@@ -455,7 +456,10 @@ function Mockup() {
           <button className={`stab ${device === "desktop" ? "active" : ""}`} onClick={() => setDevice("desktop")}>Desktop</button>
           <button className={`stab ${device === "mobile" ? "active" : ""}`} onClick={() => setDevice("mobile")}>Mobile</button>
           {userId ? (
-            <button className="stab" onClick={() => supabase.auth.signOut()}>Sign out</button>
+            <>
+              <NotificationBell />
+              <button className="stab" onClick={() => supabase.auth.signOut()}>Sign out</button>
+            </>
           ) : (
             <Link to="/auth" className="stab active" style={{ textDecoration: "none" }}>Sign in</Link>
           )}

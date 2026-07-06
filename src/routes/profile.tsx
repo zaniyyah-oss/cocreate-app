@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -362,7 +363,7 @@ function Nav({ userId }: { userId: string | null }) {
         <Link to="/saved" className="pf-navlink">Saved</Link>
         <Link to="/profile" className="pf-navlink active">Profile</Link>
       </div>
-      {userId ? <div style={{ width: 60 }} /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
+      {userId ? <NotificationBell /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
     </nav>
   );
 }
