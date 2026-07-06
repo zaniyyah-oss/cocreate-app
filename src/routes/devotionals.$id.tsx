@@ -149,6 +149,20 @@ const CSS = `
 @media (min-width:768px){
   .de-cols{grid-template-columns:1fr 1fr 1fr;gap:20px;}
 }
+
+/* Focus / fullscreen for a section */
+.de-block, .ws-root { position: relative; }
+.de-focus-btn{position:absolute;top:14px;right:16px;background:transparent;border:1px solid rgba(20,20,20,0.15);color:#181A4D;font-family:'Poppins';font-weight:700;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
+.de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+.de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
+@media (min-width:768px){
+  .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
+  .de-block.is-full > *, .ws-root.is-full > *{max-width:820px;margin-left:auto;margin-right:auto;}
+}
+.de-block.is-full .de-textarea{min-height:55vh;}
+.de-block.is-full.read .de-read-head,
+.de-block.is-full.read .de-read-part{padding-left:0;padding-right:0;}
+.de-block.is-full .de-cols{grid-template-columns:1fr;}
 `;
 
 
