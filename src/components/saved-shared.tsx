@@ -29,8 +29,9 @@ export const SAVED_CSS = `
 .sv-sub{font-size:15px;color:#8a8678;margin:0 0 32px;max-width:520px;line-height:1.6;}
 
 /* Mobile segmented tabs */
-.sv-tabs{display:none;background:#fff;border-radius:99px;padding:5px;margin-bottom:26px;border:1px solid rgba(20,20,20,0.06);}
-.sv-tabs button{flex:1;background:transparent;border:none;font-family:'Poppins';font-weight:700;font-size:13px;color:#8a8678;padding:10px 14px;border-radius:99px;cursor:pointer;}
+.sv-tabs{display:flex;background:#fff;border-radius:99px;padding:5px;margin-bottom:26px;border:1px solid rgba(20,20,20,0.06);gap:4px;max-width:520px;}
+.sv-tabs button{flex:1;background:transparent;border:none;font-family:'Poppins';font-weight:700;font-size:13px;color:#8a8678;padding:10px 14px;border-radius:99px;cursor:pointer;white-space:nowrap;}
+
 .sv-tabs button.on{background:#181A4D;color:#fff;}
 
 .sv-section{margin-bottom:56px;}
