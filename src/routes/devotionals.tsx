@@ -194,7 +194,15 @@ function DevotionalsPage() {
                   <div key={t.id} className="dv-card" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}>
                     <div className="dv-accent" style={{ background: color }} />
                     <div className="dv-card-body" style={{ display: "flex", flexDirection: "column", minHeight: 180 }}>
-                      {topic && <div className="dv-topic" style={{ color }}>{topic.name}</div>}
+                      {topic && (
+                        <Link
+                          to="/topics/$slug"
+                          params={{ slug: topic.slug }}
+                          className="dv-topic"
+                          style={{ color, textDecoration: "none" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >{topic.name} →</Link>
+                      )}
                       <h3>{t.title}</h3>
                       <div className="dv-progress">
                         <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>

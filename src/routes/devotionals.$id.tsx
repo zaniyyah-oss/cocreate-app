@@ -239,7 +239,7 @@ function EntryPage() {
             <div className="de-headcard">
               <div className="de-headaccent" style={{ background: color }} />
               <div className="de-headbody">
-                {topic && <div className="de-topic" style={{ color }}>{topic.name}</div>}
+                {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="de-topic" style={{ color, textDecoration: "none" }}>{topic.name} →</Link>}
                 <h1 className="de-title">{t.title}</h1>
                 {t.scripture_focus && <div className="de-scr">Scripture focus · {t.scripture_focus}</div>}
               </div>
