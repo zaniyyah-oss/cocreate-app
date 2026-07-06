@@ -228,17 +228,22 @@ export function QuotesSection({ pins, contentMap, onOpen, loading }: { pins: Pin
   );
 }
 
-export function NotesSection({ notes, contentMap, templateMap, onOpenContent, onOpenTemplate }: {
+export function NotesSection({ notes, contentMap, templateMap, onOpenContent, onOpenTemplate, loading }: {
   notes: Note[];
   contentMap: Record<string, PreviewRow>;
   templateMap: Record<string, Template>;
   onOpenContent: (c: PreviewRow) => void;
   onOpenTemplate: (t: Template) => void;
+  loading?: boolean;
 }) {
   return (
     <div className="sv-section">
-      <h2>Your notes <span className="count">{notes.length}</span></h2>
-      {notes.length === 0 ? (
+      <h2>Your notes {!loading && <span className="count">{notes.length}</span>}</h2>
+      {loading ? (
+        <div className="sv-skel-row">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      ) : notes.length === 0 ? (
         <div className="sv-empty"><strong>No notes yet</strong>Add a note on any essay, teaching, podcast, or devotional and it will show up here.</div>
       ) : (
         <div className="sv-notes">
