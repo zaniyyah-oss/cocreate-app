@@ -219,20 +219,7 @@ function DevotionalsPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
 
-function Nav({ userId }: { userId: string | null }) {
-  return (
-    <nav className="dv-nav">
-      <Link to="/" className="dv-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-      <div className="dv-navlinks">
-        <Link to="/" className="dv-navlink">Home</Link>
-        <Link to="/explore" className="dv-navlink">Explore</Link>
-        <Link to="/devotionals" className="dv-navlink active">Devotionals</Link>
-      </div>
-      {userId ? <NotificationBell /> : <Link to="/auth" className="dv-signin">Sign in</Link>}
-    </nav>
-  );
-}
