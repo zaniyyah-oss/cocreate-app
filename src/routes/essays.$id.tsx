@@ -154,6 +154,11 @@ function EssayPage() {
     },
   });
 
+  useEffect(() => {
+    if (previewQ.data?.id) trackEvent("content_view", { content_id: previewQ.data.id, topic_id: previewQ.data.topic_id ?? null });
+  }, [previewQ.data?.id, previewQ.data?.topic_id]);
+
+
   // Full row (auth-gated by RLS).
   const fullQ = useQuery({
     queryKey: ["essay-full", id, userId],
