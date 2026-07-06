@@ -232,14 +232,19 @@ export type Database = {
           apply_prompt: string | null
           created_at: string
           description: string | null
+          duration_days: number | null
+          fill_mode: string
           id: string
           is_default: boolean
           is_seed: boolean
+          pray_items: Json
           pray_prompt: string | null
           reflect_prompt: string | null
           scripture_focus: string | null
+          scripture_items: Json
           status: Database["public"]["Enums"]["content_status"]
           title: string
+          todo_items_pool: Json
           topic_id: string | null
           updated_at: string
         }
@@ -247,14 +252,19 @@ export type Database = {
           apply_prompt?: string | null
           created_at?: string
           description?: string | null
+          duration_days?: number | null
+          fill_mode?: string
           id?: string
           is_default?: boolean
           is_seed?: boolean
+          pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
+          scripture_items?: Json
           status?: Database["public"]["Enums"]["content_status"]
           title: string
+          todo_items_pool?: Json
           topic_id?: string | null
           updated_at?: string
         }
@@ -262,14 +272,19 @@ export type Database = {
           apply_prompt?: string | null
           created_at?: string
           description?: string | null
+          duration_days?: number | null
+          fill_mode?: string
           id?: string
           is_default?: boolean
           is_seed?: boolean
+          pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
+          scripture_items?: Json
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
+          todo_items_pool?: Json
           topic_id?: string | null
           updated_at?: string
         }
