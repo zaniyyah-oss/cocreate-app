@@ -463,8 +463,21 @@ function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string })
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
+  const [itemFocus, setItemFocus] = useState(false);
+  useEffect(() => {
+    if (!itemFocus) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setItemFocus(false); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [itemFocus]);
+
   return (
-    <div className="ws-item open">
+    <div className={`ws-item open ${itemFocus ? "item-full" : ""}`}>
+      {itemFocus && (
+        <button type="button" className="ws-item-exit" onClick={() => setItemFocus(false)}>✕ Exit focus</button>
+      )}
       <div className="ws-item-head">
         <span className="ws-status-pill">Open</span>
         <input
@@ -473,6 +486,14 @@ function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string })
           value={title}
           onChange={(e) => { setTitle(e.target.value); scheduleSave({ title: e.target.value }); }}
         />
+        <button
+          type="button"
+          className="ws-item-focus-btn"
+          onClick={() => setItemFocus((v) => !v)}
+          aria-label={itemFocus ? "Exit focus mode" : "Focus this item"}
+        >
+          {itemFocus ? "✕ Exit focus" : "⛶ Focus writing"}
+        </button>
       </div>
       <div className="ws-tags">
         {tags.map((t) => (
