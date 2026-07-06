@@ -63,6 +63,9 @@ const CSS = `
 .dv-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
 .dv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 .dv-skel{height:180px;background:#fff;border-radius:16px;animation:dvp 1.4s infinite;}
+.dv-setdef{margin-top:12px;align-self:flex-start;background:transparent;color:#0F4A42;border:1px solid rgba(15,74,66,0.25);font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;cursor:pointer;transition:background .15s ease;}
+.dv-setdef:hover:not(:disabled){background:rgba(15,74,66,0.08);}
+.dv-setdef:disabled{color:#8a8678;border-color:rgba(20,20,20,0.1);cursor:default;}
 @keyframes dvp{0%,100%{opacity:1}50%{opacity:.55}}
 `;
 
