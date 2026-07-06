@@ -429,6 +429,17 @@ function EntryPage() {
   const statusRow = (field: string) => (
     <div className={`de-status ${savedField === field ? "on" : ""}`}>{statusText(field)}</div>
   );
+  const focusBtn = (key: string) => (
+    <button
+      type="button"
+      className="de-focus-btn"
+      onClick={() => setFocusSection((cur) => (cur === key ? null : key))}
+      aria-label={focusSection === key ? "Exit focus mode" : "Focus this section"}
+    >
+      {focusSection === key ? "✕ Exit focus" : "⛶ Focus"}
+    </button>
+  );
+
 
   return (
     <div className="de-root">
