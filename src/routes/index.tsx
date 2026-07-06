@@ -76,10 +76,10 @@ const HOME_CSS = `
 .hp-hero p{font-size:14px;color:#181A4D;font-weight:600;line-height:1.5;margin:0;}
 
 /* Today's workspace banner — full width of the main workspace area */
-.hp-workspace{display:flex;align-items:center;justify-content:space-between;background:#DCE07A;padding:13px 20px;color:#181A4D;text-decoration:none;margin-bottom:24px;transition:transform .18s ease, box-shadow .18s ease;}
-@media (min-width:1024px){.hp-workspace{padding:14px 44px;margin-bottom:32px;}}
+.hp-workspace{display:flex;align-items:center;justify-content:space-between;background:#DCE07A;padding:17px 20px;color:#181A4D;text-decoration:none;margin-bottom:24px;transition:transform .18s ease, box-shadow .18s ease;}
+@media (min-width:1024px){.hp-workspace{padding:20px 44px;margin-bottom:32px;}}
 .hp-workspace:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.07);}
-.hp-workspace-text{font-weight:800;font-size:14px;letter-spacing:-0.01em;}
+.hp-workspace-text{font-weight:800;font-size:15px;letter-spacing:-0.01em;}
 .hp-workspace-arrow{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
 
 
