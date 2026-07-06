@@ -78,9 +78,13 @@ function AdminContentList() {
 
   const del = useMutation({
     mutationFn: async (r: AnyRow) => {
-      const table = r._kind === "content" ? "content_items" : "devotional_templates";
-      const { error } = await supabase.from(table).delete().eq("id", r.id);
-      if (error) throw error;
+      if (r._kind === "content") {
+        const { error } = await supabase.from("content_items").delete().eq("id", r.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("devotional_templates").delete().eq("id", r.id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-content"] });
