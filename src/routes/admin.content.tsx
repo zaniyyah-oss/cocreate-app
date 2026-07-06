@@ -92,13 +92,15 @@ function AdminContentList() {
   const togglePublish = useMutation({
     mutationFn: async (r: AnyRow) => {
       const next = r.status === "published" ? "draft" : "published";
-      const table = r._kind === "content" ? "content_items" : "devotional_templates";
-      const update: Record<string, unknown> = { status: next };
-      if (r._kind === "content" && next === "published" && !r.published_at) {
-        update.published_at = new Date().toISOString();
+      if (r._kind === "content") {
+        const update: Database["public"]["Tables"]["content_items"]["Update"] = { status: next };
+        if (next === "published" && !r.published_at) update.published_at = new Date().toISOString();
+        const { error } = await supabase.from("content_items").update(update).eq("id", r.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("devotional_templates").update({ status: next }).eq("id", r.id);
+        if (error) throw error;
       }
-      const { error } = await supabase.from(table).update(update).eq("id", r.id);
-      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-content"] });

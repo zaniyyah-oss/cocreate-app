@@ -23,6 +23,7 @@ import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
+import { Route as AdminContentRouteImport } from './routes/admin.content'
 
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
@@ -94,6 +95,11 @@ const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => DevotionalsRoute,
 } as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -308,14 +320,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevotionalsIdRouteImport
       parentRoute: typeof DevotionalsRoute
     }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminContentRoute: typeof AdminContentRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminContentRoute: AdminContentRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
