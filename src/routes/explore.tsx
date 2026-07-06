@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
