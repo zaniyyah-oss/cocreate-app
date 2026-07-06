@@ -154,7 +154,10 @@ type SaveField =
   | "further_reading_text"
   | "pray_text"
   | "todo_text"
-  | "todo_items";
+  | "todo_items"
+  | "entry_title"
+  | "entry_subtitle";
+
 
 function EntryPage() {
   const { id } = Route.useParams();
