@@ -186,6 +186,7 @@ export function MediaDetail({ id, kind }: { id: string; kind: "teaching" | "podc
       }
       const { error } = await supabase.from("saved_items").insert({ user_id: userId, content_item_id: id });
       if (error) throw error;
+      trackEvent("content_save", { content_id: id, topic_id: preview?.topic_id ?? null });
       return "saved";
     },
     onSuccess: (r) => { qc.invalidateQueries({ queryKey: ["saved", id, userId] }); setToast(r === "saved" ? "Saved" : "Removed from saved"); },
@@ -200,6 +201,7 @@ export function MediaDetail({ id, kind }: { id: string; kind: "teaching" | "podc
       } else {
         const { error } = await supabase.from("notes").insert({ user_id: userId, content_item_id: id, body });
         if (error) throw error;
+        trackEvent("note_created", { content_id: id, topic_id: preview?.topic_id ?? null });
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["note", id, userId] }); setToast("Note saved"); },
