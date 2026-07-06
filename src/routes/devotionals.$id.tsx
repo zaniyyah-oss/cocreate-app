@@ -223,6 +223,8 @@ function EntryPage() {
   const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.entry_date === selectedDate);
 
   // 5-section state
+  const [entryTitle, setEntryTitle] = useState("");
+  const [entrySubtitle, setEntrySubtitle] = useState("");
   const [whereText, setWhereText] = useState("");
   const [scriptureRef, setScriptureRef] = useState("");
   const [scriptureText, setScriptureText] = useState("");
@@ -230,6 +232,7 @@ function EntryPage() {
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
+
 
   const [savingField, setSavingField] = useState<string | null>(null);
   const [savedField, setSavedField] = useState<string | null>(null);
