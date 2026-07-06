@@ -190,6 +190,15 @@ function ProfilePage() {
     },
   });
 
+  const isAdminQ = useQuery({
+    queryKey: ["is-admin", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", { _user_id: userId!, _role: "admin" });
+      return !!data;
+    },
+  });
+
   const toggleTopic = useMutation({
     mutationFn: async ({ topicId, on }: { topicId: string; on: boolean }) => {
       if (!userId) return;
@@ -255,7 +264,12 @@ function ProfilePage() {
               <div className="pf-since">Member since {profile ? formatMonth(profile.member_since) : "—"}</div>
             </div>
           </div>
-          <button className="pf-signout" onClick={signOut}>Sign out</button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {isAdminQ.data && (
+              <Link to="/admin/content" style={{ background: "#181A4D", color: "#fff", fontWeight: 800, fontSize: 12, padding: "9px 16px", borderRadius: 20, textDecoration: "none", fontFamily: "Poppins" }}>Admin</Link>
+            )}
+            <button className="pf-signout" onClick={signOut}>Sign out</button>
+          </div>
         </header>
 
         <div className="pf-stats">

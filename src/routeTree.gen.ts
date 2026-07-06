@@ -15,12 +15,18 @@ import { Route as NotesRouteImport } from './routes/notes'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
+import { Route as AdminNewRouteImport } from './routes/admin.new'
+import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
+import { Route as AdminContentRouteImport } from './routes/admin.content'
+import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
@@ -52,10 +58,20 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const TopicsSlugRoute = TopicsSlugRouteImport.update({
   id: '/topics/$slug',
@@ -82,20 +98,46 @@ const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => DevotionalsRoute,
 } as any)
+const AdminNewRoute = AdminNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInvitesRoute = AdminInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEditIdRoute = AdminEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/invites': typeof AdminInvitesRoute
+  '/admin/new': typeof AdminNewRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,42 +147,59 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/invites': typeof AdminInvitesRoute
+  '/admin/new': typeof AdminNewRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/invites': typeof AdminInvitesRoute
+  '/admin/new': typeof AdminNewRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
+    | '/admin/invites'
+    | '/admin/new'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
     | '/topics/$slug'
+    | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,29 +209,41 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
+    | '/admin/invites'
+    | '/admin/new'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
     | '/topics/$slug'
+    | '/admin'
+    | '/admin/edit/$id'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/auth'
     | '/devotionals'
     | '/explore'
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/content'
+    | '/admin/invites'
+    | '/admin/new'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
     | '/teachings/$id'
     | '/topics/$slug'
+    | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
@@ -229,12 +300,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/topics/$slug': {
       id: '/topics/$slug'
@@ -271,8 +356,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevotionalsIdRouteImport
       parentRoute: typeof DevotionalsRoute
     }
+    '/admin/new': {
+      id: '/admin/new'
+      path: '/new'
+      fullPath: '/admin/new'
+      preLoaderRoute: typeof AdminNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invites': {
+      id: '/admin/invites'
+      path: '/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AdminInvitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/edit/$id': {
+      id: '/admin/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/admin/edit/$id'
+      preLoaderRoute: typeof AdminEditIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminContentRoute: typeof AdminContentRoute
+  AdminInvitesRoute: typeof AdminInvitesRoute
+  AdminNewRoute: typeof AdminNewRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminEditIdRoute: typeof AdminEditIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminContentRoute: AdminContentRoute,
+  AdminInvitesRoute: AdminInvitesRoute,
+  AdminNewRoute: AdminNewRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminEditIdRoute: AdminEditIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DevotionalsRouteChildren {
   DevotionalsIdRoute: typeof DevotionalsIdRoute
@@ -288,6 +419,7 @@ const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,

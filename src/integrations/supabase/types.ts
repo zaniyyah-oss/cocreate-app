@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       content_items: {
         Row: {
           author_name: string | null
@@ -24,6 +54,7 @@ export type Database = {
           media_url: string | null
           published_at: string | null
           scripture_reference: string | null
+          status: Database["public"]["Enums"]["content_status"]
           thumbnail_url: string | null
           title: string
           topic_id: string | null
@@ -39,6 +70,7 @@ export type Database = {
           media_url?: string | null
           published_at?: string | null
           scripture_reference?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
           title: string
           topic_id?: string | null
@@ -54,6 +86,7 @@ export type Database = {
           media_url?: string | null
           published_at?: string | null
           scripture_reference?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
           title?: string
           topic_id?: string | null
@@ -123,6 +156,7 @@ export type Database = {
           pray_prompt: string | null
           reflect_prompt: string | null
           scripture_focus: string | null
+          status: Database["public"]["Enums"]["content_status"]
           title: string
           topic_id: string | null
           updated_at: string
@@ -135,6 +169,7 @@ export type Database = {
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
           title: string
           topic_id?: string | null
           updated_at?: string
@@ -147,6 +182,7 @@ export type Database = {
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
           title?: string
           topic_id?: string | null
           updated_at?: string
@@ -534,6 +570,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      content_status: "draft" | "published"
       content_type: "teaching" | "essay" | "podcast" | "blog"
     }
     CompositeTypes: {
@@ -663,6 +700,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      content_status: ["draft", "published"],
       content_type: ["teaching", "essay", "podcast", "blog"],
     },
   },
