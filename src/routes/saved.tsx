@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import {
   SAVED_CSS, SignGate,
-  QuotesSection, NotesSection, SavedContentSection, AbideEntriesSection,
+  QuotesSection, NotesSection, SavedContentSection, DevotionalHistorySection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
 
