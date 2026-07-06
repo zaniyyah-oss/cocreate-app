@@ -14,7 +14,10 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
   further_reading_text?: string | null;
   todo_text?: string | null;
   todo_items?: TodoItem[] | null;
+  entry_title?: string | null;
+  entry_subtitle?: string | null;
 };
+
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
 type TodoItem = { id: string; text: string; done: boolean };
@@ -58,19 +61,26 @@ const CSS = `
 .de-back{color:#8a8678;font-weight:700;font-size:12.5px;text-decoration:none;}
 .de-back:hover{color:#181A4D;}
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
-.de-shell{max-width:720px;margin:0 auto;padding:44px 28px 120px;}
-.de-headcard{background:#fff;border-radius:24px;padding:32px 36px;margin-bottom:32px;border:1px solid rgba(20,20,20,0.06);}
-.de-headtop{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
-.de-headtitle{font-size:28px;font-weight:900;color:#181A4D;letter-spacing:-0.02em;margin:0;line-height:1;}
-.de-headarrow{color:#A8A59A;font-size:22px;font-weight:400;}
-.de-headdate{font-size:17px;font-weight:500;color:#8a8678;letter-spacing:-0.01em;}
-.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:0 0 22px;}
-.de-headquote{font-size:18px;font-style:italic;color:#181A4D;line-height:1.6;margin:0 0 10px;font-weight:500;}
+.de-shell{max-width:1120px;margin:0 auto;padding:0 0 120px;}
+.de-shell-inner{padding:0 28px;}
+.de-headcard{background:#fff;padding:36px 44px 32px;margin:0 0 28px;border-bottom:1px solid rgba(20,20,20,0.06);position:relative;}
+.de-headcard::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:#DCE07A;}
+.de-headtop{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-top:6px;}
+.de-headtitle-brand{font-size:15px;font-weight:900;color:#181A4D;letter-spacing:-0.01em;}
+.de-headarrow{color:#A8A59A;font-size:16px;font-weight:400;}
+.de-headdate{font-size:15px;font-weight:600;color:#8a8678;letter-spacing:-0.005em;}
+.de-title-input{width:100%;border:none;background:transparent;font-family:'Poppins';font-size:44px;font-weight:900;color:#181A4D;letter-spacing:-0.03em;line-height:1.05;padding:4px 0;outline:none;}
+.de-title-input::placeholder{color:#C9C3B0;}
+.de-subtitle-input{width:100%;border:none;background:transparent;font-family:'Poppins';font-size:18px;font-style:italic;color:#181A4D;padding:8px 0 4px;outline:none;margin-top:6px;}
+.de-subtitle-input::placeholder{color:#C9C3B0;font-style:italic;}
+.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:22px 0 18px;}
+.de-headquote{font-size:16px;font-style:italic;color:#181A4D;line-height:1.6;margin:0 0 8px;font-weight:500;}
 .de-headref{font-size:13px;font-weight:700;color:#8a8678;margin:0;}
 .de-date{font-size:11px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;text-align:center;margin-bottom:22px;}
 
 .de-block{background:#fff;border-radius:16px;padding:28px 30px;margin-bottom:22px;border:1px solid rgba(20,20,20,0.05);}
 .de-block.read{padding:0;overflow:hidden;}
+
 .de-read-head{padding:26px 30px 4px;}
 .de-read-part{padding:14px 30px 24px;border-top:1px solid rgba(20,20,20,0.05);}
 .de-read-part:first-of-type{border-top:none;}
@@ -125,7 +135,15 @@ const CSS = `
 .de-signgate{background:#fff;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:14px;padding:22px;}
 .de-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
 .de-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
+
+.de-cols{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:22px;}
+.de-cols .de-block{margin-bottom:0;height:100%;display:flex;flex-direction:column;}
+.de-cols .de-block .de-textarea{flex:1;}
+@media (min-width:768px){
+  .de-cols{grid-template-columns:1fr 1fr 1fr;gap:20px;}
+}
 `;
+
 
 function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -154,7 +172,10 @@ type SaveField =
   | "further_reading_text"
   | "pray_text"
   | "todo_text"
-  | "todo_items";
+  | "todo_items"
+  | "entry_title"
+  | "entry_subtitle";
+
 
 function EntryPage() {
   const { id } = Route.useParams();
@@ -202,6 +223,8 @@ function EntryPage() {
   const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.entry_date === selectedDate);
 
   // 5-section state
+  const [entryTitle, setEntryTitle] = useState("");
+  const [entrySubtitle, setEntrySubtitle] = useState("");
   const [whereText, setWhereText] = useState("");
   const [scriptureRef, setScriptureRef] = useState("");
   const [scriptureText, setScriptureText] = useState("");
@@ -209,6 +232,7 @@ function EntryPage() {
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
+
 
   const [savingField, setSavingField] = useState<string | null>(null);
   const [savedField, setSavedField] = useState<string | null>(null);
@@ -247,6 +271,8 @@ function EntryPage() {
       prefillTodo = pick(todo) ?? "";
     }
 
+    setEntryTitle(e?.entry_title ?? "");
+    setEntrySubtitle(e?.entry_subtitle ?? "");
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
     setScriptureRef(e?.scripture_reference ?? prefillScrRef);
     setScriptureText(e?.scripture_text ?? prefillScrText);
@@ -256,6 +282,7 @@ function EntryPage() {
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(items);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
 
   const upsert = useMutation({
@@ -373,18 +400,30 @@ function EntryPage() {
 
       <div className="de-shell">
         {templateQ.isLoading ? (
-          <div className="de-skel" />
+          <div className="de-shell-inner"><div className="de-skel" /></div>
         ) : !t ? (
-          <div style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
+          <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
             <div className="de-headcard">
               <div className="de-headtop">
-                <h1 className="de-headtitle">{t.title}</h1>
+                <span className="de-headtitle-brand">{t.title}</span>
                 <span className="de-headarrow">→</span>
                 <span className="de-headdate">{formatDate(selectedDate)}</span>
               </div>
-              <div className="de-headrule" />
+              <input
+                className="de-title-input"
+                placeholder="Give today a title…"
+                value={entryTitle}
+                onChange={(e) => { setEntryTitle(e.target.value); scheduleSave("entry_title", e.target.value); }}
+              />
+              <input
+                className="de-subtitle-input"
+                placeholder="Add a subtitle, if you'd like"
+                value={entrySubtitle}
+                onChange={(e) => { setEntrySubtitle(e.target.value); scheduleSave("entry_subtitle", e.target.value); }}
+              />
+              {(scriptureText || t.scripture_focus) && <div className="de-headrule" />}
               {scriptureText ? (
                 <>
                   <p className="de-headquote">"{scriptureText}"</p>
@@ -395,149 +434,154 @@ function EntryPage() {
               ) : null}
             </div>
 
-            {/* 1. Where Are You */}
-            <div className="de-block">
-              <div className="de-label">
-                <span className="dot" style={{ background: color }} />
-                <span className="name">Where are you</span>
-                <span className="num">· 01</span>
-              </div>
-              <p className="de-prompt">Before God, honestly: where are you right now? Tired, anxious, distracted, hopeful, numb? Name it plainly.</p>
-              <textarea
-                className="de-textarea short"
-                placeholder="God, I come to you today feeling…"
-                value={whereText}
-                onChange={(e) => { setWhereText(e.target.value); scheduleSave("where_text", e.target.value); }}
-              />
-              {statusRow("where_text")}
-            </div>
-
-            {/* 2. Read */}
-            <div className="de-block read">
-              <div className="de-read-head">
+            <div className="de-shell-inner">
+              {/* 1. Where Are You */}
+              <div className="de-block">
                 <div className="de-label">
                   <span className="dot" style={{ background: color }} />
-                  <span className="name">Read</span>
-                  <span className="num">· 02</span>
+                  <span className="name">Where are you</span>
+                  <span className="num">· 01</span>
                 </div>
-                <p className="de-invite">
-                  Don't rush past this. Open your Bible, read slowly — preferably out loud — and let a
-                  passage stay with you before you write anything. A few unhurried minutes here will
-                  reshape the rest of your day more than any note you take.
-                </p>
-              </div>
-
-              <div className="de-read-part">
-                <div className="de-sublabel">Scripture</div>
-                <input
-                  className="de-scr-ref"
-                  placeholder="Passage — e.g. John 15:1–8"
-                  value={scriptureRef}
-                  onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
-                />
-                <textarea
-                  className="de-textarea"
-                  placeholder="What did you notice? What lines stopped you? What is God saying through this passage?"
-                  value={scriptureText}
-                  onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
-                />
-                {statusRow("scripture_text")}
-              </div>
-
-              <div className="de-read-part">
-                <div className="de-sublabel">Further reading</div>
+                <p className="de-prompt">Before God, honestly: where are you right now? Tired, anxious, distracted, hopeful, numb? Name it plainly.</p>
                 <textarea
                   className="de-textarea short"
-                  placeholder="Any books, studies, or teachings you're working through — with notes from today's reading, if any."
-                  value={furtherReading}
-                  onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                  placeholder="God, I come to you today feeling…"
+                  value={whereText}
+                  onChange={(e) => { setWhereText(e.target.value); scheduleSave("where_text", e.target.value); }}
                 />
-                {statusRow("further_reading_text")}
+                {statusRow("where_text")}
               </div>
-            </div>
 
-            {/* 3. Pray */}
-            <div className="de-block">
-              <div className="de-label">
-                <span className="dot" style={{ background: color }} />
-                <span className="name">Pray</span>
-                <span className="num">· 03</span>
-              </div>
-              <p className="de-prompt">{t.pray_prompt || "What do you need to bring to God today? Invite Him into it. Who are you interceding for?"}</p>
-              <textarea
-                className="de-textarea"
-                placeholder="Speak plainly to God…"
-                value={prayText}
-                onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
-              />
-              {statusRow("pray_text")}
-            </div>
-
-            {/* 4. To-Do */}
-            <div className="de-block">
-              <div className="de-label">
-                <span className="dot" style={{ background: color }} />
-                <span className="name">To-Do</span>
-                <span className="num">· 04</span>
-              </div>
-              <p className="de-prompt">{t.apply_prompt || "What does obedience look like today, concretely? Not intentions — the small, specific next step."}</p>
-              <textarea
-                className="de-textarea short"
-                placeholder="What is God asking of me today?"
-                value={todoText}
-                onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
-              />
-              {statusRow("todo_text")}
-
-              <div className="de-todos">
-                {todoItems.map((it, idx) => (
-                  <div key={it.id} className="de-todo">
-                    <input
-                      type="checkbox"
-                      checked={it.done}
-                      onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
-                    />
-                    <input
-                      type="text"
-                      className={it.done ? "done" : ""}
-                      placeholder="A small, specific step"
-                      value={it.text}
-                      onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
-                    />
-                    <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+              {/* 2/3/4 row */}
+              <div className="de-cols">
+                {/* Read */}
+                <div className="de-block read">
+                  <div className="de-read-head">
+                    <div className="de-label">
+                      <span className="dot" style={{ background: color }} />
+                      <span className="name">Read</span>
+                      <span className="num">· 02</span>
+                    </div>
+                    <p className="de-invite">
+                      Don't rush past this. Open your Bible, read slowly — preferably out loud — and let a
+                      passage stay with you before you write anything.
+                    </p>
                   </div>
-                ))}
-                <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+
+                  <div className="de-read-part">
+                    <div className="de-sublabel">Scripture</div>
+                    <input
+                      className="de-scr-ref"
+                      placeholder="Passage — e.g. John 15:1–8"
+                      value={scriptureRef}
+                      onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
+                    />
+                    <textarea
+                      className="de-textarea"
+                      placeholder="What did you notice? What is God saying?"
+                      value={scriptureText}
+                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                    />
+                    {statusRow("scripture_text")}
+                  </div>
+
+                  <div className="de-read-part">
+                    <div className="de-sublabel">Further reading</div>
+                    <textarea
+                      className="de-textarea short"
+                      placeholder="Books, studies, teachings you're working through…"
+                      value={furtherReading}
+                      onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                    />
+                    {statusRow("further_reading_text")}
+                  </div>
+                </div>
+
+                {/* Pray */}
+                <div className="de-block">
+                  <div className="de-label">
+                    <span className="dot" style={{ background: color }} />
+                    <span className="name">Pray</span>
+                    <span className="num">· 03</span>
+                  </div>
+                  <p className="de-prompt">{t.pray_prompt || "What do you need to bring to God today? Invite Him into it."}</p>
+                  <textarea
+                    className="de-textarea"
+                    placeholder="Speak plainly to God…"
+                    value={prayText}
+                    onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
+                  />
+                  {statusRow("pray_text")}
+                </div>
+
+                {/* To-Do */}
+                <div className="de-block">
+                  <div className="de-label">
+                    <span className="dot" style={{ background: color }} />
+                    <span className="name">To-Do</span>
+                    <span className="num">· 04</span>
+                  </div>
+                  <p className="de-prompt">{t.apply_prompt || "What does obedience look like today, concretely?"}</p>
+                  <textarea
+                    className="de-textarea short"
+                    placeholder="What is God asking of me today?"
+                    value={todoText}
+                    onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
+                  />
+                  {statusRow("todo_text")}
+
+                  <div className="de-todos">
+                    {todoItems.map((it, idx) => (
+                      <div key={it.id} className="de-todo">
+                        <input
+                          type="checkbox"
+                          checked={it.done}
+                          onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
+                        />
+                        <input
+                          type="text"
+                          className={it.done ? "done" : ""}
+                          placeholder="A small, specific step"
+                          value={it.text}
+                          onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
+                        />
+                        <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+                      </div>
+                    ))}
+                    <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Workspace */}
+              {userId && (
+                <WorkspaceSection
+                  userId={userId}
+                  ensureEntry={ensureEntry}
+                  currentEntryId={currentEntry?.id ?? null}
+                />
+              )}
+
+              <div className="de-past">
+                <h3>Past entries</h3>
+                {(pastQ.data ?? []).length === 0 ? (
+                  <ul><li className="empty" style={{ cursor: "default", justifyContent: "center" }}>No past entries yet. Today is a good day to start.</li></ul>
+                ) : (
+                  <ul>
+                    {(pastQ.data ?? []).map((e) => {
+                      const preview = [e.where_text ?? e.reflect_text, e.scripture_text, e.pray_text, e.todo_text ?? e.apply_text].filter(Boolean).join(" · ").slice(0, 90);
+                      return (
+                        <li key={e.id} className={e.entry_date === selectedDate ? "active" : ""} onClick={() => setSelectedDate(e.entry_date)}>
+                          <span className="d">{formatDate(e.entry_date)}{e.entry_date === todayISO() ? " · Today" : ""}</span>
+                          <span className="preview">{preview || "—"}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             </div>
 
-            {/* 5. Workspace */}
-            {userId && (
-              <WorkspaceSection
-                userId={userId}
-                ensureEntry={ensureEntry}
-                currentEntryId={currentEntry?.id ?? null}
-              />
-            )}
-
-            <div className="de-past">
-              <h3>Past entries</h3>
-              {(pastQ.data ?? []).length === 0 ? (
-                <ul><li className="empty" style={{ cursor: "default", justifyContent: "center" }}>No past entries yet. Today is a good day to start.</li></ul>
-              ) : (
-                <ul>
-                  {(pastQ.data ?? []).map((e) => {
-                    const preview = [e.where_text ?? e.reflect_text, e.scripture_text, e.pray_text, e.todo_text ?? e.apply_text].filter(Boolean).join(" · ").slice(0, 90);
-                    return (
-                      <li key={e.id} className={e.entry_date === selectedDate ? "active" : ""} onClick={() => setSelectedDate(e.entry_date)}>
-                        <span className="d">{formatDate(e.entry_date)}{e.entry_date === todayISO() ? " · Today" : ""}</span>
-                        <span className="preview">{preview || "—"}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
           </>
         )}
       </div>

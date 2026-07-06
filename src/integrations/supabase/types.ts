@@ -170,6 +170,8 @@ export type Database = {
           apply_text: string | null
           created_at: string
           entry_date: string
+          entry_subtitle: string | null
+          entry_title: string | null
           further_reading_text: string | null
           id: string
           pray_text: string | null
@@ -187,6 +189,8 @@ export type Database = {
           apply_text?: string | null
           created_at?: string
           entry_date?: string
+          entry_subtitle?: string | null
+          entry_title?: string | null
           further_reading_text?: string | null
           id?: string
           pray_text?: string | null
@@ -204,6 +208,8 @@ export type Database = {
           apply_text?: string | null
           created_at?: string
           entry_date?: string
+          entry_subtitle?: string | null
+          entry_title?: string | null
           further_reading_text?: string | null
           id?: string
           pray_text?: string | null
