@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   component: Mockup,
@@ -406,8 +407,16 @@ const MOBILE_NAV: { key: Screen; label: string; icon: ReactNode }[] = [
 ];
 
 function Mockup() {
+  const navigate = useNavigate();
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [screen, setScreen] = useState<Screen>("home");
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const s = SCREENS[screen];
   const desktopMain = useMemo(() => s.build(false), [screen]);
@@ -433,7 +442,11 @@ function Mockup() {
         </div>
         <div className="screen-tabs">
           {(Object.keys(SCREENS) as Screen[]).map((k) => (
-            <button key={k} className={`stab2 ${k === screen ? "active" : ""}`} onClick={() => setScreen(k)}>
+            <button
+              key={k}
+              className={`stab2 ${k === screen ? "active" : ""}`}
+              onClick={() => (k === "explore" ? navigate({ to: "/explore" }) : setScreen(k))}
+            >
               {SCREENS[k].label}
             </button>
           ))}
@@ -441,6 +454,11 @@ function Mockup() {
         <div className="switcher-tabs">
           <button className={`stab ${device === "desktop" ? "active" : ""}`} onClick={() => setDevice("desktop")}>Desktop</button>
           <button className={`stab ${device === "mobile" ? "active" : ""}`} onClick={() => setDevice("mobile")}>Mobile</button>
+          {userId ? (
+            <button className="stab" onClick={() => supabase.auth.signOut()}>Sign out</button>
+          ) : (
+            <Link to="/auth" className="stab active" style={{ textDecoration: "none" }}>Sign in</Link>
+          )}
         </div>
       </div>
 
