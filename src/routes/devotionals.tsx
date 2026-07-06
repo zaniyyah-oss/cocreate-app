@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -137,9 +137,9 @@ function DevotionalsPage() {
 
   if (ready && !userId) {
     return (
-      <div className="dv-root">
+      <AppShell current="devotionals">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <Nav userId={null} />
+        <div className="dv-root">
         <div className="dv-shell">
           <div className="dv-head">
             <h1>Devotionals</h1>
@@ -151,7 +151,8 @@ function DevotionalsPage() {
             <Link to="/auth" className="dv-signin">Sign in</Link>
           </div>
         </div>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
@@ -160,9 +161,10 @@ function DevotionalsPage() {
   const entryMap = entryTemplatesQ.data ?? {};
 
   return (
-    <div className="dv-root">
+    <AppShell current="devotionals">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <Nav userId={userId} />
+      <div className="dv-root">
+
 
       <div className="dv-shell">
         <div className="dv-head">
@@ -217,20 +219,8 @@ function DevotionalsPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
-function Nav({ userId }: { userId: string | null }) {
-  return (
-    <nav className="dv-nav">
-      <Link to="/" className="dv-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-      <div className="dv-navlinks">
-        <Link to="/" className="dv-navlink">Home</Link>
-        <Link to="/explore" className="dv-navlink">Explore</Link>
-        <Link to="/devotionals" className="dv-navlink active">Devotionals</Link>
-      </div>
-      {userId ? <NotificationBell /> : <Link to="/auth" className="dv-signin">Sign in</Link>}
-    </nav>
-  );
-}

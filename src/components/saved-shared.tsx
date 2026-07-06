@@ -105,21 +105,7 @@ export function useAuth() {
 const formatWhen = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
-export function SavedNav({ current }: { current: "saved" | "notes" }) {
-  return (
-    <nav className="sv-nav">
-      <Link to="/" className="sv-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-      <div className="sv-navlinks">
-        <Link to="/" className="sv-navlink">Home</Link>
-        <Link to="/explore" className="sv-navlink">Explore</Link>
-        <Link to="/devotionals" className="sv-navlink">Devotionals</Link>
-        <Link to="/saved" className={`sv-navlink ${current === "saved" ? "active" : ""}`}>Saved</Link>
-        <Link to="/notes" className={`sv-navlink ${current === "notes" ? "active" : ""}`}>Notes</Link>
-      </div>
-      <NotificationBell />
-    </nav>
-  );
-}
+// SavedNav removed — pages now use the shared <AppShell />.
 
 export function SignGate() {
   return (

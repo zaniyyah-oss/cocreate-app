@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { AppShell } from "@/components/AppShell";
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 type PreviewRow = Database["public"]["Views"]["content_items_public"]["Row"];
@@ -197,14 +198,13 @@ function TopicPage() {
   };
 
   return (
-    <div className="tp-root">
+    <AppShell>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-
-      <nav className="tp-nav">
-        <Link to="/" className="tp-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
+      <div className="tp-root">
+      <div style={{ padding: "16px 24px 0", maxWidth: 1200, margin: "0 auto" }}>
         <Link to="/explore" className="tp-back">← Back to Explore</Link>
-        <div style={{ width: 60 }} />
-      </nav>
+      </div>
+
 
       <div className="tp-hero">
         <div className="tp-hero-inner">
@@ -254,9 +254,11 @@ function TopicPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }
+
 
 function TypeSection({ title, items, onOpen }: { title: string; items: PreviewRow[]; onOpen: (c: PreviewRow) => void }) {
   return (
@@ -287,3 +289,4 @@ function TypeSection({ title, items, onOpen }: { title: string; items: PreviewRo
     </div>
   );
 }
+

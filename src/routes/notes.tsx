@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { AppShell } from "@/components/AppShell";
 import {
-  SAVED_CSS, SavedNav, SignGate, NotesSection,
+  SAVED_CSS, SignGate, NotesSection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
 
@@ -21,31 +21,24 @@ function NotesPage() {
   const { userId, ready } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.body.style.background = "#eee9d9";
-    return () => { document.body.style.background = ""; };
-  }, []);
-
   const { notes, contentMap, templateMap } = useSavedData(userId, ready);
 
   if (ready && !userId) {
     return (
-      <div className="sv-root">
+      <AppShell current="notes">
         <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
-        <SavedNav current="notes" />
         <div className="sv-shell">
           <h1 className="sv-h1">Notes</h1>
           <p className="sv-sub">Everything you've written down, newest first.</p>
           <SignGate />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="sv-root">
+    <AppShell current="notes">
       <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
-      <SavedNav current="notes" />
       <div className="sv-shell">
         <h1 className="sv-h1">Notes</h1>
         <p className="sv-sub">Everything you've written down across essays, teachings, podcasts, and devotionals — newest first.</p>
@@ -59,6 +52,6 @@ function NotesPage() {
           loading={notes.isLoading}
         />
       </div>
-    </div>
+    </AppShell>
   );
 }

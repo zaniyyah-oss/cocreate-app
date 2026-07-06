@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -218,9 +218,9 @@ function ProfilePage() {
 
   if (ready && !userId) {
     return (
-      <div className="pf-root">
+      <AppShell current="profile">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <Nav userId={null} />
+        <div className="pf-root">
         <div className="pf-shell">
           <div className="pf-signgate">
             <h3>Sign in to see your profile</h3>
@@ -228,7 +228,8 @@ function ProfilePage() {
             <Link to="/auth" className="pf-signin">Sign in</Link>
           </div>
         </div>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
@@ -238,9 +239,10 @@ function ProfilePage() {
   const subbedIds = new Set(subs.map((s) => s.topic_id));
 
   return (
-    <div className="pf-root">
+    <AppShell current="profile">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <Nav userId={userId} />
+      <div className="pf-root">
+
 
       <div className="pf-shell">
         <header className="pf-header">
@@ -348,22 +350,8 @@ function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
-function Nav({ userId }: { userId: string | null }) {
-  return (
-    <nav className="pf-nav">
-      <Link to="/" className="pf-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-      <div className="pf-navlinks">
-        <Link to="/" className="pf-navlink">Home</Link>
-        <Link to="/explore" className="pf-navlink">Explore</Link>
-        <Link to="/devotionals" className="pf-navlink">Devotionals</Link>
-        <Link to="/saved" className="pf-navlink">Saved</Link>
-        <Link to="/profile" className="pf-navlink active">Profile</Link>
-      </div>
-      {userId ? <NotificationBell /> : <Link to="/auth" className="pf-signin">Sign in</Link>}
-    </nav>
-  );
-}

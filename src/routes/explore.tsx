@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -163,9 +163,6 @@ function ExplorePage() {
 
   const clearAll = () => { setSelectedTopics(new Set()); setSelectedTypes(new Set()); };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   const requireAuth = (action: string) => {
     if (userId) return true;
@@ -174,27 +171,9 @@ function ExplorePage() {
   };
 
   return (
-    <div className="ex-root">
+    <AppShell current="explore">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-
-      <nav className="ex-nav">
-        <Link to="/" className="ex-brand">
-          <div className="mark">C</div><div className="word">CoCreate</div>
-        </Link>
-        <div className="ex-navlinks">
-          <Link to="/" className="ex-navlink">Home</Link>
-          <Link to="/explore" className="ex-navlink active">Explore</Link>
-        </div>
-        {userId ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <NotificationBell />
-            <button className="ex-signout" onClick={signOut}>Sign out</button>
-          </div>
-        ) : (
-          <Link to="/auth" className="ex-signin">Sign in</Link>
-        )}
-      </nav>
-
+      <div className="ex-root">
       <div className="ex-shell">
         <h1 className="ex-h1">Explore</h1>
         <p className="ex-sub">Browse essays, teachings, podcasts, and devotionals across every topic.</p>
@@ -294,6 +273,7 @@ function ExplorePage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   );
 }
