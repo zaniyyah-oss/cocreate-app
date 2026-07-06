@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
