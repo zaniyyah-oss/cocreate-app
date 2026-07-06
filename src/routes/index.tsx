@@ -442,7 +442,11 @@ function Mockup() {
         </div>
         <div className="screen-tabs">
           {(Object.keys(SCREENS) as Screen[]).map((k) => (
-            <button key={k} className={`stab2 ${k === screen ? "active" : ""}`} onClick={() => setScreen(k)}>
+            <button
+              key={k}
+              className={`stab2 ${k === screen ? "active" : ""}`}
+              onClick={() => (k === "explore" ? navigate({ to: "/explore" }) : setScreen(k))}
+            >
               {SCREENS[k].label}
             </button>
           ))}
@@ -450,6 +454,11 @@ function Mockup() {
         <div className="switcher-tabs">
           <button className={`stab ${device === "desktop" ? "active" : ""}`} onClick={() => setDevice("desktop")}>Desktop</button>
           <button className={`stab ${device === "mobile" ? "active" : ""}`} onClick={() => setDevice("mobile")}>Mobile</button>
+          {userId ? (
+            <button className="stab" onClick={() => supabase.auth.signOut()}>Sign out</button>
+          ) : (
+            <Link to="/auth" className="stab active" style={{ textDecoration: "none" }}>Sign in</Link>
+          )}
         </div>
       </div>
 
