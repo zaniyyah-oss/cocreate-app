@@ -65,6 +65,24 @@ const CSS = `
 .dv-pill{display:inline-flex;align-items:center;gap:6px;background:#FBF8ED;color:#0F4A42;font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-left:10px;vertical-align:middle;}
 .dv-sec-desc{font-size:12.5px;color:#8a8678;margin:-8px 0 18px;line-height:1.55;max-width:560px;}
 @keyframes dvp{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* Daily Abide banner */
+.dv-banner{background:#fff;border:1px solid rgba(20,20,20,0.06);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;margin-bottom:44px;}
+.dv-banner:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(0,0,0,0.08);}
+.dv-banner-top{height:12px;background:#0F4A42;}
+.dv-banner-body{padding:28px 30px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;}
+.dv-banner-main{flex:1;min-width:0;}
+.dv-banner-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.dv-banner-eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;}
+.dv-banner-pill{background:#FBF8ED;color:#0F4A42;font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px;border:1px solid rgba(15,74,66,0.10);}
+.dv-banner-title{font-size:32px;font-weight:900;color:#181A4D;letter-spacing:-0.03em;margin:0 0 8px;line-height:1.1;}
+.dv-banner-sub{font-size:14px;color:#8a8678;margin:0;line-height:1.6;max-width:520px;}
+.dv-banner-btn{align-self:flex-end;background:#181A4D;color:#fff;font-weight:800;font-size:13px;padding:11px 22px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .15s;}
+.dv-banner-btn:hover{background:#0F4A42;}
+.dv-banner-foot{padding:0 30px 26px;}
+.dv-banner-bar{height:6px;background:#FBF8ED;border-radius:99px;overflow:hidden;margin-bottom:8px;}
+.dv-banner-bar div{height:100%;background:#0F4A42;border-radius:99px;transition:width .3s ease;}
+.dv-banner-label{font-size:13px;color:#8a8678;font-weight:600;}
 `;
 
 function useAuth() {
