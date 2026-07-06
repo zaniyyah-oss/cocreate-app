@@ -325,6 +325,7 @@ export function useSavedData(userId: string | null, ready: boolean) {
   const pins = usePinnedQuotes(userId, ready);
   const notes = useNotes(userId, ready);
   const saved = useSavedItems(userId, ready);
+  const abideEntries = useAbideEntries(userId, ready);
 
   const contentIds = useMemo(() => {
     const s = new Set<string>();
@@ -337,15 +338,16 @@ export function useSavedData(userId: string | null, ready: boolean) {
   const templateIds = useMemo(() => {
     const s = new Set<string>();
     (saved.data ?? []).forEach((r) => { if (r.devotional_template_id) s.add(r.devotional_template_id); });
-    // notes with a content_item_id that isn't a content row may actually reference a template — try both
+    (abideEntries.data ?? []).forEach((e) => { if (e.template_id) s.add(e.template_id); });
     return Array.from(s);
-  }, [saved.data]);
+  }, [saved.data, abideEntries.data]);
 
   const contentMap = useContentLookup(contentIds);
   const templateMap = useTemplateLookup(templateIds);
 
-  return { pins, notes, saved, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
+  return { pins, notes, saved, abideEntries, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
 }
+
 
 export function openContent(navigate: ReturnType<typeof useNavigate>, c: PreviewRow) {
   if (!c.id) return;
