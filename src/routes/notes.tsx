@@ -28,8 +28,6 @@ function NotesPage() {
 
   const { notes, contentMap, templateMap } = useSavedData(userId, ready);
 
-  const notesList = notes.data ?? [];
-
   if (ready && !userId) {
     return (
       <div className="sv-root">
@@ -58,6 +56,7 @@ function NotesPage() {
           templateMap={templateMap}
           onOpenContent={(c) => openContent(navigate, c)}
           onOpenTemplate={(t) => openTemplate(navigate, t)}
+          loading={notes.isLoading}
         />
       </div>
     </div>
