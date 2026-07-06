@@ -279,7 +279,7 @@ export function WorkspaceSection({
           item.status === "open" ? (
             <OpenItemCard key={item.id} item={item} userId={userId} />
           ) : (
-            <ClosedTodayCard key={item.id} item={item} userId={userId} />
+            <SavedTodayCard key={item.id} item={item} userId={userId} />
           )
         )
       )}
@@ -357,7 +357,7 @@ export function WorkspaceSection({
   );
 }
 
-function ClosedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
+function SavedTodayCard({ item, userId }: { item: WorkspaceItem; userId: string }) {
   const qc = useQueryClient();
   const reopen = useMutation({
     mutationFn: async () => {
