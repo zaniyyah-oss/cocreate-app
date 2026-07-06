@@ -186,6 +186,8 @@ function ExplorePage() {
           </div>
         )}
 
+        <RecommendedRow />
+
         <div className="ex-flabel">Topics</div>
         <div className="ex-pills">
           {topicsQ.data?.map((t) => (
