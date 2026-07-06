@@ -379,15 +379,21 @@ function EntryPage() {
         ) : (
           <>
             <div className="de-headcard">
-              <div className="de-headaccent" style={{ background: color }} />
-              <div className="de-headbody">
-                {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="de-topic" style={{ color, textDecoration: "none" }}>{topic.name} →</Link>}
-                <h1 className="de-title">{t.title}</h1>
-                {t.scripture_focus && <div className="de-scr">Scripture focus · {t.scripture_focus}</div>}
+              <div className="de-headtop">
+                <h1 className="de-headtitle">{t.title}</h1>
+                <span className="de-headarrow">→</span>
+                <span className="de-headdate">{formatDate(selectedDate)}</span>
               </div>
+              <div className="de-headrule" />
+              {scriptureText ? (
+                <>
+                  <p className="de-headquote">"{scriptureText}"</p>
+                  <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
+                </>
+              ) : t.scripture_focus ? (
+                <p className="de-headref">{t.scripture_focus}</p>
+              ) : null}
             </div>
-
-            <div className="de-date">{formatDate(selectedDate)}{selectedDate === todayISO() ? " · Today" : ""}</div>
 
             {/* 1. Where Are You */}
             <div className="de-block">
