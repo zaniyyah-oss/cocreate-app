@@ -135,7 +135,15 @@ const CSS = `
 .de-signgate{background:#fff;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:14px;padding:22px;}
 .de-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
 .de-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
+
+.de-cols{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:22px;}
+.de-cols .de-block{margin-bottom:0;height:100%;display:flex;flex-direction:column;}
+.de-cols .de-block .de-textarea{flex:1;}
+@media (min-width:768px){
+  .de-cols{grid-template-columns:1fr 1fr 1fr;gap:20px;}
+}
 `;
+
 
 function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
