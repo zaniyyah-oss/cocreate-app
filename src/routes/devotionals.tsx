@@ -229,6 +229,15 @@ function DevotionalsPage() {
                         <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>
                         <div className="dv-plabel">{label}</div>
                       </div>
+                      <button
+                        type="button"
+                        className="dv-setdef"
+                        onClick={(e) => { e.stopPropagation(); setDefault(t.id); }}
+                        disabled={defaultQ.data === t.id}
+                        title="Use this as your daily practice on Home"
+                      >
+                        {defaultQ.data === t.id ? "✓ Default" : "Set as default"}
+                      </button>
                     </div>
                   </div>
                 );
