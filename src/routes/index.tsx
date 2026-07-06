@@ -163,6 +163,7 @@ function HomePage() {
     <AppShell current="home">
       <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
       <div className="hp-page">
+        <WorkspaceReturnBanner />
         <h1 className="hp-h1">Slow spiritual formation, daily.</h1>
         <p className="hp-sub">Essays, teachings, podcasts, and devotional practices — the content changes, the practice doesn't.</p>
         <ContinuePractice />
