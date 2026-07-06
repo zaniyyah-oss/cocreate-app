@@ -25,6 +25,7 @@ import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
+import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
@@ -106,6 +107,11 @@ const AdminContentRoute = AdminContentRouteImport.update({
   path: '/content',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEditIdRoute = AdminEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin'
+    | '/admin/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/edit/$id': {
+      id: '/admin/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/admin/edit/$id'
+      preLoaderRoute: typeof AdminEditIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -353,12 +372,14 @@ interface AdminRouteChildren {
   AdminContentRoute: typeof AdminContentRoute
   AdminNewRoute: typeof AdminNewRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminEditIdRoute: typeof AdminEditIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminContentRoute: AdminContentRoute,
   AdminNewRoute: AdminNewRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminEditIdRoute: AdminEditIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
