@@ -48,6 +48,7 @@ type FormState = {
   pray_prompt: string;
   apply_prompt: string;
   status: "draft" | "published";
+  is_default: boolean;
 };
 
 const emptyState = (): FormState => ({
@@ -55,7 +56,7 @@ const emptyState = (): FormState => ({
   scripture_reference: "", scripture_focus: "", author_name: "",
   media_url: "", thumbnail_url: "", published_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
-  status: "draft",
+  status: "draft", is_default: false,
 });
 
 const stateFromContent = (r: Content): FormState => ({
@@ -82,6 +83,7 @@ const stateFromTemplate = (r: Template): FormState => ({
   pray_prompt: r.pray_prompt ?? "",
   apply_prompt: r.apply_prompt ?? "",
   status: r.status,
+  is_default: !!(r as any).is_default,
 });
 
 export function ContentForm({
@@ -152,6 +154,22 @@ export function ContentForm({
           apply_prompt: state.apply_prompt || null,
           status: targetStatus,
         };
+
+        if (state.is_default && targetStatus !== "published") {
+          throw new Error("The platform default must be published. Publish this template or turn off the Default toggle.");
+        }
+        // If turning is_default ON, clear any existing default first (unique index enforces one).
+        if (state.is_default) {
+          const excludeId = existingTemplate?.id ?? "00000000-0000-0000-0000-000000000000";
+          const { error: clearErr } = await supabase
+            .from("devotional_templates")
+            .update({ is_default: false } as any)
+            .eq("is_default" as any, true)
+            .neq("id", excludeId);
+          if (clearErr) throw clearErr;
+        }
+        (payload as any).is_default = state.is_default;
+
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
           if (error) throw error;
@@ -305,6 +323,25 @@ export function ContentForm({
               <textarea rows={3} value={state.apply_prompt} onChange={(e) => set("apply_prompt", e.target.value)} placeholder="What is one small step you can take today?" />
             </div>
           </>
+        )}
+
+        {kind === "devotional" && (
+          <div style={{ background: "#FBF8ED", border: "1px solid rgba(15,74,66,0.15)", borderRadius: 10, padding: "14px 16px" }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, textTransform: "none", letterSpacing: 0, fontSize: 13.5, fontWeight: 700, color: "#181A4D", cursor: "pointer", margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={state.is_default}
+                onChange={(e) => set("is_default", e.target.checked)}
+                style={{ width: "auto", marginTop: 3 }}
+              />
+              <span>
+                Platform Default Devotional
+                <div className="cf-note" style={{ marginTop: 4, fontWeight: 500 }}>
+                  Every user automatically has this template active. Only one template can be the default at a time — turning this on will remove the flag from the current default. The default must be published.
+                </div>
+              </span>
+            </label>
+          </div>
         )}
 
         {showThumb && (
