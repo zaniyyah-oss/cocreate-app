@@ -170,34 +170,52 @@ export type Database = {
           apply_text: string | null
           created_at: string
           entry_date: string
+          further_reading_text: string | null
           id: string
           pray_text: string | null
           reflect_text: string | null
+          scripture_reference: string | null
+          scripture_text: string | null
           template_id: string | null
+          todo_items: Json
+          todo_text: string | null
           updated_at: string
           user_id: string
+          where_text: string | null
         }
         Insert: {
           apply_text?: string | null
           created_at?: string
           entry_date?: string
+          further_reading_text?: string | null
           id?: string
           pray_text?: string | null
           reflect_text?: string | null
+          scripture_reference?: string | null
+          scripture_text?: string | null
           template_id?: string | null
+          todo_items?: Json
+          todo_text?: string | null
           updated_at?: string
           user_id: string
+          where_text?: string | null
         }
         Update: {
           apply_text?: string | null
           created_at?: string
           entry_date?: string
+          further_reading_text?: string | null
           id?: string
           pray_text?: string | null
           reflect_text?: string | null
+          scripture_reference?: string | null
+          scripture_text?: string | null
           template_id?: string | null
+          todo_items?: Json
+          todo_text?: string | null
           updated_at?: string
           user_id?: string
+          where_text?: string | null
         }
         Relationships: [
           {
