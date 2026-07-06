@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
-import { useQueryClient } from "@tanstack/react-query";
 
-type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
+type Template = Database["public"]["Tables"]["devotional_templates"]["Row"] & { is_default?: boolean };
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
 export const Route = createFileRoute("/devotionals")({
