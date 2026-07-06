@@ -84,18 +84,29 @@ const stateFromContent = (r: Content): FormState => ({
   status: r.status,
 });
 
-const stateFromTemplate = (r: Template): FormState => ({
-  ...emptyState(),
-  title: r.title,
-  description: r.description ?? "",
-  topic_id: r.topic_id ?? "",
-  scripture_focus: r.scripture_focus ?? "",
-  reflect_prompt: r.reflect_prompt ?? "",
-  pray_prompt: r.pray_prompt ?? "",
-  apply_prompt: r.apply_prompt ?? "",
-  status: r.status,
-  is_default: !!(r as any).is_default,
-});
+const stateFromTemplate = (r: Template): FormState => {
+  const scr = Array.isArray((r as any).scripture_items) ? (r as any).scripture_items : [];
+  const pr = Array.isArray((r as any).pray_items) ? (r as any).pray_items : [];
+  const td = Array.isArray((r as any).todo_items_pool) ? (r as any).todo_items_pool : [];
+  return {
+    ...emptyState(),
+    title: r.title,
+    description: r.description ?? "",
+    topic_id: r.topic_id ?? "",
+    scripture_focus: r.scripture_focus ?? "",
+    reflect_prompt: r.reflect_prompt ?? "",
+    pray_prompt: r.pray_prompt ?? "",
+    apply_prompt: r.apply_prompt ?? "",
+    status: r.status,
+    is_default: !!(r as any).is_default,
+    fill_mode: ((r as any).fill_mode === "sequence" ? "sequence" : "pool"),
+    duration_days: (r as any).duration_days ? String((r as any).duration_days) : "",
+    scripture_items: scr.map((it: any) => ({ reference: String(it?.reference ?? ""), note: String(it?.note ?? "") })),
+    pray_items: pr.map((s: any) => String(s ?? "")),
+    todo_items_pool: td.map((s: any) => String(s ?? "")),
+  };
+};
+
 
 export function ContentForm({
   kind,
