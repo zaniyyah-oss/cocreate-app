@@ -80,6 +80,23 @@ function useAuth() {
 function DevotionalsPage() {
   const { userId, ready } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const defaultQ = useQuery({
+    queryKey: ["profile-default-template", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("default_template_id" as any).eq("id", userId!).maybeSingle();
+      return (data as any)?.default_template_id as string | null | undefined;
+    },
+  });
+
+  async function setDefault(templateId: string) {
+    if (!userId) return;
+    await supabase.from("profiles").update({ default_template_id: templateId } as any).eq("id", userId);
+    qc.invalidateQueries({ queryKey: ["profile-default-template", userId] });
+    qc.invalidateQueries({ queryKey: ["continue-practice"] });
+  }
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
