@@ -38,6 +38,7 @@ export function WorkspaceEditor({
       LinkCard,
       Placeholder.configure({ placeholder: placeholder ?? "Write, paste a link, or drop in an image…" }),
       Indent,
+    ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
       attributes: { class: "ws-editor-content" },
