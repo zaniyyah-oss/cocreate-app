@@ -119,6 +119,12 @@ export function MediaDetail({ id, kind }: { id: string; kind: "teaching" | "podc
     },
   });
 
+  useEffect(() => {
+    if (previewQ.data?.id) {
+      trackEvent("content_view", { content_id: previewQ.data.id, topic_id: previewQ.data.topic_id ?? null });
+    }
+  }, [previewQ.data?.id, previewQ.data?.topic_id]);
+
   const fullQ = useQuery({
     queryKey: [kind, "full", id, userId],
     enabled: ready && !!userId,
