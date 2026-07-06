@@ -409,33 +409,36 @@ function EntryPage() {
         ) : (
           <>
             <div className="de-headcard">
-              <div className="de-headtop">
-                <span className="de-headtitle-brand">{t.title}</span>
-                <span className="de-headarrow">→</span>
-                <span className="de-headdate">{formatDate(selectedDate)}</span>
+              <div className="de-headcard-inner">
+                <div className="de-headtop">
+                  <span className="de-headtitle-brand">{t.title}</span>
+                  <span className="de-headarrow">→</span>
+                  <span className="de-headdate">{formatDate(selectedDate)}</span>
+                </div>
+                <input
+                  className="de-title-input"
+                  placeholder="Give today a title…"
+                  value={entryTitle}
+                  onChange={(e) => { setEntryTitle(e.target.value); scheduleSave("entry_title", e.target.value); }}
+                />
+                <input
+                  className="de-subtitle-input"
+                  placeholder="Add a subtitle, if you'd like"
+                  value={entrySubtitle}
+                  onChange={(e) => { setEntrySubtitle(e.target.value); scheduleSave("entry_subtitle", e.target.value); }}
+                />
+                {(scriptureText || t.scripture_focus) && <div className="de-headrule" />}
+                {scriptureText ? (
+                  <>
+                    <p className="de-headquote">"{scriptureText}"</p>
+                    <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
+                  </>
+                ) : t.scripture_focus ? (
+                  <p className="de-headref">{t.scripture_focus}</p>
+                ) : null}
               </div>
-              <input
-                className="de-title-input"
-                placeholder="Give today a title…"
-                value={entryTitle}
-                onChange={(e) => { setEntryTitle(e.target.value); scheduleSave("entry_title", e.target.value); }}
-              />
-              <input
-                className="de-subtitle-input"
-                placeholder="Add a subtitle, if you'd like"
-                value={entrySubtitle}
-                onChange={(e) => { setEntrySubtitle(e.target.value); scheduleSave("entry_subtitle", e.target.value); }}
-              />
-              {(scriptureText || t.scripture_focus) && <div className="de-headrule" />}
-              {scriptureText ? (
-                <>
-                  <p className="de-headquote">"{scriptureText}"</p>
-                  <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
-                </>
-              ) : t.scripture_focus ? (
-                <p className="de-headref">{t.scripture_focus}</p>
-              ) : null}
             </div>
+
 
             <div className="de-shell-inner">
               {/* 1. Where Are You */}
