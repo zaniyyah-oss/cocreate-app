@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type PreviewRow = Database["public"]["Views"]["content_items_public"]["Row"];
 type Pin = Database["public"]["Tables"]["pinned_quotes"]["Row"];
