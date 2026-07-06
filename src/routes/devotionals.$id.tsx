@@ -477,18 +477,13 @@ function EntryPage() {
             </div>
 
             {/* 5. Workspace */}
-            <div className="de-workspace">
-              <div className="de-label">
-                <span className="dot" style={{ background: color }} />
-                <span className="name">Workspace</span>
-                <span className="num">· 05</span>
-              </div>
-              <p>Continue this practice in your workspace — pinned quotes, notes, and everything you've saved that touches on today's reflection.</p>
-              <div className="row">
-                <Link to="/notes" className="de-ws-btn">Open notes</Link>
-                <Link to="/saved" className="de-ws-btn ghost">Saved &amp; pinned</Link>
-              </div>
-            </div>
+            {userId && (
+              <WorkspaceSection
+                userId={userId}
+                ensureEntry={ensureEntry}
+                currentEntryId={currentEntry?.id ?? null}
+              />
+            )}
 
             <div className="de-past">
               <h3>Past entries</h3>
