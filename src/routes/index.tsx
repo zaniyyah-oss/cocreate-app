@@ -388,7 +388,7 @@ const SCREENS: Record<Screen, { label: string; build: (m: boolean) => string; si
   profile: { label: "Profile", build: profileMain, side: false },
 };
 
-const NAV_ITEMS: { key: Screen; label: string; icon: JSX.Element }[] = [
+const NAV_ITEMS: { key: Screen; label: string; icon: ReactNode }[] = [
   { key: "home", label: "Home", icon: <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" /></svg> },
   { key: "explore", label: "Explore", icon: <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg> },
   { key: "saved", label: "Saved", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg> },
@@ -397,7 +397,7 @@ const NAV_ITEMS: { key: Screen; label: string; icon: JSX.Element }[] = [
   { key: "profile", label: "Profile", icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg> },
 ];
 
-const MOBILE_NAV: { key: Screen; label: string; icon: JSX.Element }[] = [
+const MOBILE_NAV: { key: Screen; label: string; icon: ReactNode }[] = [
   NAV_ITEMS[0],
   NAV_ITEMS[1],
   { key: "devo", label: "Devo", icon: NAV_ITEMS[3].icon },
