@@ -166,6 +166,13 @@ export function ContentForm({
       if (!state.title.trim()) throw new Error("Title is required.");
 
       if (kind === "devotional") {
+        const cleanScripture = state.scripture_items
+          .map((it) => ({ reference: it.reference.trim(), note: it.note.trim() }))
+          .filter((it) => it.reference || it.note);
+        const cleanPray = state.pray_items.map((s) => s.trim()).filter(Boolean);
+        const cleanTodo = state.todo_items_pool.map((s) => s.trim()).filter(Boolean);
+        const durationDays = state.duration_days.trim() ? Math.max(1, parseInt(state.duration_days, 10) || 0) || null : null;
+
         const payload: Database["public"]["Tables"]["devotional_templates"]["Insert"] = {
           title: state.title.trim(),
           description: state.description || null,
@@ -175,6 +182,11 @@ export function ContentForm({
           pray_prompt: state.pray_prompt || null,
           apply_prompt: state.apply_prompt || null,
           status: targetStatus,
+          fill_mode: state.is_default ? "pool" : state.fill_mode,
+          scripture_items: state.is_default ? [] : cleanScripture,
+          pray_items: state.is_default ? [] : cleanPray,
+          todo_items_pool: state.is_default ? [] : cleanTodo,
+          duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
         };
 
         if (state.is_default && targetStatus !== "published") {
@@ -191,6 +203,7 @@ export function ContentForm({
           if (clearErr) throw clearErr;
         }
         (payload as any).is_default = state.is_default;
+
 
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
