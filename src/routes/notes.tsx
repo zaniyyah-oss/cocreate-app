@@ -28,6 +28,8 @@ function NotesPage() {
 
   const { notes, contentMap, templateMap } = useSavedData(userId, ready);
 
+  const notesList = notes.data ?? [];
+
   if (ready && !userId) {
     return (
       <div className="sv-root">
