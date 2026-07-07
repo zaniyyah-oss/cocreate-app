@@ -103,6 +103,31 @@ export function WorkspaceEditor({
 
 function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Keep the toolbar glued to the top of the *visual* viewport on iOS/Android.
+  // When the soft keyboard opens, mobile browsers shift the page up but leave
+  // sticky/fixed positioning anchored to the layout viewport, so the bar
+  // scrolls off-screen. We translate it back down by visualViewport.offsetTop
+  // plus any scroll delta between visual and layout viewports.
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv || !barRef.current) return;
+    const el = barRef.current;
+    const update = () => {
+      const delta = (vv.offsetTop || 0) + (vv.pageTop - window.scrollY);
+      el.style.transform = delta > 0 ? `translateY(${delta}px)` : "";
+    };
+    update();
+    vv.addEventListener("scroll", update);
+    vv.addEventListener("resize", update);
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      vv.removeEventListener("scroll", update);
+      vv.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
+    };
+  }, []);
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -134,7 +159,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   };
 
   return (
-    <div className="ws-toolbar">
+    <div className="ws-toolbar" ref={barRef}>
+
       {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}
       {btn("I", () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}
       {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }))}
