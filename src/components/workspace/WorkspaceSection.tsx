@@ -475,9 +475,6 @@ function OpenItemCard({ item, userId }: { item: WorkspaceItem; userId: string })
 
   return (
     <div className={`ws-item open ${itemFocus ? "item-full" : ""}`}>
-      {itemFocus && (
-        <button type="button" className="ws-item-exit" onClick={() => setItemFocus(false)}>✕ Exit focus</button>
-      )}
       <div className="ws-item-head">
         <span className="ws-status-pill">Open</span>
         <input
