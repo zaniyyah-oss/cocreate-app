@@ -41,6 +41,7 @@ const SHELL_CSS = `
 
 /* Mobile top bar */
 .app-topbar{background:#fff;border-bottom:1px solid rgba(20,20,20,0.08);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.app-topbar::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:#fff;z-index:39;pointer-events:none;}
 .app-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
 .app-brand .mark{width:28px;height:28px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;}
 .app-brand .word{font-weight:900;font-size:18px;color:#181A4D;letter-spacing:-0.02em;}
@@ -60,9 +61,9 @@ const SHELL_CSS = `
 .app-bottomnav span{font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
 
 @media (max-width:1023px){
-  html, body{background:#fff !important;}
-  .app-shell{background:#fff;}
-  .app-main{background:#fff;}
+  html, body{background:#eee9d9 !important;}
+  .app-shell{background:#eee9d9;}
+  .app-main{background:#eee9d9;}
   /* Workspace pages: nav sits at end of page, not fixed */
   .app-shell.is-workspace .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
   .app-shell.is-workspace .app-main{padding-bottom:0;}
@@ -118,7 +119,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-    document.body.style.background = isDesktop ? "#eee9d9" : "#fff";
+    document.body.style.background = "#eee9d9";
     document.documentElement.style.background = isDesktop ? "#eee9d9" : "#fff";
     return () => {
       document.body.style.background = "";
