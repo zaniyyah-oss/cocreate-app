@@ -173,8 +173,10 @@ const CSS = `
 
 /* Focus / fullscreen for a section */
 .de-block, .ws-root { position: relative; }
-.de-focus-btn{position:absolute;top:12px;right:14px;background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
+.de-focus-btn{background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+.de-block-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.de-block-header .de-badge{margin-bottom:0;}
 .de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
 @media (min-width:768px){
   .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
