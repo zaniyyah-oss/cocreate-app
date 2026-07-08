@@ -1,0 +1,16 @@
+{
+  "name": "CoCreate",
+  "short_name": "CoCreate",
+  "description": "Essays, teachings, podcasts, and devotional practices for people who want to abide, not scroll.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eee9d9",
+  "theme_color": "#181A4D",
+  "icons": [
+    { "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
