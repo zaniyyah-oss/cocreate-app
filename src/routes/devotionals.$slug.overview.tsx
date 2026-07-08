@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 
-export const Route = createFileRoute("/devotionals/$slug/overview")({
+export const Route = createFileRoute("/devotionals/$slug/overview" as any)({
   component: OverviewPage,
   errorComponent: ({ error }) => (
     <AppShell current="devotionals">
