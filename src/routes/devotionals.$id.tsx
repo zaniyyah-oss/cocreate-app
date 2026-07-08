@@ -626,6 +626,32 @@ function EntryPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Topical devotional bands — aligned to the same 3-col grid */}
+                {(topicalsQ.data ?? []).map((tp) => {
+                  const c = topicColor(tp.topic?.color_key);
+                  const tint = hexToRgba(c, 0.15);
+                  const tagBg = hexToRgba(c, 0.35);
+                  const tagName = tp.topic?.name ?? tp.title;
+                  const readTeaser = tp.scripture_focus || tp.title;
+                  const prayTeaser = tp.pray_prompt || "Pray with this in view.";
+                  const todoTeaser = tp.apply_prompt || "Carry this into today.";
+                  const go = () => navigate({ to: "/devotionals/$id", params: { id: tp.id } });
+                  return (
+                    <div key={tp.id} className="de-band" style={{ background: tint }}>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-tag" style={{ background: tagBg }}>{tagName}</span>
+                        <span className="de-band-line">{readTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-line">{prayTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-line">{todoTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
 
