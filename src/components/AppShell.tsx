@@ -59,6 +59,10 @@ const SHELL_CSS = `
 .app-bottomnav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .app-bottomnav span{font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
 
+@media (max-width:1023px){
+  .app-main{background:#fff;}
+}
+
 @media (min-width:1024px){
   .app-layout{grid-template-columns:var(--side-w,236px) 1fr;transition:grid-template-columns .2s ease;}
   .app-side{display:flex;flex-direction:column;background:#fff;border-right:1px solid rgba(20,20,20,0.08);padding:20px 12px;position:sticky;top:0;height:100vh;overflow:hidden;}
