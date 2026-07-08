@@ -637,8 +637,10 @@ function EntryPage() {
                 <div className="de-cols">
                   {/* Read */}
                   <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
-                    {focusBtn("read")}
-                    <span className="de-badge read">read</span>
+                    <div className="de-block-header">
+                      <span className="de-badge read">read</span>
+                      {focusBtn("read")}
+                    </div>
                     <div className="de-read-part">
                       <input
                         className="de-scr-ref"
