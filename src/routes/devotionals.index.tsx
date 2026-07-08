@@ -1,318 +1,74 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 
-type Template = Database["public"]["Tables"]["devotional_templates"]["Row"] & { is_default?: boolean };
-type Topic = Database["public"]["Tables"]["topics"]["Row"];
-
 export const Route = createFileRoute("/devotionals/")({
-  component: DevotionalsPage,
+  component: DevotionalsIndex,
   head: () => ({
     meta: [
-      { title: "Devotionals — CoCreate" },
-      { name: "description", content: "Your devotional practice on CoCreate: pick up where you left off or start a new template." },
-      { property: "og:title", content: "Devotionals — CoCreate" },
-      { property: "og:description", content: "A calm, repeatable practice space." },
+      { title: "Abide — CoCreate" },
+      { name: "description", content: "Your daily Abide devotional — a simple anchor to read, pray, and move into your day." },
+      { property: "og:title", content: "Abide — CoCreate" },
+      { property: "og:description", content: "A calm, repeatable daily practice." },
     ],
   }),
 });
 
-const TOPIC_COLORS: Record<string, string> = {
-  amber: "#F5B301", teal: "#0F4A42", lime: "#DCE07A", "light-green": "#C7E39B",
-  coral: "#FF340C", navy: "#181A4D", cream: "#FBF8ED", brown: "#441B07",
-};
-const topicColor = (k?: string | null) => (k && TOPIC_COLORS[k]) || "#0F4A42";
-
-const CSS = `
-.dv-root *{box-sizing:border-box;}
-.dv-root{min-height:100vh;background:#eee9d9;font-family:'Poppins',sans-serif;color:#20201c;}
-.dv-nav{background:#fff;border-bottom:1px solid rgba(20,20,20,0.08);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:50;}
-.dv-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.dv-brand .mark{width:28px;height:28px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;}
-.dv-brand .word{font-weight:900;font-size:19px;color:#181A4D;letter-spacing:-0.02em;}
-.dv-navlinks{display:flex;gap:22px;}
-.dv-navlink{color:#8a8678;font-weight:700;font-size:13px;text-decoration:none;}
-.dv-navlink.active{color:#181A4D;}
-.dv-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
-.dv-shell{max-width:1080px;margin:0 auto;padding:52px 28px 100px;}
-.dv-head h1{font-size:38px;font-weight:900;letter-spacing:-0.03em;color:#181A4D;margin:0 0 8px;line-height:1.1;}
-.dv-head p{font-size:15px;color:#8a8678;margin:0 0 40px;max-width:520px;line-height:1.6;}
-.dv-section h2{font-size:13px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 18px;}
-.dv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;}
-.dv-card{background:#fff;border-radius:16px;padding:0;overflow:hidden;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;border:1px solid rgba(20,20,20,0.06);display:flex;flex-direction:column;}
-.dv-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(0,0,0,0.08);}
-.dv-accent{height:6px;width:100%;}
-.dv-card-body{padding:22px 22px 24px;}
-.dv-topic{font-size:10.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;margin-bottom:10px;}
-.dv-card h3{font-size:18px;font-weight:800;color:#181A4D;letter-spacing:-0.01em;margin:0 0 14px;line-height:1.3;}
-.dv-progress{margin-top:auto;}
-.dv-pbar{height:5px;background:#FBF8ED;border-radius:99px;overflow:hidden;margin-bottom:8px;}
-.dv-pbar div{height:100%;background:#0F4A42;border-radius:99px;transition:width .3s ease;}
-.dv-plabel{font-size:12px;color:#8a8678;font-weight:600;}
-.dv-empty{background:#fff;border:1.5px dashed rgba(20,20,20,0.12);border-radius:16px;padding:44px 32px;text-align:center;}
-.dv-empty h3{font-size:18px;font-weight:800;color:#181A4D;margin:0 0 8px;letter-spacing:-0.01em;}
-.dv-empty p{font-size:13.5px;color:#8a8678;margin:0 0 20px;line-height:1.6;}
-.dv-empty a{background:#181A4D;color:#fff;font-weight:700;font-size:12.5px;padding:10px 20px;border-radius:20px;text-decoration:none;display:inline-block;font-family:'Poppins';}
-.dv-block{margin-top:56px;}
-.dv-block h2{margin-bottom:18px;}
-.dv-signgate{background:#fff;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:14px;padding:22px;max-width:520px;}
-.dv-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
-.dv-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
-.dv-skel{height:180px;background:#fff;border-radius:16px;animation:dvp 1.4s infinite;}
-.dv-pill{display:inline-flex;align-items:center;gap:6px;background:#FBF8ED;color:#0F4A42;font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-left:10px;vertical-align:middle;}
-.dv-sec-desc{font-size:12.5px;color:#8a8678;margin:-8px 0 18px;line-height:1.55;max-width:560px;}
-@keyframes dvp{0%,100%{opacity:1}50%{opacity:.55}}
-
-/* Daily Abide banner */
-.dv-banner{background:#fff;border:1px solid rgba(20,20,20,0.06);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;margin-bottom:44px;}
-.dv-banner:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(0,0,0,0.08);}
-.dv-banner-top{height:12px;background:#0F4A42;}
-.dv-banner-body{padding:28px 30px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;}
-.dv-banner-main{flex:1;min-width:0;}
-.dv-banner-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
-.dv-banner-eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#0F4A42;font-weight:800;}
-.dv-banner-pill{background:#FBF8ED;color:#0F4A42;font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px;border:1px solid rgba(15,74,66,0.10);}
-.dv-banner-title{font-size:32px;font-weight:900;color:#181A4D;letter-spacing:-0.03em;margin:0 0 8px;line-height:1.1;}
-.dv-banner-sub{font-size:14px;color:#8a8678;margin:0;line-height:1.6;max-width:520px;}
-.dv-banner-btn{align-self:flex-end;background:#181A4D;color:#fff;font-weight:800;font-size:13px;padding:11px 22px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .15s;}
-.dv-banner-btn:hover{background:#0F4A42;}
-.dv-banner-foot{padding:0 30px 26px;}
-.dv-banner-bar{height:6px;background:#FBF8ED;border-radius:99px;overflow:hidden;margin-bottom:8px;}
-.dv-banner-bar div{height:100%;background:#0F4A42;border-radius:99px;transition:width .3s ease;}
-.dv-banner-label{font-size:13px;color:#8a8678;font-weight:600;}
-`;
-
-function useAuth() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+function DevotionalsIndex() {
+  // "/devotionals" is no longer a browsing page. It IS Abide — redirect
+  // straight to the platform default (Abide) entry page.
+  const [userId, setUserId] = useState<string | null | undefined>(undefined);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { setUserId(data.session?.user.id ?? null); setReady(true); });
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
     return () => sub.subscription.unsubscribe();
   }, []);
-  return { userId, ready };
-}
 
-function DevotionalsPage() {
-  const { userId, ready } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    document.body.style.background = "#eee9d9";
-    return () => { document.body.style.background = ""; };
-  }, []);
-
-  // Platform default devotional (always active for every user)
-  const defaultTplQ = useQuery({
-    queryKey: ["platform-default-template"],
+  const defaultQ = useQuery({
+    queryKey: ["platform-default-template-id"],
     queryFn: async () => {
       const { data } = await supabase
         .from("devotional_templates")
-        .select("*")
+        .select("id")
         .eq("is_default" as any, true)
         .eq("status", "published")
         .maybeSingle();
-      return (data ?? null) as Template | null;
+      return data?.id ?? null;
     },
   });
 
-  // Templates saved by the user
-  const savedQ = useQuery({
-    queryKey: ["dev-saved", userId],
-    enabled: ready && !!userId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("saved_items").select("devotional_template_id").eq("user_id", userId!).not("devotional_template_id", "is", null);
-      if (error) throw error;
-      return (data ?? []).map((r) => r.devotional_template_id!).filter(Boolean);
-    },
-  });
-
-  // Distinct template_ids the user has entries for
-  const entryTemplatesQ = useQuery({
-    queryKey: ["dev-entry-templates", userId],
-    enabled: ready && !!userId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("devotional_entries").select("template_id, entry_date").eq("user_id", userId!).not("template_id", "is", null);
-      if (error) throw error;
-      const byT: Record<string, Set<string>> = {};
-      (data ?? []).forEach((r) => {
-        if (!r.template_id) return;
-        (byT[r.template_id] ||= new Set()).add(r.entry_date);
-      });
-      return byT;
-    },
-  });
-
-  const defaultId = defaultTplQ.data?.id ?? null;
-  const templateIds = Array.from(
-    new Set([...(savedQ.data ?? []), ...Object.keys(entryTemplatesQ.data ?? {})])
-  ).filter((id) => id !== defaultId);
-
-  const templatesQ = useQuery({
-    queryKey: ["dev-templates", templateIds.sort().join(",")],
-    enabled: templateIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("devotional_templates").select("*").in("id", templateIds);
-      if (error) throw error;
-      return (data ?? []) as Template[];
-    },
-  });
-
-  const topicsQ = useQuery({
-    queryKey: ["topics-all"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("topics").select("*");
-      if (error) throw error;
-      const m: Record<string, Topic> = {};
-      (data ?? []).forEach((t) => { m[t.id] = t as Topic; });
-      return m;
-    },
-  });
-
-  if (ready && !userId) {
+  if (userId === null) {
     return (
       <AppShell current="devotionals">
-        <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <div className="dv-root">
-        <div className="dv-shell">
-          <div className="dv-head">
-            <h1>Devotionals</h1>
-            <p>A calm, repeatable practice space. Reflect, pray, and apply — a few minutes at a time.</p>
-          </div>
-          <div className="dv-signgate">
-            <h3>Sign in to start your practice</h3>
-            <p>Your devotional entries and progress are private and saved to your account.</p>
-            <Link to="/auth" className="dv-signin">Sign in</Link>
-          </div>
-        </div>
+        <div style={{ maxWidth: 520, margin: "80px auto", padding: 24, fontFamily: "Poppins,sans-serif", background: "#fff", borderRadius: 14, border: "1px solid rgba(20,20,20,0.08)", borderLeft: "4px solid #FF340C" }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#181A4D" }}>Sign in to open Abide</h3>
+          <p style={{ fontSize: 13.5, color: "#8a8678", margin: "6px 0 14px", lineHeight: 1.55 }}>Your entries are private and saved to your account.</p>
+          <Link to="/auth" style={{ background: "#181A4D", color: "#fff", fontWeight: 800, fontSize: 12.5, padding: "9px 18px", borderRadius: 20, textDecoration: "none" }}>Sign in</Link>
         </div>
       </AppShell>
     );
   }
 
-  const topicalLoading = savedQ.isLoading || entryTemplatesQ.isLoading || templatesQ.isLoading;
-  const topical = templatesQ.data ?? [];
-  const entryMap = entryTemplatesQ.data ?? {};
-
-  const renderCard = (t: Template, opts: { isDefault?: boolean } = {}) => {
-    const topic = t.topic_id ? topicsQ.data?.[t.topic_id] : undefined;
-    const color = opts.isDefault ? "#0F4A42" : topicColor(topic?.color_key);
-    const days = entryMap[t.id]?.size ?? 0;
-    const label = days === 0 ? "Not started yet" : `Day ${days} of an open practice`;
-    const pct = Math.min(100, days === 0 ? 4 : Math.min(100, days * 8));
+  if (defaultQ.isLoading || userId === undefined) {
     return (
-      <div key={t.id} className="dv-card" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}>
-        <div className="dv-accent" style={{ background: color }} />
-        <div className="dv-card-body" style={{ display: "flex", flexDirection: "column", minHeight: 180 }}>
-          {opts.isDefault ? (
-            <div className="dv-topic" style={{ color: "#0F4A42" }}>Always active</div>
-          ) : topic ? (
-            <Link
-              to="/topics/$slug"
-              params={{ slug: topic.slug }}
-              className="dv-topic"
-              style={{ color, textDecoration: "none" }}
-              onClick={(e) => e.stopPropagation()}
-            >{topic.name} →</Link>
-          ) : null}
-          <h3>{t.title}</h3>
-          <div className="dv-progress">
-            <div className="dv-pbar"><div style={{ width: `${pct}%`, background: color }} /></div>
-            <div className="dv-plabel">{label}</div>
-          </div>
-        </div>
-      </div>
+      <AppShell current="devotionals">
+        <div style={{ minHeight: "60vh" }} />
+      </AppShell>
     );
-  };
+  }
 
-  const renderDefaultBanner = (t: Template) => {
-    const days = entryMap[t.id]?.size ?? 0;
-    const label = days === 0 ? "Not started yet" : `Day ${days} of an open practice`;
-    const pct = Math.min(100, days === 0 ? 4 : Math.min(100, days * 8));
+  if (!defaultQ.data) {
     return (
-      <div
-        key={t.id}
-        className="dv-banner"
-        onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}
-      >
-        <div className="dv-banner-top" />
-        <div className="dv-banner-body">
-          <div className="dv-banner-main">
-            <div className="dv-banner-header">
-              <span className="dv-banner-eyebrow">Daily</span>
-              <span className="dv-banner-pill">Always active</span>
-            </div>
-            <h2 className="dv-banner-title">Abide</h2>
-            <p className="dv-banner-sub">A simple daily anchor — open, honest, and always here for you.</p>
-          </div>
-          <button
-            className="dv-banner-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate({ to: "/devotionals/$id", params: { id: t.id } });
-            }}
-          >
-            Open today's entry
-          </button>
+      <AppShell current="devotionals">
+        <div style={{ maxWidth: 520, margin: "80px auto", padding: 24, fontFamily: "Poppins,sans-serif", textAlign: "center", color: "#8a8678" }}>
+          <h3 style={{ color: "#181A4D", fontWeight: 800 }}>Abide isn't set up yet</h3>
+          <p>Check back soon.</p>
         </div>
-        <div className="dv-banner-foot">
-          <div className="dv-banner-bar"><div style={{ width: `${pct}%` }} /></div>
-          <div className="dv-banner-label">{label}</div>
-        </div>
-      </div>
+      </AppShell>
     );
-  };
+  }
 
-  return (
-    <AppShell current="devotionals">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="dv-root">
-        <div className="dv-shell">
-          <div className="dv-head">
-            <h1>Devotionals</h1>
-            <p>A calm, repeatable practice space. Pick up where you left off, or explore a new template.</p>
-          </div>
-
-          <div className="dv-section">
-            {defaultTplQ.isLoading ? (
-              <div className="dv-skel" style={{ height: 180 }} />
-            ) : defaultTplQ.data ? (
-              renderDefaultBanner(defaultTplQ.data)
-            ) : (
-              <div className="dv-empty">
-                <h3>No daily anchor is set yet</h3>
-                <p>Check back soon.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="dv-section dv-block">
-            <h2>Topical &amp; Temporary Devotionals</h2>
-            <p className="dv-sec-desc">Layer additional devotionals on top of your daily anchor — for a topic you're focused on or a season you're walking through. Add or remove these anytime.</p>
-
-            {topicalLoading ? (
-              <div className="dv-grid">
-                <div className="dv-skel" /><div className="dv-skel" /><div className="dv-skel" />
-              </div>
-            ) : topical.length === 0 ? (
-              <div className="dv-empty">
-                <h3>No topical devotionals yet</h3>
-                <p>Save a devotional from Explore to layer it on top of your daily Abide practice. Everything you write stays private to you.</p>
-                <Link to="/explore">Browse devotionals</Link>
-              </div>
-            ) : (
-              <div className="dv-grid">
-                {topical.map((t) => renderCard(t))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </AppShell>
-  );
+  return <Navigate to="/devotionals/$id" params={{ id: defaultQ.data }} replace />;
 }
-
-
