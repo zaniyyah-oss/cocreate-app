@@ -162,6 +162,79 @@ function FocusPage() {
     },
   });
 
+  // Today's entry for this topical template — the same row backs autosave here
+  // and shows up in History via the (user, template_id, entry_date) unique key.
+  const todayISO = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
+  const qc = useQueryClient();
+  const entryQ = useQuery({
+    queryKey: ["focus-entry", id, userId, todayISO],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("devotional_entries")
+        .select("*").eq("user_id", userId!).eq("template_id", id).eq("entry_date", todayISO).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const [scriptureText, setScriptureText] = useState("");
+  const [prayText, setPrayText] = useState("");
+  const [todoText, setTodoText] = useState("");
+  const [savingField, setSavingField] = useState<string | null>(null);
+  const [savedField, setSavedField] = useState<string | null>(null);
+  const hydratedRef = useRef<string>("");
+
+  useEffect(() => {
+    const key = `${todayISO}:${entryQ.data?.id ?? "new"}`;
+    if (hydratedRef.current === key) return;
+    hydratedRef.current = key;
+    const e = entryQ.data;
+    setScriptureText(e?.scripture_text ?? "");
+    setPrayText(e?.pray_text ?? "");
+    setTodoText(e?.todo_text ?? e?.apply_text ?? "");
+  }, [entryQ.data?.id, todayISO]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const upsert = useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      if (!userId) return;
+      const existing = entryQ.data;
+      if (existing?.id) {
+        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("devotional_entries").insert({
+          user_id: userId, template_id: id, entry_date: todayISO, ...patch,
+        } as any);
+        if (error) throw error;
+        trackEvent("devotional_entry_created", { template_id: id });
+      }
+    },
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ["focus-entry", id, userId, todayISO] });
+      const key = Object.keys(vars)[0];
+      setSavingField(null);
+      setSavedField(key);
+      setTimeout(() => setSavedField((s) => (s === key ? null : s)), 1400);
+    },
+  });
+
+  const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const scheduleSave = (field: string, value: unknown) => {
+    if (!userId || !ready) return;
+    setSavingField(field);
+    if (debouncers.current[field]) clearTimeout(debouncers.current[field]!);
+    debouncers.current[field] = setTimeout(() => { upsert.mutate({ [field]: value }); }, 800);
+  };
+  const statusRow = (field: string) => (
+    <div className={`fp-status ${savedField === field ? "on" : ""}`}>
+      {savingField === field ? "Saving…" : savedField === field ? "Saved" : ""}
+    </div>
+  );
+
   const t = templateQ.data;
   const topic = topicQ.data;
   const color = topicColor(topic?.color_key);
