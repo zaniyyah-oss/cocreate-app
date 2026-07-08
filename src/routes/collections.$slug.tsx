@@ -130,6 +130,13 @@ function CollectionPage() {
   const navigate = useNavigate();
   const [activeChip, setActiveChip] = useState("all");
 
+  const [userId, setUserId] = useState<string | null>(null);
+  const [addedLocal, setAddedLocal] = useState(false);
+
+  useMemo(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+  }, []);
+
   const q = useQuery({
     queryKey: ["collection-page", slug],
     queryFn: async () => {
@@ -144,9 +151,42 @@ function CollectionPage() {
         .eq("collection_id", col.id)
         .order("release_week", { ascending: true, nullsFirst: false })
         .order("position", { ascending: true });
-      return { collection: col, items: (itemsData ?? []) as CItem[] };
+      let template: { id: string; slug: string | null; title: string } | null = null;
+      if (col.devotional_template_id) {
+        const { data: t } = await (supabase.from as any)("devotional_templates")
+          .select("id, slug, title")
+          .eq("id", col.devotional_template_id)
+          .maybeSingle();
+        template = t ?? null;
+      }
+      return { collection: col, items: (itemsData ?? []) as CItem[], template };
     },
   });
+
+  const addedQ = useQuery({
+    queryKey: ["collection-devo-added", userId, q.data?.template?.id],
+    enabled: !!userId && !!q.data?.template?.id,
+    queryFn: async () => {
+      const { data } = await (supabase.from as any)("saved_items")
+        .select("id")
+        .eq("user_id", userId!)
+        .eq("devotional_template_id", q.data!.template!.id)
+        .limit(1);
+      return (data ?? []).length > 0;
+    },
+  });
+  const isAdded = addedLocal || !!addedQ.data;
+
+  const addToAbide = async () => {
+    const tpl = q.data?.template;
+    if (!tpl) return;
+    if (!userId) { navigate({ to: "/auth" }); return; }
+    await (supabase.from as any)("saved_items").upsert(
+      { user_id: userId, devotional_template_id: tpl.id },
+      { onConflict: "user_id,devotional_template_id" },
+    );
+    setAddedLocal(true);
+  };
 
   const now = Date.now();
 
