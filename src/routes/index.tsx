@@ -585,7 +585,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
         <div className="hp-collection-grid">
           {lead && (
             <div className="hp-cc hp-cc-lead" onClick={() => goContent(lead)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${lead.thumbnail_url || IMG_FALLBACK(lead.id ?? "l")})` }} />
+              <div className={`hp-cc-thumb ${(lead.type ?? 'essay')}`} style={{ backgroundImage: `url(${lead.thumbnail_url || IMG_FALLBACK(lead.id ?? "l")})` }} />
               <div className="hp-cc-body">
                 <h3 className="hp-cc-title">{lead.title}</h3>
                 {lead.excerpt && <p className="hp-cc-desc">{lead.excerpt}</p>}
