@@ -506,6 +506,32 @@ function EntryPage() {
           <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
+            {/* Focus-on chip row */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 18 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a8678", marginRight: 4 }}>Focus on</span>
+              <button
+                type="button"
+                onClick={() => setFocusSection(null)}
+                style={{ border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, padding: "6px 14px", borderRadius: 999, cursor: "pointer" }}
+              >
+                All of today
+              </button>
+              {(topicalsQ.data ?? []).map(tp => {
+                const c = topicColor(tp.topic?.color_key);
+                return (
+                  <Link
+                    key={tp.id}
+                    to="/devotionals/focus/$id"
+                    params={{ id: tp.id }}
+                    style={{ border: "1px solid rgba(24,26,77,0.15)", background: "#fff", color: "#181A4D", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, padding: "6px 14px", borderRadius: 999, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                  >
+                    <span style={{ width: 8, height: 8, borderRadius: 99, background: c }} />
+                    {tp.topic?.name ?? tp.title}
+                  </Link>
+                );
+              })}
+            </div>
+
             <div className="de-headcard">
               <div className="de-headcard-inner">
                 <div className="de-headtop">
@@ -527,6 +553,8 @@ function EntryPage() {
                 />
               </div>
             </div>
+
+
 
 
             <div className="de-shell-inner">
