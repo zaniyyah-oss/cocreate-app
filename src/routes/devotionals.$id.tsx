@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,6 +73,12 @@ const CSS = `
 .de-back{color:#8a8678;font-weight:700;font-size:12.5px;text-decoration:none;}
 .de-back:hover{color:#181A4D;}
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
+.de-navmenu{display:none;align-items:center;gap:2px;}
+.de-navmenu a{color:#8a8678;text-decoration:none;font-weight:700;font-size:13px;padding:8px 14px;border-radius:20px;transition:background .15s,color .15s;}
+.de-navmenu a:hover{color:#181A4D;background:#FBF8ED;}
+.de-navmenu a.active{background:#DCE07A;color:#181A4D;}
+.de-navright{display:flex;align-items:center;gap:10px;}
+@media (min-width:820px){.de-navmenu{display:flex;}}
 .de-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
 .de-shell-inner{padding:0;}
 .de-headcard{background:transparent;padding:0;margin:0 0 4px;border:none;position:relative;}
@@ -244,6 +250,29 @@ type SaveField =
   | "entry_title"
   | "entry_subtitle";
 
+
+function NavMenu() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items: Array<{ to: string; label: string; match?: string[] }> = [
+    { to: "/", label: "Home" },
+    { to: "/explore", label: "Explore" },
+    { to: "/devotionals", label: "Devotionals" },
+    { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
+    { to: "/profile", label: "Profile" },
+  ];
+  const isActive = (it: { to: string; match?: string[] }) => {
+    if (it.match?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
+    if (it.to === "/") return pathname === "/";
+    return pathname === it.to || pathname.startsWith(it.to + "/");
+  };
+  return (
+    <div className="de-navmenu">
+      {items.map((it) => (
+        <Link key={it.to} to={it.to} className={isActive(it) ? "active" : ""}>{it.label}</Link>
+      ))}
+    </div>
+  );
+}
 
 function EntryPage() {
   const { id } = Route.useParams();
@@ -484,8 +513,11 @@ function EntryPage() {
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <nav className="de-nav">
           <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-          <Link to="/devotionals" className="de-back">← Back</Link>
-          <Link to="/auth" className="de-signin">Sign in</Link>
+          <NavMenu />
+          <div className="de-navright">
+            <Link to="/devotionals" className="de-back">← Back</Link>
+            <Link to="/auth" className="de-signin">Sign in</Link>
+          </div>
         </nav>
         <div className="de-shell">
           <div className="de-signgate">
@@ -523,8 +555,10 @@ function EntryPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-        <Link to="/devotionals" className="de-back">← Back to Devotionals</Link>
-        <div style={{ width: 60 }} />
+        <NavMenu />
+        <div className="de-navright">
+          <Link to="/devotionals" className="de-back">← Back to Devotionals</Link>
+        </div>
       </nav>
 
       <div className="de-shell">
