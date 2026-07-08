@@ -160,9 +160,11 @@ const CSS = `
 
 /* Stack: Read/Pray/To-Do share ONE white card with connected column dividers */
 .de-stack{border-radius:14px;overflow:hidden;border:1px solid rgba(24,26,77,0.12);background:#fff;margin-bottom:14px;position:relative;}
-.de-stack::before,.de-stack::after{content:'';position:absolute;top:0;bottom:0;width:1px;background:rgba(24,26,77,0.12);z-index:2;pointer-events:none;}
-.de-stack::before{left:33.3333%;}
-.de-stack::after{left:66.6666%;}
+@media (min-width:900px){
+  .de-stack::before,.de-stack::after{content:'';position:absolute;top:0;bottom:0;width:1px;background:rgba(24,26,77,0.12);z-index:2;pointer-events:none;}
+  .de-stack::before{left:33.3333%;}
+  .de-stack::after{left:66.6666%;}
+}
 .de-cols{display:grid;grid-template-columns:1fr;gap:0;}
 .de-cols .de-block{margin-bottom:0;border:none;border-radius:0;background:transparent;height:100%;display:flex;flex-direction:column;padding:20px 22px;}
 .de-cols .de-block + .de-block{border-top:1px solid rgba(24,26,77,0.12);}
