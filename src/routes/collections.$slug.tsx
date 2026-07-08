@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
@@ -130,6 +130,15 @@ function CollectionPage() {
   const navigate = useNavigate();
   const [activeChip, setActiveChip] = useState("all");
 
+  const [userId, setUserId] = useState<string | null>(null);
+  const [addedLocal, setAddedLocal] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   const q = useQuery({
     queryKey: ["collection-page", slug],
     queryFn: async () => {
@@ -144,9 +153,42 @@ function CollectionPage() {
         .eq("collection_id", col.id)
         .order("release_week", { ascending: true, nullsFirst: false })
         .order("position", { ascending: true });
-      return { collection: col, items: (itemsData ?? []) as CItem[] };
+      let template: { id: string; slug: string | null; title: string } | null = null;
+      if (col.devotional_template_id) {
+        const { data: t } = await (supabase.from as any)("devotional_templates")
+          .select("id, slug, title")
+          .eq("id", col.devotional_template_id)
+          .maybeSingle();
+        template = t ?? null;
+      }
+      return { collection: col, items: (itemsData ?? []) as CItem[], template };
     },
   });
+
+  const addedQ = useQuery({
+    queryKey: ["collection-devo-added", userId, q.data?.template?.id],
+    enabled: !!userId && !!q.data?.template?.id,
+    queryFn: async () => {
+      const { data } = await (supabase.from as any)("saved_items")
+        .select("id")
+        .eq("user_id", userId!)
+        .eq("devotional_template_id", q.data!.template!.id)
+        .limit(1);
+      return (data ?? []).length > 0;
+    },
+  });
+  const isAdded = addedLocal || !!addedQ.data;
+
+  const addToAbide = async () => {
+    const tpl = q.data?.template;
+    if (!tpl) return;
+    if (!userId) { navigate({ to: "/auth" }); return; }
+    await (supabase.from as any)("saved_items").upsert(
+      { user_id: userId, devotional_template_id: tpl.id },
+      { onConflict: "user_id,devotional_template_id" },
+    );
+    setAddedLocal(true);
+  };
 
   const now = Date.now();
 
@@ -234,15 +276,26 @@ function CollectionPage() {
           </div>
         )}
 
-        {collection.devotional_template_id && (
+        {collection.devotional_template_id && q.data.template && (
           <div className="col-devoanchor">
             <div className="left">
-              <h4>New devotional layer — {collection.title}</h4>
-              <p>A guided companion to Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
+              <h4>New devotional layer — {q.data.template.title || collection.title}</h4>
+              <p>A {q.data.template && "90-day"} guided companion to Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
             </div>
             <div className="right">
-              <Link to="/devotionals/$id" params={{ id: collection.devotional_template_id }} className="col-addbtn">+ Add to my Abide</Link>
-              <Link to="/devotionals/$id" params={{ id: collection.devotional_template_id }} className="col-seeinside">See what's inside →</Link>
+              <button
+                className="col-addbtn"
+                onClick={addToAbide}
+                disabled={isAdded}
+                style={isAdded ? { opacity: 0.7, cursor: "default" } : undefined}
+              >
+                {isAdded ? "✓ Added to my Abide" : "+ Add to my Abide"}
+              </button>
+              {q.data.template.slug ? (
+                <Link to="/devotionals/$slug/overview" params={{ slug: q.data.template.slug }} className="col-seeinside">See what's inside →</Link>
+              ) : (
+                <Link to="/devotionals/$slug/overview" params={{ slug: q.data.template.id }} className="col-seeinside">See what's inside →</Link>
+              )}
             </div>
           </div>
         )}
