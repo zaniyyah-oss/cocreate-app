@@ -571,6 +571,46 @@ function EntryPage() {
           <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
+            {search.view === "today" && selectedDate !== todayISO() && (
+              <div
+                style={{
+                  background: "#FFAE00",
+                  color: "#181A4D",
+                  fontFamily: "'Poppins',sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  padding: "12px 18px",
+                  borderRadius: 10,
+                  marginBottom: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span>
+                  ⏳ You're viewing a past day — {formatDate(selectedDate)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(todayISO())}
+                  style={{
+                    background: "#181A4D",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 999,
+                    padding: "6px 14px",
+                    fontFamily: "'Poppins',sans-serif",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  Jump to today
+                </button>
+              </div>
+            )}
             {/* View switcher */}
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
               <div className="de-viewtabs">
