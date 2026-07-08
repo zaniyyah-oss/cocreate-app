@@ -531,7 +531,37 @@ function EntryPage() {
           <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
+            {/* View switcher */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
+              <div className="de-viewtabs">
+                {(["today", "week", "month"] as const).map((v) => (
+                  <button
+                    key={v}
+                    className={search.view === v ? "active" : ""}
+                    onClick={() =>
+                      navigate({
+                        to: "/devotionals/$id",
+                        params: { id },
+                        search: (prev: any) => ({ ...prev, view: v === "today" ? undefined : v }),
+                      })
+                    }
+                  >
+                    {v === "today" ? "Today" : v === "week" ? "This week" : "Month"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {search.view !== "today" ? (
+              userId ? (
+                <HistoryView userId={userId} templateId={id} range={search.view} />
+              ) : (
+                <div style={{ textAlign: "center", padding: 40, color: "#8a8678" }}>Sign in to view your history.</div>
+              )
+            ) : (
+              <>
             {/* Focus-on chip row */}
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 18 }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a8678", marginRight: 4 }}>Focus on</span>
               <button
