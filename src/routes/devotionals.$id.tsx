@@ -952,6 +952,12 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
   const weekday = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
   const monthday = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
+  const navigate = useNavigate();
+  const titleText = range === "week" ? "Covered This Week" : "Covered This Month";
+  const subtitleText = range === "week"
+    ? "An overview of what you've covered, worked on, and worked through with the Lord over the course of this week."
+    : "An overview of what came up continually over the month. Use this recap to help plan a few of your studies and workspaces.";
+
   return (
     <div>
       <div className="de-headtop" style={{ marginBottom: 6 }}>
@@ -960,10 +966,10 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
         <span className="de-headdate">{range === "week" ? "This week" : "Month"}</span>
       </div>
       <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 27, fontWeight: 700, color: "#181A4D", letterSpacing: "-0.01em", margin: "2px 0 6px" }}>
-        Your practice, laid out
+        {titleText}
       </div>
       <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 14, color: "#20201C", opacity: 0.65, margin: "0 0 22px", maxWidth: 640 }}>
-        Not a streak to perform — a mirror. If it's been a hard stretch, this shows you that too.
+        {subtitleText}
       </p>
 
       {histQ.isLoading ? (
@@ -976,8 +982,21 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
           {perDay.map(p => {
             const hasEntry = p.dayEntries.length > 0;
             const future = isFuture(p.date);
+            const openRow = () => {
+              if (future) return;
+              navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date: p.iso } as any });
+            };
+            const flatWsTags = p.wsItems.flatMap(w => w.tags.map(t => ({ itemId: w.id, tag: t })));
             return (
-              <div key={p.iso} className={`de-hist-row ${hasEntry ? "" : "empty"}`}>
+              <div
+                key={p.iso}
+                className={`de-hist-row ${hasEntry ? "" : "empty"}`}
+                onClick={openRow}
+                role="button"
+                tabIndex={future ? -1 : 0}
+                onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !future) { e.preventDefault(); openRow(); } }}
+                style={future ? { cursor: "default" } : undefined}
+              >
                 <div>{weekday(p.date)}</div>
                 <div>{monthday(p.date)}</div>
                 <div>
@@ -995,7 +1014,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                 </div>
                 <div>
                   {hasEntry && p.subtitle ? (
-                    <span className="de-hist-subtitle" title={p.subtitle}>{p.subtitle}</span>
+                    <span className="de-hist-subtitle">{p.subtitle}</span>
                   ) : (
                     <span className="de-hist-none">—</span>
                   )}
@@ -1016,13 +1035,24 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                   ))}
                 </div>
                 <div className="de-hist-tags">
-                  {p.wsTags.length === 0 ? (
+                  {flatWsTags.length === 0 ? (
                     <span className="de-hist-none">none</span>
                   ) : (
-                    p.wsTags.map(t => <span key={t} className="de-hist-wstag">#{t}</span>)
+                    flatWsTags.map((w, i) => (
+                      <Link
+                        key={`${w.itemId}-${w.tag}-${i}`}
+                        to="/devotionals/$id"
+                        params={{ id: templateId }}
+                        search={{ date: p.iso, ws: w.itemId } as any}
+                        className="de-hist-wstag"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        #{w.tag}
+                      </Link>
+                    ))
                   )}
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                   {future ? (
                     <span className="de-hist-none">—</span>
                   ) : (
