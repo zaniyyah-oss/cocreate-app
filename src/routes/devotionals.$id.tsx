@@ -781,3 +781,210 @@ function EntryPage() {
     </div>
   );
 }
+
+// ============================================================================
+// History view (This week / Month) — read-only table of daily entries in range
+// ============================================================================
+
+function startOfWeekMonday(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  const day = x.getDay(); // 0=Sun..6=Sat
+  const diff = (day + 6) % 7; // days since Monday
+  x.setDate(x.getDate() - diff);
+  return x;
+}
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+function HistoryView({ userId, templateId, range }: { userId: string; templateId: string; range: "week" | "month" }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let days: Date[] = [];
+  if (range === "week") {
+    const start = startOfWeekMonday(today);
+    days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  } else {
+    const y = today.getFullYear(), m = today.getMonth();
+    const last = new Date(y, m + 1, 0).getDate();
+    days = Array.from({ length: last }, (_, i) => new Date(y, m, i + 1));
+  }
+  const startISO = isoDate(days[0]);
+  const endISO = isoDate(days[days.length - 1]);
+
+  const histQ = useQuery({
+    queryKey: ["dev-history", userId, range, startISO, endISO],
+    queryFn: async () => {
+      const [entriesRes, wsRes] = await Promise.all([
+        supabase.from("devotional_entries").select("*").eq("user_id", userId)
+          .gte("entry_date", startISO).lte("entry_date", endISO),
+        supabase.from("workspace_items" as any).select("id,tags,created_at,devotional_entry_id")
+          .eq("user_id", userId)
+          .gte("created_at", startISO + "T00:00:00")
+          .lte("created_at", endISO + "T23:59:59"),
+      ]);
+      if (entriesRes.error) throw entriesRes.error;
+      const entries = (entriesRes.data ?? []) as Entry[];
+      const ws = (wsRes.data ?? []) as Array<{ id: string; tags: string[]; created_at: string; devotional_entry_id: string | null }>;
+
+      const tplIds = Array.from(new Set(entries.map(e => e.template_id).filter(Boolean))) as string[];
+      let templates: Template[] = [];
+      const topicMap: Record<string, Topic> = {};
+      if (tplIds.length) {
+        const { data: tpls } = await supabase.from("devotional_templates").select("*").in("id", tplIds);
+        templates = (tpls ?? []) as Template[];
+        const topicIds = Array.from(new Set(templates.map(t => t.topic_id).filter(Boolean))) as string[];
+        if (topicIds.length) {
+          const { data: tps } = await supabase.from("topics").select("*").in("id", topicIds);
+          (tps ?? []).forEach(tp => { topicMap[tp.id] = tp as Topic; });
+        }
+      }
+      const tplMap: Record<string, Template> = {};
+      templates.forEach(t => { tplMap[t.id] = t; });
+
+      return { entries, ws, tplMap, topicMap };
+    },
+  });
+
+  const data = histQ.data;
+  // Aggregate per day.
+  const perDay = days.map(d => {
+    const iso = isoDate(d);
+    const dayEntries = (data?.entries ?? []).filter(e => e.entry_date === iso);
+    const dayWs = (data?.ws ?? []).filter(w => (w.created_at ?? "").slice(0, 10) === iso);
+    const wsTags = Array.from(new Set(dayWs.flatMap(w => w.tags ?? [])));
+    // Pick a representative entry for title: prefer default (Abide) template, else first.
+    let representative: Entry | undefined;
+    if (data) {
+      representative = dayEntries.find(e => e.template_id && data.tplMap[e.template_id]?.is_default) ?? dayEntries[0];
+    } else representative = dayEntries[0];
+    // Focus tags: one per unique template on that day.
+    const focusTags = dayEntries
+      .filter(e => !!e.template_id)
+      .map(e => {
+        const tpl = data?.tplMap[e.template_id as string];
+        if (!tpl) return null;
+        const topic = tpl.topic_id ? data?.topicMap[tpl.topic_id] ?? null : null;
+        const isDaily = !!tpl.is_default;
+        const color = topic ? topicColor(topic.color_key) : "#181A4D";
+        const name = isDaily ? "daily" : (topic?.name ?? tpl.title);
+        return { key: tpl.id, name, isDaily, color };
+      })
+      .filter(Boolean) as Array<{ key: string; name: string; isDaily: boolean; color: string }>;
+    // Dedupe by tpl id
+    const seen = new Set<string>();
+    const uniqueFocus = focusTags.filter(f => (seen.has(f.key) ? false : (seen.add(f.key), true)));
+    // Mood dot: amber if there's any written content, lime if entry exists but empty, none otherwise.
+    const hasText = dayEntries.some(e =>
+      [e.where_text, e.reflect_text, e.scripture_text, e.pray_text, e.todo_text, e.apply_text, e.entry_title].some(v => (v ?? "").toString().trim().length > 0)
+    );
+    const mood = dayEntries.length === 0 ? null : hasText ? "#FFAE00" : "#DCE07A";
+    const title = representative?.entry_title?.trim()
+      || (representative && (representative.where_text ?? representative.reflect_text ?? "").toString().trim().slice(0, 80))
+      || (dayEntries.length ? "Untitled entry" : "");
+    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title };
+  });
+
+  const written = perDay.filter(p => p.dayEntries.length > 0).length;
+  const isFuture = (d: Date) => d.getTime() > today.getTime();
+  const rangeLabel = range === "week" ? "this week" : "this month";
+  const summary = `${written} of ${perDay.filter(p => !isFuture(p.date)).length} days ${rangeLabel}. Not a score — a mirror.`;
+
+  const weekday = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
+  const monthday = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+  return (
+    <div>
+      <div className="de-headtop" style={{ marginBottom: 6 }}>
+        <span className="de-headtitle-brand">Abide</span>
+        <span className="de-headarrow">→</span>
+        <span className="de-headdate">{range === "week" ? "This week" : "Month"}</span>
+      </div>
+      <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 27, fontWeight: 700, color: "#181A4D", letterSpacing: "-0.01em", margin: "2px 0 6px" }}>
+        Your practice, laid out
+      </div>
+      <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 14, color: "#20201C", opacity: 0.65, margin: "0 0 22px", maxWidth: 640 }}>
+        Not a streak to perform — a mirror. If it's been a hard stretch, this shows you that too.
+      </p>
+
+      {histQ.isLoading ? (
+        <div style={{ padding: 40, textAlign: "center", color: "#8a8678" }}>Loading…</div>
+      ) : (
+        <>
+          <div className="de-hist-header">
+            <div>Day</div><div>Date</div><div>Entry</div><div>Focus</div><div>Workspace tags</div><div />
+          </div>
+          {perDay.map(p => {
+            const hasEntry = p.dayEntries.length > 0;
+            const future = isFuture(p.date);
+            return (
+              <div key={p.iso} className={`de-hist-row ${hasEntry ? "" : "empty"}`}>
+                <div>{weekday(p.date)}</div>
+                <div>{monthday(p.date)}</div>
+                <div>
+                  {hasEntry ? (
+                    <>
+                      <span className="de-hist-mood" style={{ background: p.mood ?? "transparent" }} />
+                      <span className="de-hist-name">{p.title || "Untitled entry"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="de-hist-mood" style={{ background: "transparent", border: "1px solid rgba(24,26,77,0.12)" }} />
+                      <span style={{ color: "#8a8678" }}>— no entry —</span>
+                    </>
+                  )}
+                </div>
+                <div className="de-hist-tags">
+                  {p.uniqueFocus.length === 0 ? null : p.uniqueFocus.map(f => (
+                    f.isDaily ? (
+                      <span key={f.key} className="de-hist-tag daily">daily</span>
+                    ) : (
+                      <span
+                        key={f.key}
+                        className="de-hist-tag"
+                        style={{ background: hexToRgba(f.color, 0.18), color: f.color }}
+                      >
+                        {f.name}
+                      </span>
+                    )
+                  ))}
+                </div>
+                <div className="de-hist-tags">
+                  {p.wsTags.length === 0 ? (
+                    <span className="de-hist-none">none</span>
+                  ) : (
+                    p.wsTags.map(t => <span key={t} className="de-hist-wstag">#{t}</span>)
+                  )}
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  {future ? (
+                    <span className="de-hist-none">—</span>
+                  ) : (
+                    <Link
+                      to="/devotionals/$id"
+                      params={{ id: templateId }}
+                      search={{ date: p.iso } as any}
+                      className="de-hist-open"
+                    >
+                      {hasEntry ? "open →" : "start →"}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <p className="de-streaknote">{summary}</p>
+        </>
+      )}
+    </div>
+  );
+}
+
