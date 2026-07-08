@@ -833,7 +833,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
       ]);
       if (entriesRes.error) throw entriesRes.error;
       const entries = (entriesRes.data ?? []) as Entry[];
-      const ws = (wsRes.data ?? []) as Array<{ id: string; tags: string[]; created_at: string; devotional_entry_id: string | null }>;
+      const ws = (wsRes.data ?? []) as unknown as Array<{ id: string; tags: string[]; created_at: string; devotional_entry_id: string | null }>;
 
       const tplIds = Array.from(new Set(entries.map(e => e.template_id).filter(Boolean))) as string[];
       let templates: Template[] = [];
