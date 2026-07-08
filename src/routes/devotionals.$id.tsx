@@ -685,8 +685,10 @@ function EntryPage() {
 
                   {/* To-Do */}
                   <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
-                    {focusBtn("todo")}
-                    <span className="de-badge todo">to-do</span>
+                    <div className="de-block-header">
+                      <span className="de-badge todo">to-do</span>
+                      {focusBtn("todo")}
+                    </div>
                     
                     <textarea
                       className="de-textarea short"
