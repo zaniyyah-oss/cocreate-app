@@ -274,6 +274,36 @@ function EntryPage() {
     },
   });
 
+  // Active topical devotionals attached by this user (saved or with entries),
+  // excluding the current default (Abide) template.
+  const topicalsQ = useQuery({
+    queryKey: ["dev-active-topicals", userId, id],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const [{ data: saved }, { data: entryTpls }] = await Promise.all([
+        supabase.from("saved_items").select("devotional_template_id").eq("user_id", userId!).not("devotional_template_id", "is", null),
+        supabase.from("devotional_entries").select("template_id").eq("user_id", userId!).not("template_id", "is", null),
+      ]);
+      const ids = Array.from(new Set([
+        ...(saved ?? []).map(r => r.devotional_template_id).filter(Boolean) as string[],
+        ...(entryTpls ?? []).map(r => r.template_id).filter(Boolean) as string[],
+      ])).filter(x => x !== id);
+      if (ids.length === 0) return [] as Array<Template & { topic: Topic | null }>;
+      const { data: tpls } = await supabase
+        .from("devotional_templates")
+        .select("*")
+        .in("id", ids)
+        .eq("status", "published");
+      const topicIds = Array.from(new Set((tpls ?? []).map(x => x.topic_id).filter(Boolean))) as string[];
+      const topicMap: Record<string, Topic> = {};
+      if (topicIds.length) {
+        const { data: tps } = await supabase.from("topics").select("*").in("id", topicIds);
+        (tps ?? []).forEach(tp => { topicMap[tp.id] = tp as Topic; });
+      }
+      return (tpls ?? []).map(x => ({ ...(x as Template), topic: x.topic_id ? (topicMap[x.topic_id] ?? null) : null }));
+    },
+  });
+
   const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.entry_date === selectedDate);
 
   // 5-section state
