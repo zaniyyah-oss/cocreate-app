@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library";
 
@@ -25,14 +26,6 @@ const DESKTOP_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; ma
 ];
 
 
-// Mobile bottom nav: Saved + Notes fold into "Library" to keep bar uncluttered.
-const MOBILE_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; matchPaths?: string[] }[] = [
-  { key: "home",        label: "Home",        to: "/",            icon: ICON.home },
-  { key: "explore",     label: "Explore",     to: "/explore",     icon: ICON.explore },
-  { key: "devotionals", label: "Workspace", to: "/devotionals", icon: ICON.devotionals },
-  { key: "library",     label: "Library",     to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
-  { key: "profile",     label: "Profile",     to: "/profile",     icon: ICON.profile },
-];
 
 const SHELL_CSS = `
 .app-shell, .app-shell *{box-sizing:border-box;}
@@ -210,14 +203,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
         </div>
       </div>
 
-      {/* Fixed mobile bottom nav */}
-      <nav className="app-bottomnav" aria-label="Primary mobile">
-        {MOBILE_NAV.map((n) => (
-          <Link key={n.key} to={n.to} className={isActive(n) ? "active" : ""}>
-            {n.icon}<span>{n.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <MobileBottomNav />
     </div>
   );
 }

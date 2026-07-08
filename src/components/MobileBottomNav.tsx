@@ -1,0 +1,42 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library";
+
+const ICON = {
+  home:        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>,
+  explore:     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>,
+  devotionals: <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M8 7h8M8 11h5"/></svg>,
+  saved:       <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
+  notes:       <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>,
+  library:     <svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 15-4-1z"/></svg>,
+  profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
+};
+
+const MOBILE_NAV: { key: NavKey; label: string; to: string; matchPaths?: string[] }[] = [
+  { key: "home",        label: "Home",        to: "/" },
+  { key: "explore",     label: "Explore",     to: "/explore" },
+  { key: "devotionals", label: "Workspace", to: "/devotionals" },
+  { key: "library",     label: "Library",     to: "/saved",       matchPaths: ["/saved", "/notes"] },
+  { key: "profile",     label: "Profile",     to: "/profile" },
+];
+
+export function MobileBottomNav() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const isActive = (item: { key: NavKey; to: string; matchPaths?: string[] }) => {
+    if (item.matchPaths?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
+    if (item.to === "/") return pathname === "/";
+    return pathname === item.to || pathname.startsWith(item.to + "/");
+  };
+
+  return (
+    <nav className="app-bottomnav" aria-label="Primary mobile">
+      {MOBILE_NAV.map((n) => (
+        <Link key={n.key} to={n.to} className={isActive(n) ? "active" : ""}>
+          {ICON[n.key]}<span>{n.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
