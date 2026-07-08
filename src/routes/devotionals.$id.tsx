@@ -669,8 +669,10 @@ function EntryPage() {
 
                   {/* Pray */}
                   <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
-                    {focusBtn("pray")}
-                    <span className="de-badge pray">pray</span>
+                    <div className="de-block-header">
+                      <span className="de-badge pray">pray</span>
+                      {focusBtn("pray")}
+                    </div>
                     
                     <textarea
                       className="de-textarea"
