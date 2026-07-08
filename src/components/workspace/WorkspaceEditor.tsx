@@ -210,6 +210,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     <div className="ws-toolbar" ref={barRef}>
       {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
       {btn(<i>I</i>, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
+      {btn(<span style={{ textDecoration: "underline" }}>U</span>, () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"), `Underline (${mod}+U)`)}
+      {btn("H1", () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }), `Heading 1 (${mod}+${alt}+1)`)}
       {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
       {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
       {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
