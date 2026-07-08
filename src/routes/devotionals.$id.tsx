@@ -664,7 +664,7 @@ function EntryPage() {
                   const readTeaser = tp.scripture_focus || tp.title;
                   const prayTeaser = tp.pray_prompt || "Pray with this in view.";
                   const todoTeaser = tp.apply_prompt || "Carry this into today.";
-                  const go = () => navigate({ to: "/devotionals/$id", params: { id: tp.id } });
+                  const go = () => navigate({ to: "/devotionals/focus/$id", params: { id: tp.id } });
                   return (
                     <div key={tp.id} className="de-band" style={{ background: tint }}>
                       <div className="de-band-cell" onClick={go}>
