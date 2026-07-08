@@ -117,7 +117,7 @@ const CSS = `
 @media(max-width:899px){.hp-campaign-top{flex-direction:column;}}
 .hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
 
-.hp-banner{position:relative;border-radius:16px;overflow:hidden;height:200px;margin:16px 0 20px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;}
+.hp-banner{position:relative;border-radius:16px;overflow:hidden;height:200px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;flex:1 1 0;min-width:0;}
 .hp-banner.hasimg::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(24,26,77,0.4));}
 .hp-uploadhint{text-align:center;color:var(--cream);position:relative;z-index:2;}
 .hp-uploadhint .icon{width:38px;height:38px;border:2px dashed rgba(251,248,237,0.5);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;}
