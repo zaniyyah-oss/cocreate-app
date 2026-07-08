@@ -111,7 +111,7 @@ const CSS = `
 .hp-campaign-title{font-size:24px;font-weight:900;color:var(--navy);margin:0 0 6px;letter-spacing:-0.01em;}
 @media (min-width:900px){.hp-campaign-title{font-size:26px;}}
 
-.hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:0;flex:1 1 0;min-width:0;}
+.hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:0 0 14px;width:100%;box-sizing:border-box;}
 .hp-campaign-explainer p{margin:0;font-size:13px;color:var(--ink);opacity:0.7;line-height:1.6;}
 .hp-campaign-top{display:block;margin:14px 0 20px;}
 .hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
