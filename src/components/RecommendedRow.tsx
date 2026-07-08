@@ -12,6 +12,8 @@ const TYPE_META: Record<ContentType, { label: string; cls: string }> = {
   essay: { label: "Essay", cls: "essay" },
   podcast: { label: "Podcast", cls: "podcast" },
   blog: { label: "Blog", cls: "essay" },
+  clip: { label: "Clip", cls: "podcast" },
+  promoted: { label: "Promoted", cls: "teaching" },
 };
 
 const IMG_FALLBACK = (id: string) => `https://picsum.photos/seed/${id}/600/400`;

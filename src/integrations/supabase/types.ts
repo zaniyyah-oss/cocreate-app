@@ -103,12 +103,159 @@ export type Database = {
           },
         ]
       }
+      collection_items: {
+        Row: {
+          collection_id: string
+          content_id: string
+          created_at: string
+          id: string
+          layout_slot: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          collection_id: string
+          content_id: string
+          created_at?: string
+          id?: string
+          layout_slot?: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          collection_id?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          layout_slot?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_items_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_items_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description_md: string | null
+          devotional_template_id: string | null
+          eyebrow: string | null
+          featured_clip_content_id: string | null
+          id: string
+          intro_video_content_id: string | null
+          published_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at: string
+          week_number: number | null
+          writeup_body: string | null
+          writeup_title: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description_md?: string | null
+          devotional_template_id?: string | null
+          eyebrow?: string | null
+          featured_clip_content_id?: string | null
+          id?: string
+          intro_video_content_id?: string | null
+          published_at?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at?: string
+          week_number?: number | null
+          writeup_body?: string | null
+          writeup_title?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description_md?: string | null
+          devotional_template_id?: string | null
+          eyebrow?: string | null
+          featured_clip_content_id?: string | null
+          id?: string
+          intro_video_content_id?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string
+          updated_at?: string
+          week_number?: number | null
+          writeup_body?: string | null
+          writeup_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_devotional_template_id_fkey"
+            columns: ["devotional_template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_featured_clip_content_id_fkey"
+            columns: ["featured_clip_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_featured_clip_content_id_fkey"
+            columns: ["featured_clip_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_intro_video_content_id_fkey"
+            columns: ["intro_video_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_intro_video_content_id_fkey"
+            columns: ["intro_video_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           author_name: string | null
           body: string | null
           created_at: string
+          duration_seconds: number | null
           excerpt: string | null
+          external_url: string | null
           id: string
           is_seed: boolean
           media_url: string | null
@@ -120,12 +267,15 @@ export type Database = {
           topic_id: string | null
           type: Database["public"]["Enums"]["content_type"]
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           author_name?: string | null
           body?: string | null
           created_at?: string
+          duration_seconds?: number | null
           excerpt?: string | null
+          external_url?: string | null
           id?: string
           is_seed?: boolean
           media_url?: string | null
@@ -137,12 +287,15 @@ export type Database = {
           topic_id?: string | null
           type: Database["public"]["Enums"]["content_type"]
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           author_name?: string | null
           body?: string | null
           created_at?: string
+          duration_seconds?: number | null
           excerpt?: string | null
+          external_url?: string | null
           id?: string
           is_seed?: boolean
           media_url?: string | null
@@ -154,6 +307,7 @@ export type Database = {
           topic_id?: string | null
           type?: Database["public"]["Enums"]["content_type"]
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -164,6 +318,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_scriptures: {
+        Row: {
+          created_at: string
+          id: string
+          reference: string
+          updated_at: string
+          verse_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reference: string
+          updated_at?: string
+          verse_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reference?: string
+          updated_at?: string
+          verse_text?: string
+        }
+        Relationships: []
       }
       devotional_entries: {
         Row: {
@@ -545,6 +723,39 @@ export type Database = {
           },
         ]
       }
+      sticky_notes: {
+        Row: {
+          body: string
+          color: string
+          created_at: string
+          id: string
+          position: number
+          rotation: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          color?: string
+          created_at?: string
+          id?: string
+          position?: number
+          rotation?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          color?: string
+          created_at?: string
+          id?: string
+          position?: number
+          rotation?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topic_subscriptions: {
         Row: {
           created_at: string
@@ -690,7 +901,9 @@ export type Database = {
         Row: {
           author_name: string | null
           created_at: string | null
+          duration_seconds: number | null
           excerpt: string | null
+          external_url: string | null
           id: string | null
           published_at: string | null
           scripture_reference: string | null
@@ -698,11 +911,14 @@ export type Database = {
           title: string | null
           topic_id: string | null
           type: Database["public"]["Enums"]["content_type"] | null
+          video_url: string | null
         }
         Insert: {
           author_name?: string | null
           created_at?: string | null
+          duration_seconds?: number | null
           excerpt?: string | null
+          external_url?: string | null
           id?: string | null
           published_at?: string | null
           scripture_reference?: string | null
@@ -710,11 +926,14 @@ export type Database = {
           title?: string | null
           topic_id?: string | null
           type?: Database["public"]["Enums"]["content_type"] | null
+          video_url?: string | null
         }
         Update: {
           author_name?: string | null
           created_at?: string | null
+          duration_seconds?: number | null
           excerpt?: string | null
+          external_url?: string | null
           id?: string | null
           published_at?: string | null
           scripture_reference?: string | null
@@ -722,6 +941,7 @@ export type Database = {
           title?: string | null
           topic_id?: string | null
           type?: Database["public"]["Enums"]["content_type"] | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -748,7 +968,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       content_status: "draft" | "published"
-      content_type: "teaching" | "essay" | "podcast" | "blog"
+      content_type:
+        | "teaching"
+        | "essay"
+        | "podcast"
+        | "blog"
+        | "clip"
+        | "promoted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -878,7 +1104,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       content_status: ["draft", "published"],
-      content_type: ["teaching", "essay", "podcast", "blog"],
+      content_type: [
+        "teaching",
+        "essay",
+        "podcast",
+        "blog",
+        "clip",
+        "promoted",
+      ],
     },
   },
 } as const
