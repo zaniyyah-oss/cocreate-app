@@ -214,8 +214,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {btn("H1", () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }), `Heading 1 (${mod}+${alt}+1)`)}
       {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
       {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
-      {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
-      {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
+      {btn("• List", () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
+      {btn("1. List", () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
       {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
       {btn("→|", () => {
         if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
