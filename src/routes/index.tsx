@@ -523,6 +523,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
         )}
         {isAdmin && <button className="hp-replacebtn" onClick={replaceBanner}>Replace image</button>}
       </div>
+      </div>
 
       {collection.writeup_body && (
         <div className="hp-writeup">
