@@ -54,6 +54,12 @@ const TOPIC_COLORS: Record<string, string> = {
   coral: "#FF340C", navy: "#181A4D", cream: "#FBF8ED", brown: "#441B07",
 };
 const topicColor = (k?: string | null) => (k && TOPIC_COLORS[k]) || "#0F4A42";
+const hexToRgba = (hex: string, alpha: number) => {
+  const h = hex.replace("#", "");
+  const n = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+  const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
 
 const CSS = `
 .de-root *{box-sizing:border-box;}
@@ -92,7 +98,7 @@ const CSS = `
 .de-badge.where{background:#181A4D;}
 .de-badge.read{background:#0F4A42;}
 .de-badge.pray{background:#441B07;}
-.de-badge.todo{background:#FFAE00;color:#181A4D;}
+.de-badge.todo{background:#FFAE00;}
 
 .de-prompt{font-size:14px;line-height:1.5;color:#20201C;opacity:0.7;margin:0 0 10px;font-weight:400;max-width:520px;}
 .de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
@@ -154,6 +160,14 @@ const CSS = `
   .de-cols{grid-template-columns:1fr 1fr 1fr;}
   .de-cols .de-block + .de-block{border-top:none;}
 }
+
+/* Topical devotional bands (aligned to same 3-col grid inside .de-stack) */
+.de-band{display:grid;grid-template-columns:1fr;border-top:1px solid rgba(24,26,77,0.12);position:relative;}
+@media (min-width:900px){ .de-band{grid-template-columns:1fr 1fr 1fr;} }
+.de-band-cell{padding:14px 18px;display:flex;align-items:flex-start;gap:9px;cursor:pointer;min-width:0;}
+.de-band-cell:hover .de-band-line{opacity:1;}
+.de-band-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.02em;border-radius:999px;padding:3px 10px;flex-shrink:0;line-height:1.4;color:#20201C;}
+.de-band-line{font-size:12.5px;color:#20201C;opacity:0.75;line-height:1.4;min-width:0;}
 
 /* Focus / fullscreen for a section */
 .de-block, .ws-root { position: relative; }
@@ -263,6 +277,36 @@ function EntryPage() {
         .order("entry_date", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Entry[];
+    },
+  });
+
+  // Active topical devotionals attached by this user (saved or with entries),
+  // excluding the current default (Abide) template.
+  const topicalsQ = useQuery({
+    queryKey: ["dev-active-topicals", userId, id],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const [{ data: saved }, { data: entryTpls }] = await Promise.all([
+        supabase.from("saved_items").select("devotional_template_id").eq("user_id", userId!).not("devotional_template_id", "is", null),
+        supabase.from("devotional_entries").select("template_id").eq("user_id", userId!).not("template_id", "is", null),
+      ]);
+      const ids = Array.from(new Set([
+        ...(saved ?? []).map(r => r.devotional_template_id).filter(Boolean) as string[],
+        ...(entryTpls ?? []).map(r => r.template_id).filter(Boolean) as string[],
+      ])).filter(x => x !== id);
+      if (ids.length === 0) return [] as Array<Template & { topic: Topic | null }>;
+      const { data: tpls } = await supabase
+        .from("devotional_templates")
+        .select("*")
+        .in("id", ids)
+        .eq("status", "published");
+      const topicIds = Array.from(new Set((tpls ?? []).map(x => x.topic_id).filter(Boolean))) as string[];
+      const topicMap: Record<string, Topic> = {};
+      if (topicIds.length) {
+        const { data: tps } = await supabase.from("topics").select("*").in("id", topicIds);
+        (tps ?? []).forEach(tp => { topicMap[tp.id] = tp as Topic; });
+      }
+      return (tpls ?? []).map(x => ({ ...(x as Template), topic: x.topic_id ? (topicMap[x.topic_id] ?? null) : null }));
     },
   });
 
@@ -537,7 +581,7 @@ function EntryPage() {
                   <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
                     {focusBtn("pray")}
                     <span className="de-badge pray">pray</span>
-                    {t.pray_prompt && <p className="de-prompt">{t.pray_prompt}</p>}
+                    
                     <textarea
                       className="de-textarea"
                       placeholder="Speak plainly to God…"
@@ -551,7 +595,7 @@ function EntryPage() {
                   <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
                     {focusBtn("todo")}
                     <span className="de-badge todo">to-do</span>
-                    {t.apply_prompt && <p className="de-prompt">{t.apply_prompt}</p>}
+                    
                     <textarea
                       className="de-textarea short"
                       placeholder="What is God asking you to do today?"
@@ -582,6 +626,32 @@ function EntryPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Topical devotional bands — aligned to the same 3-col grid */}
+                {(topicalsQ.data ?? []).map((tp) => {
+                  const c = topicColor(tp.topic?.color_key);
+                  const tint = hexToRgba(c, 0.15);
+                  const tagBg = hexToRgba(c, 0.35);
+                  const tagName = tp.topic?.name ?? tp.title;
+                  const readTeaser = tp.scripture_focus || tp.title;
+                  const prayTeaser = tp.pray_prompt || "Pray with this in view.";
+                  const todoTeaser = tp.apply_prompt || "Carry this into today.";
+                  const go = () => navigate({ to: "/devotionals/$id", params: { id: tp.id } });
+                  return (
+                    <div key={tp.id} className="de-band" style={{ background: tint }}>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-tag" style={{ background: tagBg }}>{tagName}</span>
+                        <span className="de-band-line">{readTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-line">{prayTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                      <div className="de-band-cell" onClick={go}>
+                        <span className="de-band-line">{todoTeaser} <span style={{ opacity: 0.6 }}>Full guidance →</span></span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
 
