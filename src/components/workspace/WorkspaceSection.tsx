@@ -42,7 +42,7 @@ const CSS = `
 .ws-tag-input::placeholder{color:#20201C;opacity:0.5;}
 
 .ws-editor{border:none;background:transparent;position:relative;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:54px;z-index:30;margin:-20px -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:58px;z-index:45;margin:-20px -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
 @media (min-width:1024px){
   .ws-toolbar{top:0;}
 }
