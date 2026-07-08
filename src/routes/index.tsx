@@ -111,11 +111,13 @@ const CSS = `
 .hp-campaign-title{font-size:24px;font-weight:900;color:var(--navy);margin:0 0 6px;letter-spacing:-0.01em;}
 @media (min-width:900px){.hp-campaign-title{font-size:26px;}}
 
-.hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:14px 0 20px;max-width:720px;}
+.hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:0;flex:1 1 0;min-width:0;}
 .hp-campaign-explainer p{margin:0;font-size:13px;color:var(--ink);opacity:0.7;line-height:1.6;}
+.hp-campaign-top{display:flex;gap:14px;margin:14px 0 20px;align-items:stretch;}
+@media(max-width:899px){.hp-campaign-top{flex-direction:column;}}
 .hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
 
-.hp-banner{position:relative;border-radius:16px;overflow:hidden;height:200px;margin:16px 0 20px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;}
+.hp-banner{position:relative;border-radius:16px;overflow:hidden;min-height:200px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;flex:1 1 0;min-width:0;}
 .hp-banner.hasimg::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(24,26,77,0.4));}
 .hp-uploadhint{text-align:center;color:var(--cream);position:relative;z-index:2;}
 .hp-uploadhint .icon{width:38px;height:38px;border:2px dashed rgba(251,248,237,0.5);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;}
@@ -507,12 +509,12 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
         <h2 className="hp-campaign-title">{collection.title}</h2>
       </div>
 
-      <div className="hp-campaign-explainer">
-        <span className="hp-qlabel">What's a collection?</span>
-        <p>A handful of pieces released together because they're circling the same question from different angles. There's no order to follow and no badge for finishing it. New pieces keep releasing as the collection goes on — read or watch whichever one meets you where you are.</p>
-      </div>
-
-      <div className={`hp-banner${collection.banner_url ? " hasimg" : ""}`} style={collection.banner_url ? { backgroundImage: `url(${collection.banner_url})` } : undefined}>
+      <div className="hp-campaign-top">
+        <div className="hp-campaign-explainer">
+          <span className="hp-qlabel">What's a collection?</span>
+          <p>A handful of pieces released together because they're circling the same question from different angles. There's no order to follow and no badge for finishing it. New pieces keep releasing as the collection goes on — read or watch whichever one meets you where you are.</p>
+        </div>
+        <div className={`hp-banner${collection.banner_url ? " hasimg" : ""}`} style={collection.banner_url ? { backgroundImage: `url(${collection.banner_url})` } : undefined}>
         {!collection.banner_url && (
           <div className="hp-uploadhint">
             <div className="icon">⬆</div>
@@ -520,6 +522,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
           </div>
         )}
         {isAdmin && <button className="hp-replacebtn" onClick={replaceBanner}>Replace image</button>}
+      </div>
       </div>
 
       {collection.writeup_body && (
