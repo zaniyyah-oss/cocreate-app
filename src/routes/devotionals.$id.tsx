@@ -714,7 +714,8 @@ function EntryPage() {
                       {focusBtn("pray")}
                     </div>
                     
-                    <textarea
+                    <ResizableTextarea
+                      storageKey="pray"
                       className="de-textarea"
                       placeholder="Speak plainly to God…"
                       value={prayText}
