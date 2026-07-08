@@ -885,13 +885,14 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
     const uniqueFocus = focusTags.filter(f => (seen.has(f.key) ? false : (seen.add(f.key), true)));
     // Mood dot: amber if there's any written content, lime if entry exists but empty, none otherwise.
     const hasText = dayEntries.some(e =>
-      [e.where_text, e.reflect_text, e.scripture_text, e.pray_text, e.todo_text, e.apply_text, e.entry_title].some(v => (v ?? "").toString().trim().length > 0)
+      [e.where_text, e.reflect_text, e.scripture_text, e.pray_text, e.todo_text, e.apply_text, e.entry_title, e.entry_subtitle].some(v => (v ?? "").toString().trim().length > 0)
     );
     const mood = dayEntries.length === 0 ? null : hasText ? "#FFAE00" : "#DCE07A";
     const title = representative?.entry_title?.trim()
       || (representative && (representative.where_text ?? representative.reflect_text ?? "").toString().trim().slice(0, 80))
       || (dayEntries.length ? "Untitled entry" : "");
-    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title };
+    const subtitle = representative?.entry_subtitle?.trim() ?? "";
+    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title, subtitle };
   });
 
   const written = perDay.filter(p => p.dayEntries.length > 0).length;
