@@ -55,7 +55,7 @@ const CSS = `
 @media (min-width:900px){ .fp-grid{grid-template-columns:1fr 1fr 1fr;} }
 .fp-card{background:#fff;border-radius:14px;padding:22px 24px;border:1px solid rgba(24,26,77,0.12);}
 .fp-badge{display:inline-block;font-weight:600;font-size:11px;letter-spacing:0.03em;text-transform:uppercase;padding:5px 12px;border-radius:6px;color:#FBF8ED;margin-bottom:14px;}
-.fp-badge.read{background:#0F4A42;} .fp-badge.pray{background:#441B07;} .fp-badge.todo{background:#FFAE00;}
+.fp-badge.read{background:#F5B301;color:#181A4D;margin-bottom:6px;} .fp-badge.pray{background:#FF340C;color:#181A4D;margin-bottom:6px;} .fp-badge.todo{background:#C7E39B;color:#181A4D;margin-bottom:6px;}
 .fp-sublabel{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8a8678;margin:14px 0 6px;}
 .fp-scr-ref{font-size:15px;font-weight:700;color:#0F4A42;margin:0 0 4px;}
 .fp-body{font-size:13.5px;color:#20201C;line-height:1.55;margin:0;white-space:pre-wrap;}
