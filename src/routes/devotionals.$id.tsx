@@ -67,92 +67,97 @@ const CSS = `
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
 .de-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
 .de-shell-inner{padding:0;}
-.de-headcard{background:transparent;padding:0;margin:0 0 22px;border:none;position:relative;}
+.de-headcard{background:transparent;padding:0;margin:0 0 4px;border:none;position:relative;}
 .de-headcard-inner{padding:0;}
 
-.de-headtop{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:600;color:#8a8678;}
-.de-headtitle-brand{font-weight:700;color:#181A4D;font-size:13px;letter-spacing:-0.005em;}
-.de-headarrow{color:#A8A59A;font-size:13px;font-weight:400;}
-.de-headdate{font-size:13px;font-weight:600;color:#8a8678;letter-spacing:-0.005em;}
-.de-title-input{width:100%;border:none;border-bottom:1.5px dashed rgba(24,26,77,0.15);background:transparent;font-family:'Poppins',sans-serif;font-size:27px;font-weight:700;color:#181A4D;letter-spacing:-0.01em;line-height:1.2;padding:2px 0 6px;outline:none;margin:2px 0 8px;}
+/* Breadcrumb */
+.de-headtop{font-size:13px;color:rgba(24,26,77,0.55);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.de-headtitle-brand{color:#181A4D;font-weight:600;opacity:1;}
+.de-headarrow{color:rgba(24,26,77,0.55);}
+.de-headdate{color:rgba(24,26,77,0.55);font-weight:600;}
+
+/* Title / subtitle */
+.de-title-input{width:100%;border:none;border-bottom:1.5px dashed rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:27px;font-weight:700;color:#181A4D;letter-spacing:-0.01em;line-height:1.2;padding:0 0 6px;outline:none;margin:2px 0 8px;}
 .de-title-input:focus{border-bottom-color:#181A4D;}
 .de-title-input::placeholder{color:#181A4D;opacity:0.35;}
-.de-subtitle-input{display:block;width:100%;border:none;border-bottom:1.5px dashed rgba(24,26,77,0.15);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;color:#20201c;padding:0 0 6px;outline:none;margin:0 0 22px;max-width:640px;}
+.de-subtitle-input{display:block;width:100%;border:none;border-bottom:1.5px dashed rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;font-weight:400;color:#20201C;padding:0 0 6px;outline:none;margin:0 0 22px;max-width:640px;opacity:1;}
 .de-subtitle-input:focus{border-bottom-color:#181A4D;}
-.de-subtitle-input::placeholder{color:#20201c;opacity:0.4;}
-.de-headrule{height:1px;background:rgba(20,20,20,0.08);margin:14px 0 14px;}
-.de-headquote{font-size:14px;color:#181A4D;line-height:1.6;margin:0 0 6px;font-weight:500;}
-.de-headref{font-size:12px;font-weight:700;color:#8a8678;margin:0 0 8px;}
-.de-date{font-size:11px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;text-align:center;margin-bottom:22px;}
+.de-subtitle-input::placeholder{color:#20201C;opacity:0.4;}
+.de-headrule{display:none;}
+.de-headquote,.de-headref{display:none;}
 
-.de-block{background:#fff;border-radius:16px;padding:28px 30px;margin-bottom:22px;border:1px solid rgba(20,20,20,0.05);}
-.de-block.read{padding:0;overflow:hidden;}
+/* Card + badge */
+.de-block{background:#fff;border-radius:14px;padding:20px 22px;margin-bottom:14px;border:1px solid rgba(24,26,77,0.12);}
+.de-badge{display:inline-block;font-weight:600;font-size:11px;letter-spacing:0.03em;text-transform:uppercase;padding:5px 12px;border-radius:6px;color:#FBF8ED;margin-bottom:12px;font-family:'Poppins',sans-serif;}
+.de-badge.where{background:#181A4D;}
+.de-badge.read{background:#0F4A42;}
+.de-badge.pray{background:#441B07;}
+.de-badge.todo{background:#FFAE00;color:#181A4D;}
 
-.de-read-head{padding:26px 30px 4px;}
-.de-read-part{padding:14px 30px 24px;border-top:1px solid rgba(20,20,20,0.05);}
-.de-read-part:first-of-type{border-top:none;}
-.de-sublabel{font-size:10.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#0F4A42;margin:0 0 10px;}
-.de-scr-ref{width:100%;border:none;background:#FBF8ED;border-radius:10px;padding:11px 14px;font-family:'Poppins';font-size:13.5px;color:#0F4A42;font-weight:700;outline:none;margin-bottom:12px;}
-.de-scr-ref:focus{background:#f5efd8;}
-.de-invite{font-size:13px;color:#8a8678;font-style:italic;line-height:1.6;margin:0 0 14px;}
-
-.de-label{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.de-label .dot{width:8px;height:8px;border-radius:50%;}
-.de-label .name{font-size:11px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#181A4D;}
-.de-label .num{font-size:10px;font-weight:800;color:#8a8678;letter-spacing:0.12em;}
-.de-prompt{font-size:15px;line-height:1.65;color:#20201c;margin:0 0 18px;font-weight:500;letter-spacing:-0.005em;}
-.de-textarea{width:100%;border:none;background:#FBF8ED;border-radius:12px;padding:16px 18px;font-family:'Poppins';font-size:14.5px;color:#20201c;line-height:1.65;min-height:120px;resize:vertical;outline:none;transition:background .2s ease;}
-.de-textarea.tall{min-height:180px;}
-.de-textarea.short{min-height:90px;}
-.de-textarea:focus{background:#f5efd8;}
-.de-status{margin-top:10px;font-size:11px;color:#8a8678;font-weight:600;text-align:right;min-height:16px;}
+.de-prompt{font-size:14px;line-height:1.5;color:#20201C;opacity:0.7;margin:0 0 10px;font-weight:400;max-width:520px;}
+.de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
+.de-textarea.tall{min-height:120px;}
+.de-textarea.short{min-height:38px;}
+.de-textarea:focus{border-bottom-color:#181A4D;}
+.de-textarea::placeholder{color:#20201C;opacity:0.35;}
+.de-status{margin-top:8px;font-size:11px;color:#8a8678;font-weight:600;text-align:right;min-height:14px;}
 .de-status.on{color:#0F4A42;}
 
-.de-todos{margin-top:16px;background:#FBF8ED;border-radius:12px;padding:12px 14px;}
-.de-todo{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(20,20,20,0.05);}
+/* Read card internal parts (scripture ref + further reading) */
+.de-block.read{padding:20px 22px;}
+.de-read-head{padding:0;}
+.de-read-part{padding:12px 0 0;border-top:none;margin-top:10px;}
+.de-read-part:first-of-type{margin-top:0;}
+.de-sublabel{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8a8678;margin:0 0 8px;}
+.de-scr-ref{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:13px;color:#0F4A42;font-weight:600;outline:none;padding:0 0 8px;margin-bottom:10px;}
+.de-scr-ref:focus{border-bottom-color:#0F4A42;}
+.de-invite{display:none;}
+
+/* To-do */
+.de-todos{margin-top:10px;padding:0;background:transparent;}
+.de-todo{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
 .de-todo:last-of-type{border-bottom:none;}
-.de-todo input[type=checkbox]{width:16px;height:16px;accent-color:#0F4A42;cursor:pointer;flex-shrink:0;}
-.de-todo input[type=text]{flex:1;border:none;background:transparent;font-family:'Poppins';font-size:13.5px;color:#20201c;outline:none;padding:4px 0;}
+.de-todo input[type=checkbox]{width:14px;height:14px;accent-color:#0F4A42;cursor:pointer;flex-shrink:0;}
+.de-todo input[type=text]{flex:1;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;color:#20201c;outline:none;padding:2px 0;}
 .de-todo input[type=text].done{color:#8a8678;text-decoration:line-through;}
-.de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:16px;padding:2px 6px;line-height:1;}
+.de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;}
 .de-todo-x:hover{color:#FF340C;}
-.de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.3);color:#0F4A42;font-family:'Poppins';font-weight:700;font-size:12px;letter-spacing:0.04em;padding:9px 14px;border-radius:8px;cursor:pointer;margin-top:10px;width:100%;transition:background .15s ease;}
+.de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.25);color:#0F4A42;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.03em;padding:7px 12px;border-radius:6px;cursor:pointer;margin-top:8px;width:100%;transition:background .15s ease;}
 .de-todo-add:hover{background:rgba(15,74,66,0.06);}
 
-.de-workspace{background:#fff;border:1px dashed rgba(20,20,20,0.15);border-radius:16px;padding:24px 28px;margin-bottom:22px;}
-.de-workspace .name{font-size:11px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#181A4D;margin-bottom:8px;}
-.de-workspace p{font-size:13.5px;color:#8a8678;line-height:1.6;margin:0 0 14px;}
-.de-workspace .row{display:flex;gap:10px;flex-wrap:wrap;}
-.de-ws-btn{background:#181A4D;color:#fff;font-family:'Poppins';font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;}
-.de-ws-btn.ghost{background:transparent;color:#181A4D;border:1px solid rgba(24,26,77,0.25);}
-.de-ws-btn:hover{background:#0F4A42;color:#fff;border-color:#0F4A42;}
-
-.de-past{margin-top:56px;}
-.de-past h3{font-size:13px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 18px;}
-.de-past ul{list-style:none;margin:0;padding:0;background:#fff;border-radius:14px;border:1px solid rgba(20,20,20,0.06);overflow:hidden;}
-.de-past li{padding:16px 22px;border-bottom:1px solid rgba(20,20,20,0.05);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+/* Past entries */
+.de-past{margin-top:40px;}
+.de-past h3{font-size:12px;font-weight:700;color:#8a8678;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 12px;}
+.de-past ul{list-style:none;margin:0;padding:0;background:#fff;border-radius:12px;border:1px solid rgba(24,26,77,0.12);overflow:hidden;}
+.de-past li{padding:14px 20px;border-bottom:1px solid rgba(24,26,77,0.08);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .de-past li:last-child{border-bottom:none;}
 .de-past li:hover{background:#FBF8ED;}
 .de-past li.active{background:#FBF8ED;}
-.de-past .d{font-size:13.5px;font-weight:700;color:#181A4D;}
+.de-past .d{font-size:13px;font-weight:600;color:#181A4D;}
 .de-past .preview{font-size:12px;color:#8a8678;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;}
-.de-past .empty{padding:22px;text-align:center;color:#8a8678;font-size:13px;}
-.de-skel{height:200px;background:#fff;border-radius:16px;animation:dep 1.4s infinite;}
+.de-past .empty{padding:20px;text-align:center;color:#8a8678;font-size:13px;}
+.de-skel{height:180px;background:#fff;border-radius:14px;animation:dep 1.4s infinite;}
 @keyframes dep{0%,100%{opacity:1}50%{opacity:.55}}
-.de-signgate{background:#fff;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:14px;padding:22px;}
-.de-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
+.de-signgate{background:#fff;border:1px solid rgba(24,26,77,0.12);border-left:4px solid #FF340C;border-radius:14px;padding:22px;}
+.de-signgate h3{font-size:16px;font-weight:700;color:#181A4D;margin:0 0 6px;}
 .de-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 
-.de-cols{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:22px;}
-.de-cols .de-block{margin-bottom:0;height:100%;display:flex;flex-direction:column;}
-.de-cols .de-block .de-textarea{flex:1;}
-@media (min-width:768px){
-  .de-cols{grid-template-columns:1fr 1fr 1fr;gap:20px;}
+/* Stack: Read/Pray/To-Do share ONE white card with connected column dividers */
+.de-stack{border-radius:14px;overflow:hidden;border:1px solid rgba(24,26,77,0.12);background:#fff;margin-bottom:14px;position:relative;}
+.de-stack::before,.de-stack::after{content:'';position:absolute;top:0;bottom:0;width:1px;background:rgba(24,26,77,0.12);z-index:2;pointer-events:none;}
+.de-stack::before{left:33.3333%;}
+.de-stack::after{left:66.6666%;}
+.de-cols{display:grid;grid-template-columns:1fr;gap:0;}
+.de-cols .de-block{margin-bottom:0;border:none;border-radius:0;background:transparent;height:100%;display:flex;flex-direction:column;padding:20px 22px;}
+.de-cols .de-block + .de-block{border-top:1px solid rgba(24,26,77,0.12);}
+@media (min-width:900px){
+  .de-cols{grid-template-columns:1fr 1fr 1fr;}
+  .de-cols .de-block + .de-block{border-top:none;}
 }
 
 /* Focus / fullscreen for a section */
 .de-block, .ws-root { position: relative; }
-.de-focus-btn{position:absolute;top:14px;right:16px;background:transparent;border:1px solid rgba(20,20,20,0.15);color:#181A4D;font-family:'Poppins';font-weight:700;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
+.de-focus-btn{position:absolute;top:12px;right:14px;background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
 .de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
 .de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
 @media (min-width:768px){
@@ -466,25 +471,16 @@ function EntryPage() {
                 </div>
                 <input
                   className="de-title-input"
-                  placeholder="Give today a title…"
+                  placeholder="Name today's entry..."
                   value={entryTitle}
                   onChange={(e) => { setEntryTitle(e.target.value); scheduleSave("entry_title", e.target.value); }}
                 />
                 <input
                   className="de-subtitle-input"
-                  placeholder="Add a subtitle, if you'd like"
+                  placeholder="A line about why this entry matters..."
                   value={entrySubtitle}
                   onChange={(e) => { setEntrySubtitle(e.target.value); scheduleSave("entry_subtitle", e.target.value); }}
                 />
-                {(scriptureText || t.scripture_focus) && <div className="de-headrule" />}
-                {scriptureText ? (
-                  <>
-                    <p className="de-headquote">"{scriptureText}"</p>
-                    <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
-                  </>
-                ) : t.scripture_focus ? (
-                  <p className="de-headref">{t.scripture_focus}</p>
-                ) : null}
               </div>
             </div>
 
@@ -493,15 +489,10 @@ function EntryPage() {
               {/* 1. Where Are You */}
               <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
                 {focusBtn("where")}
-                <div className="de-label">
-                  <span className="dot" style={{ background: color }} />
-                  <span className="name">Where are you</span>
-                  <span className="num">· 01</span>
-                </div>
-                <p className="de-prompt">Before God, honestly: where are you right now? Tired, anxious, distracted, hopeful, numb? Name it plainly.</p>
+                <span className="de-badge where">where are you</span>
                 <textarea
-                  className="de-textarea short"
-                  placeholder="God, I come to you today feeling…"
+                  className="de-textarea"
+                  placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
                   onChange={(e) => { setWhereText(e.target.value); scheduleSave("where_text", e.target.value); }}
                 />
@@ -509,109 +500,90 @@ function EntryPage() {
               </div>
 
 
-              {/* 2/3/4 row */}
-              <div className="de-cols">
-                {/* Read */}
-                <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
-                  {focusBtn("read")}
-                  <div className="de-read-head">
-                    <div className="de-label">
-                      <span className="dot" style={{ background: color }} />
-                      <span className="name">Read</span>
-                      <span className="num">· 02</span>
+              {/* 2/3/4 stacked triad — one connected white card */}
+              <div className="de-stack">
+                <div className="de-cols">
+                  {/* Read */}
+                  <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                    {focusBtn("read")}
+                    <span className="de-badge read">read</span>
+                    <div className="de-read-part">
+                      <input
+                        className="de-scr-ref"
+                        placeholder="What scripture are you reading today?"
+                        value={scriptureRef}
+                        onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
+                      />
+                      <textarea
+                        className="de-textarea"
+                        placeholder="What did you notice? What is God saying?"
+                        value={scriptureText}
+                        onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      />
+                      {statusRow("scripture_text")}
                     </div>
-                    <p className="de-invite">
-                      Don't rush past this. Open your Bible, read slowly — preferably out loud — and let a
-                      passage stay with you before you write anything.
-                    </p>
+                    <div className="de-read-part">
+                      <textarea
+                        className="de-textarea short"
+                        placeholder="What supplemental material will you be reviewing today?"
+                        value={furtherReading}
+                        onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                      />
+                      {statusRow("further_reading_text")}
+                    </div>
                   </div>
 
-                  <div className="de-read-part">
-                    <div className="de-sublabel">Scripture</div>
-                    <input
-                      className="de-scr-ref"
-                      placeholder="Passage — e.g. John 15:1–8"
-                      value={scriptureRef}
-                      onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
-                    />
+                  {/* Pray */}
+                  <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                    {focusBtn("pray")}
+                    <span className="de-badge pray">pray</span>
+                    {t.pray_prompt && <p className="de-prompt">{t.pray_prompt}</p>}
                     <textarea
                       className="de-textarea"
-                      placeholder="What did you notice? What is God saying?"
-                      value={scriptureText}
-                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      placeholder="Speak plainly to God…"
+                      value={prayText}
+                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
                     />
-                    {statusRow("scripture_text")}
+                    {statusRow("pray_text")}
                   </div>
 
-                  <div className="de-read-part">
-                    <div className="de-sublabel">Further reading</div>
+                  {/* To-Do */}
+                  <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                    {focusBtn("todo")}
+                    <span className="de-badge todo">to-do</span>
+                    {t.apply_prompt && <p className="de-prompt">{t.apply_prompt}</p>}
                     <textarea
                       className="de-textarea short"
-                      placeholder="Books, studies, teachings you're working through…"
-                      value={furtherReading}
-                      onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                      placeholder="What is God asking you to do today?"
+                      value={todoText}
+                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
                     />
-                    {statusRow("further_reading_text")}
-                  </div>
-                </div>
+                    {statusRow("todo_text")}
 
-                {/* Pray */}
-                <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
-                  {focusBtn("pray")}
-                  <div className="de-label">
-                    <span className="dot" style={{ background: color }} />
-                    <span className="name">Pray</span>
-                    <span className="num">· 03</span>
-                  </div>
-                  <p className="de-prompt">{t.pray_prompt || "What do you need to bring to God today? Invite Him into it."}</p>
-                  <textarea
-                    className="de-textarea"
-                    placeholder="Speak plainly to God…"
-                    value={prayText}
-                    onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
-                  />
-                  {statusRow("pray_text")}
-                </div>
-
-                {/* To-Do */}
-                <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
-                  {focusBtn("todo")}
-                  <div className="de-label">
-                    <span className="dot" style={{ background: color }} />
-                    <span className="name">To-Do</span>
-                    <span className="num">· 04</span>
-                  </div>
-                  <p className="de-prompt">{t.apply_prompt || "What does obedience look like today, concretely?"}</p>
-                  <textarea
-                    className="de-textarea short"
-                    placeholder="What is God asking of me today?"
-                    value={todoText}
-                    onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
-                  />
-                  {statusRow("todo_text")}
-
-                  <div className="de-todos">
-                    {todoItems.map((it, idx) => (
-                      <div key={it.id} className="de-todo">
-                        <input
-                          type="checkbox"
-                          checked={it.done}
-                          onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
-                        />
-                        <input
-                          type="text"
-                          className={it.done ? "done" : ""}
-                          placeholder="A small, specific step"
-                          value={it.text}
-                          onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
-                        />
-                        <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
-                      </div>
-                    ))}
-                    <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+                    <div className="de-todos">
+                      {todoItems.map((it, idx) => (
+                        <div key={it.id} className="de-todo">
+                          <input
+                            type="checkbox"
+                            checked={it.done}
+                            onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
+                          />
+                          <input
+                            type="text"
+                            className={it.done ? "done" : ""}
+                            placeholder="A small, specific step"
+                            value={it.text}
+                            onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
+                          />
+                          <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+                        </div>
+                      ))}
+                      <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+                    </div>
                   </div>
                 </div>
               </div>
+
 
               {/* 5. Workspace */}
               {userId && (
