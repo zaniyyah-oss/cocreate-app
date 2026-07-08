@@ -16,7 +16,7 @@ export const Indent = Extension.create({
   name: "indent",
 
   addOptions() {
-    return { types: ["paragraph", "heading", "blockquote", "callout"] as string[] };
+    return { types: ["paragraph", "heading", "blockquote", "callout", "bulletList", "orderedList"] as string[] };
   },
 
   addGlobalAttributes() {
