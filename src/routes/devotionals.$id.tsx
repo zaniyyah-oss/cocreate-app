@@ -251,6 +251,29 @@ type SaveField =
   | "entry_subtitle";
 
 
+function NavMenu() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items: Array<{ to: string; label: string; match?: string[] }> = [
+    { to: "/", label: "Home" },
+    { to: "/explore", label: "Explore" },
+    { to: "/devotionals", label: "Devotionals" },
+    { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
+    { to: "/profile", label: "Profile" },
+  ];
+  const isActive = (it: { to: string; match?: string[] }) => {
+    if (it.match?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
+    if (it.to === "/") return pathname === "/";
+    return pathname === it.to || pathname.startsWith(it.to + "/");
+  };
+  return (
+    <div className="de-navmenu">
+      {items.map((it) => (
+        <Link key={it.to} to={it.to} className={isActive(it) ? "active" : ""}>{it.label}</Link>
+      ))}
+    </div>
+  );
+}
+
 function EntryPage() {
   const { id } = Route.useParams();
   const { userId, ready } = useAuth();
