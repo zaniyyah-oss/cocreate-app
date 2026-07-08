@@ -62,6 +62,12 @@ const CSS = `
 .fp-list{margin:6px 0 0;padding-left:18px;}
 .fp-list li{font-size:13px;color:#20201C;line-height:1.5;margin-bottom:4px;}
 .fp-cta{display:inline-block;margin-top:22px;background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:10px 20px;border-radius:22px;text-decoration:none;font-family:'Poppins',sans-serif;}
+.fp-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:96px;resize:vertical;outline:none;padding:6px 0 9px;margin-top:6px;}
+.fp-textarea:focus{border-bottom-color:#181A4D;}
+.fp-textarea::placeholder{color:#20201C;opacity:0.35;}
+.fp-status{margin-top:8px;font-size:11px;color:#8a8678;font-weight:600;text-align:right;min-height:14px;}
+.fp-status.on{color:#0F4A42;}
+.fp-response-label{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#181A4D;margin:18px 0 0;opacity:0.7;}
 `;
 
 function FocusPage() {
