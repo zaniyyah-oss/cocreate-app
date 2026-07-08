@@ -218,12 +218,16 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {btn("1. List", () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
       {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
       {btn("→|", () => {
-        if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
-        else (editor.chain().focus() as any).indent().run();
+        if (editor.isActive("listItem")) {
+          if (editor.chain().focus().sinkListItem("listItem").run()) return;
+        }
+        (editor.chain().focus() as any).indent().run();
       }, false, "Indent (Tab)")}
       {btn("|←", () => {
-        if (editor.isActive("listItem")) editor.chain().focus().liftListItem("listItem").run();
-        else (editor.chain().focus() as any).outdent().run();
+        if (editor.isActive("listItem")) {
+          if (editor.chain().focus().liftListItem("listItem").run()) return;
+        }
+        (editor.chain().focus() as any).outdent().run();
       }, false, "Outdent (Shift+Tab)")}
 
       {/* Highlight picker */}
