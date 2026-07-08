@@ -203,14 +203,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
         </div>
       </div>
 
-      {/* Fixed mobile bottom nav */}
-      <nav className="app-bottomnav" aria-label="Primary mobile">
-        {MOBILE_NAV.map((n) => (
-          <Link key={n.key} to={n.to} className={isActive(n) ? "active" : ""}>
-            {n.icon}<span>{n.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <MobileBottomNav />
     </div>
   );
 }
