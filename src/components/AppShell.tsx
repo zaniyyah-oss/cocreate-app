@@ -117,9 +117,14 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   }, []);
 
   useEffect(() => {
-    document.body.style.background = "#eee9d9";
-    return () => { document.body.style.background = ""; };
-  }, []);
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    document.body.style.background = isDesktop ? "#eee9d9" : "#fff";
+    document.documentElement.style.background = isDesktop ? "#eee9d9" : "#fff";
+    return () => {
+      document.body.style.background = "";
+      document.documentElement.style.background = "";
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
