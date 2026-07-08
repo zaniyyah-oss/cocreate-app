@@ -40,8 +40,9 @@ const CSS = `
 .fp-back{color:#8a8678;font-weight:700;font-size:12.5px;text-decoration:none;}
 .fp-back:hover{color:#181A4D;}
 .fp-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
-.fp-chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center;}
+.fp-chiprow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 0 2px;}
 .fp-chiprow-label{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8a8678;margin-right:4px;}
+.fp-grid > .fp-chiprow{grid-column:1 / -1;}
 .fp-chip{border:1px solid rgba(24,26,77,0.15);background:#fff;color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;padding:6px 14px;border-radius:999px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:background .15s ease;}
 .fp-chip:hover{background:#FBF8ED;}
 .fp-chip.active{background:#181A4D;color:#fff;border-color:#181A4D;}
