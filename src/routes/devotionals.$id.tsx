@@ -98,9 +98,9 @@ const CSS = `
 .de-block{background:#fff;border-radius:14px;padding:20px 22px;margin-bottom:14px;border:1px solid rgba(24,26,77,0.12);}
 .de-badge{display:inline-block;font-weight:600;font-size:11px;letter-spacing:0.03em;text-transform:uppercase;padding:5px 12px;border-radius:6px;color:#FBF8ED;margin-bottom:12px;font-family:'Poppins',sans-serif;}
 .de-badge.where{background:#181A4D;}
-.de-badge.read{background:#0F4A42;}
-.de-badge.pray{background:#441B07;}
-.de-badge.todo{background:#FFAE00;}
+.de-badge.read{background:#FFAE00;color:#181A4D;margin-bottom:6px;}
+.de-badge.pray{background:#E990A2;color:#181A4D;margin-bottom:6px;}
+.de-badge.todo{background:#8A96E0;color:#181A4D;margin-bottom:6px;}
 
 .de-prompt{font-size:14px;line-height:1.5;color:#20201C;opacity:0.7;margin:0 0 10px;font-weight:400;max-width:520px;}
 .de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
