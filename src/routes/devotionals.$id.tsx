@@ -910,7 +910,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
     const iso = isoDate(d);
     const dayEntries = (data?.entries ?? []).filter(e => e.entry_date === iso);
     const dayWs = (data?.ws ?? []).filter(w => (w.created_at ?? "").slice(0, 10) === iso);
-    const wsTags = Array.from(new Set(dayWs.flatMap(w => w.tags ?? [])));
+    const wsItems = dayWs.map(w => ({ id: w.id, tags: (w.tags ?? []) as string[] }));
     // Pick a representative entry for title: prefer default (Abide) template, else first.
     let representative: Entry | undefined;
     if (data) {
@@ -941,7 +941,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
       || (representative && (representative.where_text ?? representative.reflect_text ?? "").toString().trim().slice(0, 80))
       || (dayEntries.length ? "Untitled entry" : "");
     const subtitle = representative?.entry_subtitle?.trim() ?? "";
-    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title, subtitle };
+    return { date: d, iso, dayEntries, wsItems, uniqueFocus, mood, title, subtitle };
   });
 
   const written = perDay.filter(p => p.dayEntries.length > 0).length;
