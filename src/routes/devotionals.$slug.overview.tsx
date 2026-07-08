@@ -230,7 +230,7 @@ function OverviewPage() {
   }
 
   const t = q.data.template;
-  const totalDays = t.duration_days ?? Math.max(...q.data.days.map((d) => d.day_number), 0) || 0;
+  const totalDays = t.duration_days ?? (Math.max(...q.data.days.map((d) => d.day_number), 0) || 0);
   const uniqueDays = progQ.data?.uniqueDays ?? 0;
   const startedAt = progQ.data?.startedAt ?? null;
   const added = progQ.data?.added ?? false;
