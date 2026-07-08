@@ -260,7 +260,7 @@ function NavMenu() {
   const items: Array<{ to: string; label: string; match?: string[] }> = [
     { to: "/", label: "Home" },
     { to: "/explore", label: "Explore" },
-    { to: "/devotionals", label: "Devotionals" },
+    { to: "/devotionals", label: "Workspace" },
     { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
     { to: "/profile", label: "Profile" },
   ];
