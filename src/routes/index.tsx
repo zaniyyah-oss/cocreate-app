@@ -414,7 +414,8 @@ function FeaturedGrid() {
               const route = routeForType(t);
               return (
                 <Link key={c.id ?? ""} to={route as any} params={{ id: c.id! } as any} className="hp-compactcard">
-                  <div className="hp-compactthumb" style={{ backgroundImage: `url(${c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")})` }}>
+                  <div className={`hp-compactthumb ${t}`}>
+                    <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} loading="lazy" />
                     <span className={`hp-ctag ${t}`}>{t}</span>
                   </div>
                   <div className="hp-compactbody">
