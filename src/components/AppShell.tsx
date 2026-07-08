@@ -51,7 +51,7 @@ const SHELL_CSS = `
 
 .app-side{display:none;}
 .app-main-wrap{min-width:0;display:flex;flex-direction:column;}
-.app-main{flex:1;min-width:0;padding-bottom:calc(56px + env(safe-area-inset-bottom,0));}
+.app-main{flex:1;min-width:0;padding-bottom:calc(84px + env(safe-area-inset-bottom,0));}
 
 /* Fixed mobile bottom nav — always visible while scrolling */
 .app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -2px 10px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
