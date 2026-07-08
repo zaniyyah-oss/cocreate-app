@@ -174,6 +174,12 @@ const CSS = `
 .hp-cc-halfwide .hp-cc-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;}
 .hp-cc-halfwide .hp-cc-title{font-size:13px;font-weight:700;color:var(--navy);margin:0 0 3px;}
 .hp-cc-halfwide .hp-cc-meta{font-size:10px;opacity:0.55;font-weight:600;margin-top:auto;}
+.hp-cc-thumb{position:relative;}
+.hp-cc-thumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.45;pointer-events:none;}
+.hp-cc-thumb.teaching::after{background:#FFAE00;}
+.hp-cc-thumb.essay::after,.hp-cc-thumb.blog::after{background:#DCE07A;}
+.hp-cc-thumb.podcast::after{background:#0F4A42;}
+.hp-cc-thumb.clip::after{background:#CAC307;}
 
 .hp-seeallbtn{display:block;width:fit-content;margin:22px auto 0;background:transparent;border:1.5px solid var(--navy);color:var(--navy);font-size:12.5px;font-weight:700;padding:10px 22px;border-radius:999px;cursor:pointer;text-decoration:none;font-family:inherit;}
 
