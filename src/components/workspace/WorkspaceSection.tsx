@@ -55,7 +55,8 @@ const CSS = `
   .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 12px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
 }
 .ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
-.ws-tb-btn:hover{background:rgba(24,26,77,0.06);}
+.ws-tb-btn:hover{background:rgba(24,26,77,0.06);text-decoration:underline;text-underline-offset:3px;}
+.ws-tb-btn.on{text-decoration:underline;text-underline-offset:3px;}
 .ws-tb-btn.on{background:#181A4D;color:#fff;}
 .ws-popover{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid rgba(24,26,77,0.14);border-radius:10px;padding:8px;box-shadow:0 6px 20px rgba(24,26,77,0.14);display:flex;flex-wrap:wrap;gap:6px;z-index:80;max-width:220px;}
 .ws-popover-col{flex-direction:column;flex-wrap:nowrap;min-width:170px;}
