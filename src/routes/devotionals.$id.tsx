@@ -490,8 +490,11 @@ function EntryPage() {
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <nav className="de-nav">
           <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-          <Link to="/devotionals" className="de-back">← Back</Link>
-          <Link to="/auth" className="de-signin">Sign in</Link>
+          <NavMenu />
+          <div className="de-navright">
+            <Link to="/devotionals" className="de-back">← Back</Link>
+            <Link to="/auth" className="de-signin">Sign in</Link>
+          </div>
         </nav>
         <div className="de-shell">
           <div className="de-signgate">
