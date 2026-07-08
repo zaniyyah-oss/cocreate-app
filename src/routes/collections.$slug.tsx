@@ -133,8 +133,10 @@ function CollectionPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [addedLocal, setAddedLocal] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const q = useQuery({
