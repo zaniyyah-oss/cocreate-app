@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { trackEvent } from "@/lib/track";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -61,6 +62,12 @@ const CSS = `
 .fp-list{margin:6px 0 0;padding-left:18px;}
 .fp-list li{font-size:13px;color:#20201C;line-height:1.5;margin-bottom:4px;}
 .fp-cta{display:inline-block;margin-top:22px;background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:10px 20px;border-radius:22px;text-decoration:none;font-family:'Poppins',sans-serif;}
+.fp-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:96px;resize:vertical;outline:none;padding:6px 0 9px;margin-top:6px;}
+.fp-textarea:focus{border-bottom-color:#181A4D;}
+.fp-textarea::placeholder{color:#20201C;opacity:0.35;}
+.fp-status{margin-top:8px;font-size:11px;color:#8a8678;font-weight:600;text-align:right;min-height:14px;}
+.fp-status.on{color:#0F4A42;}
+.fp-response-label{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#181A4D;margin:18px 0 0;opacity:0.7;}
 `;
 
 function FocusPage() {
@@ -154,6 +161,79 @@ function FocusPage() {
       return (data?.id as string | undefined) ?? null;
     },
   });
+
+  // Today's entry for this topical template — the same row backs autosave here
+  // and shows up in History via the (user, template_id, entry_date) unique key.
+  const todayISO = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
+  const qc = useQueryClient();
+  const entryQ = useQuery({
+    queryKey: ["focus-entry", id, userId, todayISO],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("devotional_entries")
+        .select("*").eq("user_id", userId!).eq("template_id", id).eq("entry_date", todayISO).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const [scriptureText, setScriptureText] = useState("");
+  const [prayText, setPrayText] = useState("");
+  const [todoText, setTodoText] = useState("");
+  const [savingField, setSavingField] = useState<string | null>(null);
+  const [savedField, setSavedField] = useState<string | null>(null);
+  const hydratedRef = useRef<string>("");
+
+  useEffect(() => {
+    const key = `${todayISO}:${entryQ.data?.id ?? "new"}`;
+    if (hydratedRef.current === key) return;
+    hydratedRef.current = key;
+    const e = entryQ.data;
+    setScriptureText(e?.scripture_text ?? "");
+    setPrayText(e?.pray_text ?? "");
+    setTodoText(e?.todo_text ?? e?.apply_text ?? "");
+  }, [entryQ.data?.id, todayISO]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const upsert = useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      if (!userId) return;
+      const existing = entryQ.data;
+      if (existing?.id) {
+        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("devotional_entries").insert({
+          user_id: userId, template_id: id, entry_date: todayISO, ...patch,
+        } as any);
+        if (error) throw error;
+        trackEvent("devotional_entry_created", { template_id: id });
+      }
+    },
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ["focus-entry", id, userId, todayISO] });
+      const key = Object.keys(vars)[0];
+      setSavingField(null);
+      setSavedField(key);
+      setTimeout(() => setSavedField((s) => (s === key ? null : s)), 1400);
+    },
+  });
+
+  const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const scheduleSave = (field: string, value: unknown) => {
+    if (!userId || !ready) return;
+    setSavingField(field);
+    if (debouncers.current[field]) clearTimeout(debouncers.current[field]!);
+    debouncers.current[field] = setTimeout(() => { upsert.mutate({ [field]: value }); }, 800);
+  };
+  const statusRow = (field: string) => (
+    <div className={`fp-status ${savedField === field ? "on" : ""}`}>
+      {savingField === field ? "Saving…" : savedField === field ? "Saved" : ""}
+    </div>
+  );
 
   const t = templateQ.data;
   const topic = topicQ.data;
@@ -254,6 +334,18 @@ function FocusPage() {
                     </ul>
                   </>
                 )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="What did you notice? What is God saying?"
+                      value={scriptureText}
+                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                    />
+                    {statusRow("scripture_text")}
+                  </>
+                )}
               </div>
 
               {/* PRAY */}
@@ -268,6 +360,18 @@ function FocusPage() {
                     </ul>
                   </>
                 )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="Speak plainly to God…"
+                      value={prayText}
+                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
+                    />
+                    {statusRow("pray_text")}
+                  </>
+                )}
               </div>
 
               {/* TO-DO / ACTION */}
@@ -280,6 +384,18 @@ function FocusPage() {
                     <ul className="fp-list">
                       {todoItems.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
+                  </>
+                )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="What is God asking you to do today?"
+                      value={todoText}
+                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
+                    />
+                    {statusRow("todo_text")}
                   </>
                 )}
               </div>
