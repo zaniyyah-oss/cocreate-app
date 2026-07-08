@@ -509,12 +509,12 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
         <h2 className="hp-campaign-title">{collection.title}</h2>
       </div>
 
-      <div className="hp-campaign-explainer">
-        <span className="hp-qlabel">What's a collection?</span>
-        <p>A handful of pieces released together because they're circling the same question from different angles. There's no order to follow and no badge for finishing it. New pieces keep releasing as the collection goes on — read or watch whichever one meets you where you are.</p>
-      </div>
-
-      <div className={`hp-banner${collection.banner_url ? " hasimg" : ""}`} style={collection.banner_url ? { backgroundImage: `url(${collection.banner_url})` } : undefined}>
+      <div className="hp-campaign-top">
+        <div className="hp-campaign-explainer">
+          <span className="hp-qlabel">What's a collection?</span>
+          <p>A handful of pieces released together because they're circling the same question from different angles. There's no order to follow and no badge for finishing it. New pieces keep releasing as the collection goes on — read or watch whichever one meets you where you are.</p>
+        </div>
+        <div className={`hp-banner${collection.banner_url ? " hasimg" : ""}`} style={collection.banner_url ? { backgroundImage: `url(${collection.banner_url})` } : undefined}>
         {!collection.banner_url && (
           <div className="hp-uploadhint">
             <div className="icon">⬆</div>
