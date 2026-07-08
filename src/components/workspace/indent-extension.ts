@@ -98,17 +98,23 @@ export const Indent = Extension.create({
       Tab: () => {
         const editor = this.editor;
         if (editor.isActive("listItem")) {
-          return editor.chain().focus().sinkListItem("listItem").run();
+          // Try to nest under a previous sibling; if that fails (e.g. first
+          // item in the list), shift the whole list wrapper right instead
+          // so users can push a list further in from its starting indent.
+          if (editor.chain().focus().sinkListItem("listItem").run()) return true;
+          return editor.chain().focus().indent().run();
         }
         return editor.chain().focus().indent().run();
       },
       "Shift-Tab": () => {
         const editor = this.editor;
         if (editor.isActive("listItem")) {
-          return editor.chain().focus().liftListItem("listItem").run();
+          if (editor.chain().focus().liftListItem("listItem").run()) return true;
+          return editor.chain().focus().outdent().run();
         }
         return editor.chain().focus().outdent().run();
       },
     };
   },
+
 });
