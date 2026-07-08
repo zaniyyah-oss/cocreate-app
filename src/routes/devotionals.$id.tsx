@@ -192,12 +192,13 @@ const CSS = `
 .de-viewtabs button:hover:not(.active){opacity:0.85;}
 
 /* History table */
-.de-hist-header{background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:12px 12px 0 0;display:grid;grid-template-columns:55px 70px 1fr 150px 300px 55px;padding:11px 18px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#181A4D;opacity:0.55;font-family:'Poppins',sans-serif;}
-.de-hist-row{display:grid;grid-template-columns:55px 70px 1fr 150px 300px 55px;align-items:center;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;}
+.de-hist-header{background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:12px 12px 0 0;display:grid;grid-template-columns:50px 65px 1fr 150px 120px 280px 55px;padding:11px 18px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#181A4D;opacity:0.55;font-family:'Poppins',sans-serif;}
+.de-hist-row{display:grid;grid-template-columns:50px 65px 1fr 150px 120px 280px 55px;align-items:center;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;}
 .de-hist-row:last-child{border-radius:0 0 12px 12px;}
 .de-hist-row.empty{opacity:0.45;}
 .de-hist-mood{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px;flex-shrink:0;vertical-align:middle;}
 .de-hist-name{font-weight:600;color:#181A4D;}
+.de-hist-subtitle{font-size:11.5px;color:#20201C;opacity:0.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .de-hist-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .de-hist-tag{border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600;font-family:'Poppins',sans-serif;}
 .de-hist-tag.daily{background:rgba(24,26,77,0.08);color:#181A4D;}
@@ -884,13 +885,14 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
     const uniqueFocus = focusTags.filter(f => (seen.has(f.key) ? false : (seen.add(f.key), true)));
     // Mood dot: amber if there's any written content, lime if entry exists but empty, none otherwise.
     const hasText = dayEntries.some(e =>
-      [e.where_text, e.reflect_text, e.scripture_text, e.pray_text, e.todo_text, e.apply_text, e.entry_title].some(v => (v ?? "").toString().trim().length > 0)
+      [e.where_text, e.reflect_text, e.scripture_text, e.pray_text, e.todo_text, e.apply_text, e.entry_title, e.entry_subtitle].some(v => (v ?? "").toString().trim().length > 0)
     );
     const mood = dayEntries.length === 0 ? null : hasText ? "#FFAE00" : "#DCE07A";
     const title = representative?.entry_title?.trim()
       || (representative && (representative.where_text ?? representative.reflect_text ?? "").toString().trim().slice(0, 80))
       || (dayEntries.length ? "Untitled entry" : "");
-    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title };
+    const subtitle = representative?.entry_subtitle?.trim() ?? "";
+    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title, subtitle };
   });
 
   const written = perDay.filter(p => p.dayEntries.length > 0).length;
@@ -920,7 +922,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
       ) : (
         <>
           <div className="de-hist-header">
-            <div>Day</div><div>Date</div><div>Entry</div><div>Focus</div><div>Workspace tags</div><div />
+            <div>Day</div><div>Date</div><div>Entry</div><div>Notes</div><div>Focus</div><div>Workspace tags</div><div />
           </div>
           {perDay.map(p => {
             const hasEntry = p.dayEntries.length > 0;
@@ -940,6 +942,13 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                       <span className="de-hist-mood" style={{ background: "transparent", border: "1px solid rgba(24,26,77,0.12)" }} />
                       <span style={{ color: "#8a8678" }}>— no entry —</span>
                     </>
+                  )}
+                </div>
+                <div>
+                  {hasEntry && p.subtitle ? (
+                    <span className="de-hist-subtitle" title={p.subtitle}>{p.subtitle}</span>
+                  ) : (
+                    <span className="de-hist-none">—</span>
                   )}
                 </div>
                 <div className="de-hist-tags">
