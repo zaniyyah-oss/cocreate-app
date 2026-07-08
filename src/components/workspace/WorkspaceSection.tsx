@@ -201,25 +201,27 @@ export function WorkspaceSection({
   return (
     <div className={`ws-root ${isFocused ? "is-full" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      {onToggleFocus && (
-        <button
-          type="button"
-          className="ws-focus-btn"
-          onClick={onToggleFocus}
-          aria-label={isFocused ? "Exit focus mode" : "Focus this section"}
-        >
-          {isFocused ? "✕ Exit focus" : "⛶ Focus"}
-        </button>
-      )}
 
       <div className="ws-head">
         <div>
           <span className="ws-badge">workspace</span>
           <div className="ws-desc">Where you work things out with him — quotes, links, half-formed thoughts.</div>
         </div>
-        <button className="ws-newbtn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
-          {createItem.isPending ? "Opening…" : "+ New note"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {onToggleFocus && (
+            <button
+              type="button"
+              className="ws-focus-btn"
+              onClick={onToggleFocus}
+              aria-label={isFocused ? "Exit focus mode" : "Focus this section"}
+            >
+              {isFocused ? "✕ Exit focus" : "⛶ Focus"}
+            </button>
+          )}
+          <button className="ws-newbtn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
+            {createItem.isPending ? "Opening…" : "+ New note"}
+          </button>
+        </div>
       </div>
 
       {openNotes.length > 0 && (
