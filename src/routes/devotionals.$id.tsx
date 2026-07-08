@@ -54,6 +54,12 @@ const TOPIC_COLORS: Record<string, string> = {
   coral: "#FF340C", navy: "#181A4D", cream: "#FBF8ED", brown: "#441B07",
 };
 const topicColor = (k?: string | null) => (k && TOPIC_COLORS[k]) || "#0F4A42";
+const hexToRgba = (hex: string, alpha: number) => {
+  const h = hex.replace("#", "");
+  const n = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+  const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
 
 const CSS = `
 .de-root *{box-sizing:border-box;}
