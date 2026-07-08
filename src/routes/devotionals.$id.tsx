@@ -696,7 +696,8 @@ function EntryPage() {
                       {statusRow("scripture_text")}
                     </div>
                     <div className="de-read-part">
-                      <textarea
+                      <ResizableTextarea
+                        storageKey="further"
                         className="de-textarea short"
                         placeholder="What supplemental material will you be reviewing today?"
                         value={furtherReading}
