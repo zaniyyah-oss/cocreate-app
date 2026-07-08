@@ -214,8 +214,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {btn("H1", () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }), `Heading 1 (${mod}+${alt}+1)`)}
       {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
       {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
-      {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
-      {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
+      {btn("• List", () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
+      {btn("1. List", () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
       {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
       {btn("→|", () => {
         if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
@@ -421,3 +421,58 @@ async function insertLinkCard(view: any, url: string) {
 function safeDomain(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
+
+/**
+ * Toggle bullet/ordered list while preserving the indent level of the
+ * paragraph the cursor is currently in. When wrapping, transfer the
+ * paragraph's `indent` onto the new list wrapper and reset it on the
+ * paragraph so the bullet sits at the same indent the user was typing at.
+ */
+function toggleListPreservingIndent(editor: Editor, listType: "bulletList" | "orderedList") {
+  const wasActive = editor.isActive(listType);
+  // Grab current block indent before toggling.
+  const $from = editor.state.selection.$from;
+  let blockIndent = 0;
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if (["paragraph", "heading"].includes(node.type.name)) {
+      blockIndent = Number(node.attrs.indent) || 0;
+      break;
+    }
+  }
+
+  const command = listType === "bulletList"
+    ? editor.chain().focus().toggleBulletList()
+    : editor.chain().focus().toggleOrderedList();
+  command.run();
+
+  if (wasActive || blockIndent <= 0) return;
+
+  // After toggling into a list, find the newly-wrapped list ancestor and
+  // move the indent from the inner paragraph onto the list wrapper.
+  const { state, view } = editor;
+  const $pos = state.selection.$from;
+  let listPos: number | null = null;
+  let listNode: any = null;
+  for (let d = $pos.depth; d > 0; d--) {
+    const node = $pos.node(d);
+    if (node.type.name === listType) {
+      listPos = $pos.before(d);
+      listNode = node;
+      break;
+    }
+  }
+  if (listPos === null || !listNode) return;
+  const tr = state.tr.setNodeMarkup(listPos, undefined, { ...listNode.attrs, indent: blockIndent });
+  // Reset indent on the paragraph inside the current list item.
+  for (let d = $pos.depth; d > 0; d--) {
+    const node = $pos.node(d);
+    if (node.type.name === "paragraph") {
+      const pPos = $pos.before(d);
+      tr.setNodeMarkup(pPos, undefined, { ...node.attrs, indent: 0 });
+      break;
+    }
+  }
+  view.dispatch(tr);
+}
+
