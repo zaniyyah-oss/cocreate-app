@@ -19,7 +19,7 @@ const ICON = {
 const DESKTOP_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; matchPaths?: string[] }[] = [
   { key: "home",        label: "Home",        to: "/",            icon: ICON.home },
   { key: "explore",     label: "Explore",     to: "/explore",     icon: ICON.explore },
-  { key: "devotionals", label: "Devotionals", to: "/devotionals", icon: ICON.devotionals },
+  { key: "devotionals", label: "Workspace", to: "/devotionals", icon: ICON.devotionals },
   { key: "library",     label: "Library",     to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
   { key: "profile",     label: "Profile",     to: "/profile",     icon: ICON.profile },
 ];
