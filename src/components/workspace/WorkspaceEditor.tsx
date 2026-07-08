@@ -167,6 +167,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const [colorOpen, setColorOpen] = useState(false);
   const [hlOpen, setHlOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
+  const [toneOpen, setToneOpen] = useState(false);
 
   // Toolbar sticks via CSS — no scroll-driven transforms (they caused
   // shimmering as the visual viewport updated).
