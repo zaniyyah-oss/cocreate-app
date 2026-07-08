@@ -141,7 +141,6 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     return pathname === item.to || pathname.startsWith(item.to + "/");
   };
 
-  return (
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
 
   return (
