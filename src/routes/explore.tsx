@@ -27,6 +27,8 @@ const TYPE_META: Record<ContentType, { label: string; cls: string }> = {
   essay: { label: "Essay", cls: "essay" },
   podcast: { label: "Podcast", cls: "podcast" },
   blog: { label: "Blog", cls: "essay" },
+  clip: { label: "Clip", cls: "podcast" },
+  promoted: { label: "Promoted", cls: "teaching" },
 };
 
 const TYPE_OPTIONS: ContentType[] = ["teaching", "essay", "podcast", "blog"];

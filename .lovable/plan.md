@@ -1,40 +1,38 @@
-## Goal
+## Home page redesign
 
-Replace the per-user "default template" model with a single, platform-wide Default Devotional that every user always has active. Topical/temporary devotionals a user saves become additive layers, never substitutes.
+Rebuild the Home route to mirror the uploaded mockup pixel-for-pixel, and introduce the new data types the mockup requires.
 
-## Backend
+### 1. New backend tables (one migration)
 
-1. **Migration**
-   - Add `is_default boolean NOT NULL DEFAULT false` to `devotional_templates`.
-   - Add a unique partial index enforcing at most one default: `CREATE UNIQUE INDEX devotional_templates_one_default ON devotional_templates ((is_default)) WHERE is_default = true;`
-   - Add a trigger `BEFORE INSERT OR UPDATE` on `devotional_templates` that blocks setting `is_default = true` unless the row is `status = 'published'` (so the default is always visible), and blocks removing the default if it would leave zero defaults (only admins can swap by flipping another row true in the same transaction — the unique index handles the "only one" invariant).
-   - Retire `profiles.default_template_id`: drop the column (it was introduced in Prompt 18 and is now meaningless — the default is platform-wide).
-   - Seed: mark the existing "Morning Abiding" seed template as the default so the app has one out of the box. If no template qualifies (all seeds purged), leave `is_default` unset; the app handles that as "no default configured".
+- `daily_scriptures` — `verse_text`, `reference`. Publicly readable. Seeded with ~30 verses. Random-verse selection driven by `ORDER BY random()` client-side query with a small day-based rotation.
+- `sticky_notes` — per-user notes: `user_id`, `body` (≤160 chars), `color` (enum: `limelight`, `blush`, `amber`, `teal`), `rotation` (small int −4..4). RLS: user CRUD own rows.
+- Extend `content_type` enum with `clip` and `promoted`. Extend `content_items` with `video_url` (nullable), `duration_seconds` (nullable), `external_url` (nullable, used for promoted CTA).
+- `collections` — `slug`, `title`, `eyebrow` (e.g. "week 2"), `description_md`, `banner_url`, `intro_video_content_id`, `devotional_template_id`, `status`, `week_number`, `published_at`. Public read when published.
+- `collection_items` — `collection_id`, `content_id`, `position`, `layout_slot` (enum: `lead`, `medium`, `half`, `promo`). Public read.
 
-2. **Admin surface (small addition, not the focus)**
-   - In `/admin/content` and the edit form for a devotional template, add a "Set as platform Default Devotional" toggle. Flipping it on another template atomically clears the old default and sets the new one (single SQL update using the unique index; on conflict fall back to a two-step `UPDATE ... SET is_default = false WHERE is_default = true; UPDATE ... SET is_default = true WHERE id = $1;` inside a transaction / server fn).
+Grants + RLS + `updated_at` triggers on all new tables.
 
-## Frontend
+### 2. Home page (`src/routes/index.tsx`)
 
-3. **`ContinuePractice` (Home card)** — rewrite the query logic:
-   - Fetch the platform default template (`devotional_templates` where `is_default = true AND status = 'published'`).
-   - Check if the signed-in user has a `devotional_entries` row for that template with today's local date. If not, render the primary "Continue your practice" card exactly as today (teal top accent, calm styling) pointing at the default.
-   - Additionally fetch the user's topical/temporary templates — everything in `saved_items.devotional_template_id` OR templates they have any prior entry for — **excluding** the default. For each, check today's entry; render any that are incomplete as smaller secondary prompts stacked below the main card (same white card, thinner, muted label like "Also today"). Never merge into or replace the primary card.
-   - If the default is complete but topical ones are not, still show the topical prompts (no primary card). If everything is complete, render nothing.
+Rebuilt to match the mockup exactly:
 
-4. **Devotionals screen (`/devotionals`)** — restructure into two sections:
-   - **Your Default Devotional** — always the first section, always shows the platform default template card even if the user has no entries yet. No "Set as default" button, no remove button. Small "Always active" pill.
-   - **Topical & Temporary Devotionals** — the existing grid, but excluding the default. Keeps the current add-from-Explore / progress display. Remove the "Set as default" button entirely (that concept no longer exists user-side).
-   - Remove all `default_template_id` reads/writes and the `setDefault` mutation.
+- Hero: new title/subtitle. Remove green "Return to today's workspace" banner completely.
+- Widget row: `TodayScripture` (teal stripe, "↻ New verse" reshuffles) + `StickyNotes` (grid of colored rotated squares + dashed "+" add tile; add-inline via prompt or a tiny inline editor).
+- Short-form row: fixed 3 cards — 1 `promoted` + 2 `clip`, pulled from `content_items` filtered by new types. Vertical 3:4 cards with gradient overlay + pills + play icon.
+- Featured grid: existing content, restyled to 4-col dense (96px thumb, title + scripture ref only).
+- Collection preview module: pulls the latest published collection. Renders eyebrow, title, evergreen "What's a collection?" explainer card, banner image (with `Replace image` for admins → uploads to `workspace-media`), full-width writeup, 2 full-size clip cards (intro + one clip), enlarged devotional promo (`+ Add to my Abide` attaches template, `See what's inside →` links to devotional overview), asymmetric grid (1 lead + 1 medium + 3 half from `collection_items`), "See all" button linking to `/collections/$slug` (page stub not built here — link only).
 
-## Files to change
+### 3. Scope kept small
 
-- New migration under `supabase/migrations/`
-- `src/components/ContinuePractice.tsx` — rewrite fetch + render for primary + secondary prompts
-- `src/routes/devotionals.tsx` — split into two sections, drop default-selection UI
-- `src/components/admin/content-form.tsx` (or the devotional template edit path) — add "Platform default" toggle
-- `src/integrations/supabase/types.ts` regenerates after migration approval
+- No admin CRUD UI for collections/clips/scriptures in this pass — data is seeded via migration; admin polish comes later.
+- No video playback: clip cards show thumbnail + play icon; clicking a clip navigates to its content detail route (essays route reused for now, since clips are `content_items`).
+- No `/collections/$slug` route in this pass — button links there but page shows 404 until Set B.
 
-## Out of scope
+### Technical notes
 
-- No changes to entry-writing flow, analytics events, recommendations, or seed content behavior.
+- New `src/components/home/` folder: `TodayScripture.tsx`, `StickyNotes.tsx`, `ShortFormRow.tsx`, `FeaturedGrid.tsx`, `CollectionPreview.tsx`. Each self-contained with inline `<style>` blocks matching the mockup CSS.
+- Reuse `supabase` client; queries via TanStack Query.
+- Admin-only "Replace image" gated by existing `has_role('admin')`.
+- Nav "Library" doesn't exist in the app; mockup nav is inspirational — keep existing `AppShell` nav untouched.
+
+Ready to build once approved.
