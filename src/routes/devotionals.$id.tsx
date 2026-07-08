@@ -100,7 +100,7 @@ const CSS = `
 .de-badge.where{background:#181A4D;}
 .de-badge.read{background:#0F4A42;}
 .de-badge.pray{background:#441B07;}
-.de-badge.todo{background:#FFAE00;}
+.de-badge.todo{background:#F5B301;color:#181A4D;}
 
 .de-prompt{font-size:14px;line-height:1.5;color:#20201C;opacity:0.7;margin:0 0 10px;font-weight:400;max-width:520px;}
 .de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
@@ -150,23 +150,15 @@ const CSS = `
 .de-signgate h3{font-size:16px;font-weight:700;color:#181A4D;margin:0 0 6px;}
 .de-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
 
-/* Stack: Read/Pray/To-Do share ONE white card with connected column dividers */
-.de-stack{border-radius:14px;overflow:hidden;border:1px solid rgba(24,26,77,0.12);background:#fff;margin-bottom:14px;position:relative;}
-.de-stack::before,.de-stack::after{content:'';position:absolute;top:0;bottom:0;width:1px;background:rgba(24,26,77,0.12);z-index:2;pointer-events:none;}
-.de-stack::before{left:33.3333%;}
-.de-stack::after{left:66.6666%;}
-.de-cols{display:grid;grid-template-columns:1fr;gap:0;}
-.de-cols .de-block{margin-bottom:0;border:none;border-radius:0;background:transparent;height:100%;display:flex;flex-direction:column;padding:20px 22px;}
-.de-cols .de-block + .de-block{border-top:1px solid rgba(24,26,77,0.12);}
-@media (min-width:900px){
-  .de-cols{grid-template-columns:1fr 1fr 1fr;}
-  .de-cols .de-block + .de-block{border-top:none;}
-}
+/* Stack: Read/Pray/To-Do each stand alone as their own compact card,
+   stacked vertically to match Where Are You / Workspace. */
+.de-stack{margin-bottom:14px;}
+.de-cols{display:flex;flex-direction:column;gap:14px;}
+.de-cols .de-block{margin-bottom:0;}
 
-/* Topical devotional bands (aligned to same 3-col grid inside .de-stack) */
-.de-band{display:grid;grid-template-columns:1fr;border-top:1px solid rgba(24,26,77,0.12);position:relative;}
-@media (min-width:900px){ .de-band{grid-template-columns:1fr 1fr 1fr;} }
-.de-band-cell{padding:14px 18px;display:flex;align-items:flex-start;gap:9px;cursor:pointer;min-width:0;}
+/* Topical devotional bands — compact single-row card, tag + teasers stacked. */
+.de-band{display:flex;flex-direction:column;gap:8px;border-radius:14px;padding:14px 18px;margin-bottom:14px;border:1px solid rgba(24,26,77,0.12);}
+.de-band-cell{display:flex;align-items:flex-start;gap:10px;cursor:pointer;min-width:0;padding:4px 0;}
 .de-band-cell:hover .de-band-line{opacity:1;}
 .de-band-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.02em;border-radius:999px;padding:3px 10px;flex-shrink:0;line-height:1.4;color:#20201C;}
 .de-band-line{font-size:12.5px;color:#20201C;opacity:0.75;line-height:1.4;min-width:0;}
