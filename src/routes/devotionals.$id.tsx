@@ -27,6 +27,7 @@ export const Route = createFileRoute("/devotionals/$id")({
   validateSearch: (s: Record<string, unknown>) => ({
     date: typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
     view: s.view === "week" || s.view === "month" ? (s.view as "week" | "month") : ("today" as const),
+    ws: typeof s.ws === "string" ? s.ws : undefined,
   }),
 
   errorComponent: ({ error }) => (
@@ -201,16 +202,19 @@ const CSS = `
 
 /* History table */
 .de-hist-header{background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:12px 12px 0 0;display:grid;grid-template-columns:45px 55px 1fr 220px 100px 250px 50px;padding:11px 18px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#181A4D;opacity:0.55;font-family:'Poppins',sans-serif;}
-.de-hist-row{display:grid;grid-template-columns:45px 55px 1fr 220px 100px 250px 50px;align-items:center;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;}
+.de-hist-row{display:grid;grid-template-columns:45px 55px 1fr 220px 100px 250px 50px;align-items:flex-start;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;cursor:pointer;transition:background .12s;}
+.de-hist-row:hover{background:#FBF8ED;}
 .de-hist-row:last-child{border-radius:0 0 12px 12px;}
-.de-hist-row.empty{opacity:0.45;}
-.de-hist-mood{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px;flex-shrink:0;vertical-align:middle;}
-.de-hist-name{font-weight:600;color:#181A4D;}
-.de-hist-subtitle{font-size:11.5px;color:#20201C;opacity:0.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.de-hist-row.empty{opacity:0.55;}
+.de-hist-row > div{min-width:0;}
+.de-hist-mood{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px;flex-shrink:0;vertical-align:middle;margin-top:5px;}
+.de-hist-name{font-weight:600;color:#181A4D;overflow-wrap:anywhere;}
+.de-hist-subtitle{font-size:11.5px;color:#20201C;opacity:0.7;line-height:1.45;overflow-wrap:anywhere;word-break:break-word;display:block;}
 .de-hist-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .de-hist-tag{border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600;font-family:'Poppins',sans-serif;}
 .de-hist-tag.daily{background:rgba(24,26,77,0.08);color:#181A4D;}
-.de-hist-wstag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600;font-family:'Poppins',sans-serif;}
+.de-hist-wstag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600;font-family:'Poppins',sans-serif;border:none;cursor:pointer;text-decoration:none;display:inline-block;}
+.de-hist-wstag:hover{background:rgba(15,74,66,0.18);}
 .de-hist-none{font-size:11.5px;color:#20201C;opacity:0.35;}
 .de-hist-open{color:#181A4D;font-size:11.5px;font-weight:600;text-align:right;text-decoration:none;font-family:'Poppins',sans-serif;}
 .de-hist-open:hover{text-decoration:underline;}
@@ -791,6 +795,7 @@ function EntryPage() {
                   currentEntryId={currentEntry?.id ?? null}
                   isFocused={focusSection === "workspace"}
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
+                  focusItemId={search.ws}
                 />
               )}
 
@@ -905,7 +910,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
     const iso = isoDate(d);
     const dayEntries = (data?.entries ?? []).filter(e => e.entry_date === iso);
     const dayWs = (data?.ws ?? []).filter(w => (w.created_at ?? "").slice(0, 10) === iso);
-    const wsTags = Array.from(new Set(dayWs.flatMap(w => w.tags ?? [])));
+    const wsItems = dayWs.map(w => ({ id: w.id, tags: (w.tags ?? []) as string[] }));
     // Pick a representative entry for title: prefer default (Abide) template, else first.
     let representative: Entry | undefined;
     if (data) {
@@ -936,7 +941,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
       || (representative && (representative.where_text ?? representative.reflect_text ?? "").toString().trim().slice(0, 80))
       || (dayEntries.length ? "Untitled entry" : "");
     const subtitle = representative?.entry_subtitle?.trim() ?? "";
-    return { date: d, iso, dayEntries, wsTags, uniqueFocus, mood, title, subtitle };
+    return { date: d, iso, dayEntries, wsItems, uniqueFocus, mood, title, subtitle };
   });
 
   const written = perDay.filter(p => p.dayEntries.length > 0).length;
@@ -947,6 +952,12 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
   const weekday = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
   const monthday = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
+  const navigate = useNavigate();
+  const titleText = range === "week" ? "Covered This Week" : "Covered This Month";
+  const subtitleText = range === "week"
+    ? "An overview of what you've covered, worked on, and worked through with the Lord over the course of this week."
+    : "An overview of what came up continually over the month. Use this recap to help plan a few of your studies and workspaces.";
+
   return (
     <div>
       <div className="de-headtop" style={{ marginBottom: 6 }}>
@@ -955,10 +966,10 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
         <span className="de-headdate">{range === "week" ? "This week" : "Month"}</span>
       </div>
       <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 27, fontWeight: 700, color: "#181A4D", letterSpacing: "-0.01em", margin: "2px 0 6px" }}>
-        Your practice, laid out
+        {titleText}
       </div>
       <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 14, color: "#20201C", opacity: 0.65, margin: "0 0 22px", maxWidth: 640 }}>
-        Not a streak to perform — a mirror. If it's been a hard stretch, this shows you that too.
+        {subtitleText}
       </p>
 
       {histQ.isLoading ? (
@@ -971,8 +982,21 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
           {perDay.map(p => {
             const hasEntry = p.dayEntries.length > 0;
             const future = isFuture(p.date);
+            const openRow = () => {
+              if (future) return;
+              navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date: p.iso } as any });
+            };
+            const flatWsTags = p.wsItems.flatMap(w => w.tags.map(t => ({ itemId: w.id, tag: t })));
             return (
-              <div key={p.iso} className={`de-hist-row ${hasEntry ? "" : "empty"}`}>
+              <div
+                key={p.iso}
+                className={`de-hist-row ${hasEntry ? "" : "empty"}`}
+                onClick={openRow}
+                role="button"
+                tabIndex={future ? -1 : 0}
+                onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !future) { e.preventDefault(); openRow(); } }}
+                style={future ? { cursor: "default" } : undefined}
+              >
                 <div>{weekday(p.date)}</div>
                 <div>{monthday(p.date)}</div>
                 <div>
@@ -990,7 +1014,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                 </div>
                 <div>
                   {hasEntry && p.subtitle ? (
-                    <span className="de-hist-subtitle" title={p.subtitle}>{p.subtitle}</span>
+                    <span className="de-hist-subtitle">{p.subtitle}</span>
                   ) : (
                     <span className="de-hist-none">—</span>
                   )}
@@ -1011,13 +1035,24 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                   ))}
                 </div>
                 <div className="de-hist-tags">
-                  {p.wsTags.length === 0 ? (
+                  {flatWsTags.length === 0 ? (
                     <span className="de-hist-none">none</span>
                   ) : (
-                    p.wsTags.map(t => <span key={t} className="de-hist-wstag">#{t}</span>)
+                    flatWsTags.map((w, i) => (
+                      <Link
+                        key={`${w.itemId}-${w.tag}-${i}`}
+                        to="/devotionals/$id"
+                        params={{ id: templateId }}
+                        search={{ date: p.iso, ws: w.itemId } as any}
+                        className="de-hist-wstag"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        #{w.tag}
+                      </Link>
+                    ))
                   )}
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                   {future ? (
                     <span className="de-hist-none">—</span>
                   ) : (

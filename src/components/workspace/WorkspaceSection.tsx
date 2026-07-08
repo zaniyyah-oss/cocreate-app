@@ -107,12 +107,14 @@ export function WorkspaceSection({
   ensureEntry,
   isFocused,
   onToggleFocus,
+  focusItemId,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
   currentEntryId: string | null;
   isFocused?: boolean;
   onToggleFocus?: () => void;
+  focusItemId?: string;
 }) {
   const qc = useQueryClient();
   const itemsQ = useQuery({
@@ -197,6 +199,26 @@ export function WorkspaceSection({
   });
 
   const activeNote = openNotes.find((n) => n.id === activeId) ?? null;
+
+  const lastFocusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusItemId) return;
+    if (lastFocusRef.current === focusItemId) return;
+    const target = items.find((i) => i.id === focusItemId);
+    if (!target) return;
+    lastFocusRef.current = focusItemId;
+    if (target.status === "closed") {
+      reopen.mutate(focusItemId);
+    } else {
+      setActiveId(focusItemId);
+    }
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        document.querySelector(".ws-root")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [focusItemId, items]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   return (
     <div className={`ws-root ${isFocused ? "is-full" : ""}`}>
