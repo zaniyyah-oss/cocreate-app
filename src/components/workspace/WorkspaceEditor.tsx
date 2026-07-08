@@ -67,7 +67,7 @@ export function WorkspaceEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "ws-img" } }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: "ws-link" } }),
       LinkCard,
