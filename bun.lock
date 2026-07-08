@@ -39,9 +39,16 @@
         "@tanstack/react-router": "^1.170.16",
         "@tanstack/react-start": "^1.168.26",
         "@tanstack/router-plugin": "^1.168.18",
+        "@tiptap/extension-color": "^3.27.3",
+        "@tiptap/extension-highlight": "^3.27.3",
         "@tiptap/extension-image": "^3.27.1",
         "@tiptap/extension-link": "^3.27.1",
         "@tiptap/extension-placeholder": "^3.27.1",
+        "@tiptap/extension-table": "^3.27.3",
+        "@tiptap/extension-table-cell": "^3.27.3",
+        "@tiptap/extension-table-header": "^3.27.3",
+        "@tiptap/extension-table-row": "^3.27.3",
+        "@tiptap/extension-text-style": "^3.27.3",
         "@tiptap/pm": "^3.27.1",
         "@tiptap/react": "^3.27.1",
         "@tiptap/starter-kit": "^3.27.1",
@@ -606,6 +613,8 @@
 
     "@tiptap/extension-code-block": ["@tiptap/extension-code-block@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-code-block/-/extension-code-block-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1", "@tiptap/pm": "3.27.1" } }, "sha512-pHlzmZx2OlHfyQ0yRlT5UL4mGokz947DthZuYefN1OleVqOkHpWBG+2JQwqoNq6bmzMne92zbH32rhcJUEYSjA=="],
 
+    "@tiptap/extension-color": ["@tiptap/extension-color@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-color/-/extension-color-3.27.3.tgz", { "peerDependencies": { "@tiptap/extension-text-style": "3.27.3" } }, "sha512-tNXyK3VXPGygJP+vq1+YyPmrxLabx4vs+rYiVhGtmhIapTQeMVYcHbFH4s4v3h5m8JGVlTWnpI8n7cb5ExIhSQ=="],
+
     "@tiptap/extension-document": ["@tiptap/extension-document@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-document/-/extension-document-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-8FbBTkfnRP4iVaoj+2h3iWa+H0eGDD3yTyVCwrmue/sQTkqUNUoSuAZa3GDG4Sd41xdPwTJxl9nUWGgM1qDCnw=="],
 
     "@tiptap/extension-dropcursor": ["@tiptap/extension-dropcursor@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-dropcursor/-/extension-dropcursor-3.27.1.tgz", { "peerDependencies": { "@tiptap/extensions": "3.27.1" } }, "sha512-blFf9x9RG0Qr7P3FoAH/033ffa+mMLZn34trVs8Vi0Ppk6FmJAg5HpYFOtmYoeREdNDJ5rHJKV7SoACbOHgskQ=="],
@@ -617,6 +626,8 @@
     "@tiptap/extension-hard-break": ["@tiptap/extension-hard-break@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-hard-break/-/extension-hard-break-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-iv/m9hzl6jfSj9Q8UEjAxONvCoUDaP7M9SRCPx3PaLNxA230TTD6RE0Ye4zFJ8ze7ZVoJJMAqg9Qpq1iYg2JOQ=="],
 
     "@tiptap/extension-heading": ["@tiptap/extension-heading@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-heading/-/extension-heading-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-SrC4l1kEIyv9ZXFaI/8LQqU2MyMmjczw7XXsWUQOTN4YXv0JyVgMNR3cI/wz0d2xsTfBdZ1N85Tdng+Ga1t0Sg=="],
+
+    "@tiptap/extension-highlight": ["@tiptap/extension-highlight@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-highlight/-/extension-highlight-3.27.3.tgz", { "peerDependencies": { "@tiptap/core": "3.27.3" } }, "sha512-99QYxMx8F/NhdvznM8/Zhm4XiCdMU0OEiLwPvLNObJiKV8UBqjdA68cJLX6FRuOi2nqD7xfJq2KuSsFKBldi2A=="],
 
     "@tiptap/extension-horizontal-rule": ["@tiptap/extension-horizontal-rule@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-horizontal-rule/-/extension-horizontal-rule-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1", "@tiptap/pm": "3.27.1" } }, "sha512-QlKE7qn5qMnIGVGhXQlvYedvLtNJ9z0dmit5w8vPb8tKzW4Spk6M7N2kruprrDA8GBwHfeR5wmF+njfUm34qxg=="],
 
@@ -640,7 +651,17 @@
 
     "@tiptap/extension-strike": ["@tiptap/extension-strike@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-strike/-/extension-strike-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-Y3DW1jlSlCNCyMGHP3+3qBNNPS83wuFz4RTYGjZtvRRTCRh7apZme9XRWMq1rN5mJ2Cr7fKocA2/5Bs13KgN6Q=="],
 
+    "@tiptap/extension-table": ["@tiptap/extension-table@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-table/-/extension-table-3.27.3.tgz", { "peerDependencies": { "@tiptap/core": "3.27.3", "@tiptap/pm": "3.27.3" } }, "sha512-P7iQ0SkkDWZwnXzQDOVFLXktXlX67VQ3s2YxoJYKTHlc8rPZ4UCaSogFq0G2APyBlizlY3LbMNrDeZAVFOD8wQ=="],
+
+    "@tiptap/extension-table-cell": ["@tiptap/extension-table-cell@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-table-cell/-/extension-table-cell-3.27.3.tgz", { "peerDependencies": { "@tiptap/extension-table": "3.27.3" } }, "sha512-W8onBLgjge3D2PlYetbPC/BvwH5jgYfL9PLqMurfCPD7t8fyU4s+4E3SwbZkuf6eCH0twBjqyapH7+sOW/sPhA=="],
+
+    "@tiptap/extension-table-header": ["@tiptap/extension-table-header@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-table-header/-/extension-table-header-3.27.3.tgz", { "peerDependencies": { "@tiptap/extension-table": "3.27.3" } }, "sha512-8iBOxh0S1Wh5VC1rmVTZVJKanGhJpZd5E5O7Pycf+KKUu+BcWQZ17ewj3+VVSdU76sDCUWIjQE0qJ/EyI1vZeg=="],
+
+    "@tiptap/extension-table-row": ["@tiptap/extension-table-row@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-table-row/-/extension-table-row-3.27.3.tgz", { "peerDependencies": { "@tiptap/extension-table": "3.27.3" } }, "sha512-AFMVQI+1kRh97++g+NA6MjATpwQPvjar4JUyaGlnSBIt+b5sYLTW3qQS8EzpMbKPqUp7uZOX9EkLgpvepWYSow=="],
+
     "@tiptap/extension-text": ["@tiptap/extension-text@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-text/-/extension-text-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-6ZwaZwSrDh+KFFv6V1J79oO37yPs7y1bFxvk1/9Ih2rn3Xr5AWz+eMS+n8RpH3djBVVAQpdIAeYQgcn+VCSsTg=="],
+
+    "@tiptap/extension-text-style": ["@tiptap/extension-text-style@3.27.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-text-style/-/extension-text-style-3.27.3.tgz", { "peerDependencies": { "@tiptap/core": "3.27.3" } }, "sha512-oim4RqFtMBCA4N+J8f8dTFFYZrwyfmXLxLL5SvQkn+kkpfGLv8PqJCnJ4uHxsnHXDNsWHBtVVhfTGUABZsTEHg=="],
 
     "@tiptap/extension-underline": ["@tiptap/extension-underline@3.27.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@tiptap/extension-underline/-/extension-underline-3.27.1.tgz", { "peerDependencies": { "@tiptap/core": "3.27.1" } }, "sha512-N889J4nXN/TPfVt8uF9N1A0SY82E90zwc1y26lqOcw6KWNLmQrlhMh/9OD4ikLDbekmFpOBq/UicpHf/6S8hbQ=="],
 
