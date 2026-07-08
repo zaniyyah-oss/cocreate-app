@@ -92,7 +92,7 @@ const CSS = `
 .de-badge.where{background:#181A4D;}
 .de-badge.read{background:#0F4A42;}
 .de-badge.pray{background:#441B07;}
-.de-badge.todo{background:#FFAE00;color:#181A4D;}
+.de-badge.todo{background:#FFAE00;}
 
 .de-prompt{font-size:14px;line-height:1.5;color:#20201C;opacity:0.7;margin:0 0 10px;font-weight:400;max-width:520px;}
 .de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
