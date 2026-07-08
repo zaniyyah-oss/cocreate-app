@@ -334,6 +334,18 @@ function FocusPage() {
                     </ul>
                   </>
                 )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="What did you notice? What is God saying?"
+                      value={scriptureText}
+                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                    />
+                    {statusRow("scripture_text")}
+                  </>
+                )}
               </div>
 
               {/* PRAY */}
@@ -348,6 +360,18 @@ function FocusPage() {
                     </ul>
                   </>
                 )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="Speak plainly to God…"
+                      value={prayText}
+                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
+                    />
+                    {statusRow("pray_text")}
+                  </>
+                )}
               </div>
 
               {/* TO-DO / ACTION */}
@@ -360,6 +384,18 @@ function FocusPage() {
                     <ul className="fp-list">
                       {todoItems.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
+                  </>
+                )}
+                {userId && (
+                  <>
+                    <div className="fp-response-label">Your response</div>
+                    <textarea
+                      className="fp-textarea"
+                      placeholder="What is God asking you to do today?"
+                      value={todoText}
+                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
+                    />
+                    {statusRow("todo_text")}
                   </>
                 )}
               </div>
