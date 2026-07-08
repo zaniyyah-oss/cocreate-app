@@ -29,6 +29,7 @@ import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
+import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 
 const SavedRoute = SavedRouteImport.update({
@@ -131,6 +132,11 @@ const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
   path: '/focus/$id',
   getParentRoute: () => DevotionalsRoute,
 } as any)
+const DevotionalsSlugOverviewRoute = DevotionalsSlugOverviewRouteImport.update({
+  id: '/$slug/overview',
+  path: '/$slug/overview',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
 const AdminEditIdRoute = AdminEditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
+  '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
 }
 export interface FileRoutesByTo {
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/devotionals': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
+  '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
 }
 export interface FileRoutesById {
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
+  '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
 }
 export interface FileRouteTypes {
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/devotionals/'
     | '/admin/edit/$id'
+    | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/devotionals'
     | '/admin/edit/$id'
+    | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
   id:
     | '__root__'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/devotionals/'
     | '/admin/edit/$id'
+    | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
   fileRoutesById: FileRoutesById
 }
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevotionalsFocusIdRouteImport
       parentRoute: typeof DevotionalsRoute
     }
+    '/devotionals/$slug/overview': {
+      id: '/devotionals/$slug/overview'
+      path: '/$slug/overview'
+      fullPath: '/devotionals/$slug/overview'
+      preLoaderRoute: typeof DevotionalsSlugOverviewRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
     '/admin/edit/$id': {
       id: '/admin/edit/$id'
       path: '/edit/$id'
@@ -464,12 +483,14 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 interface DevotionalsRouteChildren {
   DevotionalsIdRoute: typeof DevotionalsIdRoute
   DevotionalsIndexRoute: typeof DevotionalsIndexRoute
+  DevotionalsSlugOverviewRoute: typeof DevotionalsSlugOverviewRoute
   DevotionalsFocusIdRoute: typeof DevotionalsFocusIdRoute
 }
 
 const DevotionalsRouteChildren: DevotionalsRouteChildren = {
   DevotionalsIdRoute: DevotionalsIdRoute,
   DevotionalsIndexRoute: DevotionalsIndexRoute,
+  DevotionalsSlugOverviewRoute: DevotionalsSlugOverviewRoute,
   DevotionalsFocusIdRoute: DevotionalsFocusIdRoute,
 }
 
@@ -495,3 +516,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
