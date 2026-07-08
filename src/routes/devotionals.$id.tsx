@@ -944,6 +944,13 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
                     </>
                   )}
                 </div>
+                <div>
+                  {hasEntry && p.subtitle ? (
+                    <span className="de-hist-subtitle" title={p.subtitle}>{p.subtitle}</span>
+                  ) : (
+                    <span className="de-hist-none">—</span>
+                  )}
+                </div>
                 <div className="de-hist-tags">
                   {p.uniqueFocus.length === 0 ? null : p.uniqueFocus.map(f => (
                     f.isDaily ? (
