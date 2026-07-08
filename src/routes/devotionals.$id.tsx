@@ -731,7 +731,8 @@ function EntryPage() {
                       {focusBtn("todo")}
                     </div>
                     
-                    <textarea
+                    <ResizableTextarea
+                      storageKey="todo"
                       className="de-textarea short"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
