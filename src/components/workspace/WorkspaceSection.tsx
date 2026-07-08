@@ -107,12 +107,14 @@ export function WorkspaceSection({
   ensureEntry,
   isFocused,
   onToggleFocus,
+  focusItemId,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
   currentEntryId: string | null;
   isFocused?: boolean;
   onToggleFocus?: () => void;
+  focusItemId?: string;
 }) {
   const qc = useQueryClient();
   const itemsQ = useQuery({
