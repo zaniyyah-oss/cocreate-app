@@ -260,36 +260,6 @@ function FocusPage() {
       </nav>
 
       <div className="fp-shell">
-        {/* Focus-on chip row */}
-        <div className="fp-chiprow">
-          <span className="fp-chiprow-label">Focus on</span>
-          <button
-            type="button"
-            className="fp-chip"
-            onClick={() => {
-              if (defaultQ.data) navigate({ to: "/devotionals/$id", params: { id: defaultQ.data } });
-              else navigate({ to: "/devotionals" });
-            }}
-          >
-            All of today
-          </button>
-          {(siblingsQ.data ?? []).map(s => {
-            const c = topicColor(s.topic?.color_key);
-            const active = s.id === id;
-            return (
-              <Link
-                key={s.id}
-                to="/devotionals/focus/$id"
-                params={{ id: s.id }}
-                className={`fp-chip${active ? " active" : ""}`}
-              >
-                <span className="dot" style={{ background: c }} />
-                {s.topic?.name ?? s.title}
-              </Link>
-            );
-          })}
-        </div>
-
         {templateQ.isLoading ? (
           <div style={{ height: 200, background: "#fff", borderRadius: 14 }} />
         ) : !t ? (
