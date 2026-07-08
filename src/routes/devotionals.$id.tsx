@@ -686,7 +686,8 @@ function EntryPage() {
                         value={scriptureRef}
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
-                      <textarea
+                      <ResizableTextarea
+                        storageKey="scripture"
                         className="de-textarea"
                         placeholder="What did you notice? What is God saying?"
                         value={scriptureText}
