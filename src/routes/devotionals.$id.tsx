@@ -768,8 +768,11 @@ function EntryPage() {
                 )}
               </div>
             </div>
+            </>
+            )}
 
           </>
+
         )}
       </div>
 
