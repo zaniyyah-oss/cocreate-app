@@ -1,15 +1,50 @@
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useRef } from "react";
+import Table from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import Highlight from "@tiptap/extension-highlight";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
 import { Indent } from "./indent-extension";
+import { Callout } from "./callout-node";
 
 const URL_RE = /^https?:\/\/[^\s]+$/i;
+
+// Curated palette for text color + highlight. Cream palette-friendly.
+const TEXT_COLORS = [
+  { name: "Default", value: "" },
+  { name: "Navy", value: "#181A4D" },
+  { name: "Fire", value: "#FF340C" },
+  { name: "Teal", value: "#0F4A42" },
+  { name: "Burgundy", value: "#441B07" },
+  { name: "Amber", value: "#B87500" },
+  { name: "Muted", value: "#8A8678" },
+];
+const HIGHLIGHT_COLORS = [
+  { name: "None", value: "" },
+  { name: "Yellow", value: "#FDE68A" },
+  { name: "Lime", value: "#DCE07A" },
+  { name: "Peach", value: "#FFD3B6" },
+  { name: "Blush", value: "#F4C2CD" },
+  { name: "Sky", value: "#C7D8F5" },
+  { name: "Mint", value: "#BEE3D4" },
+];
+
+// macOS vs everywhere else — used only for tooltip labels.
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+const mod = isMac ? "⌘" : "Ctrl";
+const alt = isMac ? "⌥" : "Alt";
+const shift = isMac ? "⇧" : "Shift";
 
 export type WorkspaceEditorHandle = {
   getJSON: () => any;
@@ -38,6 +73,14 @@ export function WorkspaceEditor({
       LinkCard,
       Placeholder.configure({ placeholder: placeholder ?? "Write, paste a link, or drop in an image…" }),
       Indent,
+      Table.configure({ resizable: true, HTMLAttributes: { class: "ws-table" } }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Highlight.configure({ multicolor: true }),
+      TextStyle,
+      Color,
+      Callout,
     ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
@@ -80,9 +123,6 @@ export function WorkspaceEditor({
 
   useEffect(() => {
     if (!editor) return;
-    // Never sync while the user is actively typing — that would collapse the
-    // selection to doc end (on mobile this looks like the cursor jumping to a
-    // new line after dictation / IME composition ends).
     if (editor.isFocused) return;
     if (!initialJSON || !Object.keys(initialJSON).length) return;
     const current = editor.getJSON();
@@ -96,7 +136,27 @@ export function WorkspaceEditor({
   return (
     <div className="ws-editor">
       <Toolbar editor={editor} userId={userId} />
+      <BubbleMenu
+        editor={editor}
+        options={{ placement: "top" }}
+        shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
+      >
+        <MobileBubble editor={editor} />
+      </BubbleMenu>
       <EditorContent editor={editor} />
+    </div>
+  );
+}
+
+function MobileBubble({ editor }: { editor: Editor }) {
+  return (
+    <div className="ws-bubble">
+      <button className={`ws-bb-btn ${editor.isActive("bold") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
+      <button className={`ws-bb-btn ${editor.isActive("italic") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button>
+      <button className={`ws-bb-btn ${editor.isActive("highlight") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleHighlight({ color: "#FDE68A" }).run()} title="Highlight">🖍</button>
+      <button className={`ws-bb-btn ${editor.isActive("heading", { level: 2 }) ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+      <button className={`ws-bb-btn ${editor.isActive("bulletList") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBulletList().run()}>•</button>
+      <button className={`ws-bb-btn ${editor.isActive("blockquote") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBlockquote().run()}>“”</button>
     </div>
   );
 }
@@ -104,12 +164,11 @@ export function WorkspaceEditor({
 function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  const [colorOpen, setColorOpen] = useState(false);
+  const [hlOpen, setHlOpen] = useState(false);
+  const [tableOpen, setTableOpen] = useState(false);
 
   // Keep the toolbar glued to the top of the *visual* viewport on iOS/Android.
-  // When the soft keyboard opens, mobile browsers shift the page up but leave
-  // sticky/fixed positioning anchored to the layout viewport, so the bar
-  // scrolls off-screen. We translate it back down by visualViewport.offsetTop
-  // plus any scroll delta between visual and layout viewports.
   useEffect(() => {
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!vv || !barRef.current) return;
@@ -137,12 +196,14 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const btn = (label: string, onClick: () => void, active = false) => (
+  const btn = (label: React.ReactNode, onClick: () => void, active = false, title?: string) => (
     <button
       type="button"
       className={`ws-tb-btn ${active ? "on" : ""}`}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
+      title={title}
+      aria-label={title}
     >
       {label}
     </button>
@@ -158,27 +219,104 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     await insertLinkCard(editor.view, url.trim());
   };
 
+  const inTable = editor.isActive("table");
+
   return (
     <div className="ws-toolbar" ref={barRef}>
+      {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
+      {btn(<i>I</i>, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
+      {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
+      {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
+      {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
+      {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
+      {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
 
-      {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}
-      {btn("I", () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}
-      {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }))}
-      {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }))}
-      {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}
-      {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}
-      {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}
-      {btn("⇥", () => {
-        if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
-        else editor.chain().focus().indent().run();
-      })}
-      {btn("⇤", () => {
-        if (editor.isActive("listItem")) editor.chain().focus().liftListItem("listItem").run();
-        else editor.chain().focus().outdent().run();
-      })}
-      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()}>Image</button>
+      {/* Highlight picker */}
+      <div style={{ position: "relative" }}>
+        {btn(
+          <span style={{ background: "#FDE68A", padding: "0 4px", borderRadius: 3 }}>H</span>,
+          () => { setHlOpen((v) => !v); setColorOpen(false); setTableOpen(false); },
+          editor.isActive("highlight"),
+          `Highlight (${mod}+${shift}+H)`
+        )}
+        {hlOpen && (
+          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
+            {HIGHLIGHT_COLORS.map((c) => (
+              <button
+                key={c.name}
+                className="ws-swatch"
+                title={c.name}
+                style={{ background: c.value || "transparent", border: c.value ? "1px solid rgba(0,0,0,0.08)" : "1px dashed rgba(0,0,0,0.25)" }}
+                onClick={() => {
+                  if (!c.value) editor.chain().focus().unsetHighlight().run();
+                  else editor.chain().focus().setHighlight({ color: c.value }).run();
+                  setHlOpen(false);
+                }}
+              >
+                {c.value ? "" : "×"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Text color picker */}
+      <div style={{ position: "relative" }}>
+        {btn(
+          <span style={{ color: "#FF340C", fontWeight: 700 }}>A</span>,
+          () => { setColorOpen((v) => !v); setHlOpen(false); setTableOpen(false); },
+          false,
+          "Text color"
+        )}
+        {colorOpen && (
+          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
+            {TEXT_COLORS.map((c) => (
+              <button
+                key={c.name}
+                className="ws-swatch"
+                title={c.name}
+                style={{ background: c.value || "transparent", border: c.value ? "1px solid rgba(0,0,0,0.08)" : "1px dashed rgba(0,0,0,0.25)", color: c.value ? "#fff" : "#20201C" }}
+                onClick={() => {
+                  if (!c.value) editor.chain().focus().unsetColor().run();
+                  else editor.chain().focus().setColor(c.value).run();
+                  setColorOpen(false);
+                }}
+              >
+                {c.value ? "" : "×"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Callout */}
+      {btn("💡 Callout", () => editor.chain().focus().toggleCallout().run(), editor.isActive("callout"), `Callout (${mod}+${shift}+C)`)}
+
+      {/* Table */}
+      <div style={{ position: "relative" }}>
+        {btn("▦ Table", () => setTableOpen((v) => !v), inTable, "Table")}
+        {tableOpen && (
+          <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+            {!inTable && (
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setTableOpen(false); }}>Insert 3×3 table</button>
+            )}
+            {inTable && <>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>Row above</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>Row below</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>Column left</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>Column right</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>Delete row</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>Delete column</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Toggle header row</button>
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setTableOpen(false); }}>Delete table</button>
+            </>}
+          </div>
+        )}
+      </div>
+
+      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()} title="Insert image">Image</button>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
-      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={addLinkCard}>Link card</button>
+      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={addLinkCard} title="Add link card">Link card</button>
     </div>
   );
 }
@@ -191,7 +329,6 @@ async function uploadImage(file: File, userId: string): Promise<string | null> {
       .from("workspace-media")
       .upload(path, file, { upsert: false, contentType: file.type });
     if (upErr) throw upErr;
-    // Private bucket → long-lived signed URL (1 year)
     const { data, error } = await supabase.storage
       .from("workspace-media")
       .createSignedUrl(path, 60 * 60 * 24 * 365);
@@ -213,7 +350,6 @@ async function uploadAndInsertImage(view: any, file: File, userId: string) {
 }
 
 async function insertLinkCard(view: any, url: string) {
-  // Insert placeholder card first so UI is responsive
   const domain = safeDomain(url);
   const { state } = view;
   const schema = state.schema;
@@ -224,13 +360,11 @@ async function insertLinkCard(view: any, url: string) {
 
   try {
     const preview = await fetchOgPreview({ data: { url } });
-    // Find that placeholder in the doc (by href) and update its attrs
     const { state: s2 } = view;
     let pos: number | null = null;
     s2.doc.descendants((n: any, p: number) => {
       if (pos !== null) return false;
       if (n.type.name === "linkCard" && n.attrs.href === url && !n.attrs.title) { pos = p; return false; }
-      // fall back to any linkCard matching href
       if (n.type.name === "linkCard" && n.attrs.href === url && pos === null) { pos = p; }
       return true;
     });
