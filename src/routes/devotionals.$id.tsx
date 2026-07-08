@@ -803,24 +803,6 @@ function EntryPage() {
                 />
               )}
 
-              <div className="de-past">
-                <h3>Past entries</h3>
-                {(pastQ.data ?? []).length === 0 ? (
-                  <ul><li className="empty" style={{ cursor: "default", justifyContent: "center" }}>No past entries yet. Today is a good day to start.</li></ul>
-                ) : (
-                  <ul>
-                    {(pastQ.data ?? []).map((e) => {
-                      const preview = [e.where_text ?? e.reflect_text, e.scripture_text, e.pray_text, e.todo_text ?? e.apply_text].filter(Boolean).join(" · ").slice(0, 90);
-                      return (
-                        <li key={e.id} className={e.entry_date === selectedDate ? "active" : ""} onClick={() => setSelectedDate(e.entry_date)}>
-                          <span className="d">{formatDate(e.entry_date)}{e.entry_date === todayISO() ? " · Today" : ""}</span>
-                          <span className="preview">{preview || "—"}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
             </div>
             </>
             )}
