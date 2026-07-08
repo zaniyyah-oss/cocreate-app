@@ -173,8 +173,10 @@ const CSS = `
 
 /* Focus / fullscreen for a section */
 .de-block, .ws-root { position: relative; }
-.de-focus-btn{position:absolute;top:12px;right:14px;background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
+.de-focus-btn{background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+.de-block-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.de-block-header .de-badge{margin-bottom:0;}
 .de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
 @media (min-width:768px){
   .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
@@ -616,8 +618,10 @@ function EntryPage() {
             <div className="de-shell-inner">
               {/* 1. Where Are You */}
               <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
-                {focusBtn("where")}
-                <span className="de-badge where">where are you</span>
+                <div className="de-block-header">
+                  <span className="de-badge where">where are you</span>
+                  {focusBtn("where")}
+                </div>
                 <textarea
                   className="de-textarea"
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
@@ -633,8 +637,10 @@ function EntryPage() {
                 <div className="de-cols">
                   {/* Read */}
                   <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
-                    {focusBtn("read")}
-                    <span className="de-badge read">read</span>
+                    <div className="de-block-header">
+                      <span className="de-badge read">read</span>
+                      {focusBtn("read")}
+                    </div>
                     <div className="de-read-part">
                       <input
                         className="de-scr-ref"
@@ -663,8 +669,10 @@ function EntryPage() {
 
                   {/* Pray */}
                   <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
-                    {focusBtn("pray")}
-                    <span className="de-badge pray">pray</span>
+                    <div className="de-block-header">
+                      <span className="de-badge pray">pray</span>
+                      {focusBtn("pray")}
+                    </div>
                     
                     <textarea
                       className="de-textarea"
@@ -677,8 +685,10 @@ function EntryPage() {
 
                   {/* To-Do */}
                   <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
-                    {focusBtn("todo")}
-                    <span className="de-badge todo">to-do</span>
+                    <div className="de-block-header">
+                      <span className="de-badge todo">to-do</span>
+                      {focusBtn("todo")}
+                    </div>
                     
                     <textarea
                       className="de-textarea short"
