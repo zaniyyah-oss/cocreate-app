@@ -111,6 +111,8 @@ export type Database = {
           id: string
           layout_slot: string
           position: number
+          release_at: string | null
+          release_week: number | null
           updated_at: string
         }
         Insert: {
@@ -120,6 +122,8 @@ export type Database = {
           id?: string
           layout_slot?: string
           position?: number
+          release_at?: string | null
+          release_week?: number | null
           updated_at?: string
         }
         Update: {
@@ -129,6 +133,8 @@ export type Database = {
           id?: string
           layout_slot?: string
           position?: number
+          release_at?: string | null
+          release_week?: number | null
           updated_at?: string
         }
         Relationships: [

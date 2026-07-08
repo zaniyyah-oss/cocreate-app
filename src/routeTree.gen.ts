@@ -24,6 +24,7 @@ import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
+import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
@@ -105,6 +106,11 @@ const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => DevotionalsRoute,
 } as any)
+const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminNewRoute = AdminNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   NotesRoute: typeof NotesRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
+  CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevotionalsIdRouteImport
       parentRoute: typeof DevotionalsRoute
     }
+    '/collections/$slug': {
+      id: '/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/collections/$slug'
+      preLoaderRoute: typeof CollectionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/new': {
       id: '/admin/new'
       path: '/new'
@@ -466,6 +486,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotesRoute: NotesRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
+  CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
