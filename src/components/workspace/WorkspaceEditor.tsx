@@ -276,8 +276,47 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         )}
       </div>
 
-      {/* Callout */}
-      {btn("💡 Callout", () => editor.chain().focus().toggleCallout().run(), editor.isActive("callout"), `Callout (${mod}+${shift}+C)`)}
+      {/* Callout with tone picker */}
+      <div style={{ position: "relative" }}>
+        {btn(
+          "💡 Callout",
+          () => {
+            const active = editor.isActive("callout");
+            if (active) { setToneOpen((v) => !v); setHlOpen(false); setColorOpen(false); setTableOpen(false); }
+            else { editor.chain().focus().toggleCallout().run(); }
+          },
+          editor.isActive("callout"),
+          editor.isActive("callout") ? "Callout tone" : `Callout (${mod}+${shift}+C)`
+        )}
+        {toneOpen && editor.isActive("callout") && (
+          <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+            {[
+              { tone: "amber", label: "Amber", swatch: "#FFF4D6" },
+              { tone: "teal", label: "Teal", swatch: "#E4F1EE" },
+              { tone: "blush", label: "Blush", swatch: "#FBE3E9" },
+              { tone: "lime", label: "Lime", swatch: "#F2F4C7" },
+            ].map((t) => (
+              <button
+                key={t.tone}
+                className="ws-popbtn"
+                onClick={() => {
+                  editor.chain().focus().updateAttributes("callout", { tone: t.tone }).run();
+                  setToneOpen(false);
+                }}
+              >
+                <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 3, background: t.swatch, border: "1px solid rgba(0,0,0,0.1)", marginRight: 8, verticalAlign: "middle" }} />
+                {t.label}
+              </button>
+            ))}
+            <button
+              className="ws-popbtn"
+              onClick={() => { editor.chain().focus().unsetCallout().run(); setToneOpen(false); }}
+            >
+              Remove callout
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Table */}
       <div style={{ position: "relative" }}>
