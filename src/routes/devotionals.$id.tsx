@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
+import { ResizableTextarea } from "@/components/ResizableTextarea";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
@@ -260,7 +261,7 @@ function NavMenu() {
   const items: Array<{ to: string; label: string; match?: string[] }> = [
     { to: "/", label: "Home" },
     { to: "/explore", label: "Explore" },
-    { to: "/devotionals", label: "Devotionals" },
+    { to: "/devotionals", label: "Workspace" },
     { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
     { to: "/profile", label: "Profile" },
   ];
@@ -519,7 +520,6 @@ function EntryPage() {
           <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
           <NavMenu />
           <div className="de-navright">
-            <Link to="/devotionals" className="de-back">← Back</Link>
             <Link to="/auth" className="de-signin">Sign in</Link>
           </div>
         </nav>
@@ -560,9 +560,8 @@ function EntryPage() {
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
         <NavMenu />
-        <div className="de-navright">
-          <Link to="/devotionals" className="de-back">← Back to Devotionals</Link>
-        </div>
+        <div className="de-navright" />
+
       </nav>
 
       <div className="de-shell">
@@ -660,7 +659,8 @@ function EntryPage() {
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
                 </div>
-                <textarea
+                <ResizableTextarea
+                  storageKey="where"
                   className="de-textarea"
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
@@ -686,7 +686,8 @@ function EntryPage() {
                         value={scriptureRef}
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
-                      <textarea
+                      <ResizableTextarea
+                        storageKey="scripture"
                         className="de-textarea"
                         placeholder="What did you notice? What is God saying?"
                         value={scriptureText}
@@ -695,7 +696,8 @@ function EntryPage() {
                       {statusRow("scripture_text")}
                     </div>
                     <div className="de-read-part">
-                      <textarea
+                      <ResizableTextarea
+                        storageKey="further"
                         className="de-textarea short"
                         placeholder="What supplemental material will you be reviewing today?"
                         value={furtherReading}
@@ -712,7 +714,8 @@ function EntryPage() {
                       {focusBtn("pray")}
                     </div>
                     
-                    <textarea
+                    <ResizableTextarea
+                      storageKey="pray"
                       className="de-textarea"
                       placeholder="Speak plainly to God…"
                       value={prayText}
@@ -728,7 +731,8 @@ function EntryPage() {
                       {focusBtn("todo")}
                     </div>
                     
-                    <textarea
+                    <ResizableTextarea
+                      storageKey="todo"
                       className="de-textarea short"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
