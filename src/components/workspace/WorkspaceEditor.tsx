@@ -67,7 +67,7 @@ export function WorkspaceEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "ws-img" } }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: "ws-link" } }),
       LinkCard,
@@ -167,6 +167,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const [colorOpen, setColorOpen] = useState(false);
   const [hlOpen, setHlOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
+  const [toneOpen, setToneOpen] = useState(false);
 
   // Toolbar sticks via CSS — no scroll-driven transforms (they caused
   // shimmering as the visual viewport updated).
@@ -209,6 +210,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     <div className="ws-toolbar" ref={barRef}>
       {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
       {btn(<i>I</i>, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
+      {btn(<span style={{ textDecoration: "underline" }}>U</span>, () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"), `Underline (${mod}+U)`)}
+      {btn("H1", () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }), `Heading 1 (${mod}+${alt}+1)`)}
       {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
       {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
       {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
@@ -273,8 +276,47 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         )}
       </div>
 
-      {/* Callout */}
-      {btn("💡 Callout", () => editor.chain().focus().toggleCallout().run(), editor.isActive("callout"), `Callout (${mod}+${shift}+C)`)}
+      {/* Callout with tone picker */}
+      <div style={{ position: "relative" }}>
+        {btn(
+          "💡 Callout",
+          () => {
+            const active = editor.isActive("callout");
+            if (active) { setToneOpen((v) => !v); setHlOpen(false); setColorOpen(false); setTableOpen(false); }
+            else { editor.chain().focus().toggleCallout().run(); }
+          },
+          editor.isActive("callout"),
+          editor.isActive("callout") ? "Callout tone" : `Callout (${mod}+${shift}+C)`
+        )}
+        {toneOpen && editor.isActive("callout") && (
+          <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+            {[
+              { tone: "amber", label: "Amber", swatch: "#FFF4D6" },
+              { tone: "teal", label: "Teal", swatch: "#E4F1EE" },
+              { tone: "blush", label: "Blush", swatch: "#FBE3E9" },
+              { tone: "lime", label: "Lime", swatch: "#F2F4C7" },
+            ].map((t) => (
+              <button
+                key={t.tone}
+                className="ws-popbtn"
+                onClick={() => {
+                  editor.chain().focus().updateAttributes("callout", { tone: t.tone }).run();
+                  setToneOpen(false);
+                }}
+              >
+                <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 3, background: t.swatch, border: "1px solid rgba(0,0,0,0.1)", marginRight: 8, verticalAlign: "middle" }} />
+                {t.label}
+              </button>
+            ))}
+            <button
+              className="ws-popbtn"
+              onClick={() => { editor.chain().focus().unsetCallout().run(); setToneOpen(false); }}
+            >
+              Remove callout
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Table */}
       <div style={{ position: "relative" }}>
