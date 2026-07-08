@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
+import { ResizableTextarea } from "@/components/ResizableTextarea";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
