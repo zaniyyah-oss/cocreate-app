@@ -217,8 +217,14 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {btn("• List", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
       {btn("1. List", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
       {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
-      {btn("→|", () => (editor.chain().focus() as any).indent().run(), false, "Indent (Tab)")}
-      {btn("|←", () => (editor.chain().focus() as any).outdent().run(), false, "Outdent (Shift+Tab)")}
+      {btn("→|", () => {
+        if (editor.isActive("listItem")) editor.chain().focus().sinkListItem("listItem").run();
+        else (editor.chain().focus() as any).indent().run();
+      }, false, "Indent (Tab)")}
+      {btn("|←", () => {
+        if (editor.isActive("listItem")) editor.chain().focus().liftListItem("listItem").run();
+        else (editor.chain().focus() as any).outdent().run();
+      }, false, "Outdent (Shift+Tab)")}
 
       {/* Highlight picker */}
       <div style={{ position: "relative" }}>
