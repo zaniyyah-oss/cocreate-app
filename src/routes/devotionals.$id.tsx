@@ -471,25 +471,16 @@ function EntryPage() {
                 </div>
                 <input
                   className="de-title-input"
-                  placeholder="Give today a title…"
+                  placeholder="Name today's entry..."
                   value={entryTitle}
                   onChange={(e) => { setEntryTitle(e.target.value); scheduleSave("entry_title", e.target.value); }}
                 />
                 <input
                   className="de-subtitle-input"
-                  placeholder="Add a subtitle, if you'd like"
+                  placeholder="A line about why this entry matters..."
                   value={entrySubtitle}
                   onChange={(e) => { setEntrySubtitle(e.target.value); scheduleSave("entry_subtitle", e.target.value); }}
                 />
-                {(scriptureText || t.scripture_focus) && <div className="de-headrule" />}
-                {scriptureText ? (
-                  <>
-                    <p className="de-headquote">"{scriptureText}"</p>
-                    <p className="de-headref">{scriptureRef || t.scripture_focus || ""}</p>
-                  </>
-                ) : t.scripture_focus ? (
-                  <p className="de-headref">{t.scripture_focus}</p>
-                ) : null}
               </div>
             </div>
 
@@ -498,15 +489,10 @@ function EntryPage() {
               {/* 1. Where Are You */}
               <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
                 {focusBtn("where")}
-                <div className="de-label">
-                  <span className="dot" style={{ background: color }} />
-                  <span className="name">Where are you</span>
-                  <span className="num">· 01</span>
-                </div>
-                <p className="de-prompt">Before God, honestly: where are you right now? Tired, anxious, distracted, hopeful, numb? Name it plainly.</p>
+                <span className="de-badge where">where are you</span>
                 <textarea
-                  className="de-textarea short"
-                  placeholder="God, I come to you today feeling…"
+                  className="de-textarea"
+                  placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
                   onChange={(e) => { setWhereText(e.target.value); scheduleSave("where_text", e.target.value); }}
                 />
@@ -514,109 +500,90 @@ function EntryPage() {
               </div>
 
 
-              {/* 2/3/4 row */}
-              <div className="de-cols">
-                {/* Read */}
-                <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
-                  {focusBtn("read")}
-                  <div className="de-read-head">
-                    <div className="de-label">
-                      <span className="dot" style={{ background: color }} />
-                      <span className="name">Read</span>
-                      <span className="num">· 02</span>
+              {/* 2/3/4 stacked triad — one connected white card */}
+              <div className="de-stack">
+                <div className="de-cols">
+                  {/* Read */}
+                  <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                    {focusBtn("read")}
+                    <span className="de-badge read">read</span>
+                    <div className="de-read-part">
+                      <input
+                        className="de-scr-ref"
+                        placeholder="What scripture are you reading today?"
+                        value={scriptureRef}
+                        onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
+                      />
+                      <textarea
+                        className="de-textarea"
+                        placeholder="What did you notice? What is God saying?"
+                        value={scriptureText}
+                        onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      />
+                      {statusRow("scripture_text")}
                     </div>
-                    <p className="de-invite">
-                      Don't rush past this. Open your Bible, read slowly — preferably out loud — and let a
-                      passage stay with you before you write anything.
-                    </p>
+                    <div className="de-read-part">
+                      <textarea
+                        className="de-textarea short"
+                        placeholder="What supplemental material will you be reviewing today?"
+                        value={furtherReading}
+                        onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                      />
+                      {statusRow("further_reading_text")}
+                    </div>
                   </div>
 
-                  <div className="de-read-part">
-                    <div className="de-sublabel">Scripture</div>
-                    <input
-                      className="de-scr-ref"
-                      placeholder="Passage — e.g. John 15:1–8"
-                      value={scriptureRef}
-                      onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
-                    />
+                  {/* Pray */}
+                  <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                    {focusBtn("pray")}
+                    <span className="de-badge pray">pray</span>
+                    {t.pray_prompt && <p className="de-prompt">{t.pray_prompt}</p>}
                     <textarea
                       className="de-textarea"
-                      placeholder="What did you notice? What is God saying?"
-                      value={scriptureText}
-                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      placeholder="Speak plainly to God…"
+                      value={prayText}
+                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
                     />
-                    {statusRow("scripture_text")}
+                    {statusRow("pray_text")}
                   </div>
 
-                  <div className="de-read-part">
-                    <div className="de-sublabel">Further reading</div>
+                  {/* To-Do */}
+                  <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                    {focusBtn("todo")}
+                    <span className="de-badge todo">to-do</span>
+                    {t.apply_prompt && <p className="de-prompt">{t.apply_prompt}</p>}
                     <textarea
                       className="de-textarea short"
-                      placeholder="Books, studies, teachings you're working through…"
-                      value={furtherReading}
-                      onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
+                      placeholder="What is God asking you to do today?"
+                      value={todoText}
+                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
                     />
-                    {statusRow("further_reading_text")}
-                  </div>
-                </div>
+                    {statusRow("todo_text")}
 
-                {/* Pray */}
-                <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
-                  {focusBtn("pray")}
-                  <div className="de-label">
-                    <span className="dot" style={{ background: color }} />
-                    <span className="name">Pray</span>
-                    <span className="num">· 03</span>
-                  </div>
-                  <p className="de-prompt">{t.pray_prompt || "What do you need to bring to God today? Invite Him into it."}</p>
-                  <textarea
-                    className="de-textarea"
-                    placeholder="Speak plainly to God…"
-                    value={prayText}
-                    onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
-                  />
-                  {statusRow("pray_text")}
-                </div>
-
-                {/* To-Do */}
-                <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
-                  {focusBtn("todo")}
-                  <div className="de-label">
-                    <span className="dot" style={{ background: color }} />
-                    <span className="name">To-Do</span>
-                    <span className="num">· 04</span>
-                  </div>
-                  <p className="de-prompt">{t.apply_prompt || "What does obedience look like today, concretely?"}</p>
-                  <textarea
-                    className="de-textarea short"
-                    placeholder="What is God asking of me today?"
-                    value={todoText}
-                    onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
-                  />
-                  {statusRow("todo_text")}
-
-                  <div className="de-todos">
-                    {todoItems.map((it, idx) => (
-                      <div key={it.id} className="de-todo">
-                        <input
-                          type="checkbox"
-                          checked={it.done}
-                          onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
-                        />
-                        <input
-                          type="text"
-                          className={it.done ? "done" : ""}
-                          placeholder="A small, specific step"
-                          value={it.text}
-                          onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
-                        />
-                        <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
-                      </div>
-                    ))}
-                    <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+                    <div className="de-todos">
+                      {todoItems.map((it, idx) => (
+                        <div key={it.id} className="de-todo">
+                          <input
+                            type="checkbox"
+                            checked={it.done}
+                            onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
+                          />
+                          <input
+                            type="text"
+                            className={it.done ? "done" : ""}
+                            placeholder="A small, specific step"
+                            value={it.text}
+                            onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
+                          />
+                          <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+                        </div>
+                      ))}
+                      <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
+                    </div>
                   </div>
                 </div>
               </div>
+
 
               {/* 5. Workspace */}
               {userId && (
