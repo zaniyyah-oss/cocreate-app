@@ -70,9 +70,11 @@ const CSS = `
 .ws-editor-content p:last-child{margin-bottom:0;}
 .ws-editor-content h2{font-size:17px;font-weight:700;color:#181A4D;margin:12px 0 6px;letter-spacing:-0.005em;}
 .ws-editor-content h3{font-size:14.5px;font-weight:700;color:#181A4D;margin:10px 0 5px;}
-.ws-editor-content ul{list-style:disc outside;padding-left:22px;margin:0 0 8px;}
-.ws-editor-content ol{list-style:decimal outside;padding-left:22px;margin:0 0 8px;}
-.ws-editor-content li{margin-bottom:3px;}
+.ws-editor-content ul{list-style:disc outside;padding-left:18px;margin:0 0 6px;}
+.ws-editor-content ol{list-style:decimal outside;padding-left:20px;margin:0 0 6px;}
+.ws-editor-content ul ul,.ws-editor-content ol ul,.ws-editor-content ul ol,.ws-editor-content ol ol{padding-left:18px;margin:2px 0 2px;}
+.ws-editor-content li{margin-bottom:2px;padding-left:2px;}
+.ws-editor-content li::marker{color:#181A4D;}
 .ws-editor-content li > p{margin:0;}
 .ws-editor-content blockquote{border-left:3px solid #DCE07A;padding:2px 0 2px 12px;margin:8px 0;color:#5c5847;font-style:italic;}
 .ws-editor-content mark{padding:0 2px;border-radius:3px;}
