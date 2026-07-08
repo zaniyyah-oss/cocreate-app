@@ -93,8 +93,13 @@ const CSS = `
 @media (min-width:1024px){.hp-compactgrid{grid-template-columns:repeat(4,1fr);gap:14px;}}
 .hp-compactcard{background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--hair);cursor:pointer;text-decoration:none;color:inherit;display:block;transition:transform .18s ease, box-shadow .18s ease;}
 .hp-compactcard:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,0.06);}
-.hp-compactthumb{height:96px;background-size:cover;background-position:center;position:relative;background-color:var(--limelight);}
-.hp-compactthumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.hp-compactthumb{height:96px;background-size:cover;background-position:center;position:relative;background-color:var(--limelight);overflow:hidden;}
+.hp-compactthumb img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(0.15) contrast(1.05);}
+.hp-compactthumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.45;pointer-events:none;}
+.hp-compactthumb.teaching::after{background:#FFAE00;}
+.hp-compactthumb.essay::after,.hp-compactthumb.blog::after{background:#DCE07A;}
+.hp-compactthumb.podcast::after{background:#0F4A42;}
+.hp-compactthumb.clip::after{background:#CAC307;}
 .hp-ctag{position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;padding:3px 8px;border-radius:4px;color:#fff;}
 .hp-ctag.podcast{background:var(--teal);}
 .hp-ctag.essay{background:var(--navy);}
@@ -117,7 +122,7 @@ const CSS = `
 .hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
 
 .hp-banner{position:relative;border-radius:16px;overflow:hidden;min-height:200px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;width:100%;box-sizing:border-box;}
-.hp-banner.hasimg::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(24,26,77,0.4));}
+.hp-banner.hasimg::before{content:'';position:absolute;inset:0;background:#DCE07A;mix-blend-mode:multiply;opacity:0.4;}
 .hp-uploadhint{text-align:center;color:var(--cream);position:relative;z-index:2;}
 .hp-uploadhint .icon{width:38px;height:38px;border:2px dashed rgba(251,248,237,0.5);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;}
 .hp-uploadhint .label{font-size:12.5px;font-weight:600;opacity:0.85;}
@@ -169,6 +174,12 @@ const CSS = `
 .hp-cc-halfwide .hp-cc-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;}
 .hp-cc-halfwide .hp-cc-title{font-size:13px;font-weight:700;color:var(--navy);margin:0 0 3px;}
 .hp-cc-halfwide .hp-cc-meta{font-size:10px;opacity:0.55;font-weight:600;margin-top:auto;}
+.hp-cc-thumb{position:relative;}
+.hp-cc-thumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.45;pointer-events:none;}
+.hp-cc-thumb.teaching::after{background:#FFAE00;}
+.hp-cc-thumb.essay::after,.hp-cc-thumb.blog::after{background:#DCE07A;}
+.hp-cc-thumb.podcast::after{background:#0F4A42;}
+.hp-cc-thumb.clip::after{background:#CAC307;}
 
 .hp-seeallbtn{display:block;width:fit-content;margin:22px auto 0;background:transparent;border:1.5px solid var(--navy);color:var(--navy);font-size:12.5px;font-weight:700;padding:10px 22px;border-radius:999px;cursor:pointer;text-decoration:none;font-family:inherit;}
 
@@ -409,7 +420,8 @@ function FeaturedGrid() {
               const route = routeForType(t);
               return (
                 <Link key={c.id ?? ""} to={route as any} params={{ id: c.id! } as any} className="hp-compactcard">
-                  <div className="hp-compactthumb" style={{ backgroundImage: `url(${c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")})` }}>
+                  <div className={`hp-compactthumb ${t}`}>
+                    <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} loading="lazy" />
                     <span className={`hp-ctag ${t}`}>{t}</span>
                   </div>
                   <div className="hp-compactbody">
@@ -573,7 +585,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
         <div className="hp-collection-grid">
           {lead && (
             <div className="hp-cc hp-cc-lead" onClick={() => goContent(lead)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${lead.thumbnail_url || IMG_FALLBACK(lead.id ?? "l")})` }} />
+              <div className={`hp-cc-thumb ${(lead.type ?? 'essay')}`} style={{ backgroundImage: `url(${lead.thumbnail_url || IMG_FALLBACK(lead.id ?? "l")})` }} />
               <div className="hp-cc-body">
                 <h3 className="hp-cc-title">{lead.title}</h3>
                 {lead.excerpt && <p className="hp-cc-desc">{lead.excerpt}</p>}
@@ -582,7 +594,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
           )}
           {medium && (
             <div className="hp-cc hp-cc-medium" onClick={() => goContent(medium)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${medium.thumbnail_url || IMG_FALLBACK(medium.id ?? "m")})` }} />
+              <div className={`hp-cc-thumb ${(medium.type ?? 'essay')}`} style={{ backgroundImage: `url(${medium.thumbnail_url || IMG_FALLBACK(medium.id ?? "m")})` }} />
               <div className="hp-cc-body">
                 <h4 className="hp-cc-title">{medium.title}</h4>
                 <div className="hp-cc-meta">{medium.author_name ?? medium.excerpt ?? ""}</div>
@@ -591,7 +603,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
           )}
           {halves.map((h) => (
             <div key={h.id ?? ""} className="hp-cc hp-cc-halfwide" onClick={() => goContent(h)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${h.thumbnail_url || IMG_FALLBACK(h.id ?? "h")})` }} />
+              <div className={`hp-cc-thumb ${(h.type ?? 'essay')}`} style={{ backgroundImage: `url(${h.thumbnail_url || IMG_FALLBACK(h.id ?? "h")})` }} />
               <div className="hp-cc-body">
                 <h4 className="hp-cc-title">{h.title}</h4>
                 <div className="hp-cc-meta">{h.author_name ?? h.excerpt ?? ""}</div>
