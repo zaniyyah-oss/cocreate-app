@@ -168,25 +168,9 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const [hlOpen, setHlOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
 
-  // Keep the toolbar glued to the top of the *visual* viewport on iOS/Android.
-  useEffect(() => {
-    const vv = typeof window !== "undefined" ? window.visualViewport : null;
-    if (!vv || !barRef.current) return;
-    const el = barRef.current;
-    const update = () => {
-      const delta = (vv.offsetTop || 0) + (vv.pageTop - window.scrollY);
-      el.style.transform = delta > 0 ? `translateY(${delta}px)` : "";
-    };
-    update();
-    vv.addEventListener("scroll", update);
-    vv.addEventListener("resize", update);
-    window.addEventListener("scroll", update, { passive: true });
-    return () => {
-      vv.removeEventListener("scroll", update);
-      vv.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update);
-    };
-  }, []);
+  // Toolbar sticks via CSS — no scroll-driven transforms (they caused
+  // shimmering as the visual viewport updated).
+
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
