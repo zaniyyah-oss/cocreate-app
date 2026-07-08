@@ -922,7 +922,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
       ) : (
         <>
           <div className="de-hist-header">
-            <div>Day</div><div>Date</div><div>Entry</div><div>Focus</div><div>Workspace tags</div><div />
+            <div>Day</div><div>Date</div><div>Entry</div><div>Notes</div><div>Focus</div><div>Workspace tags</div><div />
           </div>
           {perDay.map(p => {
             const hasEntry = p.dayEntries.length > 0;
