@@ -594,7 +594,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
           )}
           {medium && (
             <div className="hp-cc hp-cc-medium" onClick={() => goContent(medium)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${medium.thumbnail_url || IMG_FALLBACK(medium.id ?? "m")})` }} />
+              <div className={`hp-cc-thumb ${(medium.type ?? 'essay')}`} style={{ backgroundImage: `url(${medium.thumbnail_url || IMG_FALLBACK(medium.id ?? "m")})` }} />
               <div className="hp-cc-body">
                 <h4 className="hp-cc-title">{medium.title}</h4>
                 <div className="hp-cc-meta">{medium.author_name ?? medium.excerpt ?? ""}</div>
@@ -603,7 +603,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
           )}
           {halves.map((h) => (
             <div key={h.id ?? ""} className="hp-cc hp-cc-halfwide" onClick={() => goContent(h)}>
-              <div className="hp-cc-thumb" style={{ backgroundImage: `url(${h.thumbnail_url || IMG_FALLBACK(h.id ?? "h")})` }} />
+              <div className={`hp-cc-thumb ${(h.type ?? 'essay')}`} style={{ backgroundImage: `url(${h.thumbnail_url || IMG_FALLBACK(h.id ?? "h")})` }} />
               <div className="hp-cc-body">
                 <h4 className="hp-cc-title">{h.title}</h4>
                 <div className="hp-cc-meta">{h.author_name ?? h.excerpt ?? ""}</div>
