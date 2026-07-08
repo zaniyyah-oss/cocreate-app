@@ -618,8 +618,10 @@ function EntryPage() {
             <div className="de-shell-inner">
               {/* 1. Where Are You */}
               <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
-                {focusBtn("where")}
-                <span className="de-badge where">where are you</span>
+                <div className="de-block-header">
+                  <span className="de-badge where">where are you</span>
+                  {focusBtn("where")}
+                </div>
                 <textarea
                   className="de-textarea"
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
