@@ -349,6 +349,56 @@ export type Database = {
         }
         Relationships: []
       }
+      devotional_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          medium: Database["public"]["Enums"]["devotional_medium"]
+          preview_carry: string | null
+          preview_read: string | null
+          preview_reflect: string | null
+          scripture_reference: string | null
+          template_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          medium?: Database["public"]["Enums"]["devotional_medium"]
+          preview_carry?: string | null
+          preview_read?: string | null
+          preview_reflect?: string | null
+          scripture_reference?: string | null
+          template_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          medium?: Database["public"]["Enums"]["devotional_medium"]
+          preview_carry?: string | null
+          preview_read?: string | null
+          preview_reflect?: string | null
+          scripture_reference?: string | null
+          template_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_days_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devotional_entries: {
         Row: {
           apply_text: string | null
@@ -417,6 +467,50 @@ export type Database = {
           },
         ]
       }
+      devotional_movements: {
+        Row: {
+          created_at: string
+          day_end: number
+          day_start: number
+          description: string | null
+          id: string
+          position: number
+          template_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_end: number
+          day_start: number
+          description?: string | null
+          id?: string
+          position?: number
+          template_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_end?: number
+          day_start?: number
+          description?: string | null
+          id?: string
+          position?: number
+          template_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_movements_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devotional_templates: {
         Row: {
           apply_prompt: string | null
@@ -427,11 +521,17 @@ export type Database = {
           id: string
           is_default: boolean
           is_seed: boolean
+          overview_aim: string | null
+          overview_belief: string | null
+          overview_intro: string | null
+          overview_philosophy: string | null
+          overview_problem: string | null
           pray_items: Json
           pray_prompt: string | null
           reflect_prompt: string | null
           scripture_focus: string | null
           scripture_items: Json
+          slug: string | null
           status: Database["public"]["Enums"]["content_status"]
           title: string
           todo_items_pool: Json
@@ -447,11 +547,17 @@ export type Database = {
           id?: string
           is_default?: boolean
           is_seed?: boolean
+          overview_aim?: string | null
+          overview_belief?: string | null
+          overview_intro?: string | null
+          overview_philosophy?: string | null
+          overview_problem?: string | null
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
+          slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           title: string
           todo_items_pool?: Json
@@ -467,11 +573,17 @@ export type Database = {
           id?: string
           is_default?: boolean
           is_seed?: boolean
+          overview_aim?: string | null
+          overview_belief?: string | null
+          overview_intro?: string | null
+          overview_philosophy?: string | null
+          overview_problem?: string | null
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
+          slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
           todo_items_pool?: Json
@@ -981,6 +1093,7 @@ export type Database = {
         | "blog"
         | "clip"
         | "promoted"
+      devotional_medium: "scripture" | "podcast" | "reflect"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1118,6 +1231,7 @@ export const Constants = {
         "clip",
         "promoted",
       ],
+      devotional_medium: ["scripture", "podcast", "reflect"],
     },
   },
 } as const
