@@ -45,18 +45,44 @@ export const Indent = Extension.create({
   },
 
   addCommands() {
+    const types = () => this.options.types as string[];
     const setIndentFor = (delta: number) => () => ({ state, tr, dispatch }: any) => {
       const { from, to } = state.selection;
+      // Prefer indenting the outermost matching wrapper (callout / blockquote)
+      // when the selection sits inside one, so Tab moves the whole block
+      // rather than double-indenting both wrapper and inner paragraph.
+      const wrapperTypes = ["callout", "blockquote"];
+      const $from = state.selection.$from;
+      let wrapperPos: number | null = null;
+      let wrapperNode: any = null;
+      for (let d = $from.depth; d > 0; d--) {
+        const node = $from.node(d);
+        if (wrapperTypes.includes(node.type.name) && types().includes(node.type.name)) {
+          wrapperPos = $from.before(d);
+          wrapperNode = node;
+          break;
+        }
+      }
       let changed = false;
-      state.doc.nodesBetween(from, to, (node: any, pos: number) => {
-        if (!this.options.types.includes(node.type.name)) return;
-        const cur = Number(node.attrs.indent) || 0;
+      if (wrapperNode && wrapperPos !== null) {
+        const cur = Number(wrapperNode.attrs.indent) || 0;
         const next = Math.max(0, Math.min(MAX, cur + delta));
         if (next !== cur) {
-          tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: next });
+          tr.setNodeMarkup(wrapperPos, undefined, { ...wrapperNode.attrs, indent: next });
           changed = true;
         }
-      });
+      } else {
+        state.doc.nodesBetween(from, to, (node: any, pos: number) => {
+          if (!types().includes(node.type.name)) return;
+          if (wrapperTypes.includes(node.type.name)) return;
+          const cur = Number(node.attrs.indent) || 0;
+          const next = Math.max(0, Math.min(MAX, cur + delta));
+          if (next !== cur) {
+            tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: next });
+            changed = true;
+          }
+        });
+      }
       if (changed && dispatch) dispatch(tr);
       return changed;
     };
