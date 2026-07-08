@@ -276,15 +276,26 @@ function CollectionPage() {
           </div>
         )}
 
-        {collection.devotional_template_id && (
+        {collection.devotional_template_id && q.data.template && (
           <div className="col-devoanchor">
             <div className="left">
-              <h4>New devotional layer — {collection.title}</h4>
-              <p>A guided companion to Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
+              <h4>New devotional layer — {q.data.template.title || collection.title}</h4>
+              <p>A {q.data.template && "90-day"} guided companion to Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
             </div>
             <div className="right">
-              <Link to="/devotionals/$id" params={{ id: collection.devotional_template_id }} className="col-addbtn">+ Add to my Abide</Link>
-              <Link to="/devotionals/$id" params={{ id: collection.devotional_template_id }} className="col-seeinside">See what's inside →</Link>
+              <button
+                className="col-addbtn"
+                onClick={addToAbide}
+                disabled={isAdded}
+                style={isAdded ? { opacity: 0.7, cursor: "default" } : undefined}
+              >
+                {isAdded ? "✓ Added to my Abide" : "+ Add to my Abide"}
+              </button>
+              {q.data.template.slug ? (
+                <Link to="/devotionals/$slug/overview" params={{ slug: q.data.template.slug }} className="col-seeinside">See what's inside →</Link>
+              ) : (
+                <Link to="/devotionals/$slug/overview" params={{ slug: q.data.template.id }} className="col-seeinside">See what's inside →</Link>
+              )}
             </div>
           </div>
         )}
