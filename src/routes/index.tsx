@@ -113,6 +113,8 @@ const CSS = `
 
 .hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:0;flex:1 1 0;min-width:0;}
 .hp-campaign-explainer p{margin:0;font-size:13px;color:var(--ink);opacity:0.7;line-height:1.6;}
+.hp-campaign-top{display:flex;gap:14px;margin:14px 0 20px;align-items:stretch;}
+@media(max-width:899px){.hp-campaign-top{flex-direction:column;}}
 .hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
 
 .hp-banner{position:relative;border-radius:16px;overflow:hidden;height:200px;margin:16px 0 20px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;}
