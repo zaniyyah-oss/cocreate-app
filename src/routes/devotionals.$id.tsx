@@ -155,6 +155,14 @@ const CSS = `
   .de-cols .de-block + .de-block{border-top:none;}
 }
 
+/* Topical devotional bands (aligned to same 3-col grid inside .de-stack) */
+.de-band{display:grid;grid-template-columns:1fr;border-top:1px solid rgba(24,26,77,0.12);position:relative;}
+@media (min-width:900px){ .de-band{grid-template-columns:1fr 1fr 1fr;} }
+.de-band-cell{padding:14px 18px;display:flex;align-items:flex-start;gap:9px;cursor:pointer;min-width:0;}
+.de-band-cell:hover .de-band-line{opacity:1;}
+.de-band-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.02em;border-radius:999px;padding:3px 10px;flex-shrink:0;line-height:1.4;color:#20201C;}
+.de-band-line{font-size:12.5px;color:#20201C;opacity:0.75;line-height:1.4;min-width:0;}
+
 /* Focus / fullscreen for a section */
 .de-block, .ws-root { position: relative; }
 .de-focus-btn{position:absolute;top:12px;right:14px;background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;}
