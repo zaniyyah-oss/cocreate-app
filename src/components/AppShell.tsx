@@ -142,7 +142,10 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   };
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}`}>
+  const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
+
+  return (
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       <div className="app-layout">
         {/* Desktop sidebar */}
