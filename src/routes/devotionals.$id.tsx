@@ -559,9 +559,8 @@ function EntryPage() {
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
         <NavMenu />
-        <div className="de-navright">
-          <Link to="/devotionals" className="de-back">← Back to Devotionals</Link>
-        </div>
+        <div className="de-navright" />
+
       </nav>
 
       <div className="de-shell">
