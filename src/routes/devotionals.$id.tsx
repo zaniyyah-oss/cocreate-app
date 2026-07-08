@@ -73,6 +73,12 @@ const CSS = `
 .de-back{color:#8a8678;font-weight:700;font-size:12.5px;text-decoration:none;}
 .de-back:hover{color:#181A4D;}
 .de-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
+.de-navmenu{display:none;align-items:center;gap:2px;}
+.de-navmenu a{color:#8a8678;text-decoration:none;font-weight:700;font-size:13px;padding:8px 14px;border-radius:20px;transition:background .15s,color .15s;}
+.de-navmenu a:hover{color:#181A4D;background:#FBF8ED;}
+.de-navmenu a.active{background:#DCE07A;color:#181A4D;}
+.de-navright{display:flex;align-items:center;gap:10px;}
+@media (min-width:820px){.de-navmenu{display:flex;}}
 .de-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
 .de-shell-inner{padding:0;}
 .de-headcard{background:transparent;padding:0;margin:0 0 4px;border:none;position:relative;}
