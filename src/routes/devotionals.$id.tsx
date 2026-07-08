@@ -659,7 +659,8 @@ function EntryPage() {
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
                 </div>
-                <textarea
+                <ResizableTextarea
+                  storageKey="where"
                   className="de-textarea"
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
