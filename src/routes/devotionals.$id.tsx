@@ -26,7 +26,9 @@ export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
   validateSearch: (s: Record<string, unknown>) => ({
     date: typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
+    view: s.view === "week" || s.view === "month" ? (s.view as "week" | "month") : ("today" as const),
   }),
+
   errorComponent: ({ error }) => (
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins,sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This devotional didn't load</h1>
