@@ -427,9 +427,11 @@ export function useAbideEntries(userId: string | null, ready: boolean) {
   });
 }
 
-const entryPreview = (e: AbideEntry) => {
+const entryPreviewLine = (e: AbideEntry) => {
   const parts = [e.where_text, e.reflect_text, e.pray_text, e.apply_text].filter((x): x is string => !!x && x.trim().length > 0);
-  return parts[0]?.slice(0, 220) ?? "";
+  const raw = parts[0] ?? "";
+  const firstLine = raw.split(/\r?\n/).find((l) => l.trim().length > 0) ?? "";
+  return firstLine.trim().slice(0, 220);
 };
 
 const hasContent = (e: AbideEntry) => {
@@ -469,53 +471,104 @@ export function DevotionalHistorySection({
     );
   }
 
-  // Group by template_id, preserving newest-first order from `entries`
-  const groups = new Map<string, AbideEntry[]>();
-  const orderedKeys: string[] = [];
-  for (const e of visible) {
-    const key = e.template_id ?? "__standalone__";
-    if (!groups.has(key)) { groups.set(key, []); orderedKeys.push(key); }
-    groups.get(key)!.push(e);
-  }
-
-  const meta = TYPE_META.devotional;
-
   return (
-    <>
-      {orderedKeys.map((key) => {
-        const bucket = groups.get(key)!;
-        const template = key === "__standalone__" ? undefined : templateMap[key];
-        const heading = `${(template?.title ?? "Devotional")} history`;
+    <div className="sv-section">
+      <h2>Devotional history <span className="count">{visible.length}</span></h2>
+      <div className="sv-tbl-header sv-tbl-devo">
+        <div>Date</div>
+        <div>Entry title</div>
+        <div className="col-hide">Preview</div>
+      </div>
+      {visible.map((e) => {
+        const template = e.template_id ? templateMap[e.template_id] : undefined;
+        const title = e.entry_title?.trim() || template?.title || "Untitled entry";
+        const preview = entryPreviewLine(e);
+        const clickable = !!e.template_id;
         return (
-          <div className="sv-section" key={key}>
-            <h2>{heading} <span className="count">{bucket.length}</span></h2>
-            <div className="sv-notes">
-              {bucket.map((e) => {
-                const title = e.entry_title?.trim() || template?.title || "Entry";
-                const preview = entryPreview(e);
-                return (
-                  <div
-                    key={e.id}
-                    className="sv-note"
-                    onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
-                    style={{ cursor: e.template_id ? "pointer" : "default" }}
-                  >
-                    <div className="top">
-                      <span className="kind" style={{ background: meta.bg, color: meta.fg }}>{template?.title ?? "Devotional"}</span>
-                      <span className="ctx">{title}</span>
-                      <span className="when">{formatWhen(e.entry_date)}</span>
-                    </div>
-                    {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
-                    {preview && <p>{preview}</p>}
-                  </div>
-                );
-              })}
-            </div>
+          <div
+            key={e.id}
+            className="sv-tbl-row sv-tbl-devo"
+            role="button"
+            tabIndex={clickable ? 0 : -1}
+            onClick={() => clickable && onOpen(e.template_id!, e.entry_date)}
+            onKeyDown={(ev) => { if (clickable && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); onOpen(e.template_id!, e.entry_date); } }}
+            style={clickable ? undefined : { cursor: "default" }}
+          >
+            <div className="sv-tbl-date">{formatWhen(e.entry_date)}</div>
+            <div className="sv-tbl-title">{title}</div>
+            <div className="col-hide sv-tbl-preview">{preview || <span className="sv-tbl-none">—</span>}</div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
+
+export function WorkspaceDocsSection({
+  docs,
+  entryMeta,
+  loading,
+  onOpen,
+}: {
+  docs: WorkspaceDoc[];
+  entryMeta: Record<string, { template_id: string | null; entry_date: string }>;
+  loading?: boolean;
+  onOpen: (doc: WorkspaceDoc) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="sv-section">
+        <h2>Workspace documents</h2>
+        <div className="sv-skel-row">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (docs.length === 0) {
+    return (
+      <div className="sv-section">
+        <h2>Workspace documents</h2>
+        <div className="sv-empty"><strong>No workspace documents yet</strong>Every document you create inside your Abide workspace will show up here.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sv-section">
+      <h2>Workspace documents <span className="count">{docs.length}</span></h2>
+      <div className="sv-tbl-header sv-tbl-ws">
+        <div>Title</div>
+        <div className="col-hide">Tags</div>
+        <div className="col-hide">Date created</div>
+      </div>
+      {docs.map((d) => {
+        const meta = d.devotional_entry_id ? entryMeta[d.devotional_entry_id] : undefined;
+        const clickable = !!(meta && meta.template_id);
+        return (
+          <div
+            key={d.id}
+            className="sv-tbl-row sv-tbl-ws"
+            role="button"
+            tabIndex={clickable ? 0 : -1}
+            onClick={() => clickable && onOpen(d)}
+            onKeyDown={(ev) => { if (clickable && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); onOpen(d); } }}
+            style={clickable ? undefined : { cursor: "default" }}
+          >
+            <div className="sv-tbl-title">{d.title?.trim() || "Untitled document"}</div>
+            <div className="col-hide sv-tbl-tags">
+              {d.tags && d.tags.length > 0
+                ? d.tags.map((t, i) => <span key={`${d.id}-${t}-${i}`} className="sv-tbl-tag">#{t}</span>)
+                : <span className="sv-tbl-none">—</span>}
+            </div>
+            <div className="col-hide sv-tbl-date">{formatWhen(d.created_at)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 
 
