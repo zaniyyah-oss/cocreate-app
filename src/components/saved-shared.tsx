@@ -337,12 +337,39 @@ export function SavedContentSection({ saved, contentMap, templateMap, onOpenCont
   );
 }
 
+export function useWorkspaceDocs(userId: string | null, ready: boolean) {
+  return useQuery({
+    queryKey: ["workspace-docs-all", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("workspace_items" as any)
+        .select("id, title, tags, created_at, updated_at, body_text, devotional_entry_id")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as WorkspaceDoc[];
+    },
+  });
+}
+
+export type WorkspaceDoc = {
+  id: string;
+  title: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  body_text: string;
+  devotional_entry_id: string | null;
+};
+
 // Small helper for pages that use these sections
 export function useSavedData(userId: string | null, ready: boolean) {
   const pins = usePinnedQuotes(userId, ready);
   const notes = useNotes(userId, ready);
   const saved = useSavedItems(userId, ready);
   const abideEntries = useAbideEntries(userId, ready);
+  const workspaceDocs = useWorkspaceDocs(userId, ready);
 
   const contentIds = useMemo(() => {
     const s = new Set<string>();
@@ -359,10 +386,17 @@ export function useSavedData(userId: string | null, ready: boolean) {
     return Array.from(s);
   }, [saved.data, abideEntries.data]);
 
+  // Map devotional_entry_id -> { template_id, entry_date } so workspace docs can open the right entry
+  const entryMeta = useMemo(() => {
+    const m: Record<string, { template_id: string | null; entry_date: string }> = {};
+    (abideEntries.data ?? []).forEach((e) => { m[e.id] = { template_id: e.template_id, entry_date: e.entry_date }; });
+    return m;
+  }, [abideEntries.data]);
+
   const contentMap = useContentLookup(contentIds);
   const templateMap = useTemplateLookup(templateIds);
 
-  return { pins, notes, saved, abideEntries, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
+  return { pins, notes, saved, abideEntries, workspaceDocs, entryMeta, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
 }
 
 
