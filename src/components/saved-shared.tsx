@@ -80,7 +80,24 @@ export const SAVED_CSS = `
 @media (max-width:720px){
   .sv-h1{font-size:28px;}
   .sv-tabs{max-width:none;}
+  .sv-tbl-header,.sv-tbl-row{grid-template-columns:90px 1fr !important;}
+  .sv-tbl-header > .col-hide,.sv-tbl-row > .col-hide{display:none;}
 }
+
+/* Table (matches Workspace "This Month" style) */
+.sv-tbl-header{background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:12px 12px 0 0;display:grid;padding:11px 18px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#181A4D;opacity:0.55;font-family:'Poppins',sans-serif;gap:8px;}
+.sv-tbl-row{display:grid;align-items:flex-start;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;cursor:pointer;transition:background .12s;}
+.sv-tbl-row:hover{background:#FBF8ED;}
+.sv-tbl-row:last-child{border-radius:0 0 12px 12px;}
+.sv-tbl-row > div{min-width:0;}
+.sv-tbl-title{font-weight:600;color:#181A4D;overflow-wrap:anywhere;}
+.sv-tbl-preview{font-size:12px;color:#20201C;opacity:0.7;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sv-tbl-date{font-size:12px;color:#181A4D;opacity:0.75;font-weight:600;}
+.sv-tbl-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.sv-tbl-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:3px 10px;font-size:10.5px;font-weight:600;}
+.sv-tbl-none{font-size:11.5px;color:#20201C;opacity:0.35;}
+.sv-tbl-devo{grid-template-columns:110px 1fr 1.4fr;}
+.sv-tbl-ws{grid-template-columns:1fr 260px 130px;}
 `;
 
 
@@ -320,12 +337,39 @@ export function SavedContentSection({ saved, contentMap, templateMap, onOpenCont
   );
 }
 
+export function useWorkspaceDocs(userId: string | null, ready: boolean) {
+  return useQuery({
+    queryKey: ["workspace-docs-all", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("workspace_items" as any)
+        .select("id, title, tags, created_at, updated_at, body_text, devotional_entry_id")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as WorkspaceDoc[];
+    },
+  });
+}
+
+export type WorkspaceDoc = {
+  id: string;
+  title: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  body_text: string;
+  devotional_entry_id: string | null;
+};
+
 // Small helper for pages that use these sections
 export function useSavedData(userId: string | null, ready: boolean) {
   const pins = usePinnedQuotes(userId, ready);
   const notes = useNotes(userId, ready);
   const saved = useSavedItems(userId, ready);
   const abideEntries = useAbideEntries(userId, ready);
+  const workspaceDocs = useWorkspaceDocs(userId, ready);
 
   const contentIds = useMemo(() => {
     const s = new Set<string>();
@@ -342,10 +386,17 @@ export function useSavedData(userId: string | null, ready: boolean) {
     return Array.from(s);
   }, [saved.data, abideEntries.data]);
 
+  // Map devotional_entry_id -> { template_id, entry_date } so workspace docs can open the right entry
+  const entryMeta = useMemo(() => {
+    const m: Record<string, { template_id: string | null; entry_date: string }> = {};
+    (abideEntries.data ?? []).forEach((e) => { m[e.id] = { template_id: e.template_id, entry_date: e.entry_date }; });
+    return m;
+  }, [abideEntries.data]);
+
   const contentMap = useContentLookup(contentIds);
   const templateMap = useTemplateLookup(templateIds);
 
-  return { pins, notes, saved, abideEntries, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
+  return { pins, notes, saved, abideEntries, workspaceDocs, entryMeta, contentMap: contentMap.data ?? {}, templateMap: templateMap.data ?? {} };
 }
 
 
@@ -376,9 +427,11 @@ export function useAbideEntries(userId: string | null, ready: boolean) {
   });
 }
 
-const entryPreview = (e: AbideEntry) => {
+const entryPreviewLine = (e: AbideEntry) => {
   const parts = [e.where_text, e.reflect_text, e.pray_text, e.apply_text].filter((x): x is string => !!x && x.trim().length > 0);
-  return parts[0]?.slice(0, 220) ?? "";
+  const raw = parts[0] ?? "";
+  const firstLine = raw.split(/\r?\n/).find((l) => l.trim().length > 0) ?? "";
+  return firstLine.trim().slice(0, 220);
 };
 
 const hasContent = (e: AbideEntry) => {
@@ -418,53 +471,104 @@ export function DevotionalHistorySection({
     );
   }
 
-  // Group by template_id, preserving newest-first order from `entries`
-  const groups = new Map<string, AbideEntry[]>();
-  const orderedKeys: string[] = [];
-  for (const e of visible) {
-    const key = e.template_id ?? "__standalone__";
-    if (!groups.has(key)) { groups.set(key, []); orderedKeys.push(key); }
-    groups.get(key)!.push(e);
-  }
-
-  const meta = TYPE_META.devotional;
-
   return (
-    <>
-      {orderedKeys.map((key) => {
-        const bucket = groups.get(key)!;
-        const template = key === "__standalone__" ? undefined : templateMap[key];
-        const heading = `${(template?.title ?? "Devotional")} history`;
+    <div className="sv-section">
+      <h2>Devotional history <span className="count">{visible.length}</span></h2>
+      <div className="sv-tbl-header sv-tbl-devo">
+        <div>Date</div>
+        <div>Entry title</div>
+        <div className="col-hide">Preview</div>
+      </div>
+      {visible.map((e) => {
+        const template = e.template_id ? templateMap[e.template_id] : undefined;
+        const title = e.entry_title?.trim() || template?.title || "Untitled entry";
+        const preview = entryPreviewLine(e);
+        const clickable = !!e.template_id;
         return (
-          <div className="sv-section" key={key}>
-            <h2>{heading} <span className="count">{bucket.length}</span></h2>
-            <div className="sv-notes">
-              {bucket.map((e) => {
-                const title = e.entry_title?.trim() || template?.title || "Entry";
-                const preview = entryPreview(e);
-                return (
-                  <div
-                    key={e.id}
-                    className="sv-note"
-                    onClick={() => e.template_id && onOpen(e.template_id, e.entry_date)}
-                    style={{ cursor: e.template_id ? "pointer" : "default" }}
-                  >
-                    <div className="top">
-                      <span className="kind" style={{ background: meta.bg, color: meta.fg }}>{template?.title ?? "Devotional"}</span>
-                      <span className="ctx">{title}</span>
-                      <span className="when">{formatWhen(e.entry_date)}</span>
-                    </div>
-                    {e.entry_subtitle && <p style={{ fontStyle: "italic", color: "#8a8678", marginBottom: 6 }}>{e.entry_subtitle}</p>}
-                    {preview && <p>{preview}</p>}
-                  </div>
-                );
-              })}
-            </div>
+          <div
+            key={e.id}
+            className="sv-tbl-row sv-tbl-devo"
+            role="button"
+            tabIndex={clickable ? 0 : -1}
+            onClick={() => clickable && onOpen(e.template_id!, e.entry_date)}
+            onKeyDown={(ev) => { if (clickable && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); onOpen(e.template_id!, e.entry_date); } }}
+            style={clickable ? undefined : { cursor: "default" }}
+          >
+            <div className="sv-tbl-date">{formatWhen(e.entry_date)}</div>
+            <div className="sv-tbl-title">{title}</div>
+            <div className="col-hide sv-tbl-preview">{preview || <span className="sv-tbl-none">—</span>}</div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
+
+export function WorkspaceDocsSection({
+  docs,
+  entryMeta,
+  loading,
+  onOpen,
+}: {
+  docs: WorkspaceDoc[];
+  entryMeta: Record<string, { template_id: string | null; entry_date: string }>;
+  loading?: boolean;
+  onOpen: (doc: WorkspaceDoc) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="sv-section">
+        <h2>Workspace documents</h2>
+        <div className="sv-skel-row">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="sv-skel-card" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (docs.length === 0) {
+    return (
+      <div className="sv-section">
+        <h2>Workspace documents</h2>
+        <div className="sv-empty"><strong>No workspace documents yet</strong>Every document you create inside your Abide workspace will show up here.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sv-section">
+      <h2>Workspace documents <span className="count">{docs.length}</span></h2>
+      <div className="sv-tbl-header sv-tbl-ws">
+        <div>Title</div>
+        <div className="col-hide">Tags</div>
+        <div className="col-hide">Date created</div>
+      </div>
+      {docs.map((d) => {
+        const meta = d.devotional_entry_id ? entryMeta[d.devotional_entry_id] : undefined;
+        const clickable = !!(meta && meta.template_id);
+        return (
+          <div
+            key={d.id}
+            className="sv-tbl-row sv-tbl-ws"
+            role="button"
+            tabIndex={clickable ? 0 : -1}
+            onClick={() => clickable && onOpen(d)}
+            onKeyDown={(ev) => { if (clickable && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); onOpen(d); } }}
+            style={clickable ? undefined : { cursor: "default" }}
+          >
+            <div className="sv-tbl-title">{d.title?.trim() || "Untitled document"}</div>
+            <div className="col-hide sv-tbl-tags">
+              {d.tags && d.tags.length > 0
+                ? d.tags.map((t, i) => <span key={`${d.id}-${t}-${i}`} className="sv-tbl-tag">#{t}</span>)
+                : <span className="sv-tbl-none">—</span>}
+            </div>
+            <div className="col-hide sv-tbl-date">{formatWhen(d.created_at)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 
 
