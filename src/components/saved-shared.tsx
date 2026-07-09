@@ -80,7 +80,24 @@ export const SAVED_CSS = `
 @media (max-width:720px){
   .sv-h1{font-size:28px;}
   .sv-tabs{max-width:none;}
+  .sv-tbl-header,.sv-tbl-row{grid-template-columns:90px 1fr !important;}
+  .sv-tbl-header > .col-hide,.sv-tbl-row > .col-hide{display:none;}
 }
+
+/* Table (matches Workspace "This Month" style) */
+.sv-tbl-header{background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:12px 12px 0 0;display:grid;padding:11px 18px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#181A4D;opacity:0.55;font-family:'Poppins',sans-serif;gap:8px;}
+.sv-tbl-row{display:grid;align-items:flex-start;padding:14px 18px;background:#fff;border:1px solid rgba(24,26,77,0.12);border-top:none;font-size:13px;font-family:'Poppins',sans-serif;color:#20201C;gap:8px;cursor:pointer;transition:background .12s;}
+.sv-tbl-row:hover{background:#FBF8ED;}
+.sv-tbl-row:last-child{border-radius:0 0 12px 12px;}
+.sv-tbl-row > div{min-width:0;}
+.sv-tbl-title{font-weight:600;color:#181A4D;overflow-wrap:anywhere;}
+.sv-tbl-preview{font-size:12px;color:#20201C;opacity:0.7;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sv-tbl-date{font-size:12px;color:#181A4D;opacity:0.75;font-weight:600;}
+.sv-tbl-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.sv-tbl-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:3px 10px;font-size:10.5px;font-weight:600;}
+.sv-tbl-none{font-size:11.5px;color:#20201C;opacity:0.35;}
+.sv-tbl-devo{grid-template-columns:110px 1fr 1.4fr;}
+.sv-tbl-ws{grid-template-columns:1fr 260px 130px;}
 `;
 
 
