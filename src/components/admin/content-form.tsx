@@ -174,8 +174,17 @@ export function ContentForm({
 
   const save = useMutation({
     mutationFn: async (opts: { status: "draft" | "published" }) => {
-      const targetStatus = opts.status;
+      let targetStatus = opts.status;
       if (!state.title.trim()) throw new Error("Title is required.");
+
+      // Parse scheduled_at (datetime-local -> ISO). If it's in the future and
+      // the user hit Publish/Schedule, save as draft with scheduled_at set —
+      // the pg_cron job will flip it to published when the time arrives.
+      const scheduledIso = state.scheduled_at ? new Date(state.scheduled_at).toISOString() : null;
+      const scheduledInFuture = !!scheduledIso && new Date(scheduledIso).getTime() > Date.now();
+      if (scheduledInFuture && targetStatus === "published") {
+        targetStatus = "draft";
+      }
 
       if (kind === "devotional") {
         const cleanScripture = state.scripture_items
@@ -200,9 +209,13 @@ export function ContentForm({
           todo_items_pool: state.is_default ? [] : cleanTodo,
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
         };
+        (payload as any).scheduled_at = scheduledIso;
 
-        if (state.is_default && targetStatus !== "published") {
+        if (state.is_default && opts.status !== "published") {
           throw new Error("The platform default must be published. Publish this template or turn off the Default toggle.");
+        }
+        if (state.is_default && scheduledInFuture) {
+          throw new Error("The platform default can't be scheduled — it must be live now.");
         }
         // If turning is_default ON, clear any existing default first (unique index enforces one).
         if (state.is_default) {
@@ -242,6 +255,7 @@ export function ContentForm({
           published_at: publishedAt,
           status: targetStatus,
         };
+        (payload as any).scheduled_at = scheduledIso;
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
           if (error) throw error;
@@ -259,11 +273,19 @@ export function ContentForm({
     onError: (e) => setErr(e instanceof Error ? e.message : "Save failed"),
   });
 
+  const scheduledIso = state.scheduled_at ? new Date(state.scheduled_at) : null;
+  const isScheduledFuture = !!scheduledIso && !Number.isNaN(scheduledIso.getTime()) && scheduledIso.getTime() > Date.now();
+
   const onSubmit = (e: FormEvent, status: "draft" | "published") => {
     e.preventDefault();
     setErr(null);
+    if (status === "published" && isScheduledFuture) {
+      const when = scheduledIso!.toLocaleString();
+      if (!window.confirm(`Schedule this to publish at ${when}?`)) return;
+    }
     save.mutate({ status });
   };
+
 
   const topics = topicsQ.data ?? [];
   const showBody = kind === "essay" || kind === "blog";
