@@ -121,6 +121,7 @@ const stateFromTemplate = (r: Template): FormState => {
     scripture_items: scr.map((it: any) => ({ reference: String(it?.reference ?? ""), note: String(it?.note ?? "") })),
     pray_items: pr.map((s: any) => String(s ?? "")),
     todo_items_pool: td.map((s: any) => String(s ?? "")),
+    accent_color: ((r as any).accent_color ?? null) as BrandColorKey | null,
   };
 };
 
