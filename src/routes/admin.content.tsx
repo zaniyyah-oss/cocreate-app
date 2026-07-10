@@ -8,6 +8,16 @@ export const Route = createFileRoute("/admin/content")({
   component: AdminContentList,
 });
 
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "now";
+  const m = Math.floor(ms / 60000);
+  if (m < 60) return `in ${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `in ${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `in ${d}d ${h % 24}h`;
+}
+
 type Row = Database["public"]["Tables"]["content_items"]["Row"] & { _kind: "content" };
 type TplRow = Database["public"]["Tables"]["devotional_templates"]["Row"] & { _kind: "template" };
 type AnyRow = Row | TplRow;
