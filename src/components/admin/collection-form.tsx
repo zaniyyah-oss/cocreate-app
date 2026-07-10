@@ -148,6 +148,7 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
         cover_image_url: cover || null,
         banner_url: cover || null,
         status: opts.status,
+        tag_color: tagColor,
       };
       if (existing) {
         const { error } = await supabase.from("collections").update(payload).eq("id", existing.id);
