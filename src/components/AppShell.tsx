@@ -105,6 +105,8 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     return window.localStorage.getItem(STORAGE_KEY) === "1";
   });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navLabelsQ = usePageContent("site_nav");
+  const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
