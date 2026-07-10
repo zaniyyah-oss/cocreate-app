@@ -70,6 +70,12 @@ type FormState = {
   pray_items: string[];
   todo_items_pool: string[];
   accent_color: BrandColorKey | null;
+  overview_text: string;
+  intro_video_url: string;
+  widget_heading: string;
+  widget_subheading: string;
+  widget_cta_label: string;
+  is_featured: boolean;
 };
 
 
