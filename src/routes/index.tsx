@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { usePageContent } from "@/lib/page-content";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
