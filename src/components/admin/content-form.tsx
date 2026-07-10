@@ -436,6 +436,10 @@ export function ContentForm({
           <AutoFillEditor state={state} setState={setState} />
         )}
 
+        {kind === "devotional" && existingTemplate && !state.is_default && (
+          <DayOverrides template={existingTemplate} state={state} />
+        )}
+
 
         {showThumb && (
           <div>
@@ -610,6 +614,271 @@ function AutoFillEditor({
 }
 
 
+type DayFields = {
+  focus_preview: string;
+  reflect_prompt: string;
+  pray_prompt: string;
+  apply_prompt: string;
+  scripture_reference: string;
+  scripture_note: string;
+};
+
+const emptyDay = (): DayFields => ({
+  focus_preview: "", reflect_prompt: "", pray_prompt: "",
+  apply_prompt: "", scripture_reference: "", scripture_note: "",
+});
+
+function DayOverrides({ template, state }: { template: Template; state: FormState }) {
+  const qc = useQueryClient();
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [drafts, setDrafts] = useState<Record<number, DayFields>>({});
+  const [busy, setBusy] = useState<number | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const duration = Math.max(0, parseInt(state.duration_days, 10) || 0);
+
+  const daysQ = useQuery({
+    queryKey: ["devotional-days", template.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("devotional_days")
+        .select("*")
+        .eq("template_id", template.id)
+        .order("day_number", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; day_number: number; is_override: boolean;
+        focus_preview: string | null; reflect_prompt: string | null;
+        pray_prompt: string | null; apply_prompt: string | null;
+        scripture_reference: string | null; scripture_note: string | null;
+      }>;
+    },
+  });
+
+  const byDay = useMemo(() => {
+    const m = new Map<number, (typeof daysQ.data extends (infer U)[] | undefined ? U : never)>();
+    for (const r of daysQ.data ?? []) m.set(r.day_number, r as any);
+    return m;
+  }, [daysQ.data]);
+
+  // For "default sequence content for that day, shown for reference":
+  // pull from template.scripture_items (index = day-1) plus template-level prompts.
+  const defaultsFor = (day: number): DayFields => {
+    const scr = state.scripture_items[day - 1];
+    return {
+      focus_preview: "",
+      reflect_prompt: state.reflect_prompt || "",
+      pray_prompt: state.pray_prompt || "",
+      apply_prompt: state.apply_prompt || "",
+      scripture_reference: scr?.reference || "",
+      scripture_note: scr?.note || "",
+    };
+  };
+
+  const liveFor = (day: number): DayFields => {
+    const row = byDay.get(day);
+    if (row && row.is_override) {
+      return {
+        focus_preview: row.focus_preview ?? "",
+        reflect_prompt: row.reflect_prompt ?? "",
+        pray_prompt: row.pray_prompt ?? "",
+        apply_prompt: row.apply_prompt ?? "",
+        scripture_reference: row.scripture_reference ?? "",
+        scripture_note: row.scripture_note ?? "",
+      };
+    }
+    return defaultsFor(day);
+  };
+
+  const expand = (day: number) => {
+    if (expanded === day) { setExpanded(null); return; }
+    setErr(null);
+    setDrafts((d) => ({ ...d, [day]: d[day] ?? liveFor(day) }));
+    setExpanded(day);
+  };
+
+  const patchDraft = (day: number, patch: Partial<DayFields>) =>
+    setDrafts((d) => ({ ...d, [day]: { ...(d[day] ?? liveFor(day)), ...patch } }));
+
+  const save = async (day: number) => {
+    setBusy(day); setErr(null);
+    try {
+      const v = drafts[day] ?? liveFor(day);
+      const existing = byDay.get(day);
+      const payload: any = {
+        template_id: template.id,
+        day_number: day,
+        title: `Day ${day}`,
+        medium: "text",
+        is_override: true,
+        focus_preview: v.focus_preview || null,
+        reflect_prompt: v.reflect_prompt || null,
+        pray_prompt: v.pray_prompt || null,
+        apply_prompt: v.apply_prompt || null,
+        scripture_reference: v.scripture_reference || null,
+        scripture_note: v.scripture_note || null,
+      };
+      if (existing) {
+        const { error } = await (supabase.from as any)("devotional_days")
+          .update(payload).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from as any)("devotional_days").insert(payload);
+        if (error) throw error;
+      }
+      await qc.invalidateQueries({ queryKey: ["devotional-days", template.id] });
+      setExpanded(null);
+      setDrafts((d) => { const n = { ...d }; delete n[day]; return n; });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Save failed");
+    } finally { setBusy(null); }
+  };
+
+  const revert = async (day: number) => {
+    const existing = byDay.get(day);
+    if (!existing) return;
+    if (!window.confirm(`Revert Day ${day} to the default sequence content?`)) return;
+    setBusy(day); setErr(null);
+    try {
+      const { error } = await (supabase.from as any)("devotional_days")
+        .delete().eq("id", existing.id);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["devotional-days", template.id] });
+      setExpanded(null);
+      setDrafts((d) => { const n = { ...d }; delete n[day]; return n; });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Revert failed");
+    } finally { setBusy(null); }
+  };
+
+  const chipStyle = (overridden: boolean): React.CSSProperties => ({
+    fontSize: 10.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
+    padding: "3px 9px", borderRadius: 99,
+    background: overridden ? "#DCE07A" : "rgba(20,20,20,0.06)",
+    color: overridden ? "#181A4D" : "#8a8678",
+  });
+  const rowStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: 12,
+    padding: "10px 12px", borderTop: "1px solid rgba(20,20,20,0.08)",
+  };
+  const editBtnStyle: React.CSSProperties = {
+    marginLeft: "auto", background: "transparent",
+    border: "1px solid rgba(20,20,20,0.14)", borderRadius: 8,
+    padding: "5px 12px", fontSize: 11.5, fontWeight: 700,
+    color: "#181A4D", cursor: "pointer", fontFamily: "Poppins",
+  };
+
+  return (
+    <div style={{ background: "#FBF8ED", border: "1px solid rgba(15,74,66,0.15)", borderRadius: 10, padding: "18px 20px", display: "grid", gap: 12 }}>
+      <div>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: "#181A4D", marginBottom: 4 }}>Day-by-day overrides</div>
+        <div className="cf-note" style={{ marginTop: 0 }}>
+          Every devotional follows a fixed sequence by default. Override any specific day with custom prompts, scripture, and a focus preview. Non-overridden days stay in sync with the auto-fill content above.
+        </div>
+      </div>
+
+      {duration === 0 && (
+        <div className="cf-note">Set a duration (in the Daily auto-fill content section above) to enable per-day overrides.</div>
+      )}
+      {duration > 0 && daysQ.isLoading && <div className="cf-note">Loading days…</div>}
+      {err && <div className="cf-err">{err}</div>}
+
+      {duration > 0 && !daysQ.isLoading && (
+        <div style={{ background: "#fff", border: "1px solid rgba(20,20,20,0.08)", borderRadius: 8 }}>
+          {Array.from({ length: duration }, (_, i) => i + 1).map((day) => {
+            const existing = byDay.get(day);
+            const overridden = !!existing?.is_override;
+            const isOpen = expanded === day;
+            const draft = drafts[day] ?? liveFor(day);
+            const def = defaultsFor(day);
+            return (
+              <div key={day} style={{ borderTop: day === 1 ? "none" : undefined }}>
+                <div style={{ ...rowStyle, borderTop: day === 1 ? "none" : rowStyle.borderTop }}>
+                  <div style={{ fontWeight: 800, color: "#181A4D", fontSize: 13.5, minWidth: 62 }}>Day {day}</div>
+                  <span style={chipStyle(overridden)}>{overridden ? "Overridden" : "Default"}</span>
+                  <button type="button" style={editBtnStyle} onClick={() => expand(day)} disabled={busy === day}>
+                    {isOpen ? "Close" : "Edit"}
+                  </button>
+                </div>
+                {isOpen && (
+                  <div style={{ padding: "6px 14px 16px", display: "grid", gap: 14, background: "#fff" }}>
+                    <div>
+                      <label>Focus preview</label>
+                      <input
+                        value={draft.focus_preview}
+                        onChange={(e) => patchDraft(day, { focus_preview: e.target.value })}
+                        placeholder="A teaser, not a summary."
+                      />
+                      <div className="cf-note">A teaser, not a summary. Shown on the collapsed day row on the public overview page — keep it spoiler-free.</div>
+                    </div>
+                    <div>
+                      <label>Reflect prompt</label>
+                      <textarea rows={3} value={draft.reflect_prompt} onChange={(e) => patchDraft(day, { reflect_prompt: e.target.value })} placeholder="What does this passage stir in you today?" />
+                      {!overridden && def.reflect_prompt && (
+                        <div className="cf-note">Default: {def.reflect_prompt}</div>
+                      )}
+                    </div>
+                    <div>
+                      <label>Pray prompt</label>
+                      <textarea rows={3} value={draft.pray_prompt} onChange={(e) => patchDraft(day, { pray_prompt: e.target.value })} placeholder="Write a prayer in response to what you noticed." />
+                      {!overridden && def.pray_prompt && (
+                        <div className="cf-note">Default: {def.pray_prompt}</div>
+                      )}
+                    </div>
+                    <div>
+                      <label>Apply prompt</label>
+                      <textarea rows={3} value={draft.apply_prompt} onChange={(e) => patchDraft(day, { apply_prompt: e.target.value })} placeholder="What is one small step you can take today?" />
+                      {!overridden && def.apply_prompt && (
+                        <div className="cf-note">Default: {def.apply_prompt}</div>
+                      )}
+                    </div>
+                    <div className="grid two" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
+                      <div>
+                        <label>Scripture reference</label>
+                        <input value={draft.scripture_reference} onChange={(e) => patchDraft(day, { scripture_reference: e.target.value })} placeholder="e.g. Matthew 4:1–11" />
+                        {!overridden && def.scripture_reference && (
+                          <div className="cf-note">Default: {def.scripture_reference}</div>
+                        )}
+                      </div>
+                      <div>
+                        <label>Scripture note</label>
+                        <textarea rows={2} value={draft.scripture_note} onChange={(e) => patchDraft(day, { scripture_note: e.target.value })} placeholder="Short reading note (optional)" />
+                        {!overridden && def.scripture_note && (
+                          <div className="cf-note">Default: {def.scripture_note}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                      {overridden && (
+                        <button
+                          type="button"
+                          className="ad-btn ghost sm"
+                          onClick={() => revert(day)}
+                          disabled={busy === day}
+                          style={{ marginRight: "auto", color: "#8f2600", borderColor: "rgba(143,38,0,0.3)" }}
+                        >
+                          Revert to default
+                        </button>
+                      )}
+                      <button type="button" className="ad-btn ghost sm" onClick={() => { setExpanded(null); setDrafts((d) => { const n = { ...d }; delete n[day]; return n; }); }} disabled={busy === day}>
+                        Cancel
+                      </button>
+                      <button type="button" className="ad-btn sm" onClick={() => save(day)} disabled={busy === day}>
+                        {busy === day ? "Saving…" : "Save override"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // util for callers to import kind list
 export const KIND_LIST: Kind[] = ["teaching", "essay", "podcast", "blog", "devotional"];
 export type { Kind };
+
