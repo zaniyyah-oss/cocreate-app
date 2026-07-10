@@ -30,6 +30,7 @@ import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
+import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
@@ -141,6 +142,11 @@ const AdminCollectionsRoute = AdminCollectionsRouteImport.update({
   path: '/collections',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCollectionsRoute,
+} as any)
 const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
   id: '/focus/$id',
   path: '/focus/$id',
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -202,7 +209,6 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -220,6 +226,7 @@ export interface FileRoutesByTo {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/admin/collections': typeof AdminCollectionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -249,6 +256,7 @@ export interface FileRoutesById {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -279,6 +287,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/admin/collections/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -287,7 +296,6 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
-    | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -305,6 +313,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/admin/collections'
   id:
     | '__root__'
     | '/'
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/admin/collections/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -500,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/collections/': {
+      id: '/admin/collections/'
+      path: '/'
+      fullPath: '/admin/collections/'
+      preLoaderRoute: typeof AdminCollectionsIndexRouteImport
+      parentRoute: typeof AdminCollectionsRoute
+    }
     '/devotionals/focus/$id': {
       id: '/devotionals/focus/$id'
       path: '/focus/$id'
@@ -541,11 +558,13 @@ declare module '@tanstack/react-router' {
 interface AdminCollectionsRouteChildren {
   AdminCollectionsIdRoute: typeof AdminCollectionsIdRoute
   AdminCollectionsNewRoute: typeof AdminCollectionsNewRoute
+  AdminCollectionsIndexRoute: typeof AdminCollectionsIndexRoute
 }
 
 const AdminCollectionsRouteChildren: AdminCollectionsRouteChildren = {
   AdminCollectionsIdRoute: AdminCollectionsIdRoute,
   AdminCollectionsNewRoute: AdminCollectionsNewRoute,
+  AdminCollectionsIndexRoute: AdminCollectionsIndexRoute,
 }
 
 const AdminCollectionsRouteWithChildren =
