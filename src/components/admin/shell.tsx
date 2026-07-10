@@ -78,6 +78,7 @@ const CSS = `
 
 const NAV = [
   { to: "/admin/content", label: "Content" },
+  { to: "/admin/collections", label: "Collections" },
   { to: "/admin/invites", label: "Team" },
 ];
 
