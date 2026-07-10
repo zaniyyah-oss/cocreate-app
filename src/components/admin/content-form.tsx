@@ -4,6 +4,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { DevotionalPreviewModal } from "@/components/admin/devotional-preview";
+import { ColorSwatches } from "@/components/admin/color-swatches";
+import type { BrandColorKey } from "@/lib/brand-palette";
 
 type Kind = "teaching" | "essay" | "podcast" | "blog" | "devotional";
 type Content = Database["public"]["Tables"]["content_items"]["Row"];
@@ -67,6 +69,7 @@ type FormState = {
   scripture_items: ScriptureItem[];
   pray_items: string[];
   todo_items_pool: string[];
+  accent_color: BrandColorKey | null;
 };
 
 
@@ -78,6 +81,7 @@ const emptyState = (): FormState => ({
   status: "draft", is_default: false,
   fill_mode: "pool", duration_days: "",
   scripture_items: [], pray_items: [], todo_items_pool: [],
+  accent_color: null,
 });
 
 
@@ -117,6 +121,7 @@ const stateFromTemplate = (r: Template): FormState => {
     scripture_items: scr.map((it: any) => ({ reference: String(it?.reference ?? ""), note: String(it?.note ?? "") })),
     pray_items: pr.map((s: any) => String(s ?? "")),
     todo_items_pool: td.map((s: any) => String(s ?? "")),
+    accent_color: ((r as any).accent_color ?? null) as BrandColorKey | null,
   };
 };
 
@@ -210,6 +215,7 @@ export function ContentForm({
           pray_items: state.is_default ? [] : cleanPray,
           todo_items_pool: state.is_default ? [] : cleanTodo,
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
+          accent_color: state.accent_color,
         };
         (payload as any).scheduled_at = scheduledIso;
 
@@ -433,6 +439,15 @@ export function ContentForm({
             </label>
           </div>
         )}
+
+        {kind === "devotional" && (
+          <div>
+            <label>Color</label>
+            <ColorSwatches value={state.accent_color} onChange={(v) => set("accent_color", v)} />
+            <div className="cf-note">Used as a small accent — icon background, left border, or tag chip — wherever this devotional appears.</div>
+          </div>
+        )}
+
 
         {kind === "devotional" && !state.is_default && (
           <AutoFillEditor state={state} setState={setState} />

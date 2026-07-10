@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { ColorSwatches } from "@/components/admin/color-swatches";
+import type { BrandColorKey } from "@/lib/brand-palette";
 
 export type CollectionRow = {
   id: string;
@@ -12,6 +14,7 @@ export type CollectionRow = {
   banner_url: string | null;
   status: "draft" | "published";
   slug: string;
+  tag_color?: string | null;
 };
 
 type ItemRow = {
@@ -73,6 +76,7 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
   const [description, setDescription] = useState(existing?.description ?? existing?.description_md ?? "");
   const [cover, setCover] = useState(existing?.cover_image_url ?? existing?.banner_url ?? "");
   const [status, setStatus] = useState<"draft" | "published">(existing?.status ?? "draft");
+  const [tagColor, setTagColor] = useState<BrandColorKey | null>((existing?.tag_color as BrandColorKey | null) ?? null);
   const [err, setErr] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -144,6 +148,7 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
         cover_image_url: cover || null,
         banner_url: cover || null,
         status: opts.status,
+        tag_color: tagColor,
       };
       if (existing) {
         const { error } = await supabase.from("collections").update(payload).eq("id", existing.id);
@@ -218,6 +223,12 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
             {cover && <button type="button" className="ad-btn ghost sm" onClick={() => setCover("")}>Remove</button>}
           </div>
           {uploading && <div className="cf-note">Uploading…</div>}
+        </div>
+
+        <div>
+          <label>Color</label>
+          <ColorSwatches value={tagColor} onChange={setTagColor} />
+          <div className="cf-note">Used as the collection's tag chip wherever it appears on the workspace.</div>
         </div>
 
         {isEdit && (

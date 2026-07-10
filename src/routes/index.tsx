@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { usePageContent } from "@/lib/page-content";
+import { brandColor } from "@/lib/brand-palette";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -450,6 +451,7 @@ type CollectionRow = {
   intro_video_content_id: string | null;
   featured_clip_content_id: string | null;
   devotional_template_id: string | null;
+  tag_color: string | null;
 };
 
 function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
@@ -549,7 +551,17 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="hp-campaign">
       <div>
-        <div className="hp-campaign-eyebrow">{collection.eyebrow ?? "A collection"}</div>
+        <div className="hp-campaign-eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {(() => {
+            const bc = brandColor(collection.tag_color);
+            return bc ? (
+              <span style={{ display: "inline-block", background: bc.hex, color: bc.onHex, fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 999 }}>
+                {collection.title}
+              </span>
+            ) : null;
+          })()}
+          <span>{collection.eyebrow ?? "A collection"}</span>
+        </div>
         <h2 className="hp-campaign-title">{collection.title}</h2>
       </div>
 
