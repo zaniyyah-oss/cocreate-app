@@ -671,6 +671,8 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
 function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const heroQ = usePageContent("home_hero");
+  const hero = heroQ.data ?? {};
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
@@ -688,8 +690,8 @@ function HomePage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hp-root">
         <div className="hp-hero">
-          <h1>Building what's been entrusted to you.</h1>
-          <p>Essays, teachings, podcasts, and devotionals to help you build what's been entrusted to you — your life, your work, your calling — with him, not just for him.</p>
+          <h1>{hero.heading || "Building what's been entrusted to you."}</h1>
+          <p>{hero.subheading || "Essays, teachings, podcasts, and devotionals to help you build what's been entrusted to you — your life, your work, your calling — with him, not just for him."}</p>
         </div>
 
         <div className="hp-widgetrow">
