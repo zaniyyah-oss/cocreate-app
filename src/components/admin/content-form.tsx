@@ -478,6 +478,16 @@ export function ContentForm({
           <DayOverrides template={existingTemplate} state={state} />
         )}
 
+        {kind === "devotional" && !state.is_default && (
+          <OverviewPageSection
+            state={state}
+            set={set}
+            existingTemplate={existingTemplate}
+          />
+        )}
+
+
+
 
         {showThumb && (
           <div>
