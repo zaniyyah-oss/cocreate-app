@@ -463,7 +463,11 @@ export function ContentForm({
           {save.isPending ? "Saving…" : "Save draft"}
         </button>
         <button type="submit" className="ad-btn" disabled={save.isPending || uploading}>
-          {save.isPending ? "Publishing…" : (state.status === "published" && isEdit ? "Save & keep published" : "Publish")}
+          {save.isPending
+            ? (isScheduledFuture ? "Scheduling…" : "Publishing…")
+            : isScheduledFuture
+              ? "Schedule"
+              : (state.status === "published" && isEdit ? "Save & keep published" : "Publish")}
         </button>
       </div>
     </form>
