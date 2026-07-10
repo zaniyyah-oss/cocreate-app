@@ -81,6 +81,7 @@ const emptyState = (): FormState => ({
   status: "draft", is_default: false,
   fill_mode: "pool", duration_days: "",
   scripture_items: [], pray_items: [], todo_items_pool: [],
+  accent_color: null,
 });
 
 
