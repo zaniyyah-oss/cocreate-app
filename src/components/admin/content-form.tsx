@@ -46,6 +46,7 @@ type FormState = {
   media_url: string;
   thumbnail_url: string;
   published_at: string; // yyyy-mm-dd
+  scheduled_at: string; // yyyy-mm-ddThh:mm (datetime-local)
   reflect_prompt: string;
   pray_prompt: string;
   apply_prompt: string;
