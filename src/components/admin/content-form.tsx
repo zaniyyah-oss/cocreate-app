@@ -377,6 +377,25 @@ export function ContentForm({
           </div>
         )}
 
+        <div>
+          <label>Scheduled release (optional)</label>
+          <input
+            type="datetime-local"
+            value={state.scheduled_at}
+            onChange={(e) => set("scheduled_at", e.target.value)}
+          />
+          <div className="cf-note">
+            Leave blank to publish immediately when you hit Publish. If set, this item publishes automatically at this date and time.
+            {state.scheduled_at && (
+              <button
+                type="button"
+                onClick={() => set("scheduled_at", "")}
+                style={{ marginLeft: 8, background: "none", border: "none", color: "#8f2600", fontFamily: "Poppins", fontWeight: 700, fontSize: 11.5, cursor: "pointer", padding: 0 }}
+              >Clear</button>
+            )}
+          </div>
+        </div>
+
         {showPromptBlock && (
           <>
             <div>
