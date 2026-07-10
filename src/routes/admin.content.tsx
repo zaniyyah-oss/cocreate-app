@@ -125,11 +125,18 @@ function AdminContentList() {
     return list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
   }, [contentQ.data, templatesQ.data]);
 
+  const now = Date.now();
+  const isScheduled = (r: AnyRow) => {
+    const s = (r as any).scheduled_at as string | null | undefined;
+    return !!s && new Date(s).getTime() > now;
+  };
+
   const filtered = useMemo(() => all.filter((r) => {
     const kind = r._kind === "template" ? "devotional" : r.type;
     if (type !== "all" && kind !== type) return false;
     if (topic !== "all" && r.topic_id !== topic) return false;
-    if (status !== "all" && r.status !== status) return false;
+    if (status === "scheduled") { if (!isScheduled(r)) return false; }
+    else if (status !== "all" && r.status !== status) return false;
     if (q && !r.title.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }), [all, q, type, topic, status]);
