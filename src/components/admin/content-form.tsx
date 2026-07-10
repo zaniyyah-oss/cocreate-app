@@ -82,6 +82,7 @@ const stateFromContent = (r: Content): FormState => ({
   media_url: r.media_url ?? "",
   thumbnail_url: r.thumbnail_url ?? "",
   published_at: r.published_at ? r.published_at.slice(0, 10) : "",
+  scheduled_at: (r as any).scheduled_at ? toLocalInput((r as any).scheduled_at) : "",
   status: r.status,
 });
 
