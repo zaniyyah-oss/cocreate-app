@@ -201,7 +201,11 @@ function AdminContentList() {
           const scheduledAt = (r as any).scheduled_at as string | null | undefined;
           const scheduled = scheduledAt && new Date(scheduledAt).getTime() > now ? new Date(scheduledAt) : null;
           return (
-            <div key={`${r._kind}-${r.id}`} className="acl-row">
+            <div
+              key={`${r._kind}-${r.id}`}
+              className="acl-row"
+              style={r._kind === "template" && (r as any).accent_color ? { borderLeft: `4px solid ${brandColor((r as any).accent_color)?.hex ?? "transparent"}` } : undefined}
+            >
               <div>
                 <h3>{r.title}</h3>
                 <div className="meta">
