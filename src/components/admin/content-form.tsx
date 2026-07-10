@@ -232,6 +232,12 @@ export function ContentForm({
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
           accent_color: state.accent_color,
         };
+        (payload as any).overview_text = state.overview_text || null;
+        (payload as any).intro_video_url = state.intro_video_url || null;
+        (payload as any).widget_heading = state.widget_heading || null;
+        (payload as any).widget_subheading = state.widget_subheading || null;
+        (payload as any).widget_cta_label = state.widget_cta_label || null;
+        (payload as any).is_featured = state.is_featured && targetStatus === "published";
         (payload as any).scheduled_at = scheduledIso;
 
         if (state.is_default && opts.status !== "published") {
