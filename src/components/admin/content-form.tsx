@@ -63,7 +63,7 @@ type FormState = {
 const emptyState = (): FormState => ({
   title: "", excerpt: "", body: "", description: "", topic_id: "",
   scripture_reference: "", scripture_focus: "", author_name: "",
-  media_url: "", thumbnail_url: "", published_at: "",
+  media_url: "", thumbnail_url: "", published_at: "", scheduled_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
   status: "draft", is_default: false,
   fill_mode: "pool", duration_days: "",
