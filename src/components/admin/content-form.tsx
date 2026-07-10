@@ -88,6 +88,9 @@ const emptyState = (): FormState => ({
   fill_mode: "pool", duration_days: "",
   scripture_items: [], pray_items: [], todo_items_pool: [],
   accent_color: null,
+  overview_text: "", intro_video_url: "",
+  widget_heading: "", widget_subheading: "", widget_cta_label: "",
+  is_featured: false,
 });
 
 
