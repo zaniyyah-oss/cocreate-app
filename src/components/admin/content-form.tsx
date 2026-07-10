@@ -69,6 +69,7 @@ type FormState = {
   scripture_items: ScriptureItem[];
   pray_items: string[];
   todo_items_pool: string[];
+  accent_color: BrandColorKey | null;
 };
 
 
