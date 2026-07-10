@@ -106,35 +106,38 @@ export type Database = {
       collection_items: {
         Row: {
           collection_id: string
-          content_id: string
+          content_id: string | null
           created_at: string
           id: string
           layout_slot: string
           position: number
           release_at: string | null
           release_week: number | null
+          template_id: string | null
           updated_at: string
         }
         Insert: {
           collection_id: string
-          content_id: string
+          content_id?: string | null
           created_at?: string
           id?: string
           layout_slot?: string
           position?: number
           release_at?: string | null
           release_week?: number | null
+          template_id?: string | null
           updated_at?: string
         }
         Update: {
           collection_id?: string
-          content_id?: string
+          content_id?: string | null
           created_at?: string
           id?: string
           layout_slot?: string
           position?: number
           release_at?: string | null
           release_week?: number | null
+          template_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -159,12 +162,21 @@ export type Database = {
             referencedRelation: "content_items_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "collection_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
         ]
       }
       collections: {
         Row: {
           banner_url: string | null
+          cover_image_url: string | null
           created_at: string
+          description: string | null
           description_md: string | null
           devotional_template_id: string | null
           eyebrow: string | null
@@ -182,7 +194,9 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
+          cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           description_md?: string | null
           devotional_template_id?: string | null
           eyebrow?: string | null
@@ -200,7 +214,9 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
+          cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           description_md?: string | null
           devotional_template_id?: string | null
           eyebrow?: string | null
@@ -266,6 +282,7 @@ export type Database = {
           is_seed: boolean
           media_url: string | null
           published_at: string | null
+          scheduled_at: string | null
           scripture_reference: string | null
           status: Database["public"]["Enums"]["content_status"]
           thumbnail_url: string | null
@@ -286,6 +303,7 @@ export type Database = {
           is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
           scripture_reference?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
@@ -306,6 +324,7 @@ export type Database = {
           is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
           scripture_reference?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
@@ -351,39 +370,54 @@ export type Database = {
       }
       devotional_days: {
         Row: {
+          apply_prompt: string | null
           created_at: string
           day_number: number
           id: string
+          is_override: boolean
           medium: Database["public"]["Enums"]["devotional_medium"]
+          pray_prompt: string | null
           preview_carry: string | null
           preview_read: string | null
           preview_reflect: string | null
+          reflect_prompt: string | null
+          scripture_note: string | null
           scripture_reference: string | null
           template_id: string
           title: string
           updated_at: string
         }
         Insert: {
+          apply_prompt?: string | null
           created_at?: string
           day_number: number
           id?: string
+          is_override?: boolean
           medium?: Database["public"]["Enums"]["devotional_medium"]
+          pray_prompt?: string | null
           preview_carry?: string | null
           preview_read?: string | null
           preview_reflect?: string | null
+          reflect_prompt?: string | null
+          scripture_note?: string | null
           scripture_reference?: string | null
           template_id: string
           title: string
           updated_at?: string
         }
         Update: {
+          apply_prompt?: string | null
           created_at?: string
           day_number?: number
           id?: string
+          is_override?: boolean
           medium?: Database["public"]["Enums"]["devotional_medium"]
+          pray_prompt?: string | null
           preview_carry?: string | null
           preview_read?: string | null
           preview_reflect?: string | null
+          reflect_prompt?: string | null
+          scripture_note?: string | null
           scripture_reference?: string | null
           template_id?: string
           title?: string
@@ -529,6 +563,7 @@ export type Database = {
           pray_items: Json
           pray_prompt: string | null
           reflect_prompt: string | null
+          scheduled_at: string | null
           scripture_focus: string | null
           scripture_items: Json
           slug: string | null
@@ -555,6 +590,7 @@ export type Database = {
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
+          scheduled_at?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
           slug?: string | null
@@ -581,6 +617,7 @@ export type Database = {
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
+          scheduled_at?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
           slug?: string | null
@@ -723,6 +760,33 @@ export type Database = {
           read_at?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      page_content: {
+        Row: {
+          created_at: string
+          field_key: string
+          field_value: string
+          id: string
+          page_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          field_value?: string
+          id?: string
+          page_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          field_value?: string
+          id?: string
+          page_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1082,6 +1146,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      publish_scheduled_content: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
