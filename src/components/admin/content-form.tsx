@@ -34,6 +34,15 @@ const FORM_CSS = `
 
 type ScriptureItem = { reference: string; note: string };
 
+// Convert an ISO timestamp to the local "YYYY-MM-DDTHH:mm" string an
+// <input type="datetime-local"> expects.
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 type FormState = {
   title: string;
   excerpt: string;
@@ -46,6 +55,7 @@ type FormState = {
   media_url: string;
   thumbnail_url: string;
   published_at: string; // yyyy-mm-dd
+  scheduled_at: string; // yyyy-mm-ddThh:mm (datetime-local)
   reflect_prompt: string;
   pray_prompt: string;
   apply_prompt: string;
@@ -62,7 +72,7 @@ type FormState = {
 const emptyState = (): FormState => ({
   title: "", excerpt: "", body: "", description: "", topic_id: "",
   scripture_reference: "", scripture_focus: "", author_name: "",
-  media_url: "", thumbnail_url: "", published_at: "",
+  media_url: "", thumbnail_url: "", published_at: "", scheduled_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
   status: "draft", is_default: false,
   fill_mode: "pool", duration_days: "",
@@ -81,6 +91,7 @@ const stateFromContent = (r: Content): FormState => ({
   media_url: r.media_url ?? "",
   thumbnail_url: r.thumbnail_url ?? "",
   published_at: r.published_at ? r.published_at.slice(0, 10) : "",
+  scheduled_at: (r as any).scheduled_at ? toLocalInput((r as any).scheduled_at) : "",
   status: r.status,
 });
 
@@ -98,6 +109,7 @@ const stateFromTemplate = (r: Template): FormState => {
     pray_prompt: r.pray_prompt ?? "",
     apply_prompt: r.apply_prompt ?? "",
     status: r.status,
+    scheduled_at: (r as any).scheduled_at ? toLocalInput((r as any).scheduled_at) : "",
     is_default: !!(r as any).is_default,
     fill_mode: ((r as any).fill_mode === "sequence" ? "sequence" : "pool"),
     duration_days: (r as any).duration_days ? String((r as any).duration_days) : "",
@@ -162,8 +174,17 @@ export function ContentForm({
 
   const save = useMutation({
     mutationFn: async (opts: { status: "draft" | "published" }) => {
-      const targetStatus = opts.status;
+      let targetStatus = opts.status;
       if (!state.title.trim()) throw new Error("Title is required.");
+
+      // Parse scheduled_at (datetime-local -> ISO). If it's in the future and
+      // the user hit Publish/Schedule, save as draft with scheduled_at set —
+      // the pg_cron job will flip it to published when the time arrives.
+      const scheduledIso = state.scheduled_at ? new Date(state.scheduled_at).toISOString() : null;
+      const scheduledInFuture = !!scheduledIso && new Date(scheduledIso).getTime() > Date.now();
+      if (scheduledInFuture && targetStatus === "published") {
+        targetStatus = "draft";
+      }
 
       if (kind === "devotional") {
         const cleanScripture = state.scripture_items
@@ -188,9 +209,13 @@ export function ContentForm({
           todo_items_pool: state.is_default ? [] : cleanTodo,
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
         };
+        (payload as any).scheduled_at = scheduledIso;
 
-        if (state.is_default && targetStatus !== "published") {
+        if (state.is_default && opts.status !== "published") {
           throw new Error("The platform default must be published. Publish this template or turn off the Default toggle.");
+        }
+        if (state.is_default && scheduledInFuture) {
+          throw new Error("The platform default can't be scheduled — it must be live now.");
         }
         // If turning is_default ON, clear any existing default first (unique index enforces one).
         if (state.is_default) {
@@ -230,6 +255,7 @@ export function ContentForm({
           published_at: publishedAt,
           status: targetStatus,
         };
+        (payload as any).scheduled_at = scheduledIso;
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
           if (error) throw error;
@@ -247,11 +273,19 @@ export function ContentForm({
     onError: (e) => setErr(e instanceof Error ? e.message : "Save failed"),
   });
 
+  const scheduledIso = state.scheduled_at ? new Date(state.scheduled_at) : null;
+  const isScheduledFuture = !!scheduledIso && !Number.isNaN(scheduledIso.getTime()) && scheduledIso.getTime() > Date.now();
+
   const onSubmit = (e: FormEvent, status: "draft" | "published") => {
     e.preventDefault();
     setErr(null);
+    if (status === "published" && isScheduledFuture) {
+      const when = scheduledIso!.toLocaleString();
+      if (!window.confirm(`Schedule this to publish at ${when}?`)) return;
+    }
     save.mutate({ status });
   };
+
 
   const topics = topicsQ.data ?? [];
   const showBody = kind === "essay" || kind === "blog";
@@ -343,6 +377,25 @@ export function ContentForm({
           </div>
         )}
 
+        <div>
+          <label>Scheduled release (optional)</label>
+          <input
+            type="datetime-local"
+            value={state.scheduled_at}
+            onChange={(e) => set("scheduled_at", e.target.value)}
+          />
+          <div className="cf-note">
+            Leave blank to publish immediately when you hit Publish. If set, this item publishes automatically at this date and time.
+            {state.scheduled_at && (
+              <button
+                type="button"
+                onClick={() => set("scheduled_at", "")}
+                style={{ marginLeft: 8, background: "none", border: "none", color: "#8f2600", fontFamily: "Poppins", fontWeight: 700, fontSize: 11.5, cursor: "pointer", padding: 0 }}
+              >Clear</button>
+            )}
+          </div>
+        </div>
+
         {showPromptBlock && (
           <>
             <div>
@@ -410,7 +463,11 @@ export function ContentForm({
           {save.isPending ? "Saving…" : "Save draft"}
         </button>
         <button type="submit" className="ad-btn" disabled={save.isPending || uploading}>
-          {save.isPending ? "Publishing…" : (state.status === "published" && isEdit ? "Save & keep published" : "Publish")}
+          {save.isPending
+            ? (isScheduledFuture ? "Scheduling…" : "Publishing…")
+            : isScheduledFuture
+              ? "Schedule"
+              : (state.status === "published" && isEdit ? "Save & keep published" : "Publish")}
         </button>
       </div>
     </form>

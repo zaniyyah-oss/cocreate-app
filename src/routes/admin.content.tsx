@@ -8,6 +8,16 @@ export const Route = createFileRoute("/admin/content")({
   component: AdminContentList,
 });
 
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "now";
+  const m = Math.floor(ms / 60000);
+  if (m < 60) return `in ${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `in ${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `in ${d}d ${h % 24}h`;
+}
+
 type Row = Database["public"]["Tables"]["content_items"]["Row"] & { _kind: "content" };
 type TplRow = Database["public"]["Tables"]["devotional_templates"]["Row"] & { _kind: "template" };
 type AnyRow = Row | TplRow;
@@ -125,11 +135,18 @@ function AdminContentList() {
     return list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
   }, [contentQ.data, templatesQ.data]);
 
+  const now = Date.now();
+  const isScheduled = (r: AnyRow) => {
+    const s = (r as any).scheduled_at as string | null | undefined;
+    return !!s && new Date(s).getTime() > now;
+  };
+
   const filtered = useMemo(() => all.filter((r) => {
     const kind = r._kind === "template" ? "devotional" : r.type;
     if (type !== "all" && kind !== type) return false;
     if (topic !== "all" && r.topic_id !== topic) return false;
-    if (status !== "all" && r.status !== status) return false;
+    if (status === "scheduled") { if (!isScheduled(r)) return false; }
+    else if (status !== "all" && r.status !== status) return false;
     if (q && !r.title.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }), [all, q, type, topic, status]);
@@ -164,6 +181,7 @@ function AdminContentList() {
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">All statuses</option>
           <option value="published">Published</option>
+          <option value="scheduled">Scheduled</option>
           <option value="draft">Draft</option>
         </select>
         <span style={{ fontSize: 12, color: "#8a8678", marginLeft: "auto" }}>{filtered.length} item{filtered.length === 1 ? "" : "s"}</span>
@@ -180,13 +198,22 @@ function AdminContentList() {
         filtered.map((r) => {
           const kind = r._kind === "template" ? "devotional" : r.type;
           const meta = KIND_LABEL[kind] ?? KIND_LABEL.essay;
+          const scheduledAt = (r as any).scheduled_at as string | null | undefined;
+          const scheduled = scheduledAt && new Date(scheduledAt).getTime() > now ? new Date(scheduledAt) : null;
           return (
             <div key={`${r._kind}-${r.id}`} className="acl-row">
               <div>
                 <h3>{r.title}</h3>
                 <div className="meta">
                   <span className="badge" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>
-                  <span className={`acl-status ${r.status}`}>{r.status}</span>
+                  {scheduled ? (
+                    <span className="acl-status" style={{ background: "#FFAE00", color: "#181A4D" }}>scheduled</span>
+                  ) : (
+                    <span className={`acl-status ${r.status}`}>{r.status}</span>
+                  )}
+                  {scheduled && (
+                    <span>· {scheduled.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ({formatCountdown(scheduled.getTime() - now)})</span>
+                  )}
                   {r.topic_id && <span>· {topicMap[r.topic_id] ?? "Topic"}</span>}
                   <span>· Updated {new Date(r.updated_at).toLocaleDateString()}</span>
                 </div>
