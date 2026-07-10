@@ -164,7 +164,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               )}
             </button>
           </div>
-          {DESKTOP_NAV.map((n) => (
+          {desktopNav.map((n) => (
             <Link
               key={n.key}
               to={n.to}
