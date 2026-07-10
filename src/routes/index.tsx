@@ -450,6 +450,7 @@ type CollectionRow = {
   intro_video_content_id: string | null;
   featured_clip_content_id: string | null;
   devotional_template_id: string | null;
+  tag_color: string | null;
 };
 
 function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
