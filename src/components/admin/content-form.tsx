@@ -440,6 +440,15 @@ export function ContentForm({
           </div>
         )}
 
+        {kind === "devotional" && (
+          <div>
+            <label>Color</label>
+            <ColorSwatches value={state.accent_color} onChange={(v) => set("accent_color", v)} />
+            <div className="cf-note">Used as a small accent — icon background, left border, or tag chip — wherever this devotional appears.</div>
+          </div>
+        )}
+
+
         {kind === "devotional" && !state.is_default && (
           <AutoFillEditor state={state} setState={setState} />
         )}
