@@ -171,6 +171,7 @@ function AdminContentList() {
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">All statuses</option>
           <option value="published">Published</option>
+          <option value="scheduled">Scheduled</option>
           <option value="draft">Draft</option>
         </select>
         <span style={{ fontSize: 12, color: "#8a8678", marginLeft: "auto" }}>{filtered.length} item{filtered.length === 1 ? "" : "s"}</span>
