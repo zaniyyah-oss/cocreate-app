@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { usePageContent } from "@/lib/page-content";
 
 export const Route = createFileRoute("/devotionals/$slug/overview")({
   component: OverviewPage,
@@ -124,6 +125,8 @@ type DayRow = {
 function OverviewPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const pcQ = usePageContent("devotional_overview");
+  const pc = pcQ.data ?? {};
   const [userId, setUserId] = useState<string | null>(null);
   const [openMovements, setOpenMovements] = useState<Record<string, boolean>>({});
   const [openDay, setOpenDay] = useState<string | null>(null);
@@ -250,14 +253,14 @@ function OverviewPage() {
 
         <div className="dov-head">
           <div>
-            <h1>{t.title}</h1>
-            <div className="meta">{totalDays ? `${totalDays} days · ` : ""}a guided layer for Abide</div>
+            <h1>{pc.heading || t.title}</h1>
+            <div className="meta">{pc.subheading || `${totalDays ? `${totalDays} days · ` : ""}a guided layer for Abide`}</div>
           </div>
           <div>
             {added ? (
               <Link to="/devotionals/$id" params={{ id: t.id }} className="dov-addbtn added">Open in Abide →</Link>
             ) : (
-              <button className="dov-addbtn" onClick={addToAbide}>+ Add to my Abide</button>
+              <button className="dov-addbtn" onClick={addToAbide}>{pc.cta_label || "+ Add to my Abide"}</button>
             )}
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { usePageContent } from "@/lib/page-content";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -454,6 +455,8 @@ type CollectionRow = {
 function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const pcQ = usePageContent("home_devotional_widget");
+  const pc = pcQ.data ?? {};
   const q = useQuery({
     queryKey: ["home-collection"],
     queryFn: async () => {
@@ -603,8 +606,8 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
       {collection.devotional_template_id && q.data.template && (
         <div className="hp-devopromo">
           <div className="left">
-            <h4>New devotional layer — {q.data.template.title || collection.title}</h4>
-            <p>A guided companion inside Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
+            <h4>{pc.heading || `New devotional layer — ${q.data.template.title || collection.title}`}</h4>
+            <p>{pc.subheading || "A guided companion inside Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it."}</p>
           </div>
           <div className="right">
             <button
@@ -613,7 +616,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
               disabled={isAdded}
               style={isAdded ? { opacity: 0.75, cursor: "default", border: "none", fontFamily: "inherit" } : { border: "none", fontFamily: "inherit", cursor: "pointer" }}
             >
-              {isAdded ? "✓ Added to my Abide" : "+ Add to my Abide"}
+              {isAdded ? "✓ Added to my Abide" : (pc.cta_label || "+ Add to my Abide")}
             </button>
             <Link
               to="/devotionals/$slug/overview"
