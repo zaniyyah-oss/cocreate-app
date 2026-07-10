@@ -170,6 +170,67 @@ export function ContentForm({
     },
   });
 
+  const collectionsQ = useQuery({
+    queryKey: ["admin-all-collections"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("collections").select("id,title").order("title");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const currentItemId = existingContent?.id ?? existingTemplate?.id ?? null;
+  const currentItemKind: "content" | "template" | null = existingContent ? "content" : existingTemplate ? "template" : null;
+
+  const memberQ = useQuery({
+    queryKey: ["admin-item-collections", currentItemKind, currentItemId],
+    enabled: !!currentItemId,
+    queryFn: async () => {
+      const col = currentItemKind === "template" ? "template_id" : "content_id";
+      const { data, error } = await supabase
+        .from("collection_items")
+        .select("collection_id")
+        .eq(col, currentItemId!);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.collection_id as string);
+    },
+  });
+
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
+  const [initialCollectionIds, setInitialCollectionIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (memberQ.data) {
+      setCollectionIds(memberQ.data);
+      setInitialCollectionIds(memberQ.data);
+    }
+  }, [memberQ.data]);
+
+  const toggleCollection = (id: string) => {
+    setCollectionIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const syncCollections = async (itemId: string, itemKind: "content" | "template") => {
+    const col = itemKind === "template" ? "template_id" : "content_id";
+    const toAdd = collectionIds.filter((id) => !initialCollectionIds.includes(id));
+    const toRemove = initialCollectionIds.filter((id) => !collectionIds.includes(id));
+    if (toRemove.length) {
+      const { error } = await supabase
+        .from("collection_items")
+        .delete()
+        .eq(col, itemId)
+        .in("collection_id", toRemove);
+      if (error) throw error;
+    }
+    if (toAdd.length) {
+      const rows = toAdd.map((cid) => ({
+        collection_id: cid,
+        [col]: itemId,
+      } as any));
+      const { error } = await supabase.from("collection_items").insert(rows);
+      if (error) throw error;
+    }
+  };
+
   const isEdit = !!(existingContent || existingTemplate);
   const meta = KIND_META[kind];
 
