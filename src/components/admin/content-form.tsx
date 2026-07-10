@@ -138,6 +138,7 @@ export function ContentForm({
   });
   const [err, setErr] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const topicsQ = useQuery({
     queryKey: ["admin-topics"],
