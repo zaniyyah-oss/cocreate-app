@@ -32,6 +32,7 @@ import { Route as AdminCollectionsRouteImport } from './routes/admin.collections
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
+import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
 
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
@@ -148,6 +149,11 @@ const AdminEditIdRoute = AdminEditIdRouteImport.update({
   path: '/edit/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCollectionsNewRoute = AdminCollectionsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminCollectionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,7 +164,7 @@ export interface FileRoutesByFullPath {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/admin/collections': typeof AdminCollectionsRoute
+  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
+  '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
@@ -181,7 +188,7 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/admin/collections': typeof AdminCollectionsRoute
+  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
   '/devotionals': typeof DevotionalsIndexRoute
+  '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
@@ -207,7 +215,7 @@ export interface FileRoutesById {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/admin/collections': typeof AdminCollectionsRoute
+  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
+  '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin/'
     | '/devotionals/'
+    | '/admin/collections/new'
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin'
     | '/devotionals'
+    | '/admin/collections/new'
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin/'
     | '/devotionals/'
+    | '/admin/collections/new'
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
@@ -478,11 +490,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEditIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/collections/new': {
+      id: '/admin/collections/new'
+      path: '/new'
+      fullPath: '/admin/collections/new'
+      preLoaderRoute: typeof AdminCollectionsNewRouteImport
+      parentRoute: typeof AdminCollectionsRoute
+    }
   }
 }
 
+interface AdminCollectionsRouteChildren {
+  AdminCollectionsNewRoute: typeof AdminCollectionsNewRoute
+}
+
+const AdminCollectionsRouteChildren: AdminCollectionsRouteChildren = {
+  AdminCollectionsNewRoute: AdminCollectionsNewRoute,
+}
+
+const AdminCollectionsRouteWithChildren =
+  AdminCollectionsRoute._addFileChildren(AdminCollectionsRouteChildren)
+
 interface AdminRouteChildren {
-  AdminCollectionsRoute: typeof AdminCollectionsRoute
+  AdminCollectionsRoute: typeof AdminCollectionsRouteWithChildren
   AdminContentRoute: typeof AdminContentRoute
   AdminInvitesRoute: typeof AdminInvitesRoute
   AdminNewRoute: typeof AdminNewRoute
@@ -491,7 +521,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminCollectionsRoute: AdminCollectionsRoute,
+  AdminCollectionsRoute: AdminCollectionsRouteWithChildren,
   AdminContentRoute: AdminContentRoute,
   AdminInvitesRoute: AdminInvitesRoute,
   AdminNewRoute: AdminNewRoute,
