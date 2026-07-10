@@ -89,7 +89,7 @@ const emptyState = (): FormState => ({
   scripture_items: [], pray_items: [], todo_items_pool: [],
   accent_color: null,
   overview_text: "", intro_video_url: "",
-  widget_heading: "", widget_subheading: "", widget_cta_label: "",
+  widget_heading: "", widget_subheading: "", widget_cta_label: "Start this devotional",
   is_featured: false,
 });
 
