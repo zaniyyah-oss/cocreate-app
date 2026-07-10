@@ -188,13 +188,22 @@ function AdminContentList() {
         filtered.map((r) => {
           const kind = r._kind === "template" ? "devotional" : r.type;
           const meta = KIND_LABEL[kind] ?? KIND_LABEL.essay;
+          const scheduledAt = (r as any).scheduled_at as string | null | undefined;
+          const scheduled = scheduledAt && new Date(scheduledAt).getTime() > now ? new Date(scheduledAt) : null;
           return (
             <div key={`${r._kind}-${r.id}`} className="acl-row">
               <div>
                 <h3>{r.title}</h3>
                 <div className="meta">
                   <span className="badge" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>
-                  <span className={`acl-status ${r.status}`}>{r.status}</span>
+                  {scheduled ? (
+                    <span className="acl-status" style={{ background: "#FFAE00", color: "#181A4D" }}>scheduled</span>
+                  ) : (
+                    <span className={`acl-status ${r.status}`}>{r.status}</span>
+                  )}
+                  {scheduled && (
+                    <span>· {scheduled.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ({formatCountdown(scheduled.getTime() - now)})</span>
+                  )}
                   {r.topic_id && <span>· {topicMap[r.topic_id] ?? "Topic"}</span>}
                   <span>· Updated {new Date(r.updated_at).toLocaleDateString()}</span>
                 </div>
