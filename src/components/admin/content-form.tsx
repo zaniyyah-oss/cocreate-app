@@ -70,6 +70,12 @@ type FormState = {
   pray_items: string[];
   todo_items_pool: string[];
   accent_color: BrandColorKey | null;
+  overview_text: string;
+  intro_video_url: string;
+  widget_heading: string;
+  widget_subheading: string;
+  widget_cta_label: string;
+  is_featured: boolean;
 };
 
 
@@ -82,6 +88,9 @@ const emptyState = (): FormState => ({
   fill_mode: "pool", duration_days: "",
   scripture_items: [], pray_items: [], todo_items_pool: [],
   accent_color: null,
+  overview_text: "", intro_video_url: "",
+  widget_heading: "", widget_subheading: "", widget_cta_label: "Start this devotional",
+  is_featured: false,
 });
 
 
@@ -122,6 +131,12 @@ const stateFromTemplate = (r: Template): FormState => {
     pray_items: pr.map((s: any) => String(s ?? "")),
     todo_items_pool: td.map((s: any) => String(s ?? "")),
     accent_color: ((r as any).accent_color ?? null) as BrandColorKey | null,
+    overview_text: (r as any).overview_text ?? "",
+    intro_video_url: (r as any).intro_video_url ?? "",
+    widget_heading: (r as any).widget_heading ?? "",
+    widget_subheading: (r as any).widget_subheading ?? "",
+    widget_cta_label: (r as any).widget_cta_label ?? "Start this devotional",
+    is_featured: !!(r as any).is_featured,
   };
 };
 
@@ -217,6 +232,12 @@ export function ContentForm({
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
           accent_color: state.accent_color,
         };
+        (payload as any).overview_text = state.overview_text || null;
+        (payload as any).intro_video_url = state.intro_video_url || null;
+        (payload as any).widget_heading = state.widget_heading || null;
+        (payload as any).widget_subheading = state.widget_subheading || null;
+        (payload as any).widget_cta_label = state.widget_cta_label || null;
+        (payload as any).is_featured = state.is_featured && targetStatus === "published";
         (payload as any).scheduled_at = scheduledIso;
 
         if (state.is_default && opts.status !== "published") {
@@ -456,6 +477,16 @@ export function ContentForm({
         {kind === "devotional" && existingTemplate && !state.is_default && (
           <DayOverrides template={existingTemplate} state={state} />
         )}
+
+        {kind === "devotional" && !state.is_default && (
+          <OverviewPageSection
+            state={state}
+            set={set}
+            existingTemplate={existingTemplate}
+          />
+        )}
+
+
 
 
         {showThumb && (
@@ -920,7 +951,231 @@ function DayOverrides({ template, state }: { template: Template; state: FormStat
 }
 
 
+function OverviewPageSection({
+  state,
+  set,
+  existingTemplate,
+}: {
+  state: FormState;
+  set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  existingTemplate?: Template;
+}) {
+  const featuredQ = useQuery({
+    queryKey: ["featured-devotional"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_templates")
+        .select("id,title")
+        .eq("is_featured" as any, true)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; title: string } | null;
+    },
+  });
+  const currentFeatured = featuredQ.data;
+  const otherFeatured = currentFeatured && currentFeatured.id !== existingTemplate?.id ? currentFeatured : null;
+
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ borderTop: "1px solid rgba(20,20,20,0.08)", paddingTop: 16 }}>
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em" }}>Overview page</h3>
+        <div className="cf-note" style={{ marginTop: 4 }}>Content that appears on this devotional's public overview page — the landing screen people see before starting.</div>
+      </div>
+
+      <div>
+        <label>Overview text</label>
+        <textarea
+          className="tall"
+          value={state.overview_text}
+          onChange={(e) => set("overview_text", e.target.value)}
+          placeholder="What this devotional is about. Blank lines separate paragraphs. Markdown for **bold**, *italic*, and [links](https://) is supported."
+        />
+        <div className="cf-note">Renders at the top of the public overview page. Markdown supported.</div>
+      </div>
+
+      <div>
+        <label>Intro video URL (optional)</label>
+        <input
+          placeholder="https://youtube.com/…"
+          value={state.intro_video_url}
+          onChange={(e) => set("intro_video_url", e.target.value)}
+        />
+        <div className="cf-note">Optional — not every devotional needs a video introduction. If left blank, no video embed renders on the public page.</div>
+      </div>
+
+      <div className="grid two">
+        <div>
+          <label>Widget heading</label>
+          <input value={state.widget_heading} onChange={(e) => set("widget_heading", e.target.value)} placeholder="e.g. Add to your workspace" />
+        </div>
+        <div>
+          <label>Widget CTA label</label>
+          <input value={state.widget_cta_label} onChange={(e) => set("widget_cta_label", e.target.value)} placeholder="Start this devotional" />
+        </div>
+      </div>
+      <div>
+        <label>Widget subheading</label>
+        <input value={state.widget_subheading} onChange={(e) => set("widget_subheading", e.target.value)} placeholder="One line describing what happens when someone adds this." />
+        <div className="cf-note">These three fields power this devotional's own "Add to your workspace" widget copy.</div>
+      </div>
+
+      <div style={{ background: "#FBF8ED", border: "1px solid rgba(15,74,66,0.15)", borderRadius: 10, padding: "14px 16px" }}>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, textTransform: "none", letterSpacing: 0, fontSize: 13.5, fontWeight: 700, color: "#181A4D", cursor: "pointer", margin: 0 }}>
+          <input
+            type="checkbox"
+            checked={state.is_featured}
+            onChange={(e) => set("is_featured", e.target.checked)}
+            style={{ width: "auto", marginTop: 3 }}
+          />
+          <span>
+            Featured
+            <div className="cf-note" style={{ marginTop: 4, fontWeight: 500 }}>
+              Only one devotional can be featured at a time — turning this on will remove the flag from the current featured devotional. The devotional must be published to be featured.
+              {otherFeatured && (
+                <div style={{ marginTop: 6, color: "#181A4D" }}>
+                  Currently featured: <b>{otherFeatured.title}</b>
+                </div>
+              )}
+              {currentFeatured && currentFeatured.id === existingTemplate?.id && (
+                <div style={{ marginTop: 6, color: "#181A4D" }}>This devotional is currently featured.</div>
+              )}
+            </div>
+          </span>
+        </label>
+      </div>
+
+      {existingTemplate && (
+        <DayContentsAccordion template={existingTemplate} state={state} />
+      )}
+    </div>
+  );
+}
+
+function DayContentsAccordion({ template, state }: { template: Template; state: FormState }) {
+  const [openDays, setOpenDays] = useState<Set<number>>(new Set());
+  const duration = Math.max(0, parseInt(state.duration_days, 10) || 0);
+
+  const daysQ = useQuery({
+    queryKey: ["devotional-days", template.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("devotional_days")
+        .select("*")
+        .eq("template_id", template.id)
+        .order("day_number", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; day_number: number; is_override: boolean;
+        focus_preview: string | null; reflect_prompt: string | null;
+        pray_prompt: string | null; apply_prompt: string | null;
+        scripture_reference: string | null; scripture_note: string | null;
+      }>;
+    },
+  });
+
+  const byDay = useMemo(() => {
+    const m = new Map<number, any>();
+    for (const r of daysQ.data ?? []) m.set(r.day_number, r);
+    return m;
+  }, [daysQ.data]);
+
+  const contentFor = (day: number) => {
+    const row = byDay.get(day);
+    const scr = state.scripture_items[day - 1];
+    if (row && row.is_override) {
+      return {
+        focus: row.focus_preview ?? "",
+        scripture_reference: row.scripture_reference ?? "",
+        scripture_note: row.scripture_note ?? "",
+        pray: row.pray_prompt ?? state.pray_prompt ?? "",
+        apply: row.apply_prompt ?? state.apply_prompt ?? "",
+        overridden: true,
+      };
+    }
+    return {
+      focus: "",
+      scripture_reference: scr?.reference ?? "",
+      scripture_note: scr?.note ?? "",
+      pray: state.pray_prompt ?? "",
+      apply: state.apply_prompt ?? "",
+      overridden: false,
+    };
+  };
+
+  const toggle = (day: number) =>
+    setOpenDays((s) => {
+      const n = new Set(s);
+      if (n.has(day)) n.delete(day); else n.add(day);
+      return n;
+    });
+
+  return (
+    <div style={{ borderTop: "1px solid rgba(20,20,20,0.08)", paddingTop: 16 }}>
+      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#181A4D", letterSpacing: "-0.01em" }}>Day contents</h3>
+      <div className="cf-note" style={{ marginTop: 4, marginBottom: 10 }}>
+        Read-only overview of every day in this devotional. Expand a row to see its scripture, prayer prompt, and to-do/apply prompt. To edit, use Day-by-day overrides above.
+      </div>
+      {duration === 0 ? (
+        <div className="cf-note">Set a duration to see the day list.</div>
+      ) : daysQ.isLoading ? (
+        <div className="cf-note">Loading…</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {Array.from({ length: duration }, (_, i) => i + 1).map((day) => {
+            const open = openDays.has(day);
+            const c = contentFor(day);
+            return (
+              <div key={day} style={{ background: "#fff", border: "1px solid rgba(20,20,20,0.08)", borderRadius: 10, overflow: "hidden" }}>
+                <button
+                  type="button"
+                  onClick={() => toggle(day)}
+                  style={{ width: "100%", display: "grid", gridTemplateColumns: "70px 1fr auto auto", gap: 12, alignItems: "center", padding: "12px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "Poppins" }}
+                >
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "#181A4D", letterSpacing: "0.05em" }}>Day {day}</span>
+                  <span style={{ fontSize: 13, color: "#20201c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {c.focus || c.scripture_reference || <span style={{ color: "#8a8678" }}>—</span>}
+                  </span>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 10, background: c.overridden ? "#DCE07A" : "rgba(20,20,20,0.06)", color: c.overridden ? "#181A4D" : "#8a8678" }}>
+                    {c.overridden ? "Overridden" : "Default"}
+                  </span>
+                  <span aria-hidden style={{ fontSize: 14, color: "#8a8678", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>›</span>
+                </button>
+                {open && (
+                  <div style={{ padding: "12px 16px 16px", borderTop: "1px solid rgba(20,20,20,0.06)", background: "#FBF8ED", display: "grid", gap: 10 }}>
+                    <div>
+                      <div className="cf-note" style={{ margin: 0, fontWeight: 800, color: "#181A4D", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: 10 }}>Scripture</div>
+                      <div style={{ fontSize: 13, color: "#20201c", marginTop: 3 }}>
+                        {c.scripture_reference || <span style={{ color: "#8a8678" }}>—</span>}
+                      </div>
+                      {c.scripture_note && (
+                        <div style={{ fontSize: 12.5, color: "#20201c", marginTop: 4, whiteSpace: "pre-wrap" }}>{c.scripture_note}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="cf-note" style={{ margin: 0, fontWeight: 800, color: "#181A4D", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: 10 }}>Prayer prompt</div>
+                      <div style={{ fontSize: 12.5, color: "#20201c", marginTop: 3, whiteSpace: "pre-wrap" }}>
+                        {c.pray || <span style={{ color: "#8a8678" }}>—</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="cf-note" style={{ margin: 0, fontWeight: 800, color: "#181A4D", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: 10 }}>To-do / Apply prompt</div>
+                      <div style={{ fontSize: 12.5, color: "#20201c", marginTop: 3, whiteSpace: "pre-wrap" }}>
+                        {c.apply || <span style={{ color: "#8a8678" }}>—</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // util for callers to import kind list
 export const KIND_LIST: Kind[] = ["teaching", "essay", "podcast", "blog", "devotional"];
 export type { Kind };
+
 
