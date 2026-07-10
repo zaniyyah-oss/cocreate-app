@@ -372,11 +372,17 @@ export function ContentForm({
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
           if (error) throw error;
+          await syncCollections(existingContent.id, "content");
           return { kind: "content" as const, id: existingContent.id, isNew: false };
         } else {
-          const { error } = await supabase.from("content_items").insert(payload);
+          const { data: inserted, error } = await supabase
+            .from("content_items")
+            .insert(payload)
+            .select("id")
+            .single();
           if (error) throw error;
-          return { kind: "content" as const, id: "", isNew: true };
+          await syncCollections(inserted.id as string, "content");
+          return { kind: "content" as const, id: inserted.id as string, isNew: true };
         }
       }
     },
@@ -384,6 +390,8 @@ export function ContentForm({
       qc.invalidateQueries({ queryKey: ["admin-content"] });
       qc.invalidateQueries({ queryKey: ["admin-templates"] });
       qc.invalidateQueries({ queryKey: ["devotional-days"] });
+      qc.invalidateQueries({ queryKey: ["admin-collection-items"] });
+      qc.invalidateQueries({ queryKey: ["admin-item-collections"] });
       if (result && result.kind === "devotional" && result.isNew) {
         navigate({ to: "/admin/edit/$id", params: { id: result.id }, search: { kind: "template" } });
       } else {
