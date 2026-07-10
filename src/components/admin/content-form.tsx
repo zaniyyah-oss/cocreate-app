@@ -135,7 +135,7 @@ const stateFromTemplate = (r: Template): FormState => {
     intro_video_url: (r as any).intro_video_url ?? "",
     widget_heading: (r as any).widget_heading ?? "",
     widget_subheading: (r as any).widget_subheading ?? "",
-    widget_cta_label: (r as any).widget_cta_label ?? "",
+    widget_cta_label: (r as any).widget_cta_label ?? "Start this devotional",
     is_featured: !!(r as any).is_featured,
   };
 };
