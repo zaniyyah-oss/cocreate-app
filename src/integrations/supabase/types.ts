@@ -105,38 +105,47 @@ export type Database = {
       }
       collection_items: {
         Row: {
+          added_at: string
           collection_id: string
           content_id: string | null
+          content_kind: string | null
           created_at: string
           id: string
           layout_slot: string
           position: number
           release_at: string | null
           release_week: number | null
+          sort_order: number | null
           template_id: string | null
           updated_at: string
         }
         Insert: {
+          added_at?: string
           collection_id: string
           content_id?: string | null
+          content_kind?: string | null
           created_at?: string
           id?: string
           layout_slot?: string
           position?: number
           release_at?: string | null
           release_week?: number | null
+          sort_order?: number | null
           template_id?: string | null
           updated_at?: string
         }
         Update: {
+          added_at?: string
           collection_id?: string
           content_id?: string | null
+          content_kind?: string | null
           created_at?: string
           id?: string
           layout_slot?: string
           position?: number
           release_at?: string | null
           release_week?: number | null
+          sort_order?: number | null
           template_id?: string | null
           updated_at?: string
         }
@@ -186,6 +195,7 @@ export type Database = {
           published_at: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
+          tag_color: string | null
           title: string
           updated_at: string
           week_number: number | null
@@ -206,6 +216,7 @@ export type Database = {
           published_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
+          tag_color?: string | null
           title: string
           updated_at?: string
           week_number?: number | null
@@ -226,6 +237,7 @@ export type Database = {
           published_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
+          tag_color?: string | null
           title?: string
           updated_at?: string
           week_number?: number | null
@@ -373,6 +385,7 @@ export type Database = {
           apply_prompt: string | null
           created_at: string
           day_number: number
+          focus_preview: string | null
           id: string
           is_override: boolean
           medium: Database["public"]["Enums"]["devotional_medium"]
@@ -391,6 +404,7 @@ export type Database = {
           apply_prompt?: string | null
           created_at?: string
           day_number: number
+          focus_preview?: string | null
           id?: string
           is_override?: boolean
           medium?: Database["public"]["Enums"]["devotional_medium"]
@@ -409,6 +423,7 @@ export type Database = {
           apply_prompt?: string | null
           created_at?: string
           day_number?: number
+          focus_preview?: string | null
           id?: string
           is_override?: boolean
           medium?: Database["public"]["Enums"]["devotional_medium"]
@@ -547,19 +562,23 @@ export type Database = {
       }
       devotional_templates: {
         Row: {
+          accent_color: string | null
           apply_prompt: string | null
           created_at: string
           description: string | null
           duration_days: number | null
           fill_mode: string
           id: string
+          intro_video_url: string | null
           is_default: boolean
+          is_featured: boolean
           is_seed: boolean
           overview_aim: string | null
           overview_belief: string | null
           overview_intro: string | null
           overview_philosophy: string | null
           overview_problem: string | null
+          overview_text: string | null
           pray_items: Json
           pray_prompt: string | null
           reflect_prompt: string | null
@@ -572,21 +591,28 @@ export type Database = {
           todo_items_pool: Json
           topic_id: string | null
           updated_at: string
+          widget_cta_label: string | null
+          widget_heading: string | null
+          widget_subheading: string | null
         }
         Insert: {
+          accent_color?: string | null
           apply_prompt?: string | null
           created_at?: string
           description?: string | null
           duration_days?: number | null
           fill_mode?: string
           id?: string
+          intro_video_url?: string | null
           is_default?: boolean
+          is_featured?: boolean
           is_seed?: boolean
           overview_aim?: string | null
           overview_belief?: string | null
           overview_intro?: string | null
           overview_philosophy?: string | null
           overview_problem?: string | null
+          overview_text?: string | null
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
@@ -599,21 +625,28 @@ export type Database = {
           todo_items_pool?: Json
           topic_id?: string | null
           updated_at?: string
+          widget_cta_label?: string | null
+          widget_heading?: string | null
+          widget_subheading?: string | null
         }
         Update: {
+          accent_color?: string | null
           apply_prompt?: string | null
           created_at?: string
           description?: string | null
           duration_days?: number | null
           fill_mode?: string
           id?: string
+          intro_video_url?: string | null
           is_default?: boolean
+          is_featured?: boolean
           is_seed?: boolean
           overview_aim?: string | null
           overview_belief?: string | null
           overview_intro?: string | null
           overview_philosophy?: string | null
           overview_problem?: string | null
+          overview_text?: string | null
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
@@ -626,6 +659,9 @@ export type Database = {
           todo_items_pool?: Json
           topic_id?: string | null
           updated_at?: string
+          widget_cta_label?: string | null
+          widget_heading?: string | null
+          widget_subheading?: string | null
         }
         Relationships: [
           {
