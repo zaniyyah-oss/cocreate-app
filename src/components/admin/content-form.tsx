@@ -465,6 +465,11 @@ export function ContentForm({
           {isEdit ? `Currently ${state.status}` : "New item starts as draft unless you publish"}
         </span>
         <button type="button" className="ad-btn ghost" onClick={() => navigate({ to: "/admin/content" })}>Cancel</button>
+        {kind === "devotional" && existingTemplate && !state.is_default && (
+          <button type="button" className="ad-btn ghost" onClick={() => setPreviewOpen(true)}>
+            Preview
+          </button>
+        )}
         <button type="button" className="ad-btn ghost" onClick={(e) => onSubmit(e, "draft")} disabled={save.isPending || uploading}>
           {save.isPending ? "Saving…" : "Save draft"}
         </button>
@@ -476,6 +481,26 @@ export function ContentForm({
               : (state.status === "published" && isEdit ? "Save & keep published" : "Publish")}
         </button>
       </div>
+
+      {previewOpen && existingTemplate && (
+        <DevotionalPreviewModal
+          template={existingTemplate}
+          formState={{
+            title: state.title,
+            description: state.description,
+            scripture_focus: state.scripture_focus,
+            reflect_prompt: state.reflect_prompt,
+            pray_prompt: state.pray_prompt,
+            apply_prompt: state.apply_prompt,
+            fill_mode: state.fill_mode,
+            duration_days: state.duration_days,
+            scripture_items: state.scripture_items,
+            pray_items: state.pray_items,
+            todo_items_pool: state.todo_items_pool,
+          }}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </form>
   );
 }
