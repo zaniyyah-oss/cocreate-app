@@ -436,6 +436,10 @@ export function ContentForm({
           <AutoFillEditor state={state} setState={setState} />
         )}
 
+        {kind === "devotional" && existingTemplate && !state.is_default && (
+          <DayOverrides template={existingTemplate} state={state} />
+        )}
+
 
         {showThumb && (
           <div>
