@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { usePageContent } from "@/lib/page-content";
 
 export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library";
 
@@ -16,14 +17,15 @@ const ICON = {
   profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
 };
 
-// Desktop sidebar: Saved and Notes now fold into a single "Library" item.
-const DESKTOP_NAV: { key: NavKey; label: string; to: string; icon: ReactNode; matchPaths?: string[] }[] = [
-  { key: "home",        label: "Home",        to: "/",            icon: ICON.home },
-  { key: "explore",     label: "Explore",     to: "/explore",     icon: ICON.explore },
-  { key: "devotionals", label: "Workspace", to: "/devotionals", icon: ICON.devotionals },
-  { key: "library",     label: "Library",     to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
-  { key: "profile",     label: "Profile",     to: "/profile",     icon: ICON.profile },
-];
+function buildDesktopNav(labels: Record<string, string>) {
+  return [
+    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
+    { key: "explore" as const,     label: labels.explore_label     || "Explore",   to: "/explore",     icon: ICON.explore },
+    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+    { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
+    { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile",     icon: ICON.profile },
+  ];
+}
 
 
 
@@ -103,6 +105,8 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     return window.localStorage.getItem(STORAGE_KEY) === "1";
   });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navLabelsQ = usePageContent("site_nav");
+  const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
@@ -160,7 +164,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               )}
             </button>
           </div>
-          {DESKTOP_NAV.map((n) => (
+          {desktopNav.map((n) => (
             <Link
               key={n.key}
               to={n.to}

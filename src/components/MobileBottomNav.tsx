@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { usePageContent } from "@/lib/page-content";
 
 export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library";
 
@@ -13,16 +14,20 @@ const ICON = {
   profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
 };
 
-const MOBILE_NAV: { key: NavKey; label: string; to: string; matchPaths?: string[] }[] = [
-  { key: "home",        label: "Home",        to: "/" },
-  { key: "explore",     label: "Explore",     to: "/explore" },
-  { key: "devotionals", label: "Workspace", to: "/devotionals" },
-  { key: "library",     label: "Library",     to: "/saved",       matchPaths: ["/saved", "/notes"] },
-  { key: "profile",     label: "Profile",     to: "/profile" },
-];
+function buildMobileNav(labels: Record<string, string>) {
+  return [
+    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/" },
+    { key: "explore" as const,     label: labels.explore_label     || "Explore",   to: "/explore" },
+    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals" },
+    { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved", matchPaths: ["/saved", "/notes"] },
+    { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile" },
+  ];
+}
 
 export function MobileBottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const labelsQ = usePageContent("site_nav");
+  const nav = useMemo(() => buildMobileNav(labelsQ.data ?? {}), [labelsQ.data]);
 
   const isActive = (item: { key: NavKey; to: string; matchPaths?: string[] }) => {
     if (item.matchPaths?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
@@ -32,7 +37,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="app-bottomnav" aria-label="Primary mobile">
-      {MOBILE_NAV.map((n) => (
+      {nav.map((n) => (
         <Link key={n.key} to={n.to} className={isActive(n) ? "active" : ""}>
           {ICON[n.key]}<span>{n.label}</span>
         </Link>

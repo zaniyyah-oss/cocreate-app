@@ -32,7 +32,9 @@ export function labelizeField(key: string): string {
 /** Human-readable label for a snake_case page_key. */
 export function labelizePage(key: string): string {
   const map: Record<string, string> = {
-    home_devotional_widget: "Home — Devotional Widget",
+    home_hero: "Homepage — Hero",
+    site_nav: "Site Navigation",
+    site_footer: "Site Footer",
     devotional_overview: "Devotional Overview Page",
   };
   return map[key] ?? labelizeField(key);
@@ -40,7 +42,9 @@ export function labelizePage(key: string): string {
 
 /** Preview route for a given page_key (best-effort). */
 export function previewRouteFor(pageKey: string): string {
-  if (pageKey === "home_devotional_widget") return "/";
+  if (pageKey === "home_hero") return "/";
+  if (pageKey === "site_nav") return "/";
+  if (pageKey === "site_footer") return "/";
   if (pageKey === "devotional_overview") return "/devotionals";
   return "/";
 }
