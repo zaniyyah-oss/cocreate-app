@@ -166,10 +166,10 @@ function OverviewPage() {
       const tid = q.data!.template!.id;
       const [savedRes, entryRes] = await Promise.all([
         supabase.from("saved_items")
-          .select("created_at")
+          .select("saved_at")
           .eq("user_id", userId!)
           .eq("devotional_template_id", tid)
-          .order("created_at", { ascending: true })
+          .order("saved_at", { ascending: true })
           .limit(1)
           .maybeSingle(),
         supabase.from("devotional_entries")
@@ -180,8 +180,8 @@ function OverviewPage() {
           .limit(1)
           .maybeSingle(),
       ]);
-      const savedIso: string | null = savedRes.data?.created_at
-        ? (savedRes.data.created_at as string).slice(0, 10)
+      const savedIso: string | null = savedRes.data?.saved_at
+        ? (savedRes.data.saved_at as string).slice(0, 10)
         : null;
       const entryIso: string | null = (entryRes.data as any)?.entry_date ?? null;
       // Pick the earlier of the two if both exist
