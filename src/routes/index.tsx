@@ -455,6 +455,8 @@ type CollectionRow = {
 function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const pcQ = usePageContent("home_devotional_widget");
+  const pc = pcQ.data ?? {};
   const q = useQuery({
     queryKey: ["home-collection"],
     queryFn: async () => {
