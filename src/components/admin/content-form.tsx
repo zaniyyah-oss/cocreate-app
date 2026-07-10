@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { DevotionalPreviewModal } from "@/components/admin/devotional-preview";
 
 type Kind = "teaching" | "essay" | "podcast" | "blog" | "devotional";
 type Content = Database["public"]["Tables"]["content_items"]["Row"];
