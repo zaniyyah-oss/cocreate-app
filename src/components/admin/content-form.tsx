@@ -109,6 +109,7 @@ const stateFromTemplate = (r: Template): FormState => {
     pray_prompt: r.pray_prompt ?? "",
     apply_prompt: r.apply_prompt ?? "",
     status: r.status,
+    scheduled_at: (r as any).scheduled_at ? toLocalInput((r as any).scheduled_at) : "",
     is_default: !!(r as any).is_default,
     fill_mode: ((r as any).fill_mode === "sequence" ? "sequence" : "pool"),
     duration_days: (r as any).duration_days ? String((r as any).duration_days) : "",
