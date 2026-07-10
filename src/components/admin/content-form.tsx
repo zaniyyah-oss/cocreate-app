@@ -323,6 +323,7 @@ export function ContentForm({
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
           if (error) throw error;
+          await syncCollections(existingTemplate.id, "template");
           return { kind: "devotional" as const, id: existingTemplate.id, isNew: false };
         } else {
           const { data: inserted, error } = await supabase
@@ -346,6 +347,7 @@ export function ContentForm({
             const { error: daysErr } = await (supabase.from as any)("devotional_days").insert(rows);
             if (daysErr) throw daysErr;
           }
+          await syncCollections(newId, "template");
           return { kind: "devotional" as const, id: newId, isNew: true };
         }
       } else {
