@@ -170,6 +170,67 @@ export function ContentForm({
     },
   });
 
+  const collectionsQ = useQuery({
+    queryKey: ["admin-all-collections"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("collections").select("id,title").order("title");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const currentItemId = existingContent?.id ?? existingTemplate?.id ?? null;
+  const currentItemKind: "content" | "template" | null = existingContent ? "content" : existingTemplate ? "template" : null;
+
+  const memberQ = useQuery({
+    queryKey: ["admin-item-collections", currentItemKind, currentItemId],
+    enabled: !!currentItemId,
+    queryFn: async () => {
+      const col = currentItemKind === "template" ? "template_id" : "content_id";
+      const { data, error } = await supabase
+        .from("collection_items")
+        .select("collection_id")
+        .eq(col, currentItemId!);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.collection_id as string);
+    },
+  });
+
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
+  const [initialCollectionIds, setInitialCollectionIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (memberQ.data) {
+      setCollectionIds(memberQ.data);
+      setInitialCollectionIds(memberQ.data);
+    }
+  }, [memberQ.data]);
+
+  const toggleCollection = (id: string) => {
+    setCollectionIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const syncCollections = async (itemId: string, itemKind: "content" | "template") => {
+    const col = itemKind === "template" ? "template_id" : "content_id";
+    const toAdd = collectionIds.filter((id) => !initialCollectionIds.includes(id));
+    const toRemove = initialCollectionIds.filter((id) => !collectionIds.includes(id));
+    if (toRemove.length) {
+      const { error } = await supabase
+        .from("collection_items")
+        .delete()
+        .eq(col, itemId)
+        .in("collection_id", toRemove);
+      if (error) throw error;
+    }
+    if (toAdd.length) {
+      const rows = toAdd.map((cid) => ({
+        collection_id: cid,
+        [col]: itemId,
+      } as any));
+      const { error } = await supabase.from("collection_items").insert(rows);
+      if (error) throw error;
+    }
+  };
+
   const isEdit = !!(existingContent || existingTemplate);
   const meta = KIND_META[kind];
 
@@ -262,6 +323,7 @@ export function ContentForm({
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
           if (error) throw error;
+          await syncCollections(existingTemplate.id, "template");
           return { kind: "devotional" as const, id: existingTemplate.id, isNew: false };
         } else {
           const { data: inserted, error } = await supabase
@@ -285,6 +347,7 @@ export function ContentForm({
             const { error: daysErr } = await (supabase.from as any)("devotional_days").insert(rows);
             if (daysErr) throw daysErr;
           }
+          await syncCollections(newId, "template");
           return { kind: "devotional" as const, id: newId, isNew: true };
         }
       } else {
@@ -309,11 +372,17 @@ export function ContentForm({
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
           if (error) throw error;
+          await syncCollections(existingContent.id, "content");
           return { kind: "content" as const, id: existingContent.id, isNew: false };
         } else {
-          const { error } = await supabase.from("content_items").insert(payload);
+          const { data: inserted, error } = await supabase
+            .from("content_items")
+            .insert(payload)
+            .select("id")
+            .single();
           if (error) throw error;
-          return { kind: "content" as const, id: "", isNew: true };
+          await syncCollections(inserted.id as string, "content");
+          return { kind: "content" as const, id: inserted.id as string, isNew: true };
         }
       }
     },
@@ -321,6 +390,8 @@ export function ContentForm({
       qc.invalidateQueries({ queryKey: ["admin-content"] });
       qc.invalidateQueries({ queryKey: ["admin-templates"] });
       qc.invalidateQueries({ queryKey: ["devotional-days"] });
+      qc.invalidateQueries({ queryKey: ["admin-collection-items"] });
+      qc.invalidateQueries({ queryKey: ["admin-item-collections"] });
       if (result && result.kind === "devotional" && result.isNew) {
         navigate({ to: "/admin/edit/$id", params: { id: result.id }, search: { kind: "template" } });
       } else {
@@ -515,6 +586,43 @@ export function ContentForm({
         )}
 
 
+        <div>
+          <label>Collections</label>
+          {collectionsQ.isLoading ? (
+            <div className="cf-note">Loading collections…</div>
+          ) : (collectionsQ.data ?? []).length === 0 ? (
+            <div className="cf-note">No collections exist yet. Create one from the Collections area to tag this item into it.</div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", border: "1px solid rgba(20,20,20,0.14)", borderRadius: 9, background: "#fff" }}>
+              {(collectionsQ.data ?? []).map((c: any) => {
+                const checked = collectionIds.includes(c.id);
+                return (
+                  <label
+                    key={c.id}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "6px 10px", borderRadius: 999,
+                      border: `1px solid ${checked ? "#181A4D" : "rgba(20,20,20,0.14)"}`,
+                      background: checked ? "#181A4D" : "#fff",
+                      color: checked ? "#fff" : "#20201c",
+                      cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+                      textTransform: "none", letterSpacing: 0, margin: 0,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleCollection(c.id)}
+                      style={{ width: "auto", margin: 0, accentColor: "#181A4D" }}
+                    />
+                    <span>{c.title}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          <div className="cf-note">Tag this item into one or more collections. Stays in sync with the Collections builder — items appear in each selected collection's list immediately after saving.</div>
+        </div>
 
 
         {showThumb && (
