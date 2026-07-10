@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { usePageContent } from "@/lib/page-content";
+import { brandColor } from "@/lib/brand-palette";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
