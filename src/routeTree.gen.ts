@@ -29,6 +29,7 @@ import { Route as AdminPageContentRouteImport } from './routes/admin.page-conten
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
+import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
@@ -136,10 +137,15 @@ const AdminContentRoute = AdminContentRouteImport.update({
   path: '/content',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
-  id: '/collections/',
-  path: '/collections/',
+const AdminCollectionsRoute = AdminCollectionsRouteImport.update({
+  id: '/collections',
+  path: '/collections',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCollectionsRoute,
 } as any)
 const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
   id: '/focus/$id',
@@ -157,14 +163,14 @@ const AdminEditIdRoute = AdminEditIdRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCollectionsNewRoute = AdminCollectionsNewRouteImport.update({
-  id: '/collections/new',
-  path: '/collections/new',
-  getParentRoute: () => AdminRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminCollectionsRoute,
 } as any)
 const AdminCollectionsIdRoute = AdminCollectionsIdRouteImport.update({
-  id: '/collections/$id',
-  path: '/collections/$id',
-  getParentRoute: () => AdminRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCollectionsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -231,6 +238,7 @@ export interface FileRoutesById {
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -261,6 +269,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/profile'
     | '/saved'
+    | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -493,12 +503,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/collections': {
+      id: '/admin/collections'
+      path: '/collections'
+      fullPath: '/admin/collections'
+      preLoaderRoute: typeof AdminCollectionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/collections/': {
       id: '/admin/collections/'
-      path: '/collections'
+      path: '/'
       fullPath: '/admin/collections/'
       preLoaderRoute: typeof AdminCollectionsIndexRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminCollectionsRoute
     }
     '/devotionals/focus/$id': {
       id: '/devotionals/focus/$id'
@@ -523,43 +540,54 @@ declare module '@tanstack/react-router' {
     }
     '/admin/collections/new': {
       id: '/admin/collections/new'
-      path: '/collections/new'
+      path: '/new'
       fullPath: '/admin/collections/new'
       preLoaderRoute: typeof AdminCollectionsNewRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminCollectionsRoute
     }
     '/admin/collections/$id': {
       id: '/admin/collections/$id'
-      path: '/collections/$id'
+      path: '/$id'
       fullPath: '/admin/collections/$id'
       preLoaderRoute: typeof AdminCollectionsIdRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof AdminCollectionsRoute
     }
   }
 }
 
+interface AdminCollectionsRouteChildren {
+  AdminCollectionsIdRoute: typeof AdminCollectionsIdRoute
+  AdminCollectionsNewRoute: typeof AdminCollectionsNewRoute
+  AdminCollectionsIndexRoute: typeof AdminCollectionsIndexRoute
+}
+
+const AdminCollectionsRouteChildren: AdminCollectionsRouteChildren = {
+  AdminCollectionsIdRoute: AdminCollectionsIdRoute,
+  AdminCollectionsNewRoute: AdminCollectionsNewRoute,
+  AdminCollectionsIndexRoute: AdminCollectionsIndexRoute,
+}
+
+const AdminCollectionsRouteWithChildren =
+  AdminCollectionsRoute._addFileChildren(AdminCollectionsRouteChildren)
+
 interface AdminRouteChildren {
+  AdminCollectionsRoute: typeof AdminCollectionsRouteWithChildren
   AdminContentRoute: typeof AdminContentRoute
   AdminInvitesRoute: typeof AdminInvitesRoute
   AdminNewRoute: typeof AdminNewRoute
   AdminPageContentRoute: typeof AdminPageContentRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminCollectionsIdRoute: typeof AdminCollectionsIdRoute
-  AdminCollectionsNewRoute: typeof AdminCollectionsNewRoute
   AdminEditIdRoute: typeof AdminEditIdRoute
-  AdminCollectionsIndexRoute: typeof AdminCollectionsIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCollectionsRoute: AdminCollectionsRouteWithChildren,
   AdminContentRoute: AdminContentRoute,
   AdminInvitesRoute: AdminInvitesRoute,
   AdminNewRoute: AdminNewRoute,
   AdminPageContentRoute: AdminPageContentRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminCollectionsIdRoute: AdminCollectionsIdRoute,
-  AdminCollectionsNewRoute: AdminCollectionsNewRoute,
   AdminEditIdRoute: AdminEditIdRoute,
-  AdminCollectionsIndexRoute: AdminCollectionsIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
