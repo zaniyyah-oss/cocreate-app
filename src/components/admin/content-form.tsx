@@ -131,6 +131,12 @@ const stateFromTemplate = (r: Template): FormState => {
     pray_items: pr.map((s: any) => String(s ?? "")),
     todo_items_pool: td.map((s: any) => String(s ?? "")),
     accent_color: ((r as any).accent_color ?? null) as BrandColorKey | null,
+    overview_text: (r as any).overview_text ?? "",
+    intro_video_url: (r as any).intro_video_url ?? "",
+    widget_heading: (r as any).widget_heading ?? "",
+    widget_subheading: (r as any).widget_subheading ?? "",
+    widget_cta_label: (r as any).widget_cta_label ?? "",
+    is_featured: !!(r as any).is_featured,
   };
 };
 
