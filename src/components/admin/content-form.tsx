@@ -215,6 +215,7 @@ export function ContentForm({
           pray_items: state.is_default ? [] : cleanPray,
           todo_items_pool: state.is_default ? [] : cleanTodo,
           duration_days: state.is_default ? null : (state.fill_mode === "sequence" ? durationDays : null),
+          accent_color: state.accent_color,
         };
         (payload as any).scheduled_at = scheduledIso;
 
