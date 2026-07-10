@@ -262,9 +262,30 @@ export function ContentForm({
         if (existingTemplate) {
           const { error } = await supabase.from("devotional_templates").update(payload).eq("id", existingTemplate.id);
           if (error) throw error;
+          return { kind: "devotional" as const, id: existingTemplate.id, isNew: false };
         } else {
-          const { error } = await supabase.from("devotional_templates").insert(payload);
+          const { data: inserted, error } = await supabase
+            .from("devotional_templates")
+            .insert(payload)
+            .select("id")
+            .single();
           if (error) throw error;
+          const newId = inserted.id as string;
+
+          // Scaffold placeholder devotional_days for Day 1..duration (default 7).
+          const scaffoldDuration = durationDays ?? 7;
+          if (scaffoldDuration > 0) {
+            const rows = Array.from({ length: scaffoldDuration }, (_, i) => ({
+              template_id: newId,
+              day_number: i + 1,
+              title: `Day ${i + 1}`,
+              medium: "text",
+              is_override: false,
+            }));
+            const { error: daysErr } = await (supabase.from as any)("devotional_days").insert(rows);
+            if (daysErr) throw daysErr;
+          }
+          return { kind: "devotional" as const, id: newId, isNew: true };
         }
       } else {
         const contentType = meta.contentType!;
@@ -288,16 +309,23 @@ export function ContentForm({
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
           if (error) throw error;
+          return { kind: "content" as const, id: existingContent.id, isNew: false };
         } else {
           const { error } = await supabase.from("content_items").insert(payload);
           if (error) throw error;
+          return { kind: "content" as const, id: "", isNew: true };
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ["admin-content"] });
       qc.invalidateQueries({ queryKey: ["admin-templates"] });
-      navigate({ to: "/admin/content" });
+      qc.invalidateQueries({ queryKey: ["devotional-days"] });
+      if (result && result.kind === "devotional" && result.isNew) {
+        navigate({ to: "/admin/edit/$id", params: { id: result.id }, search: { kind: "template" } });
+      } else {
+        navigate({ to: "/admin/content" });
+      }
     },
     onError: (e) => setErr(e instanceof Error ? e.message : "Save failed"),
   });
