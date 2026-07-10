@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { usePageContent } from "@/lib/page-content";
 
 export const Route = createFileRoute("/devotionals/$slug/overview")({
   component: OverviewPage,
@@ -124,6 +125,8 @@ type DayRow = {
 function OverviewPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const pcQ = usePageContent("devotional_overview");
+  const pc = pcQ.data ?? {};
   const [userId, setUserId] = useState<string | null>(null);
   const [openMovements, setOpenMovements] = useState<Record<string, boolean>>({});
   const [openDay, setOpenDay] = useState<string | null>(null);
