@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { usePageContent } from "@/lib/page-content";
 
 export const Route = createFileRoute("/devotionals/$slug/overview")({
   component: OverviewPage,
@@ -20,73 +19,52 @@ export const Route = createFileRoute("/devotionals/$slug/overview")({
   head: ({ params }) => ({
     meta: [
       { title: `${params.slug} · Overview — CoCreate` },
-      { name: "description", content: "Overview of a topical devotional: its rationale, movements, and day-by-day structure." },
+      { name: "description", content: "Overview of a devotional: what it's about, an intro video, and a day-by-day preview." },
     ],
   }),
 });
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const DEFAULT_PHILOSOPHY =
-  "Our hope is that this becomes unnecessary. The goal isn't for you to depend on a reminder from us — it's for you to grow strong enough in this to disciple someone else in it. You're still leading your own life here; we're handing you scripture and a structure, not doing the work of believing it for you.";
-
 const CSS = `
-.dov{--cream:#FBF8ED;--navy:#181A4D;--teal:#0F4A42;--limelight:#DCE07A;--amber:#FFAE00;--burgundy:#441B07;--blush:#E990A2;--ink:#20201C;--hair:rgba(24,26,77,0.12);padding:26px 20px 90px;max-width:1100px;margin:0 auto;width:100%;font-family:'Poppins',sans-serif;color:var(--ink);}
+.dov{--cream:#FBF8ED;--navy:#181A4D;--teal:#0F4A42;--limelight:#DCE07A;--ink:#20201C;--hair:rgba(24,26,77,0.12);padding:26px 20px 90px;max-width:1000px;margin:0 auto;width:100%;font-family:'Poppins',sans-serif;color:var(--ink);}
 @media(min-width:900px){.dov{padding:30px 44px 90px;}}
-.dov-crumb{font-size:13px;font-weight:600;color:var(--navy);opacity:0.55;margin-bottom:14px;}
-.dov-crumb b{opacity:1;}
+.dov-crumb{font-size:13px;font-weight:600;color:var(--navy);opacity:0.6;margin-bottom:14px;}
 .dov-crumb a{color:inherit;text-decoration:none;}
-.dov-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:8px;flex-wrap:wrap;}
-.dov-head h1{font-size:28px;font-weight:900;color:var(--navy);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.1;}
-@media(min-width:900px){.dov-head h1{font-size:34px;}}
-.dov-head .meta{font-size:13px;color:var(--ink);opacity:0.6;font-weight:600;}
-.dov-addbtn{background:var(--navy);color:var(--limelight);font-size:12.5px;font-weight:700;padding:9px 18px;border-radius:999px;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-block;}
-.dov-addbtn.added{background:var(--limelight);color:var(--navy);}
+.dov-title{font-size:28px;font-weight:900;color:var(--navy);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.15;}
+@media(min-width:900px){.dov-title{font-size:34px;}}
+.dov-meta{font-size:13px;color:var(--ink);opacity:0.6;font-weight:600;margin-bottom:22px;}
 
-.dov-progresswrap{margin:18px 0 28px;}
-.dov-progresslabel{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;}
-.dov-progresslabel span.faded{opacity:0.5;}
-.dov-progressbar{height:8px;background:rgba(24,26,77,0.08);border-radius:999px;overflow:hidden;}
-.dov-progressfill{height:100%;background:var(--limelight);border-radius:999px;transition:width 0.4s ease;}
+.dov-widget{background:var(--navy);color:var(--cream);border-radius:14px;padding:20px 22px;margin-bottom:24px;display:flex;flex-direction:column;gap:12px;}
+@media(min-width:700px){.dov-widget{flex-direction:row;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;}}
+.dov-widget-copy h2{font-size:17px;font-weight:800;margin:0 0 4px;color:var(--limelight);letter-spacing:-0.01em;}
+.dov-widget-copy p{font-size:13.5px;line-height:1.55;margin:0;opacity:0.9;}
+.dov-widget-cta{background:var(--limelight);color:var(--navy);font-size:13px;font-weight:800;padding:11px 22px;border-radius:999px;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-block;text-align:center;}
+.dov-widget-cta.added{background:transparent;border:1.5px solid var(--limelight);color:var(--limelight);}
 
-.dov-toplabel{font-size:11.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--burgundy);margin-bottom:14px;}
-.dov-whyblock{margin-bottom:36px;}
-.dov-whyrow{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px;}
-@media(min-width:700px){.dov-whyrow{grid-template-columns:repeat(3,1fr);}}
-.dov-whycard{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:18px 20px;}
-.dov-whycard h4{font-size:13px;font-weight:800;color:var(--navy);margin:0 0 8px;}
-.dov-whycard p{font-size:13px;color:var(--ink);opacity:0.75;line-height:1.6;margin:0;white-space:pre-wrap;}
+.dov-video{position:relative;width:100%;background:#000;border-radius:14px;overflow:hidden;margin-bottom:24px;aspect-ratio:16/9;}
+.dov-video iframe,.dov-video video{position:absolute;inset:0;width:100%;height:100%;border:none;}
 
-.dov-aim{background:var(--navy);border-radius:12px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start;}
-.dov-aim .icon{font-size:18px;flex-shrink:0;margin-top:1px;color:var(--limelight);}
-.dov-aim p{color:var(--cream);font-size:13.5px;line-height:1.65;margin:0;opacity:0.92;white-space:pre-wrap;}
+.dov-overview{font-size:14.5px;line-height:1.7;color:var(--ink);opacity:0.88;margin-bottom:34px;white-space:pre-wrap;}
+.dov-overview p{margin:0 0 12px;}
 
-.dov-insidehead{margin:38px 0 16px;}
-.dov-insidehead p{font-size:13.5px;color:var(--ink);opacity:0.7;line-height:1.6;margin:0;max-width:720px;}
+.dov-sectlabel{font-size:11.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--navy);opacity:0.75;margin:0 0 12px;}
 
-.dov-movement{margin-bottom:22px;}
-.dov-mhead{display:flex;justify-content:space-between;align-items:baseline;padding:12px 16px;background:#fff;border:1px solid var(--hair);border-radius:12px 12px 0 0;cursor:pointer;gap:12px;}
-.dov-mhead.closed{border-radius:12px;}
-.dov-mtitle{font-size:14px;font-weight:700;color:var(--navy);}
-.dov-mrange{font-size:11.5px;color:var(--ink);opacity:0.45;font-weight:600;margin-left:8px;}
-.dov-chev{font-size:14px;color:var(--navy);opacity:0.45;font-family:inherit;}
-.dov-mdesc{padding:10px 16px 4px;font-size:12.5px;color:var(--ink);opacity:0.65;background:#fff;border-left:1px solid var(--hair);border-right:1px solid var(--hair);line-height:1.5;}
+.dov-acc{display:flex;flex-direction:column;gap:6px;}
+.dov-row{background:#fff;border:1px solid var(--hair);border-radius:10px;overflow:hidden;}
+.dov-rowhead{width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;background:transparent;border:none;cursor:pointer;text-align:left;font-family:inherit;}
+.dov-rowhead:hover{background:rgba(220,224,122,0.15);}
+.dov-daylabel{font-size:12.5px;font-weight:800;color:var(--navy);letter-spacing:0.02em;min-width:88px;}
+.dov-daylabel .sub{display:block;font-size:10.5px;font-weight:600;color:var(--ink);opacity:0.55;letter-spacing:0.02em;margin-top:1px;}
+.dov-focus{font-size:13px;color:var(--ink);opacity:0.85;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.dov-focus.empty{opacity:0.4;}
+.dov-chev{font-size:14px;color:var(--navy);opacity:0.5;transition:transform 0.15s;}
+.dov-chev.open{transform:rotate(90deg);}
 
-.dov-dayrow{display:grid;grid-template-columns:64px 1fr auto auto;align-items:center;padding:11px 16px;background:#fff;border:1px solid var(--hair);border-top:none;font-size:13px;cursor:pointer;gap:12px;}
-.dov-dayrow:hover{background:rgba(220,224,122,0.15);}
-.dov-dayrow.current{background:rgba(220,224,122,0.22);}
-.dov-daynum{font-weight:700;color:var(--navy);opacity:0.55;}
-.dov-daytitle{color:var(--navy);font-weight:600;line-height:1.3;}
-.dov-daymedium{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink);opacity:0.6;font-weight:600;}
-.dov-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.dov-dot.scripture{background:var(--teal);}
-.dov-dot.podcast{background:var(--amber);}
-.dov-dot.reflect{background:var(--blush);}
-.dov-dayopen{color:var(--navy);opacity:0.45;font-size:11.5px;font-weight:600;text-align:right;}
-.dov-daydetail{background:rgba(220,224,122,0.14);border:1px solid var(--hair);border-top:none;padding:16px 20px;font-size:12.5px;color:var(--ink);opacity:0.9;line-height:1.6;}
-.dov-daydetail b{color:var(--navy);}
-.dov-mempty{padding:14px 16px;background:#fff;border:1px solid var(--hair);border-top:none;border-radius:0 0 12px 12px;font-size:12.5px;color:var(--ink);opacity:0.6;}
-.dov-mfoot{border-bottom-left-radius:12px;border-bottom-right-radius:12px;}
+.dov-detail{padding:14px 16px 18px;border-top:1px solid var(--hair);background:#FBF8ED;display:grid;gap:12px;}
+.dov-dsub{font-size:10px;font-weight:800;color:var(--navy);letter-spacing:0.1em;text-transform:uppercase;margin:0 0 3px;}
+.dov-dval{font-size:13px;color:var(--ink);line-height:1.55;white-space:pre-wrap;}
+.dov-dval.empty{color:#8a8678;font-style:italic;}
 `;
 
 type Template = {
@@ -95,41 +73,63 @@ type Template = {
   title: string;
   description: string | null;
   duration_days: number | null;
-  overview_intro: string | null;
-  overview_problem: string | null;
-  overview_belief: string | null;
-  overview_aim: string | null;
-  overview_philosophy: string | null;
-};
-
-type Movement = {
-  id: string;
-  position: number;
-  title: string;
-  description: string | null;
-  day_start: number;
-  day_end: number;
+  overview_text: string | null;
+  intro_video_url: string | null;
+  widget_heading: string | null;
+  widget_subheading: string | null;
+  widget_cta_label: string | null;
+  scripture_items: unknown;
+  pray_prompt: string | null;
+  apply_prompt: string | null;
 };
 
 type DayRow = {
   id: string;
   day_number: number;
-  title: string;
-  medium: "scripture" | "podcast" | "reflect";
+  is_override: boolean;
+  focus_preview: string | null;
   scripture_reference: string | null;
-  preview_read: string | null;
-  preview_reflect: string | null;
-  preview_carry: string | null;
+  scripture_note: string | null;
+  pray_prompt: string | null;
+  apply_prompt: string | null;
 };
+
+function toEmbedUrl(url: string): { kind: "iframe" | "video"; src: string } | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  // YouTube
+  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (ytMatch) return { kind: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}` };
+  // Vimeo
+  const vmMatch = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vmMatch) return { kind: "iframe", src: `https://player.vimeo.com/video/${vmMatch[1]}` };
+  // Direct video file
+  if (/\.(mp4|webm|ogg|mov)($|\?)/i.test(trimmed)) return { kind: "video", src: trimmed };
+  // Fallback: try to embed as iframe
+  return { kind: "iframe", src: trimmed };
+}
+
+function addDaysISO(startISO: string, offset: number): string {
+  const d = new Date(startISO + (startISO.length === 10 ? "T00:00:00" : ""));
+  d.setDate(d.getDate() + offset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+function formatDateShort(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
 
 function OverviewPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
-  const pcQ = usePageContent("devotional_overview");
-  const pc = pcQ.data ?? {};
   const [userId, setUserId] = useState<string | null>(null);
-  const [openMovements, setOpenMovements] = useState<Record<string, boolean>>({});
-  const [openDay, setOpenDay] = useState<string | null>(null);
+  const [openDays, setOpenDays] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
@@ -141,78 +141,113 @@ function OverviewPage() {
     queryKey: ["dev-overview", slug],
     queryFn: async () => {
       const isUuid = UUID_RE.test(slug);
-      const tpl = await (supabase.from as any)("devotional_templates")
-        .select("id, slug, title, description, duration_days, overview_intro, overview_problem, overview_belief, overview_aim, overview_philosophy")
-        [isUuid ? "or" : "eq"](isUuid ? `id.eq.${slug},slug.eq.${slug}` : "slug", isUuid ? undefined : slug)
-        .eq("status", "published")
-        .maybeSingle();
+      const base = (supabase.from as any)("devotional_templates")
+        .select("id, slug, title, description, duration_days, overview_text, intro_video_url, widget_heading, widget_subheading, widget_cta_label, scripture_items, pray_prompt, apply_prompt")
+        .eq("status", "published");
+      const tpl = isUuid
+        ? await base.or(`id.eq.${slug},slug.eq.${slug}`).maybeSingle()
+        : await base.eq("slug", slug).maybeSingle();
       const template = tpl.data as Template | null;
       if (!template) return null;
 
-      const [mvRes, dyRes] = await Promise.all([
-        (supabase.from as any)("devotional_movements")
-          .select("id, position, title, description, day_start, day_end")
-          .eq("template_id", template.id)
-          .order("position", { ascending: true }),
-        (supabase.from as any)("devotional_days")
-          .select("id, day_number, title, medium, scripture_reference, preview_read, preview_reflect, preview_carry")
-          .eq("template_id", template.id)
-          .order("day_number", { ascending: true }),
-      ]);
-      return {
-        template,
-        movements: (mvRes.data ?? []) as Movement[],
-        days: (dyRes.data ?? []) as DayRow[],
-      };
+      const { data: days, error } = await (supabase.from as any)("devotional_days")
+        .select("id, day_number, is_override, focus_preview, scripture_reference, scripture_note, pray_prompt, apply_prompt")
+        .eq("template_id", template.id)
+        .order("day_number", { ascending: true });
+      if (error) throw error;
+      return { template, days: (days ?? []) as DayRow[] };
     },
   });
 
-  const progQ = useQuery({
-    queryKey: ["dev-overview-progress", q.data?.template?.id, userId],
+  const startQ = useQuery({
+    queryKey: ["dev-overview-start", q.data?.template?.id, userId],
     enabled: !!q.data?.template?.id && !!userId,
     queryFn: async () => {
       const tid = q.data!.template!.id;
-      const [entRes, savedRes] = await Promise.all([
+      const [savedRes, entryRes] = await Promise.all([
+        supabase.from("saved_items")
+          .select("created_at")
+          .eq("user_id", userId!)
+          .eq("devotional_template_id", tid)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
         supabase.from("devotional_entries")
           .select("entry_date")
           .eq("user_id", userId!)
           .eq("template_id", tid)
-          .order("entry_date", { ascending: true }),
-        supabase.from("saved_items")
-          .select("id")
-          .eq("user_id", userId!)
-          .eq("devotional_template_id", tid)
-          .limit(1),
+          .order("entry_date", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
       ]);
-      const dates = (entRes.data ?? []).map((r: any) => r.entry_date as string);
-      const uniqueDays = new Set(dates).size;
-      const startedAt = dates[0] ?? null;
-      const added = (savedRes.data ?? []).length > 0 || uniqueDays > 0;
-      return { uniqueDays, startedAt, added };
+      const savedIso: string | null = savedRes.data?.created_at
+        ? (savedRes.data.created_at as string).slice(0, 10)
+        : null;
+      const entryIso: string | null = (entryRes.data as any)?.entry_date ?? null;
+      // Pick the earlier of the two if both exist
+      const candidates = [savedIso, entryIso].filter(Boolean) as string[];
+      const startDate = candidates.length ? candidates.sort()[0] : null;
+      return { added: !!startDate, startDate };
     },
   });
 
-  const currentMovementId = useMemo(() => {
-    if (!q.data) return null;
-    const day = Math.max(1, progQ.data?.uniqueDays ?? 0);
-    const mv = q.data.movements.find((m) => day >= m.day_start && day <= m.day_end);
-    return mv?.id ?? q.data.movements[0]?.id ?? null;
-  }, [q.data, progQ.data]);
+  const t = q.data?.template;
+  const days = q.data?.days ?? [];
+  const totalDays = useMemo(() => {
+    if (!t) return 0;
+    return t.duration_days ?? (days.length ? Math.max(...days.map((d) => d.day_number)) : 0);
+  }, [t, days]);
 
-  useEffect(() => {
-    if (currentMovementId && openMovements[currentMovementId] === undefined) {
-      setOpenMovements((s) => ({ ...s, [currentMovementId]: true }));
+  const scriptureItems = useMemo<Array<{ reference: string; note: string }>>(() => {
+    const raw = Array.isArray(t?.scripture_items) ? (t?.scripture_items as any[]) : [];
+    return raw.map((it) => ({
+      reference: String(it?.reference ?? ""),
+      note: String(it?.note ?? ""),
+    }));
+  }, [t]);
+
+  const byDay = useMemo(() => {
+    const m = new Map<number, DayRow>();
+    for (const r of days) m.set(r.day_number, r);
+    return m;
+  }, [days]);
+
+  const contentFor = (day: number) => {
+    const row = byDay.get(day);
+    const scr = scriptureItems[day - 1];
+    if (row && row.is_override) {
+      return {
+        focus: row.focus_preview ?? "",
+        scripture_reference: row.scripture_reference ?? "",
+        scripture_note: row.scripture_note ?? "",
+        pray: row.pray_prompt ?? t?.pray_prompt ?? "",
+        apply: row.apply_prompt ?? t?.apply_prompt ?? "",
+      };
     }
-  }, [currentMovementId]); // eslint-disable-line react-hooks/exhaustive-deps
+    return {
+      focus: row?.focus_preview ?? "",
+      scripture_reference: scr?.reference ?? "",
+      scripture_note: scr?.note ?? "",
+      pray: t?.pray_prompt ?? "",
+      apply: t?.apply_prompt ?? "",
+    };
+  };
 
-  const addToAbide = async () => {
-    if (!q.data?.template) return;
+  const toggle = (day: number) =>
+    setOpenDays((s) => {
+      const n = new Set(s);
+      if (n.has(day)) n.delete(day); else n.add(day);
+      return n;
+    });
+
+  const addToWorkspace = async () => {
+    if (!t) return;
     if (!userId) { navigate({ to: "/auth" }); return; }
     await supabase.from("saved_items").upsert({
       user_id: userId,
-      devotional_template_id: q.data.template.id,
+      devotional_template_id: t.id,
     } as any, { onConflict: "user_id,devotional_template_id" } as any);
-    navigate({ to: "/devotionals/$id", params: { id: q.data.template.id } });
+    navigate({ to: "/devotionals/$id", params: { id: t.id } });
   };
 
   if (q.isLoading) {
@@ -223,7 +258,7 @@ function OverviewPage() {
       </AppShell>
     );
   }
-  if (!q.data?.template) {
+  if (!t) {
     return (
       <AppShell current="devotionals">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -232,136 +267,95 @@ function OverviewPage() {
     );
   }
 
-  const t = q.data.template;
-  const totalDays = t.duration_days ?? (Math.max(...q.data.days.map((d) => d.day_number), 0) || 0);
-  const uniqueDays = progQ.data?.uniqueDays ?? 0;
-  const startedAt = progQ.data?.startedAt ?? null;
-  const added = progQ.data?.added ?? false;
-  const pct = totalDays ? Math.min(100, Math.round((uniqueDays / totalDays) * 100)) : 0;
-  const daysAgo = startedAt ? Math.floor((Date.now() - new Date(startedAt).getTime()) / 86400000) : 0;
-
-  const daysByMovement = (m: Movement) =>
-    q.data!.days.filter((d) => d.day_number >= m.day_start && d.day_number <= m.day_end);
+  const embed = toEmbedUrl(t.intro_video_url ?? "");
+  const added = startQ.data?.added ?? false;
+  const startDate = startQ.data?.startDate ?? null;
 
   return (
     <AppShell current="devotionals">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="dov">
         <div className="dov-crumb">
-          <Link to="/devotionals"><b>{t.title}</b></Link> → Devotional overview
+          <Link to="/devotionals">Workspace</Link> → Devotional overview
         </div>
 
-        <div className="dov-head">
-          <div>
-            <h1>{pc.heading || t.title}</h1>
-            <div className="meta">{pc.subheading || `${totalDays ? `${totalDays} days · ` : ""}a guided layer for Abide`}</div>
+        <h1 className="dov-title">{t.title}</h1>
+        <div className="dov-meta">
+          {totalDays ? `${totalDays} day${totalDays === 1 ? "" : "s"}` : "Ongoing"}
+          {t.description ? ` · ${t.description}` : ""}
+        </div>
+
+        <div className="dov-widget">
+          <div className="dov-widget-copy">
+            <h2>{t.widget_heading || "Add to your workspace"}</h2>
+            <p>{t.widget_subheading || "Bring this devotional into your daily workspace and start Day 1 whenever you're ready."}</p>
           </div>
-          <div>
-            {added ? (
-              <Link to="/devotionals/$id" params={{ id: t.id }} className="dov-addbtn added">Open in Abide →</Link>
+          {added ? (
+            <Link to="/devotionals/$id" params={{ id: t.id }} className="dov-widget-cta added">Open in workspace →</Link>
+          ) : (
+            <button type="button" className="dov-widget-cta" onClick={addToWorkspace}>
+              {t.widget_cta_label || "Start this devotional"}
+            </button>
+          )}
+        </div>
+
+        {embed && (
+          <div className="dov-video">
+            {embed.kind === "iframe" ? (
+              <iframe src={embed.src} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Devotional intro video" />
             ) : (
-              <button className="dov-addbtn" onClick={addToAbide}>{pc.cta_label || "+ Add to my Abide"}</button>
+              <video src={embed.src} controls playsInline />
             )}
           </div>
-        </div>
-
-        {added && totalDays > 0 && (
-          <div className="dov-progresswrap">
-            <div className="dov-progresslabel">
-              <span>Day {Math.min(totalDays, Math.max(1, uniqueDays))} of {totalDays}</span>
-              <span className="faded">{startedAt ? `started ${daysAgo === 0 ? "today" : daysAgo + " day" + (daysAgo === 1 ? "" : "s") + " ago"}` : ""}</span>
-            </div>
-            <div className="dov-progressbar"><div className="dov-progressfill" style={{ width: `${pct}%` }} /></div>
-          </div>
         )}
 
-        {(t.overview_problem || t.overview_belief || t.overview_aim || t.overview_philosophy) && (
-          <div className="dov-whyblock">
-            <div className="dov-toplabel">Why this exists</div>
-            <div className="dov-whyrow">
-              <div className="dov-whycard">
-                <h4>The problem</h4>
-                <p>{t.overview_problem || "—"}</p>
-              </div>
-              <div className="dov-whycard">
-                <h4>What we believe</h4>
-                <p>{t.overview_belief || "—"}</p>
-              </div>
-              <div className="dov-whycard">
-                <h4>What this is trying to do</h4>
-                <p>{t.overview_aim || "—"}</p>
-              </div>
-            </div>
-            <div className="dov-aim">
-              <span className="icon">✦</span>
-              <p>{t.overview_philosophy || DEFAULT_PHILOSOPHY}</p>
-            </div>
-          </div>
+        {t.overview_text && (
+          <div className="dov-overview">{t.overview_text}</div>
         )}
 
-        {q.data.movements.length > 0 && (
+        {totalDays > 0 && (
           <>
-            <div className="dov-insidehead">
-              <div className="dov-toplabel">What's inside</div>
-              <p>{t.overview_intro || `${totalDays || ""} days, organized in ${q.data.movements.length} movement${q.data.movements.length === 1 ? "" : "s"}. Click into any day to see what's planned before you commit to starting.`}</p>
-            </div>
-
-            {q.data.movements.map((m) => {
-              const isOpen = openMovements[m.id] ?? m.id === currentMovementId;
-              const days = daysByMovement(m);
-              return (
-                <div key={m.id} className="dov-movement">
-                  <div
-                    className={`dov-mhead${!isOpen ? " closed" : ""}`}
-                    onClick={() => setOpenMovements((s) => ({ ...s, [m.id]: !isOpen }))}
-                  >
-                    <div>
-                      <span className="dov-mtitle">{m.title}</span>
-                      <span className="dov-mrange">Days {m.day_start}–{m.day_end}</span>
-                    </div>
-                    <span className="dov-chev">{isOpen ? "⌃" : "⌄"}</span>
-                  </div>
-
-                  {isOpen && m.description && <div className="dov-mdesc">{m.description}</div>}
-
-                  {isOpen && days.length === 0 && (
-                    <div className="dov-mempty dov-mfoot">Days for this movement haven't been added yet.</div>
-                  )}
-
-                  {isOpen && days.map((d, idx) => {
-                    const isCurrent = added && uniqueDays > 0 && d.day_number === Math.min(totalDays || Infinity, uniqueDays);
-                    const isLast = idx === days.length - 1;
-                    const isOpenDay = openDay === d.id;
-                    return (
-                      <div key={d.id}>
-                        <div
-                          className={`dov-dayrow${isCurrent ? " current" : ""}${isLast && !isOpenDay ? " dov-mfoot" : ""}`}
-                          onClick={() => setOpenDay(isOpenDay ? null : d.id)}
-                        >
-                          <div className="dov-daynum">Day {d.day_number}</div>
-                          <div className="dov-daytitle">{d.title}</div>
-                          <div className="dov-daymedium">
-                            <span className={`dov-dot ${d.medium}`}></span>
-                            {d.medium === "scripture" ? "Scripture + reflection" : d.medium === "podcast" ? "Podcast unlocks today" : "Reflection"}
+            <div className="dov-sectlabel">Day by day</div>
+            <div className="dov-acc">
+              {Array.from({ length: totalDays }, (_, i) => i + 1).map((day) => {
+                const open = openDays.has(day);
+                const c = contentFor(day);
+                const dateIso = added && startDate ? addDaysISO(startDate, day - 1) : null;
+                return (
+                  <div key={day} className="dov-row">
+                    <button type="button" className="dov-rowhead" onClick={() => toggle(day)}>
+                      <span className="dov-daylabel">
+                        {dateIso ? formatDateShort(dateIso) : `Day ${day}`}
+                        {dateIso && <span className="sub">Day {day}</span>}
+                      </span>
+                      <span className={`dov-focus${c.focus ? "" : " empty"}`}>
+                        {c.focus || c.scripture_reference || "Preview coming soon"}
+                      </span>
+                      <span className={`dov-chev${open ? " open" : ""}`} aria-hidden>›</span>
+                    </button>
+                    {open && (
+                      <div className="dov-detail">
+                        <div>
+                          <div className="dov-dsub">Scripture</div>
+                          <div className={`dov-dval${c.scripture_reference || c.scripture_note ? "" : " empty"}`}>
+                            {c.scripture_reference || "—"}
+                            {c.scripture_note && <>{"\n"}{c.scripture_note}</>}
                           </div>
-                          <div className="dov-dayopen">{isCurrent ? "today" : isOpenDay ? "close" : "preview →"}</div>
                         </div>
-                        {isOpenDay && (
-                          <div className={`dov-daydetail${isLast ? " dov-mfoot" : ""}`}>
-                            {d.preview_read && <><b>Read —</b> {d.scripture_reference ? `${d.scripture_reference}. ` : ""}{d.preview_read} </>}
-                            {d.preview_reflect && <><b>Reflect —</b> {d.preview_reflect} </>}
-                            {d.preview_carry && <><b>Carry —</b> {d.preview_carry}</>}
-                            {!d.preview_read && !d.preview_reflect && !d.preview_carry && (
-                              <span style={{ opacity: 0.6 }}>Preview isn't written for this day yet.</span>
-                            )}
-                          </div>
-                        )}
+                        <div>
+                          <div className="dov-dsub">Prayer prompt</div>
+                          <div className={`dov-dval${c.pray ? "" : " empty"}`}>{c.pray || "—"}</div>
+                        </div>
+                        <div>
+                          <div className="dov-dsub">To-do / Apply</div>
+                          <div className={`dov-dval${c.apply ? "" : " empty"}`}>{c.apply || "—"}</div>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
       </div>
