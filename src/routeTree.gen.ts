@@ -25,6 +25,7 @@ import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
+import { Route as AdminPageContentRouteImport } from './routes/admin.page-content'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
@@ -115,6 +116,11 @@ const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
   path: '/collections/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPageContentRoute = AdminPageContentRouteImport.update({
+  id: '/page-content',
+  path: '/page-content',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminNewRoute = AdminNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/page-content': typeof AdminPageContentRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/page-content': typeof AdminPageContentRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/page-content': typeof AdminPageContentRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/admin/page-content'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/admin/page-content'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -308,6 +319,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
+    | '/admin/page-content'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -453,6 +465,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/page-content': {
+      id: '/admin/page-content'
+      path: '/page-content'
+      fullPath: '/admin/page-content'
+      preLoaderRoute: typeof AdminPageContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/new': {
       id: '/admin/new'
       path: '/new'
@@ -537,6 +556,7 @@ interface AdminRouteChildren {
   AdminContentRoute: typeof AdminContentRoute
   AdminInvitesRoute: typeof AdminInvitesRoute
   AdminNewRoute: typeof AdminNewRoute
+  AdminPageContentRoute: typeof AdminPageContentRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEditIdRoute: typeof AdminEditIdRoute
 }
@@ -546,6 +566,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContentRoute: AdminContentRoute,
   AdminInvitesRoute: AdminInvitesRoute,
   AdminNewRoute: AdminNewRoute,
+  AdminPageContentRoute: AdminPageContentRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEditIdRoute: AdminEditIdRoute,
 }
