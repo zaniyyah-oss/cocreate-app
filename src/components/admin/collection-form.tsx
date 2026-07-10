@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { ColorSwatches } from "@/components/admin/color-swatches";
+import type { BrandColorKey } from "@/lib/brand-palette";
 
 export type CollectionRow = {
   id: string;
@@ -12,6 +14,7 @@ export type CollectionRow = {
   banner_url: string | null;
   status: "draft" | "published";
   slug: string;
+  tag_color?: string | null;
 };
 
 type ItemRow = {
