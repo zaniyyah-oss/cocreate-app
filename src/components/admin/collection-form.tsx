@@ -225,6 +225,12 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
           {uploading && <div className="cf-note">Uploading…</div>}
         </div>
 
+        <div>
+          <label>Color</label>
+          <ColorSwatches value={tagColor} onChange={setTagColor} />
+          <div className="cf-note">Used as the collection's tag chip wherever it appears on the workspace.</div>
+        </div>
+
         {isEdit && (
           <div>
             <label>Items in this collection</label>
