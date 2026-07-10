@@ -4,6 +4,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { DevotionalPreviewModal } from "@/components/admin/devotional-preview";
+import { ColorSwatches } from "@/components/admin/color-swatches";
+import type { BrandColorKey } from "@/lib/brand-palette";
 
 type Kind = "teaching" | "essay" | "podcast" | "blog" | "devotional";
 type Content = Database["public"]["Tables"]["content_items"]["Row"];
