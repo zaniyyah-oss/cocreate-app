@@ -76,6 +76,7 @@ export function CollectionForm({ existing }: { existing?: CollectionRow }) {
   const [description, setDescription] = useState(existing?.description ?? existing?.description_md ?? "");
   const [cover, setCover] = useState(existing?.cover_image_url ?? existing?.banner_url ?? "");
   const [status, setStatus] = useState<"draft" | "published">(existing?.status ?? "draft");
+  const [tagColor, setTagColor] = useState<BrandColorKey | null>((existing?.tag_color as BrandColorKey | null) ?? null);
   const [err, setErr] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
