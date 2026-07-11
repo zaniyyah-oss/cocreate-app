@@ -545,27 +545,32 @@ function EntryPage() {
     scheduleSave("todo_items", next);
   };
 
-  if (ready && !userId) {
-    return (
-      <div className="de-root">
-        <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <nav className="de-nav">
-          <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-          <NavMenu />
-          <div className="de-navright">
-            <Link to="/auth" className="de-signin">Sign in</Link>
-          </div>
-        </nav>
-        <div className="de-shell">
-          <div className="de-signgate">
-            <h3>Sign in to open this devotional</h3>
-            <p>Your reflections stay private and save automatically as you write.</p>
-            <Link to="/auth" className="de-signin">Sign in</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Guest preview mode: unauthenticated visitors see the full workspace and can
+  // interact locally (typing, todos, focus mode). Nothing is written to Supabase.
+  const isGuest = ready && !userId;
+  const [guestTyped, setGuestTyped] = useState(false);
+  const [guestGate, setGuestGate] = useState<null | "type" | "save">(null);
+  const guestNote = (kind: "type" | "save") => {
+    if (!isGuest) return;
+    if (kind === "type") {
+      if (!guestTyped) setGuestTyped(true);
+      setGuestGate((g) => g ?? "type");
+    } else {
+      setGuestGate("save");
+    }
+  };
+  // Warn guests before losing typed content on refresh / navigation.
+  useEffect(() => {
+    if (!isGuest || !guestTyped) return;
+    const onBefore = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBefore);
+    return () => window.removeEventListener("beforeunload", onBefore);
+  }, [isGuest, guestTyped]);
+
+
 
   const t = templateQ.data;
   const topic = topicQ.data;
