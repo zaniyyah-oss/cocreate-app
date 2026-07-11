@@ -802,7 +802,7 @@ function EntryPage() {
                   </div>
 
                   {/* To-Do */}
-                  <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                  <div id="sec-todo" className={`de-block de-anchor ${focusSection === "todo" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge todo">to-do</span>
                       {focusBtn("todo")}
