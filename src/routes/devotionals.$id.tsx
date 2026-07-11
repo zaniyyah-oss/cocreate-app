@@ -115,6 +115,25 @@ const CSS = `
 .de-textarea{width:100%;border:none;border-bottom:1px solid rgba(24,26,77,0.12);background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.5;min-height:38px;resize:vertical;outline:none;padding:0 0 9px;transition:border-color .15s ease;}
 .de-textarea.tall{min-height:120px;}
 .de-textarea.short{min-height:38px;}
+@media (max-width:899px){
+  .de-textarea{min-height:112px;}
+  .de-textarea.short{min-height:96px;}
+}
+
+/* Mobile jump nav — color-coded fast-links to each section */
+.de-jump{display:none;}
+@media (max-width:899px){
+  .de-jump{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 2px 12px;margin:0 0 6px;scrollbar-width:none;}
+  .de-jump::-webkit-scrollbar{display:none;}
+  .de-jump a{flex:0 0 auto;font-family:'Poppins',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.03em;text-transform:uppercase;color:#181A4D;text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid rgba(24,26,77,0.14);background:#fff;display:inline-flex;align-items:center;gap:7px;line-height:1;}
+  .de-jump a .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0;}
+  .de-jump a.where .dot{background:#181A4D;}
+  .de-jump a.read .dot{background:#FFAE00;}
+  .de-jump a.pray .dot{background:#E990A2;}
+  .de-jump a.todo .dot{background:#8A96E0;}
+  .de-jump a.workspace .dot{background:#0F4A42;}
+}
+.de-anchor{scroll-margin-top:72px;}
 .de-textarea:focus{border-bottom-color:#181A4D;}
 .de-textarea::placeholder{color:#20201C;opacity:0.35;}
 .de-status{margin-top:8px;font-size:11px;color:#8a8678;font-weight:600;text-align:right;min-height:14px;}
@@ -702,8 +721,17 @@ function EntryPage() {
 
 
             <div className="de-shell-inner">
+              {/* Mobile-only quick jump to each section */}
+              <nav className="de-jump" aria-label="Jump to section">
+                <a href="#sec-where" className="where"><span className="dot" />Where</a>
+                <a href="#sec-read" className="read"><span className="dot" />Read</a>
+                <a href="#sec-pray" className="pray"><span className="dot" />Pray</a>
+                <a href="#sec-todo" className="todo"><span className="dot" />To-do</a>
+                {userId && <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>}
+              </nav>
+
               {/* 1. Where Are You */}
-              <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
+              <div id="sec-where" className={`de-block de-anchor ${focusSection === "where" ? "is-full" : ""}`}>
                 <div className="de-block-header">
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
@@ -723,7 +751,7 @@ function EntryPage() {
               <div className="de-stack">
                 <div className="de-cols">
                   {/* Read */}
-                  <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                  <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
@@ -757,7 +785,7 @@ function EntryPage() {
                   </div>
 
                   {/* Pray */}
-                  <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                  <div id="sec-pray" className={`de-block de-anchor ${focusSection === "pray" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge pray">pray</span>
                       {focusBtn("pray")}
@@ -774,7 +802,7 @@ function EntryPage() {
                   </div>
 
                   {/* To-Do */}
-                  <div className={`de-block ${focusSection === "todo" ? "is-full" : ""}`}>
+                  <div id="sec-todo" className={`de-block de-anchor ${focusSection === "todo" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge todo">to-do</span>
                       {focusBtn("todo")}
@@ -842,6 +870,7 @@ function EntryPage() {
 
               {/* 5. Workspace */}
               {userId && (
+                <div id="sec-workspace" className="de-anchor">
                 <WorkspaceSection
                   userId={userId}
                   ensureEntry={ensureEntry}
@@ -850,6 +879,7 @@ function EntryPage() {
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
                 />
+                </div>
               )}
 
             </div>
