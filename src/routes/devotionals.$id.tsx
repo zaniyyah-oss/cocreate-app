@@ -870,6 +870,7 @@ function EntryPage() {
 
               {/* 5. Workspace */}
               {userId && (
+                <div id="sec-workspace" className="de-anchor">
                 <WorkspaceSection
                   userId={userId}
                   ensureEntry={ensureEntry}
