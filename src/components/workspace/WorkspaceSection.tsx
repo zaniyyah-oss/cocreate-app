@@ -364,10 +364,16 @@ function NoteBody({
   item,
   userId,
   onTitleChange,
+  guest = false,
+  onGuestGate,
+  onGuestUpdate,
 }: {
   item: WorkspaceItem;
   userId: string;
   onTitleChange?: (title: string) => void;
+  guest?: boolean;
+  onGuestGate?: (kind: "type" | "save") => void;
+  onGuestUpdate?: (patch: Partial<WorkspaceItem>) => void;
 }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState(item.title);
@@ -383,10 +389,12 @@ function NoteBody({
 
   const save = useMutation({
     mutationFn: async (patch: Record<string, unknown>) => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
       if (error) throw error;
     },
     onSuccess: () => {
+      if (guest) return;
       qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
@@ -394,6 +402,11 @@ function NoteBody({
   });
 
   const scheduleSave = (patch: Record<string, unknown>) => {
+    if (guest) {
+      onGuestUpdate?.(patch as Partial<WorkspaceItem>);
+      onGuestGate?.("type");
+      return;
+    }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => save.mutate(patch), 700);
   };
@@ -401,18 +414,20 @@ function NoteBody({
 
   const removeItem = useMutation({
     mutationFn: async () => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).delete().eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-items", userId] }),
+    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
   });
 
   const close = useMutation({
     mutationFn: async () => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).update({ status: "closed" }).eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-items", userId] }),
+    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
   });
 
   const addTag = (t: string) => {
