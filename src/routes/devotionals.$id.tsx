@@ -879,6 +879,7 @@ function EntryPage() {
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
                 />
+                </div>
               )}
 
             </div>
