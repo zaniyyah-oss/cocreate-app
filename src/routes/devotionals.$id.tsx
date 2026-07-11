@@ -785,7 +785,7 @@ function EntryPage() {
                   </div>
 
                   {/* Pray */}
-                  <div className={`de-block ${focusSection === "pray" ? "is-full" : ""}`}>
+                  <div id="sec-pray" className={`de-block de-anchor ${focusSection === "pray" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge pray">pray</span>
                       {focusBtn("pray")}
