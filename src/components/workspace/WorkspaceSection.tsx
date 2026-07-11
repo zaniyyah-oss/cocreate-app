@@ -176,7 +176,7 @@ export function WorkspaceSection({
     },
   });
 
-  const items = itemsQ.data ?? [];
+  const items = guest ? guestItems : (itemsQ.data ?? []);
 
   const openNotes = useMemo(
     () =>
