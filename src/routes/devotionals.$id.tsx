@@ -751,7 +751,7 @@ function EntryPage() {
               <div className="de-stack">
                 <div className="de-cols">
                   {/* Read */}
-                  <div className={`de-block read ${focusSection === "read" ? "is-full" : ""}`}>
+                  <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
