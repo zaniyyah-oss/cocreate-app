@@ -148,6 +148,8 @@ export function WorkspaceSection({
   isFocused,
   onToggleFocus,
   focusItemId,
+  guest = false,
+  onGuestGate,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
@@ -155,10 +157,14 @@ export function WorkspaceSection({
   isFocused?: boolean;
   onToggleFocus?: () => void;
   focusItemId?: string;
+  guest?: boolean;
+  onGuestGate?: (kind: "type" | "save") => void;
 }) {
   const qc = useQueryClient();
+  const [guestItems, setGuestItems] = useState<WorkspaceItem[]>([]);
   const itemsQ = useQuery({
     queryKey: ["workspace-items", userId],
+    enabled: !guest && !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("workspace_items" as any)
