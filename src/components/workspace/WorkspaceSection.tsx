@@ -335,7 +335,7 @@ export function WorkspaceSection({
       ) : !activeNote ? (
         <div className="ws-empty-body">No open notes. Start a new one to begin.</div>
       ) : (
-        <NoteBody key={activeNote.id} item={activeNote} userId={userId} onTitleChange={() => { /* live tab label */ }} />
+        <NoteBody key={activeNote.id} item={activeNote} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
       )}
 
       <div className="ws-library-strip">
