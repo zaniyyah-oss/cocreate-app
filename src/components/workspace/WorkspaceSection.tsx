@@ -48,8 +48,9 @@ const CSS = `
   .ws-root.is-full .ws-toolbar{margin-left:-48px;margin-right:-48px;padding-left:48px;padding-right:48px;}
 }
 @media (max-width:719px){
-  .ws-toolbar{position:sticky;top:auto;bottom:0;background:#fff;border-top:1px solid rgba(24,26,77,0.10);border-bottom:none;padding:6px 8px;margin:0 -22px -20px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(24,26,77,0.06);}
-  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 12px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-toolbar{position:static;top:auto;bottom:auto;background:#fff;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);padding:6px 8px;margin:0 -22px 14px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-editor-content{padding-top:4px;}
 }
 .ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
 .ws-tb-btn:hover{background:rgba(24,26,77,0.06);text-decoration:underline;text-underline-offset:3px;}
