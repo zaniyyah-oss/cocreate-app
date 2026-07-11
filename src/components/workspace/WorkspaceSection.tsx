@@ -209,6 +209,23 @@ export function WorkspaceSection({
 
   const createItem = useMutation({
     mutationFn: async () => {
+      if (guest) {
+        const now = new Date().toISOString();
+        const created: WorkspaceItem = {
+          id: `guest-${crypto.randomUUID()}`,
+          user_id: "guest",
+          devotional_entry_id: null,
+          title: "",
+          body: {},
+          body_text: "",
+          tags: [],
+          status: "open",
+          created_at: now,
+          updated_at: now,
+        };
+        setGuestItems((cur) => [...cur, created]);
+        return created;
+      }
       const entryId = await ensureEntry();
       if (!entryId) throw new Error("Could not create today's entry");
       const { data, error } = await supabase
@@ -228,18 +245,22 @@ export function WorkspaceSection({
       return data as unknown as WorkspaceItem;
     },
     onSuccess: (created) => {
-      qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       if (created?.id) setActiveId(created.id);
     },
   });
 
   const reopen = useMutation({
     mutationFn: async (id: string) => {
+      if (guest) {
+        setGuestItems((cur) => cur.map((i) => (i.id === id ? { ...i, status: "open" as const } : i)));
+        return;
+      }
       const { error } = await supabase.from("workspace_items" as any).update({ status: "open" }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_r, id) => {
-      qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       setActiveId(id);
     },
   });
