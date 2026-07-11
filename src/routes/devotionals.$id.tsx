@@ -598,7 +598,7 @@ function EntryPage() {
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
         <NavMenu />
-        <div className="de-navright" />
+        <div className="de-navright">{isGuest && <Link to="/auth" className="de-signin">Sign in</Link>}</div>
 
       </nav>
 
