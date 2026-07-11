@@ -879,18 +879,18 @@ function EntryPage() {
 
 
               {/* 5. Workspace */}
-              {userId && (
-                <div id="sec-workspace" className="de-anchor">
+              <div id="sec-workspace" className="de-anchor">
                 <WorkspaceSection
-                  userId={userId}
+                  userId={userId ?? ""}
                   ensureEntry={ensureEntry}
                   currentEntryId={currentEntry?.id ?? null}
                   isFocused={focusSection === "workspace"}
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
+                  guest={isGuest}
+                  onGuestGate={guestNote}
                 />
-                </div>
-              )}
+              </div>
 
             </div>
             </>
