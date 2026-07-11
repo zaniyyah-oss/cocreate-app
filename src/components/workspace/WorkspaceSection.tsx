@@ -486,7 +486,7 @@ function NoteBody({
       />
 
       <div className="ws-note-actions">
-        <button className="ws-linkaction" onClick={() => close.mutate()}>Save &amp; file away</button>
+        <button className="ws-linkaction" onClick={() => { if (guest) { onGuestGate?.("save"); return; } close.mutate(); }}>Save &amp; file away</button>
         <button
           className="ws-linkaction del"
           onClick={() => { if (confirm("Delete this note?")) removeItem.mutate(); }}
