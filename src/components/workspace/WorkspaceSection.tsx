@@ -52,6 +52,11 @@ const CSS = `
   .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
   .ws-editor-content{padding-top:4px;}
 }
+@media (min-width:720px) and (max-width:1024px){
+  .ws-toolbar{position:static;top:auto;background:#fff;padding:8px 20px;margin:0 -22px 16px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-root.is-full .ws-toolbar{position:static;top:auto;margin:0 -48px 16px;padding:10px 48px 8px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-editor-content{padding-top:6px;}
+}
 .ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
 .ws-tb-btn:hover{background:rgba(24,26,77,0.06);text-decoration:underline;text-underline-offset:3px;}
 .ws-tb-btn.on{text-decoration:underline;text-underline-offset:3px;}
