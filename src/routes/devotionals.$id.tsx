@@ -737,7 +737,7 @@ function EntryPage() {
                 <a href="#sec-read" className="read"><span className="dot" />Read</a>
                 <a href="#sec-pray" className="pray"><span className="dot" />Pray</a>
                 <a href="#sec-todo" className="todo"><span className="dot" />To-do</a>
-                {userId && <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>}
+                <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>
               </nav>
 
               {/* 1. Where Are You */}
