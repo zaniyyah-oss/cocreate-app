@@ -127,7 +127,7 @@ const CSS = `
   .de-jump::-webkit-scrollbar{display:none;}
   .de-jump a{flex:0 0 auto;font-family:'Poppins',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.03em;text-transform:uppercase;color:#181A4D;text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid rgba(24,26,77,0.14);background:#fff;display:inline-flex;align-items:center;gap:7px;line-height:1;}
   .de-jump a .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0;}
-  .de-jump a.where .dot{background:#181A4D;}
+  .de-jump a.read .dot{background:#FFAE00;}
   .de-jump a.read .dot{background:#FFAE00;}
   .de-jump a.pray .dot{background:#E990A2;}
   .de-jump a.todo .dot{background:#8A96E0;}
@@ -723,7 +723,6 @@ function EntryPage() {
             <div className="de-shell-inner">
               {/* Mobile-only quick jump to each section */}
               <nav className="de-jump" aria-label="Jump to section">
-                <a href="#sec-where" className="where"><span className="dot" />Where</a>
                 <a href="#sec-read" className="read"><span className="dot" />Read</a>
                 <a href="#sec-pray" className="pray"><span className="dot" />Pray</a>
                 <a href="#sec-todo" className="todo"><span className="dot" />To-do</a>
