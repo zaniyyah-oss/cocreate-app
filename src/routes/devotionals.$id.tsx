@@ -721,8 +721,17 @@ function EntryPage() {
 
 
             <div className="de-shell-inner">
+              {/* Mobile-only quick jump to each section */}
+              <nav className="de-jump" aria-label="Jump to section">
+                <a href="#sec-where" className="where"><span className="dot" />Where</a>
+                <a href="#sec-read" className="read"><span className="dot" />Read</a>
+                <a href="#sec-pray" className="pray"><span className="dot" />Pray</a>
+                <a href="#sec-todo" className="todo"><span className="dot" />To-do</a>
+                {userId && <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>}
+              </nav>
+
               {/* 1. Where Are You */}
-              <div className={`de-block ${focusSection === "where" ? "is-full" : ""}`}>
+              <div id="sec-where" className={`de-block de-anchor ${focusSection === "where" ? "is-full" : ""}`}>
                 <div className="de-block-header">
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
