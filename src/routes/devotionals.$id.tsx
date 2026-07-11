@@ -522,7 +522,8 @@ function EntryPage() {
 
   const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const scheduleSave = (field: SaveField, value: unknown) => {
-    if (!userId || !ready) return;
+    if (!ready) return;
+    if (!userId) { guestNote("type"); return; }
     setSavingField(field);
     if (debouncers.current[field]) clearTimeout(debouncers.current[field]!);
     debouncers.current[field] = setTimeout(() => { upsert.mutate({ [field]: value }); }, 800);
