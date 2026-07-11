@@ -513,7 +513,7 @@ function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
   const addToAbide = async () => {
     const tpl = q.data?.template;
     if (!tpl) return;
-    if (!userId) { navigate({ to: "/auth" }); return; }
+    if (!userId) { navigate({ to: "/devotionals" }); return; }
     await (supabase.from as any)("saved_items").upsert(
       { user_id: userId, devotional_template_id: tpl.id },
       { onConflict: "user_id,devotional_template_id" },

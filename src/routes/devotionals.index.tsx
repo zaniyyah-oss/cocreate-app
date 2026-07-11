@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,17 +39,8 @@ function DevotionalsIndex() {
     },
   });
 
-  if (userId === null) {
-    return (
-      <AppShell current="devotionals">
-        <div style={{ maxWidth: 520, margin: "80px auto", padding: 24, fontFamily: "Poppins,sans-serif", background: "#fff", borderRadius: 14, border: "1px solid rgba(20,20,20,0.08)", borderLeft: "4px solid #FF340C" }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#181A4D" }}>Sign in to open Abide</h3>
-          <p style={{ fontSize: 13.5, color: "#8a8678", margin: "6px 0 14px", lineHeight: 1.55 }}>Your entries are private and saved to your account.</p>
-          <Link to="/auth" style={{ background: "#181A4D", color: "#fff", fontWeight: 800, fontSize: 12.5, padding: "9px 18px", borderRadius: 20, textDecoration: "none" }}>Sign in</Link>
-        </div>
-      </AppShell>
-    );
-  }
+  // Guests fall through to the same redirect below — they get the guest preview
+  // inside /devotionals/$id.
 
   if (defaultQ.isLoading || userId === undefined) {
     return (
