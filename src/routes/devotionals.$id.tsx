@@ -188,9 +188,14 @@ const CSS = `
 .de-cols{display:grid;grid-template-columns:1fr;gap:0;}
 .de-cols .de-block{margin-bottom:0;border:none;border-radius:0;background:transparent;height:100%;display:flex;flex-direction:column;padding:20px 22px;}
 .de-cols .de-block + .de-block{border-top:1px solid rgba(24,26,77,0.12);}
+.de-pray-card .de-pray-textarea{flex:1;}
+@media (min-width:720px){
+  .de-pray-card .de-pray-textarea{min-height:220px;}
+}
 @media (min-width:900px){
   .de-cols{grid-template-columns:1fr 1fr 1fr;}
   .de-cols .de-block + .de-block{border-top:none;}
+  .de-pray-card .de-pray-textarea{height:100%;min-height:0;}
 }
 
 /* Topical devotional bands (aligned to same 3-col grid inside .de-stack) */
@@ -784,7 +789,7 @@ function EntryPage() {
                   </div>
 
                   {/* Pray */}
-                  <div id="sec-pray" className={`de-block de-anchor ${focusSection === "pray" ? "is-full" : ""}`}>
+                  <div id="sec-pray" className={`de-block de-anchor de-pray-card ${focusSection === "pray" ? "is-full" : ""}`}>
                     <div className="de-block-header">
                       <span className="de-badge pray">pray</span>
                       {focusBtn("pray")}
@@ -792,7 +797,7 @@ function EntryPage() {
                     
                     <ResizableTextarea
                       storageKey="pray"
-                      className="de-textarea"
+                      className="de-textarea de-pray-textarea"
                       placeholder="Speak plainly to God…"
                       value={prayText}
                       onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
