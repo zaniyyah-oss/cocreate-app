@@ -522,7 +522,8 @@ function EntryPage() {
 
   const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const scheduleSave = (field: SaveField, value: unknown) => {
-    if (!userId || !ready) return;
+    if (!ready) return;
+    if (!userId) { guestNote("type"); return; }
     setSavingField(field);
     if (debouncers.current[field]) clearTimeout(debouncers.current[field]!);
     debouncers.current[field] = setTimeout(() => { upsert.mutate({ [field]: value }); }, 800);
@@ -545,27 +546,32 @@ function EntryPage() {
     scheduleSave("todo_items", next);
   };
 
-  if (ready && !userId) {
-    return (
-      <div className="de-root">
-        <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <nav className="de-nav">
-          <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-          <NavMenu />
-          <div className="de-navright">
-            <Link to="/auth" className="de-signin">Sign in</Link>
-          </div>
-        </nav>
-        <div className="de-shell">
-          <div className="de-signgate">
-            <h3>Sign in to open this devotional</h3>
-            <p>Your reflections stay private and save automatically as you write.</p>
-            <Link to="/auth" className="de-signin">Sign in</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Guest preview mode: unauthenticated visitors see the full workspace and can
+  // interact locally (typing, todos, focus mode). Nothing is written to Supabase.
+  const isGuest = ready && !userId;
+  const [guestTyped, setGuestTyped] = useState(false);
+  const [guestGate, setGuestGate] = useState<null | "type" | "save">(null);
+  const guestNote = (kind: "type" | "save") => {
+    if (!isGuest) return;
+    if (kind === "type") {
+      if (!guestTyped) setGuestTyped(true);
+      setGuestGate((g) => g ?? "type");
+    } else {
+      setGuestGate("save");
+    }
+  };
+  // Warn guests before losing typed content on refresh / navigation.
+  useEffect(() => {
+    if (!isGuest || !guestTyped) return;
+    const onBefore = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBefore);
+    return () => window.removeEventListener("beforeunload", onBefore);
+  }, [isGuest, guestTyped]);
+
+
 
   const t = templateQ.data;
   const topic = topicQ.data;
@@ -593,7 +599,7 @@ function EntryPage() {
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
         <NavMenu />
-        <div className="de-navright" />
+        <div className="de-navright">{isGuest && <Link to="/auth" className="de-signin">Sign in</Link>}</div>
 
       </nav>
 
@@ -731,7 +737,7 @@ function EntryPage() {
                 <a href="#sec-read" className="read"><span className="dot" />Read</a>
                 <a href="#sec-pray" className="pray"><span className="dot" />Pray</a>
                 <a href="#sec-todo" className="todo"><span className="dot" />To-do</a>
-                {userId && <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>}
+                <a href="#sec-workspace" className="workspace"><span className="dot" />Workspace</a>
               </nav>
 
               {/* 1. Where Are You */}
@@ -873,18 +879,18 @@ function EntryPage() {
 
 
               {/* 5. Workspace */}
-              {userId && (
-                <div id="sec-workspace" className="de-anchor">
+              <div id="sec-workspace" className="de-anchor">
                 <WorkspaceSection
-                  userId={userId}
+                  userId={userId ?? ""}
                   ensureEntry={ensureEntry}
                   currentEntryId={currentEntry?.id ?? null}
                   isFocused={focusSection === "workspace"}
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
+                  guest={isGuest}
+                  onGuestGate={guestNote}
                 />
-                </div>
-              )}
+              </div>
 
             </div>
             </>
@@ -899,6 +905,51 @@ function EntryPage() {
 
       {/* keep navigate reference to avoid unused warning */}
       <span style={{ display: "none" }} aria-hidden onClick={() => navigate({ to: "/devotionals" })} />
+
+      {/* Guest preview: soft banner (first type) + hard modal (save/comment) */}
+      {isGuest && guestTyped && guestGate !== "save" && (
+        <div style={{
+          position: "fixed", left: "50%", transform: "translateX(-50%)",
+          bottom: 88, zIndex: 500, background: "#181A4D", color: "#DCE07A",
+          borderRadius: 999, padding: "10px 18px", boxShadow: "0 10px 30px rgba(24,26,77,0.25)",
+          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12.5,
+          display: "flex", alignItems: "center", gap: 12, maxWidth: "calc(100vw - 32px)",
+        }}>
+          <span>Sign in to save this as you go.</span>
+          <Link to="/auth" style={{ background: "#DCE07A", color: "#181A4D", padding: "6px 14px", borderRadius: 999, textDecoration: "none", fontWeight: 700 }}>Sign in</Link>
+          <button aria-label="Dismiss" onClick={() => setGuestGate(null)} style={{ background: "transparent", border: "none", color: "#DCE07A", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+        </div>
+      )}
+      {isGuest && guestGate === "save" && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setGuestGate(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 600, background: "rgba(24,26,77,0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 16, padding: "28px 26px",
+              maxWidth: 400, width: "100%", fontFamily: "'Poppins',sans-serif",
+              boxShadow: "0 20px 60px rgba(24,26,77,0.35)", textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a8678", marginBottom: 8 }}>Preview mode</div>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: "#181A4D", margin: "0 0 10px" }}>Create an account to save your notes</h3>
+            <p style={{ fontSize: 13.5, color: "#5c5847", lineHeight: 1.55, margin: "0 0 20px" }}>
+              You're previewing the workspace — anything you've typed lives only on this device and will be lost when you refresh.
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link to="/auth" className="de-signin" style={{ padding: "10px 22px" }}>Create account</Link>
+              <button onClick={() => setGuestGate(null)} style={{ background: "transparent", border: "1px solid rgba(24,26,77,0.2)", color: "#181A4D", padding: "10px 22px", borderRadius: 20, fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>Keep previewing</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

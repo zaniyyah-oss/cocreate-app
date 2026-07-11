@@ -148,6 +148,8 @@ export function WorkspaceSection({
   isFocused,
   onToggleFocus,
   focusItemId,
+  guest = false,
+  onGuestGate,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
@@ -155,10 +157,14 @@ export function WorkspaceSection({
   isFocused?: boolean;
   onToggleFocus?: () => void;
   focusItemId?: string;
+  guest?: boolean;
+  onGuestGate?: (kind: "type" | "save") => void;
 }) {
   const qc = useQueryClient();
+  const [guestItems, setGuestItems] = useState<WorkspaceItem[]>([]);
   const itemsQ = useQuery({
     queryKey: ["workspace-items", userId],
+    enabled: !guest && !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("workspace_items" as any)
@@ -170,7 +176,7 @@ export function WorkspaceSection({
     },
   });
 
-  const items = itemsQ.data ?? [];
+  const items = guest ? guestItems : (itemsQ.data ?? []);
 
   const openNotes = useMemo(
     () =>
@@ -203,6 +209,23 @@ export function WorkspaceSection({
 
   const createItem = useMutation({
     mutationFn: async () => {
+      if (guest) {
+        const now = new Date().toISOString();
+        const created: WorkspaceItem = {
+          id: `guest-${crypto.randomUUID()}`,
+          user_id: "guest",
+          devotional_entry_id: null,
+          title: "",
+          body: {},
+          body_text: "",
+          tags: [],
+          status: "open",
+          created_at: now,
+          updated_at: now,
+        };
+        setGuestItems((cur) => [...cur, created]);
+        return created;
+      }
       const entryId = await ensureEntry();
       if (!entryId) throw new Error("Could not create today's entry");
       const { data, error } = await supabase
@@ -222,18 +245,22 @@ export function WorkspaceSection({
       return data as unknown as WorkspaceItem;
     },
     onSuccess: (created) => {
-      qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       if (created?.id) setActiveId(created.id);
     },
   });
 
   const reopen = useMutation({
     mutationFn: async (id: string) => {
+      if (guest) {
+        setGuestItems((cur) => cur.map((i) => (i.id === id ? { ...i, status: "open" as const } : i)));
+        return;
+      }
       const { error } = await supabase.from("workspace_items" as any).update({ status: "open" }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_r, id) => {
-      qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       setActiveId(id);
     },
   });
@@ -308,7 +335,7 @@ export function WorkspaceSection({
       ) : !activeNote ? (
         <div className="ws-empty-body">No open notes. Start a new one to begin.</div>
       ) : (
-        <NoteBody key={activeNote.id} item={activeNote} userId={userId} onTitleChange={() => { /* live tab label */ }} />
+        <NoteBody key={activeNote.id} item={activeNote} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
       )}
 
       <div className="ws-library-strip">
@@ -337,10 +364,16 @@ function NoteBody({
   item,
   userId,
   onTitleChange,
+  guest = false,
+  onGuestGate,
+  onGuestUpdate,
 }: {
   item: WorkspaceItem;
   userId: string;
   onTitleChange?: (title: string) => void;
+  guest?: boolean;
+  onGuestGate?: (kind: "type" | "save") => void;
+  onGuestUpdate?: (patch: Partial<WorkspaceItem>) => void;
 }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState(item.title);
@@ -356,10 +389,12 @@ function NoteBody({
 
   const save = useMutation({
     mutationFn: async (patch: Record<string, unknown>) => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
       if (error) throw error;
     },
     onSuccess: () => {
+      if (guest) return;
       qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
@@ -367,6 +402,11 @@ function NoteBody({
   });
 
   const scheduleSave = (patch: Record<string, unknown>) => {
+    if (guest) {
+      onGuestUpdate?.(patch as Partial<WorkspaceItem>);
+      onGuestGate?.("type");
+      return;
+    }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => save.mutate(patch), 700);
   };
@@ -374,18 +414,20 @@ function NoteBody({
 
   const removeItem = useMutation({
     mutationFn: async () => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).delete().eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-items", userId] }),
+    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
   });
 
   const close = useMutation({
     mutationFn: async () => {
+      if (guest) return;
       const { error } = await supabase.from("workspace_items" as any).update({ status: "closed" }).eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-items", userId] }),
+    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
   });
 
   const addTag = (t: string) => {
@@ -444,7 +486,7 @@ function NoteBody({
       />
 
       <div className="ws-note-actions">
-        <button className="ws-linkaction" onClick={() => close.mutate()}>Save &amp; file away</button>
+        <button className="ws-linkaction" onClick={() => { if (guest) { onGuestGate?.("save"); return; } close.mutate(); }}>Save &amp; file away</button>
         <button
           className="ws-linkaction del"
           onClick={() => { if (confirm("Delete this note?")) removeItem.mutate(); }}
