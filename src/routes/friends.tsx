@@ -341,6 +341,107 @@ function FriendsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["discipleships", userId] }),
   });
 
+  // ---------------- External invites (email / SMS) ----------------
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteRole, setInviteRole] = useState<"discipler" | "disciple">("discipler");
+  const [inviteChannel, setInviteChannel] = useState<"email" | "sms">("email");
+  const [inviteContact, setInviteContact] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteErr, setInviteErr] = useState<string | null>(null);
+
+  const invitesQ = useQuery({
+    queryKey: ["disc-invites", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discipleship_invites")
+        .select("*")
+        .eq("inviter_id", userId!)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as DiscInvite[];
+    },
+  });
+  const pendingInvites = invitesQ.data ?? [];
+
+  const sendExternalInvite = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("Not signed in");
+      const contact = inviteContact.trim();
+      if (!contact) throw new Error("Enter an email or phone number");
+      if (inviteChannel === "email") {
+        const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+        if (!ok) throw new Error("Enter a valid email");
+      } else {
+        const digits = contact.replace(/\D/g, "");
+        if (digits.length < 7) throw new Error("Enter a valid phone number");
+      }
+      const { data, error } = await supabase.from("discipleship_invites").insert({
+        inviter_id: userId,
+        role: inviteRole,
+        channel: inviteChannel,
+        contact,
+        invitee_name: inviteName.trim() || null,
+        status: "pending",
+      }).select().single();
+      if (error) throw error;
+      return data as DiscInvite;
+    },
+    onSuccess: (row) => {
+      // Open the user's mail/messages app pre-filled with an invite
+      const senderName = (typeof window !== "undefined" && window.sessionStorage.getItem("cocreate:name")) || "A friend";
+      const roleText = row.role === "discipler"
+        ? `${senderName} is inviting you to disciple them on CoCreate.`
+        : `${senderName} is inviting you to be their disciple on CoCreate.`;
+      const body = `${roleText}\n\nCoCreate is a quiet space for shared devotional practice. Join here: ${window.location.origin}/auth`;
+      if (row.channel === "email") {
+        const subject = row.role === "discipler" ? "Would you disciple me?" : "Would you be my disciple?";
+        window.location.href = `mailto:${encodeURIComponent(row.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      } else {
+        window.location.href = `sms:${encodeURIComponent(row.contact)}?&body=${encodeURIComponent(body)}`;
+      }
+      setToast("Invite ready to send");
+      setInviteOpen(false);
+      setInviteContact(""); setInviteName(""); setInviteErr(null);
+      qc.invalidateQueries({ queryKey: ["disc-invites", userId] });
+    },
+    onError: (e: any) => setInviteErr(e?.message ?? "Couldn't create invite"),
+  });
+
+  const cancelInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleship_invites").update({ status: "canceled" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["disc-invites", userId] }),
+  });
+
+  const resendInvite = (row: DiscInvite) => {
+    const senderName = (typeof window !== "undefined" && window.sessionStorage.getItem("cocreate:name")) || "A friend";
+    const roleText = row.role === "discipler"
+      ? `${senderName} is inviting you to disciple them on CoCreate.`
+      : `${senderName} is inviting you to be their disciple on CoCreate.`;
+    const body = `${roleText}\n\nCoCreate is a quiet space for shared devotional practice. Join here: ${window.location.origin}/auth`;
+    if (row.channel === "email") {
+      const subject = row.role === "discipler" ? "Would you disciple me?" : "Would you be my disciple?";
+      window.location.href = `mailto:${encodeURIComponent(row.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    } else {
+      window.location.href = `sms:${encodeURIComponent(row.contact)}?&body=${encodeURIComponent(body)}`;
+    }
+  };
+
+  const openInviteModal = (role: "discipler" | "disciple") => {
+    setInviteRole(role);
+    setInviteChannel("email");
+    setInviteContact("");
+    setInviteName("");
+    setInviteErr(null);
+    setInviteOpen(true);
+  };
+
+
+
 
 
   if (ready && !userId) {
