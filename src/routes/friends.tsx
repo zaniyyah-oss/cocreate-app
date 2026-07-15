@@ -831,7 +831,57 @@ function FriendsPage() {
             </section>
           )}
         </div>
+        {inviteOpen && (
+          <div className="fr-modal-back" onClick={(e) => { if (e.target === e.currentTarget) setInviteOpen(false); }}>
+            <div className="fr-modal" role="dialog" aria-label="Invite discipler or disciple">
+              <h3>Invite {inviteRole === "discipler" ? "a discipler" : "a disciple"}</h3>
+              <p>{inviteRole === "discipler" ? "Ask someone to disciple you — we'll open a pre-filled message for you to send." : "Ask someone to be your disciple — we'll open a pre-filled message for you to send."}</p>
+
+              <div className="fr-field">
+                <label>Role</label>
+                <div className="fr-seg">
+                  <button type="button" className={inviteRole === "discipler" ? "on" : ""} onClick={() => setInviteRole("discipler")}>They'll disciple me</button>
+                  <button type="button" className={inviteRole === "disciple" ? "on" : ""} onClick={() => setInviteRole("disciple")}>They'll be my disciple</button>
+                </div>
+              </div>
+
+              <div className="fr-field">
+                <label>Send via</label>
+                <div className="fr-seg">
+                  <button type="button" className={inviteChannel === "email" ? "on" : ""} onClick={() => setInviteChannel("email")}>Email</button>
+                  <button type="button" className={inviteChannel === "sms" ? "on" : ""} onClick={() => setInviteChannel("sms")}>Text</button>
+                </div>
+              </div>
+
+              <div className="fr-field">
+                <label>Their name (optional)</label>
+                <input type="text" value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="e.g. Sarah" maxLength={80} />
+              </div>
+
+              <div className="fr-field">
+                <label>{inviteChannel === "email" ? "Email address" : "Phone number"}</label>
+                <input
+                  type={inviteChannel === "email" ? "email" : "tel"}
+                  value={inviteContact}
+                  onChange={(e) => setInviteContact(e.target.value)}
+                  placeholder={inviteChannel === "email" ? "friend@example.com" : "+1 555 555 5555"}
+                  maxLength={120}
+                />
+              </div>
+
+              {inviteErr && <div className="fr-err">{inviteErr}</div>}
+
+              <div className="fr-modal-actions">
+                <button className="fr-btn ghost" onClick={() => setInviteOpen(false)}>Cancel</button>
+                <button className="fr-btn" disabled={sendExternalInvite.isPending} onClick={() => sendExternalInvite.mutate()}>
+                  {sendExternalInvite.isPending ? "Preparing…" : "Send invite"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {toast && <div className="fr-toast">{toast}</div>}
+
       </div>
     </AppShell>
   );
