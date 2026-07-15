@@ -116,6 +116,12 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   }, []);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCollapsed(window.localStorage.getItem(STORAGE_KEY) === "1");
+    }
+  }, []);
+
+  useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     document.body.style.background = "#eee9d9";
     document.documentElement.style.background = isDesktop ? "#eee9d9" : "#fff";
