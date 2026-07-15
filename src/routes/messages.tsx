@@ -383,7 +383,7 @@ function MessagesPage() {
             </div>
 
             {/* Thread view panel */}
-            <div className="mg-panel" style={{ display: !currentThreadId ? (window.innerWidth <= 820 ? "none" : "flex") : "flex" }}>
+            <div className="mg-panel" style={{ display: !currentThreadId ? (winWidth <= 820 ? "none" : "flex") : "flex" }}>
               {!currentThread ? (
                 <div className="mg-empty" style={{ margin: "auto" }}>
                   <strong>Pick a conversation</strong>
