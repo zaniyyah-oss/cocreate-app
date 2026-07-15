@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DevotionalsRouteImport } from './routes/devotionals'
@@ -51,6 +52,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const NotesRoute = NotesRouteImport.update({
   id: '/notes',
   path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FriendsRoute = FriendsRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
+  '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
+  '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
+  '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
@@ -276,6 +285,7 @@ export interface FileRouteTypes {
     | '/devotionals'
     | '/explore'
     | '/friends'
+    | '/messages'
     | '/notes'
     | '/profile'
     | '/saved'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/explore'
     | '/friends'
+    | '/messages'
     | '/notes'
     | '/profile'
     | '/saved'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/devotionals'
     | '/explore'
     | '/friends'
+    | '/messages'
     | '/notes'
     | '/profile'
     | '/saved'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   FriendsRoute: typeof FriendsRoute
+  MessagesRoute: typeof MessagesRoute
   NotesRoute: typeof NotesRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/notes'
       fullPath: '/notes'
       preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/friends': {
@@ -637,6 +657,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   FriendsRoute: FriendsRoute,
+  MessagesRoute: MessagesRoute,
   NotesRoute: NotesRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,

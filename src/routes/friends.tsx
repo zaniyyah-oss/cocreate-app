@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,6 +104,7 @@ function Avatar({ profile }: { profile?: Pick<Profile, "name" | "avatar_url"> | 
 function FriendsPage() {
   const { userId, ready } = useAuth();
   const qc = useQueryClient();
+  const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [discQuery, setDiscQuery] = useState("");
@@ -422,6 +423,7 @@ function FriendsPage() {
                         <div className="fr-meta">Friends since {new Date(f.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
                       </div>
                       <div className="fr-btnrow">
+                        <button className="fr-btn ghost" onClick={() => nav({ to: "/messages", search: { with: otherId } })}>Message</button>
                         <button className="fr-btn danger" disabled={remove.isPending} onClick={() => { if (confirm("Remove this friend?")) remove.mutate(f.id); }}>Remove</button>
                       </div>
                     </div>
@@ -561,6 +563,7 @@ function FriendsPage() {
                         <div className="fr-meta">Discipling you since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
                       </div>
                       <div className="fr-btnrow">
+                        <button className="fr-btn ghost" onClick={() => nav({ to: "/messages", search: { with: d.mentor_id } })}>Message</button>
                         <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
                       </div>
                     </div>
@@ -587,6 +590,7 @@ function FriendsPage() {
                         <div className="fr-meta">Discipling since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
                       </div>
                       <div className="fr-btnrow">
+                        <button className="fr-btn ghost" onClick={() => nav({ to: "/messages", search: { with: d.disciple_id } })}>Message</button>
                         <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
                       </div>
                     </div>
