@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { trackEvent } from "@/lib/track";
+import { DevotionalReminders } from "@/components/DevotionalReminders";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -301,6 +302,12 @@ function ProfilePage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="pf-section">
+          <h2>Daily practice</h2>
+          <p className="sh">Set reminders so your devotional time doesn't slip past you.</p>
+          {userId && <DevotionalReminders userId={userId} />}
         </div>
 
         <div className="pf-section">
