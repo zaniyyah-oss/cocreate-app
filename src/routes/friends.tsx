@@ -631,11 +631,53 @@ function FriendsPage() {
           {/* ============ Discipleship ============ */}
           <div style={{ height: 16, borderTop: "1px solid rgba(20,20,20,0.08)", margin: "24px 0 32px" }} />
 
-          <header className="fr-head" style={{ marginBottom: 20 }}>
-            <div className="fr-eyebrow">Discipleship</div>
-            <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
-            <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+          <header className="fr-head" style={{ marginBottom: 20, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "start", gap: 16 }}>
+            <div>
+              <div className="fr-eyebrow">Discipleship</div>
+              <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
+              <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+            </div>
+            <div className="fr-btnrow" style={{ justifyContent: "flex-end" }}>
+              <button className="fr-btn ghost" style={{ padding: "10px 16px", fontSize: 12.5 }} onClick={() => openInviteModal("discipler")}>
+                + Invite discipler
+              </button>
+              <button className="fr-btn" style={{ padding: "10px 16px", fontSize: 12.5 }} onClick={() => openInviteModal("disciple")}>
+                + Invite disciple
+              </button>
+            </div>
           </header>
+
+          {/* Pending external invites (email / text) */}
+          {pendingInvites.length > 0 && (
+            <section className="fr-section">
+              <h2>Pending invites · {pendingInvites.length}</h2>
+              <div className="fr-list">
+                {pendingInvites.map((inv) => (
+                  <div key={inv.id} className="fr-row">
+                    <div className="fr-av" style={{ background: inv.role === "discipler" ? "#8B5A2B" : "#0F4A42" }}>
+                      {inv.channel === "email" ? (
+                        <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "#FBF8ED", fill: "none", strokeWidth: 2 }}><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "#FBF8ED", fill: "none", strokeWidth: 2 }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="fr-name">{inv.invitee_name || inv.contact}</div>
+                      <div className="fr-meta">
+                        Invited {inv.role === "discipler" ? "to disciple you" : "as your disciple"} · via {inv.channel === "email" ? "email" : "text"} · <span style={{ color: "#B8860B", fontWeight: 800 }}>Pending</span>
+                      </div>
+                    </div>
+                    <div className="fr-btnrow">
+                      <button className="fr-btn ghost" onClick={() => resendInvite(inv)}>Resend</button>
+                      <button className="fr-btn danger" disabled={cancelInvite.isPending} onClick={() => cancelInvite.mutate(inv.id)}>Cancel</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
 
           {/* Discipleship requests */}
           {discIncoming.length > 0 && (
