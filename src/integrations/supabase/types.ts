@@ -673,6 +673,36 @@ export type Database = {
           },
         ]
       }
+      discipleships: {
+        Row: {
+          created_at: string
+          disciple_id: string
+          id: string
+          mentor_id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["discipleship_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          disciple_id: string
+          id?: string
+          mentor_id: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["discipleship_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          disciple_id?: string
+          id?: string
+          mentor_id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["discipleship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discussion_comments: {
         Row: {
           body: string
@@ -1222,6 +1252,7 @@ export type Database = {
         | "clip"
         | "promoted"
       devotional_medium: "scripture" | "podcast" | "reflect"
+      discipleship_status: "pending" | "accepted"
       friendship_status: "pending" | "accepted"
     }
     CompositeTypes: {
@@ -1361,6 +1392,7 @@ export const Constants = {
         "promoted",
       ],
       devotional_medium: ["scripture", "podcast", "reflect"],
+      discipleship_status: ["pending", "accepted"],
       friendship_status: ["pending", "accepted"],
     },
   },

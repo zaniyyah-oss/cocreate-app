@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
+type Discipleship = Database["public"]["Tables"]["discipleships"]["Row"];
 
 const FRIEND_CAP = 10;
 
@@ -105,6 +106,7 @@ function FriendsPage() {
   const qc = useQueryClient();
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [discQuery, setDiscQuery] = useState("");
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
@@ -220,6 +222,107 @@ function FriendsPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["friendships", userId] }),
   });
+
+  // ---------------- Discipleship ----------------
+  const discQ = useQuery({
+    queryKey: ["discipleships", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discipleships")
+        .select("*")
+        .or(`mentor_id.eq.${userId},disciple_id.eq.${userId}`)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Discipleship[];
+    },
+  });
+  const discs = discQ.data ?? [];
+  const disciplersAccepted = discs.filter((d) => d.status === "accepted" && d.disciple_id === userId); // mentor = counterpart
+  const disciplesAccepted = discs.filter((d) => d.status === "accepted" && d.mentor_id === userId);   // disciple = counterpart
+  const discIncoming = discs.filter((d) => d.status === "pending" && d.requester_id !== userId);
+  const discOutgoing = discs.filter((d) => d.status === "pending" && d.requester_id === userId);
+
+  const discCounterpartIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const d of discs) s.add(d.mentor_id === userId ? d.disciple_id : d.mentor_id);
+    return Array.from(s);
+  }, [discs, userId]);
+
+  const discProfilesQ = useQuery({
+    queryKey: ["disc-profiles", discCounterpartIds.sort().join(",")],
+    enabled: discCounterpartIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id,name,avatar_url,member_since,streak_count,created_at,updated_at").in("id", discCounterpartIds);
+      if (error) throw error;
+      const map: Record<string, Profile> = {};
+      for (const p of (data ?? []) as Profile[]) map[p.id] = p;
+      return map;
+    },
+  });
+  const discProfiles = discProfilesQ.data ?? {};
+
+  const dq = discQuery.trim();
+  const discExistingIds = useMemo(() => {
+    const s = new Set<string>();
+    if (userId) s.add(userId);
+    for (const d of discs) s.add(d.mentor_id === userId ? d.disciple_id : d.mentor_id);
+    return s;
+  }, [discs, userId]);
+
+  const discSearchQ = useQuery({
+    queryKey: ["disc-search", dq, userId],
+    enabled: ready && !!userId && dq.length >= 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,name,avatar_url,member_since,streak_count,created_at,updated_at")
+        .ilike("name", `%${dq}%`)
+        .limit(20);
+      if (error) throw error;
+      return ((data ?? []) as Profile[]).filter((p) => !discExistingIds.has(p.id));
+    },
+  });
+
+  const sendDiscRequest = useMutation({
+    mutationFn: async (vars: { otherId: string; role: "discipler" | "disciple" }) => {
+      if (!userId) throw new Error("Not signed in");
+      // role = the role the OTHER person will fill
+      const mentor_id = vars.role === "discipler" ? vars.otherId : userId;
+      const disciple_id = vars.role === "discipler" ? userId : vars.otherId;
+      const { error } = await supabase.from("discipleships").insert({
+        mentor_id, disciple_id, requester_id: userId, status: "pending",
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      setToast(vars.role === "discipler" ? "Invited to disciple you" : "Invited to be your disciple");
+      qc.invalidateQueries({ queryKey: ["discipleships", userId] });
+    },
+    onError: (e: any) => setToast(e?.message?.includes("duplicate") ? "Already invited" : (e?.message ?? "Couldn't send request")),
+  });
+
+  const acceptDisc = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleships").update({ status: "accepted" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setToast("Discipleship started");
+      qc.invalidateQueries({ queryKey: ["discipleships", userId] });
+    },
+    onError: (e: any) => setToast(e?.message ?? "Couldn't accept"),
+  });
+
+  const removeDisc = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleships").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["discipleships", userId] }),
+  });
+
+
 
   if (ready && !userId) {
     return (
@@ -381,6 +484,165 @@ function FriendsPage() {
                       </div>
                       <div className="fr-btnrow">
                         <button className="fr-btn danger" disabled={remove.isPending} onClick={() => remove.mutate(f.id)}>Cancel</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ============ Discipleship ============ */}
+          <div style={{ height: 16, borderTop: "1px solid rgba(20,20,20,0.08)", margin: "24px 0 32px" }} />
+
+          <header className="fr-head" style={{ marginBottom: 20 }}>
+            <div className="fr-eyebrow">Discipleship</div>
+            <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
+            <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+          </header>
+
+          {/* Discipleship requests */}
+          {discIncoming.length > 0 && (
+            <section className="fr-section">
+              <h2>Discipleship requests · {discIncoming.length}</h2>
+              <div className="fr-list">
+                {discIncoming.map((d) => {
+                  const otherId = d.requester_id;
+                  const p = discProfiles[otherId];
+                  const invitingMeAs = d.mentor_id === userId ? "discipler" : "disciple"; // my role in this pair
+                  const label = invitingMeAs === "discipler" ? "wants you to disciple them" : "wants to disciple you";
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Someone"}</div>
+                        <div className="fr-meta">{label}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn accept" disabled={acceptDisc.isPending} onClick={() => acceptDisc.mutate(d.id)}>Accept</button>
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => removeDisc.mutate(d.id)}>Decline</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Discipling Me */}
+          <section className="fr-section">
+            <h2>Discipling me · {disciplersAccepted.length}</h2>
+            {disciplersAccepted.length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No disciplers yet</strong>Invite someone below to disciple you.</div></div>
+            ) : (
+              <div className="fr-list">
+                {disciplersAccepted.map((d) => {
+                  const p = discProfiles[d.mentor_id];
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Discipler"}</div>
+                        <div className="fr-meta">Discipling you since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* I'm Discipling */}
+          <section className="fr-section">
+            <h2>I'm discipling · {disciplesAccepted.length}</h2>
+            {disciplesAccepted.length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No disciples yet</strong>Invite someone below to be your disciple.</div></div>
+            ) : (
+              <div className="fr-list">
+                {disciplesAccepted.map((d) => {
+                  const p = discProfiles[d.disciple_id];
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Disciple"}</div>
+                        <div className="fr-meta">Discipling since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Find people to disciple / be discipled by */}
+          <section className="fr-section">
+            <h2>Invite a discipler or disciple</h2>
+            <div className="fr-search" style={{ marginBottom: 14 }}>
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input
+                type="text"
+                placeholder="Search by name…"
+                value={discQuery}
+                onChange={(e) => setDiscQuery(e.target.value)}
+              />
+            </div>
+            {dq.length < 2 ? (
+              <div className="fr-list"><div className="fr-empty">Type at least 2 characters to search.</div></div>
+            ) : discSearchQ.isLoading ? (
+              <div className="fr-list"><div className="fr-empty">Searching…</div></div>
+            ) : (discSearchQ.data ?? []).length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No matches</strong>No one found for "{dq}".</div></div>
+            ) : (
+              <div className="fr-list">
+                {(discSearchQ.data ?? []).map((p) => {
+                  const pending = sendDiscRequest.isPending && sendDiscRequest.variables?.otherId === p.id;
+                  return (
+                    <div key={p.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p.name ?? "Member"}</div>
+                        <div className="fr-meta">Member since {new Date(p.member_since).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn ghost" disabled={pending} onClick={() => sendDiscRequest.mutate({ otherId: p.id, role: "discipler" })}>
+                          Invite as discipler
+                        </button>
+                        <button className="fr-btn" disabled={pending} onClick={() => sendDiscRequest.mutate({ otherId: p.id, role: "disciple" })}>
+                          Invite as disciple
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Outgoing discipleship requests */}
+          {discOutgoing.length > 0 && (
+            <section className="fr-section">
+              <h2>Awaiting response · {discOutgoing.length}</h2>
+              <div className="fr-list">
+                {discOutgoing.map((d) => {
+                  const otherId = d.mentor_id === userId ? d.disciple_id : d.mentor_id;
+                  const p = discProfiles[otherId];
+                  const role = d.mentor_id === userId ? "as your disciple" : "to disciple you";
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Member"}</div>
+                        <div className="fr-meta">Invited {role} · {new Date(d.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => removeDisc.mutate(d.id)}>Cancel</button>
                       </div>
                     </div>
                   );
