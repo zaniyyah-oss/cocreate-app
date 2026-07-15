@@ -491,6 +491,165 @@ function FriendsPage() {
               </div>
             </section>
           )}
+
+          {/* ============ Discipleship ============ */}
+          <div style={{ height: 16, borderTop: "1px solid rgba(20,20,20,0.08)", margin: "24px 0 32px" }} />
+
+          <header className="fr-head" style={{ marginBottom: 20 }}>
+            <div className="fr-eyebrow">Discipleship</div>
+            <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
+            <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+          </header>
+
+          {/* Discipleship requests */}
+          {discIncoming.length > 0 && (
+            <section className="fr-section">
+              <h2>Discipleship requests · {discIncoming.length}</h2>
+              <div className="fr-list">
+                {discIncoming.map((d) => {
+                  const otherId = d.requester_id;
+                  const p = discProfiles[otherId];
+                  const invitingMeAs = d.mentor_id === userId ? "discipler" : "disciple"; // my role in this pair
+                  const label = invitingMeAs === "discipler" ? "wants you to disciple them" : "wants to disciple you";
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Someone"}</div>
+                        <div className="fr-meta">{label}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn accept" disabled={acceptDisc.isPending} onClick={() => acceptDisc.mutate(d.id)}>Accept</button>
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => removeDisc.mutate(d.id)}>Decline</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Discipling Me */}
+          <section className="fr-section">
+            <h2>Discipling me · {disciplersAccepted.length}</h2>
+            {disciplersAccepted.length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No disciplers yet</strong>Invite someone below to disciple you.</div></div>
+            ) : (
+              <div className="fr-list">
+                {disciplersAccepted.map((d) => {
+                  const p = discProfiles[d.mentor_id];
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Discipler"}</div>
+                        <div className="fr-meta">Discipling you since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* I'm Discipling */}
+          <section className="fr-section">
+            <h2>I'm discipling · {disciplesAccepted.length}</h2>
+            {disciplesAccepted.length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No disciples yet</strong>Invite someone below to be your disciple.</div></div>
+            ) : (
+              <div className="fr-list">
+                {disciplesAccepted.map((d) => {
+                  const p = discProfiles[d.disciple_id];
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Disciple"}</div>
+                        <div className="fr-meta">Discipling since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Find people to disciple / be discipled by */}
+          <section className="fr-section">
+            <h2>Invite a discipler or disciple</h2>
+            <div className="fr-search" style={{ marginBottom: 14 }}>
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input
+                type="text"
+                placeholder="Search by name…"
+                value={discQuery}
+                onChange={(e) => setDiscQuery(e.target.value)}
+              />
+            </div>
+            {dq.length < 2 ? (
+              <div className="fr-list"><div className="fr-empty">Type at least 2 characters to search.</div></div>
+            ) : discSearchQ.isLoading ? (
+              <div className="fr-list"><div className="fr-empty">Searching…</div></div>
+            ) : (discSearchQ.data ?? []).length === 0 ? (
+              <div className="fr-list"><div className="fr-empty"><strong>No matches</strong>No one found for "{dq}".</div></div>
+            ) : (
+              <div className="fr-list">
+                {(discSearchQ.data ?? []).map((p) => {
+                  const pending = sendDiscRequest.isPending && sendDiscRequest.variables?.otherId === p.id;
+                  return (
+                    <div key={p.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p.name ?? "Member"}</div>
+                        <div className="fr-meta">Member since {new Date(p.member_since).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn ghost" disabled={pending} onClick={() => sendDiscRequest.mutate({ otherId: p.id, role: "discipler" })}>
+                          Invite as discipler
+                        </button>
+                        <button className="fr-btn" disabled={pending} onClick={() => sendDiscRequest.mutate({ otherId: p.id, role: "disciple" })}>
+                          Invite as disciple
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Outgoing discipleship requests */}
+          {discOutgoing.length > 0 && (
+            <section className="fr-section">
+              <h2>Awaiting response · {discOutgoing.length}</h2>
+              <div className="fr-list">
+                {discOutgoing.map((d) => {
+                  const otherId = d.mentor_id === userId ? d.disciple_id : d.mentor_id;
+                  const p = discProfiles[otherId];
+                  const role = d.mentor_id === userId ? "as your disciple" : "to disciple you";
+                  return (
+                    <div key={d.id} className="fr-row">
+                      <Avatar profile={p} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fr-name">{p?.name ?? "Member"}</div>
+                        <div className="fr-meta">Invited {role} · {new Date(d.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</div>
+                      </div>
+                      <div className="fr-btnrow">
+                        <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => removeDisc.mutate(d.id)}>Cancel</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
         {toast && <div className="fr-toast">{toast}</div>}
       </div>
