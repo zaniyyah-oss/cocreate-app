@@ -673,6 +673,42 @@ export type Database = {
           },
         ]
       }
+      discipleship_invites: {
+        Row: {
+          channel: string
+          contact: string
+          created_at: string
+          id: string
+          invitee_name: string | null
+          inviter_id: string
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          contact: string
+          created_at?: string
+          id?: string
+          invitee_name?: string | null
+          inviter_id: string
+          role: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          contact?: string
+          created_at?: string
+          id?: string
+          invitee_name?: string | null
+          inviter_id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discipleships: {
         Row: {
           created_at: string
