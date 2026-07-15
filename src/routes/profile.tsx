@@ -305,6 +305,12 @@ function ProfilePage() {
         </div>
 
         <div className="pf-section">
+          <h2>Daily practice</h2>
+          <p className="sh">Set reminders so your devotional time doesn't slip past you.</p>
+          {userId && <DevotionalReminders userId={userId} />}
+        </div>
+
+        <div className="pf-section">
           <h2>Settings</h2>
           <p className="sh">Quiet by default. Change these any time.</p>
           <div className="pf-settings">
