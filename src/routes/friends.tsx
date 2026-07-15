@@ -590,6 +590,7 @@ function FriendsPage() {
                         <div className="fr-meta">Discipling since {new Date(d.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
                       </div>
                       <div className="fr-btnrow">
+                        <button className="fr-btn ghost" onClick={() => nav({ to: "/messages", search: { with: d.disciple_id } })}>Message</button>
                         <button className="fr-btn danger" disabled={removeDisc.isPending} onClick={() => { if (confirm("End this discipleship?")) removeDisc.mutate(d.id); }}>Remove</button>
                       </div>
                     </div>
