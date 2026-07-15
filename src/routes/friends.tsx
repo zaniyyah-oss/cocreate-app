@@ -104,6 +104,7 @@ function Avatar({ profile }: { profile?: Pick<Profile, "name" | "avatar_url"> | 
 function FriendsPage() {
   const { userId, ready } = useAuth();
   const qc = useQueryClient();
+  const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [discQuery, setDiscQuery] = useState("");
