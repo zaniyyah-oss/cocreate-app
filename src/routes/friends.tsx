@@ -423,6 +423,7 @@ function FriendsPage() {
                         <div className="fr-meta">Friends since {new Date(f.updated_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
                       </div>
                       <div className="fr-btnrow">
+                        <button className="fr-btn ghost" onClick={() => nav({ to: "/messages", search: { with: otherId } })}>Message</button>
                         <button className="fr-btn danger" disabled={remove.isPending} onClick={() => { if (confirm("Remove this friend?")) remove.mutate(f.id); }}>Remove</button>
                       </div>
                     </div>
