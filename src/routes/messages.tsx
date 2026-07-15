@@ -5,16 +5,20 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { GroupsInner } from "@/components/GroupsInner";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Thread = Database["public"]["Tables"]["message_threads"]["Row"];
 type Participant = Database["public"]["Tables"]["thread_participants"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
+type Discipleship = Database["public"]["Tables"]["discipleships"]["Row"];
 
 const searchSchema = z.object({
   t: z.string().optional(),
-  with: z.string().optional(), // start-1:1-with user id (from Friend row)
+  with: z.string().optional(),
+  view: z.enum(["groups"]).optional(),
+  code: z.string().optional(),
 });
 
 export const Route = createFileRoute("/messages")({
@@ -23,11 +27,13 @@ export const Route = createFileRoute("/messages")({
   head: () => ({
     meta: [
       { title: "Messages — CoCreate" },
-      { name: "description", content: "Direct and group messages with friends, disciplers, and disciples." },
+      { name: "description", content: "Direct and group messages with friends, disciplers, disciples, and facilitator groups." },
       { property: "og:title", content: "Messages — CoCreate" },
     ],
   }),
 });
+
+const FG_PREFIX = "fg_"; // sentinel for facilitator group threads in ?t=
 
 const CSS = `
 .mg-root *{box-sizing:border-box;}
@@ -45,27 +51,40 @@ const CSS = `
 .mg-newbtn:hover{opacity:0.9;}
 .mg-newbtn.ghost{background:transparent;color:#181A4D;border:1.5px solid rgba(20,20,20,0.12);}
 
+.mg-actions{display:flex;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(20,20,20,0.05);background:#FBF8ED;}
+.mg-actionbtn{flex:1;background:#fff;border:1.5px solid rgba(20,20,20,0.12);color:#181A4D;font-family:'Poppins';font-weight:800;font-size:12px;padding:9px 12px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.mg-actionbtn:hover{border-color:#181A4D;}
+.mg-actionbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.mg-section{margin-top:6px;}
+.mg-section-head{padding:14px 18px 6px;font-size:10.5px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.mg-section-count{background:rgba(24,26,77,0.06);color:#181A4D;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;letter-spacing:0.02em;text-transform:none;}
+
 .mg-list{overflow-y:auto;flex:1;}
-.mg-thread{padding:14px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;border-bottom:1px solid rgba(20,20,20,0.04);background:#fff;transition:background .15s ease;}
+.mg-thread{padding:12px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;border-bottom:1px solid rgba(20,20,20,0.04);background:#fff;transition:background .15s ease;}
 .mg-thread:hover{background:#FBF8ED;}
 .mg-thread.active{background:#FBF8ED;}
 .mg-av{width:38px;height:38px;border-radius:50%;background:#0F4A42;color:#FBF8ED;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;overflow:hidden;flex-shrink:0;letter-spacing:-0.02em;}
 .mg-av.group{background:#DCE07A;color:#181A4D;}
+.mg-av.fg{background:#181A4D;color:#DCE07A;border-radius:10px;}
 .mg-av img{width:100%;height:100%;object-fit:cover;}
-.mg-tname{font-size:13.5px;font-weight:800;color:#181A4D;letter-spacing:-0.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mg-tname{font-size:13.5px;font-weight:800;color:#181A4D;letter-spacing:-0.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
 .mg-tpreview{font-size:12px;color:#8a8678;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .mg-tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
 .mg-twhen{font-size:10.5px;color:#8a8678;font-weight:700;}
 .mg-badge{min-width:18px;height:18px;padding:0 6px;border-radius:99px;background:#FF340C;color:#fff;font-size:10px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+.mg-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:0.06em;text-transform:uppercase;}
+.mg-tag.fg{background:#DCE07A;color:#181A4D;}
 
 .mg-empty{padding:40px 24px;text-align:center;color:#8a8678;font-size:13px;line-height:1.55;}
 .mg-empty strong{display:block;color:#181A4D;font-weight:800;font-size:14px;margin-bottom:6px;}
+.mg-section-empty{padding:8px 18px 14px;color:#8a8678;font-size:11.5px;font-style:italic;}
 
 /* Thread view */
 .mg-view-head{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(20,20,20,0.05);}
 .mg-back{background:transparent;border:none;color:#8a8678;font-weight:800;font-size:12px;cursor:pointer;padding:6px 8px;display:none;font-family:'Poppins';}
 @media (max-width:820px){.mg-back{display:inline-flex;}}
-.mg-view-name{font-size:14px;font-weight:900;color:#181A4D;letter-spacing:-0.005em;}
+.mg-view-name{font-size:14px;font-weight:900;color:#181A4D;letter-spacing:-0.005em;display:flex;align-items:center;gap:8px;}
 .mg-view-sub{font-size:11.5px;color:#8a8678;font-weight:600;margin-top:1px;}
 
 .mg-msgs{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:6px;background:#FBF8ED;}
@@ -162,7 +181,7 @@ function MessagesPage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // 1. Load user's threads (participant rows) + thread rows
+  // ============ FRIEND-BASED THREADS (existing) ============
   const partsQ = useQuery({
     queryKey: ["msg-my-parts", userId],
     enabled: ready && !!userId,
@@ -186,7 +205,6 @@ function MessagesPage() {
   });
   const threads = threadsQ.data ?? [];
 
-  // 2. All participants across my threads (to know who I'm talking to)
   const allPartsQ = useQuery({
     queryKey: ["msg-all-parts", threadIds.sort().join(",")],
     enabled: threadIds.length > 0,
@@ -198,7 +216,6 @@ function MessagesPage() {
   });
   const allParts = allPartsQ.data ?? [];
 
-  // 3. Profiles for all counterpart users
   const counterpartIds = useMemo(() => {
     const s = new Set<string>();
     for (const p of allParts) if (p.user_id !== userId) s.add(p.user_id);
@@ -217,7 +234,6 @@ function MessagesPage() {
   });
   const profiles = profilesQ.data ?? {};
 
-  // 4. Latest message per thread (for preview & unread)
   const previewsQ = useQuery({
     queryKey: ["msg-previews", threadIds.sort().join(",")],
     enabled: threadIds.length > 0,
@@ -232,7 +248,7 @@ function MessagesPage() {
   });
   const previews = previewsQ.data?.latest ?? {};
 
-  // Friends (for New Group modal + starting 1:1)
+  // Friends for New Group modal
   const friendsQ = useQuery({
     queryKey: ["msg-friends", userId],
     enabled: ready && !!userId,
@@ -249,39 +265,68 @@ function MessagesPage() {
   });
   const friends = friendsQ.data ?? [];
 
-  // Start-with flow (from Friend "Message" button)
-  const startWith = search.with;
-  const startingRef = useRef(false);
-  useEffect(() => {
-    if (!startWith || !userId || !ready || startingRef.current) return;
-    startingRef.current = true;
-    (async () => {
-      // Find existing 1:1 thread with this user
-      const existingThreadId = threads
-        .filter((t) => !t.is_group)
-        .find((t) => {
-          const parts = allParts.filter((p) => p.thread_id === t.id);
-          const ids = parts.map((p) => p.user_id).sort();
-          return parts.length === 2 && ids.includes(userId) && ids.includes(startWith);
-        })?.id;
-      if (existingThreadId) {
-        nav({ to: "/messages", search: { t: existingThreadId }, replace: true });
-        return;
-      }
-      // Create
-      const { data: t, error } = await supabase.from("message_threads").insert({ is_group: false, created_by: userId }).select().single();
-      if (error) { startingRef.current = false; return; }
-      const { error: pe } = await supabase.from("thread_participants").insert([
-        { thread_id: t.id, user_id: userId },
-        { thread_id: t.id, user_id: startWith },
-      ]);
-      if (pe) { startingRef.current = false; return; }
-      await qc.invalidateQueries({ queryKey: ["msg-my-parts", userId] });
-      nav({ to: "/messages", search: { t: t.id }, replace: true });
-    })();
-  }, [startWith, userId, ready, threads, allParts, nav, qc]);
+  // Discipleships — for tagging discipleship threads
+  const discipleshipsQ = useQuery({
+    queryKey: ["msg-discipleships", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("discipleships").select("*").eq("status", "accepted");
+      if (error) throw error;
+      return (data ?? []) as Discipleship[];
+    },
+  });
+  const discipleshipPartnerIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const d of discipleshipsQ.data ?? []) {
+      if (d.mentor_id === userId) s.add(d.disciple_id);
+      else if (d.disciple_id === userId) s.add(d.mentor_id);
+    }
+    return s;
+  }, [discipleshipsQ.data, userId]);
 
-  // Realtime: refresh threads/previews when messages appear in my threads
+  // ============ FACILITATOR GROUP THREADS ============
+  const fgThreadsQ = useQuery({
+    queryKey: ["msg-fg-threads", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const [{ data: mine, error: e1 }, { data: mem, error: e2 }] = await Promise.all([
+        supabase.from("facilitator_groups").select("id, name, description, facilitator_id, created_at").eq("facilitator_id", userId!),
+        supabase.from("facilitator_group_members").select("group_id, facilitator_groups!inner(id, name, description, facilitator_id, created_at)").eq("user_id", userId!),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      const map = new Map<string, { id: string; name: string; description: string | null; facilitator_id: string; created_at: string; role: "facilitator" | "member" }>();
+      for (const g of (mine ?? []) as any[]) map.set(g.id, { ...g, role: "facilitator" });
+      for (const row of (mem ?? []) as any[]) {
+        const g = row.facilitator_groups;
+        if (g && !map.has(g.id)) map.set(g.id, { ...g, role: "member" });
+      }
+      return Array.from(map.values());
+    },
+  });
+  const fgThreads = fgThreadsQ.data ?? [];
+  const fgIds = fgThreads.map((g) => g.id);
+
+  const fgPreviewsQ = useQuery({
+    queryKey: ["msg-fg-previews", fgIds.sort().join(",")],
+    enabled: fgIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("facilitator_group_messages")
+        .select("id, group_id, user_id, body, created_at")
+        .in("group_id", fgIds)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const rows = (data ?? []) as { id: string; group_id: string; user_id: string; body: string; created_at: string }[];
+      const latest: Record<string, typeof rows[number]> = {};
+      for (const m of rows) if (!latest[m.group_id]) latest[m.group_id] = m;
+      return latest;
+    },
+  });
+  const fgPreviews = fgPreviewsQ.data ?? {};
+
+  // Realtime for friend messages
   useEffect(() => {
     if (!userId || threadIds.length === 0) return;
     const channel = supabase
@@ -297,15 +342,78 @@ function MessagesPage() {
     return () => { supabase.removeChannel(channel); };
   }, [userId, threadIds.join(","), qc]);
 
+  // Realtime for facilitator group messages
+  useEffect(() => {
+    if (!userId || fgIds.length === 0) return;
+    const channel = supabase
+      .channel(`msg-user-fg-${userId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "facilitator_group_messages" }, (payload) => {
+        const row = payload.new as { group_id: string };
+        if (fgIds.includes(row.group_id)) {
+          qc.invalidateQueries({ queryKey: ["msg-fg-previews", fgIds.sort().join(",")] });
+          qc.invalidateQueries({ queryKey: ["msg-fg-thread-messages", row.group_id] });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, fgIds.join(","), qc]);
+
+  // Start-with flow (from Friend "Message" button)
+  const startWith = search.with;
+  const startingRef = useRef(false);
+  useEffect(() => {
+    if (!startWith || !userId || !ready || startingRef.current) return;
+    startingRef.current = true;
+    (async () => {
+      const existingThreadId = threads
+        .filter((t) => !t.is_group)
+        .find((t) => {
+          const parts = allParts.filter((p) => p.thread_id === t.id);
+          const ids = parts.map((p) => p.user_id).sort();
+          return parts.length === 2 && ids.includes(userId) && ids.includes(startWith);
+        })?.id;
+      if (existingThreadId) {
+        nav({ to: "/messages", search: { t: existingThreadId }, replace: true });
+        return;
+      }
+      const { data: t, error } = await supabase.from("message_threads").insert({ is_group: false, created_by: userId }).select().single();
+      if (error) { startingRef.current = false; return; }
+      const { error: pe } = await supabase.from("thread_participants").insert([
+        { thread_id: t.id, user_id: userId },
+        { thread_id: t.id, user_id: startWith },
+      ]);
+      if (pe) { startingRef.current = false; return; }
+      await qc.invalidateQueries({ queryKey: ["msg-my-parts", userId] });
+      nav({ to: "/messages", search: { t: t.id }, replace: true });
+    })();
+  }, [startWith, userId, ready, threads, allParts, nav, qc]);
+
   // Selected thread
   const currentThreadId = search.t ?? null;
-  const currentThread = threads.find((t) => t.id === currentThreadId) ?? null;
+  const isFgThread = !!currentThreadId && currentThreadId.startsWith(FG_PREFIX);
+  const currentFgId = isFgThread ? currentThreadId!.slice(FG_PREFIX.length) : null;
+  const currentThread = !isFgThread ? threads.find((t) => t.id === currentThreadId) ?? null : null;
+  const currentFg = currentFgId ? fgThreads.find((g) => g.id === currentFgId) ?? null : null;
+  const viewingGroups = search.view === "groups";
 
-  function threadLabel(t: Thread): { name: string; sub: string; av: React.ReactNode } {
+  // Categorize friend threads: discipleship vs friend
+  const discipleshipThreads: Thread[] = [];
+  const friendThreads: Thread[] = [];
+  for (const t of threads) {
+    if (!t.is_group) {
+      const other = allParts.find((p) => p.thread_id === t.id && p.user_id !== userId);
+      if (other && discipleshipPartnerIds.has(other.user_id)) {
+        discipleshipThreads.push(t);
+        continue;
+      }
+    }
+    friendThreads.push(t);
+  }
+
+  function friendThreadLabel(t: Thread): { name: string; sub: string; av: React.ReactNode } {
     const others = allParts.filter((p) => p.thread_id === t.id && p.user_id !== userId).map((p) => profiles[p.user_id]).filter(Boolean) as Profile[];
     if (t.is_group) {
       const names = others.map((o) => o.name ?? "Friend").slice(0, 3).join(", ");
-      const more = others.length > 3 ? ` +${others.length - 3}` : "";
       return {
         name: t.title || names || "Group",
         sub: `${others.length + 1} members`,
@@ -320,6 +428,56 @@ function MessagesPage() {
     };
   }
 
+  function renderThreadRow(t: Thread) {
+    const { name, sub, av } = friendThreadLabel(t);
+    const last = previews[t.id];
+    const myPart = myParts.find((p) => p.thread_id === t.id);
+    const unread = last && myPart && new Date(last.created_at) > new Date(myPart.last_read_at) && last.sender_id !== userId;
+    return (
+      <div
+        key={t.id}
+        className={`mg-thread ${currentThreadId === t.id ? "active" : ""}`}
+        onClick={() => nav({ to: "/messages", search: { t: t.id } })}
+      >
+        {av}
+        <div style={{ minWidth: 0 }}>
+          <div className="mg-tname">{name}</div>
+          <div className="mg-tpreview">{last ? (last.sender_id === userId ? "You: " : "") + last.body : sub}</div>
+        </div>
+        <div className="mg-tmeta">
+          {last && <div className="mg-twhen">{timeAgo(last.created_at)}</div>}
+          {unread && <span className="mg-badge">1</span>}
+        </div>
+      </div>
+    );
+  }
+
+  function renderFgRow(g: typeof fgThreads[number]) {
+    const last = fgPreviews[g.id];
+    const active = currentThreadId === `${FG_PREFIX}${g.id}`;
+    return (
+      <div
+        key={g.id}
+        className={`mg-thread ${active ? "active" : ""}`}
+        onClick={() => nav({ to: "/messages", search: { t: `${FG_PREFIX}${g.id}` } })}
+      >
+        <div className="mg-av fg">{initials(g.name)}</div>
+        <div style={{ minWidth: 0 }}>
+          <div className="mg-tname">
+            {g.name}
+            <span className="mg-tag fg">{g.role === "facilitator" ? "Facilitating" : "Member"}</span>
+          </div>
+          <div className="mg-tpreview">
+            {last ? (last.user_id === userId ? "You: " : "") + last.body : (g.description || "Group conversation")}
+          </div>
+        </div>
+        <div className="mg-tmeta">
+          {last && <div className="mg-twhen">{timeAgo(last.created_at)}</div>}
+        </div>
+      </div>
+    );
+  }
+
   if (ready && !userId) {
     return (
       <AppShell current="messages">
@@ -327,13 +485,17 @@ function MessagesPage() {
         <div className="mg-root">
           <div className="mg-gate">
             <h3>Sign in to message</h3>
-            <p>Direct and group messages are for signed-in members.</p>
+            <p>Direct messages, discipleship, facilitator groups, and group threads are for signed-in members.</p>
             <a href="/auth">Sign in</a>
           </div>
         </div>
       </AppShell>
     );
   }
+
+  const totalThreads = threads.length + fgThreads.length;
+  const showThreadPanel = !currentThreadId && !viewingGroups;
+  const showViewPanel = !!currentThreadId || viewingGroups || winWidth > 820;
 
   return (
     <AppShell current="messages">
@@ -342,54 +504,85 @@ function MessagesPage() {
         <div className="mg-shell">
           <div className="mg-grid">
             {/* Thread list panel */}
-            <div className="mg-panel" style={{ display: currentThreadId ? "none" : "flex" }}>
+            <div className="mg-panel" style={{ display: (currentThreadId || viewingGroups) && winWidth <= 820 ? "none" : "flex" }}>
               <div className="mg-panel-head">
                 <div>
                   <h2>Messages</h2>
-                  <div className="sub">{threads.length} thread{threads.length === 1 ? "" : "s"}</div>
+                  <div className="sub">{totalThreads} thread{totalThreads === 1 ? "" : "s"}</div>
                 </div>
                 <button className="mg-newbtn" onClick={() => setShowNewGroup(true)}>+ New group</button>
               </div>
+
+              <div className="mg-actions">
+                <button
+                  className="mg-actionbtn"
+                  onClick={() => nav({ to: "/messages", search: { view: "groups" } })}
+                >
+                  <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M17 11l2 2 4-4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/></svg>
+                  Facilitator Groups
+                </button>
+              </div>
+
               <div className="mg-list">
-                {threads.length === 0 ? (
+                {totalThreads === 0 ? (
                   <div className="mg-empty">
                     <strong>No messages yet</strong>
-                    Open a friend's row and tap Message, or start a group.
+                    Message a friend, start a group, or join a facilitator group with an invite code.
                   </div>
-                ) : threads.map((t) => {
-                  const { name, sub, av } = threadLabel(t);
-                  const last = previews[t.id];
-                  const myPart = myParts.find((p) => p.thread_id === t.id);
-                  const unread = last && myPart && new Date(last.created_at) > new Date(myPart.last_read_at) && last.sender_id !== userId;
-                  return (
-                    <div
-                      key={t.id}
-                      className={`mg-thread ${currentThreadId === t.id ? "active" : ""}`}
-                      onClick={() => nav({ to: "/messages", search: { t: t.id } })}
-                    >
-                      {av}
-                      <div style={{ minWidth: 0 }}>
-                        <div className="mg-tname">{name}</div>
-                        <div className="mg-tpreview">{last ? (last.sender_id === userId ? "You: " : "") + last.body : sub}</div>
+                ) : (
+                  <>
+                    {/* Facilitator Groups section */}
+                    {fgThreads.length > 0 && (
+                      <div className="mg-section">
+                        <div className="mg-section-head">
+                          Facilitator Groups
+                          <span className="mg-section-count">{fgThreads.length}</span>
+                        </div>
+                        {fgThreads.map(renderFgRow)}
                       </div>
-                      <div className="mg-tmeta">
-                        {last && <div className="mg-twhen">{timeAgo(last.created_at)}</div>}
-                        {unread && <span className="mg-badge">1</span>}
+                    )}
+
+                    {/* Discipleship section */}
+                    {discipleshipThreads.length > 0 && (
+                      <div className="mg-section">
+                        <div className="mg-section-head">
+                          Discipleship
+                          <span className="mg-section-count">{discipleshipThreads.length}</span>
+                        </div>
+                        {discipleshipThreads.map(renderThreadRow)}
                       </div>
-                    </div>
-                  );
-                })}
+                    )}
+
+                    {/* Friends section */}
+                    {friendThreads.length > 0 && (
+                      <div className="mg-section">
+                        <div className="mg-section-head">
+                          Friends
+                          <span className="mg-section-count">{friendThreads.length}</span>
+                        </div>
+                        {friendThreads.map(renderThreadRow)}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Thread view panel */}
-            <div className="mg-panel" style={{ display: !currentThreadId ? (winWidth <= 820 ? "none" : "flex") : "flex" }}>
-              {!currentThread ? (
-                <div className="mg-empty" style={{ margin: "auto" }}>
-                  <strong>Pick a conversation</strong>
-                  Select a thread on the left, or start a new group.
-                </div>
-              ) : (
+            {/* View panel: groups inner, thread view, or empty */}
+            <div className="mg-panel" style={{ display: showThreadPanel && winWidth <= 820 ? "none" : "flex" }}>
+              {viewingGroups && userId ? (
+                <GroupsInner
+                  userId={userId}
+                  onBack={() => nav({ to: "/messages", search: {} })}
+                  prefilledCode={search.code ?? null}
+                />
+              ) : isFgThread && currentFg ? (
+                <FacilitatorGroupThreadView
+                  group={currentFg}
+                  userId={userId!}
+                  onBack={() => nav({ to: "/messages", search: {} })}
+                />
+              ) : currentThread ? (
                 <ThreadView
                   thread={currentThread}
                   userId={userId!}
@@ -398,6 +591,11 @@ function MessagesPage() {
                   onBack={() => nav({ to: "/messages", search: {} })}
                   myLastReadAt={myParts.find((p) => p.thread_id === currentThread.id)?.last_read_at}
                 />
+              ) : (
+                <div className="mg-empty" style={{ margin: "auto" }}>
+                  <strong>Pick a conversation</strong>
+                  Select a thread on the left, or open Facilitator Groups.
+                </div>
               )}
             </div>
           </div>
@@ -442,7 +640,6 @@ function ThreadView({ thread, userId, participants, profiles, onBack, myLastRead
   });
   const messages = msgsQ.data ?? [];
 
-  // Realtime for this thread
   useEffect(() => {
     const channel = supabase
       .channel(`msg-thread-${thread.id}`)
@@ -453,12 +650,10 @@ function ThreadView({ thread, userId, participants, profiles, onBack, myLastRead
     return () => { supabase.removeChannel(channel); };
   }, [thread.id, qc]);
 
-  // Auto-scroll on new message
   useEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
   }, [messages.length, thread.id]);
 
-  // Mark read when viewing this thread & when messages arrive
   useEffect(() => {
     if (messages.length === 0) return;
     const latest = messages[messages.length - 1];
@@ -494,7 +689,6 @@ function ThreadView({ thread, userId, participants, profiles, onBack, myLastRead
     : (others[0]?.name ?? "Direct message");
   const headerSub = thread.is_group ? `${participants.length} members` : "Direct message";
 
-  // Group day separators
   const withSeps: Array<{ kind: "sep"; label: string } | { kind: "msg"; m: Message }> = [];
   let lastDay = "";
   for (const m of messages) {
@@ -533,6 +727,150 @@ function ThreadView({ thread, userId, participants, profiles, onBack, myLastRead
       <div className="mg-composer">
         <textarea
           placeholder="Write a message…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          rows={1}
+        />
+        <button className="mg-send" disabled={!text.trim() || send.isPending} onClick={() => { const t = text.trim(); if (t) send.mutate(t); }}>
+          Send
+        </button>
+      </div>
+    </>
+  );
+}
+
+function FacilitatorGroupThreadView({ group, userId, onBack }: {
+  group: { id: string; name: string; description: string | null; facilitator_id: string; role: "facilitator" | "member" };
+  userId: string;
+  onBack: () => void;
+}) {
+  const qc = useQueryClient();
+  const [text, setText] = useState("");
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const msgsQ = useQuery({
+    queryKey: ["msg-fg-thread-messages", group.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("facilitator_group_messages")
+        .select("id, group_id, user_id, body, created_at")
+        .eq("group_id", group.id)
+        .order("created_at", { ascending: true })
+        .limit(200);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const messages = msgsQ.data ?? [];
+
+  // Profiles for message senders
+  const senderIds = useMemo(() => Array.from(new Set(messages.map((m) => m.user_id))), [messages]);
+  const profilesQ = useQuery({
+    queryKey: ["msg-fg-profiles", group.id, senderIds.sort().join(",")],
+    enabled: senderIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id, name, avatar_url").in("id", senderIds);
+      if (error) throw error;
+      const m: Record<string, { id: string; name: string | null; avatar_url: string | null }> = {};
+      for (const p of data ?? []) m[p.id] = p as any;
+      return m;
+    },
+  });
+  const senderProfiles = profilesQ.data ?? {};
+
+  // Member count
+  const countQ = useQuery({
+    queryKey: ["msg-fg-membercount", group.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("facilitator_group_members")
+        .select("*", { count: "exact", head: true })
+        .eq("group_id", group.id);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`msg-fg-thread-${group.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "facilitator_group_messages", filter: `group_id=eq.${group.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["msg-fg-thread-messages", group.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [group.id, qc]);
+
+  useEffect(() => {
+    if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+  }, [messages.length, group.id]);
+
+  const send = useMutation({
+    mutationFn: async (body: string) => {
+      const { error } = await supabase.from("facilitator_group_messages").insert({ group_id: group.id, user_id: userId, body });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setText("");
+      qc.invalidateQueries({ queryKey: ["msg-fg-thread-messages", group.id] });
+      qc.invalidateQueries({ queryKey: ["msg-fg-previews"] });
+    },
+  });
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const t = text.trim();
+      if (t) send.mutate(t);
+    }
+  }
+
+  const withSeps: Array<{ kind: "sep"; label: string } | { kind: "msg"; m: typeof messages[number] }> = [];
+  let lastDay = "";
+  for (const m of messages) {
+    const dl = dayLabel(m.created_at);
+    if (dl !== lastDay) { withSeps.push({ kind: "sep", label: dl }); lastDay = dl; }
+    withSeps.push({ kind: "msg", m });
+  }
+
+  const memberSub = countQ.data != null
+    ? `${countQ.data + 1}/26 · ${group.role === "facilitator" ? "You facilitate" : "Facilitator group"}`
+    : (group.role === "facilitator" ? "You facilitate this group" : "Facilitator group");
+
+  return (
+    <>
+      <div className="mg-view-head">
+        <button className="mg-back" onClick={onBack}>← Back</button>
+        <div>
+          <div className="mg-view-name">
+            {group.name}
+            <span className="mg-tag fg">Facilitator Group</span>
+          </div>
+          <div className="mg-view-sub">{memberSub}</div>
+        </div>
+      </div>
+      <div className="mg-msgs" ref={scrollerRef}>
+        {withSeps.length === 0 ? (
+          <div className="mg-empty" style={{ margin: "auto" }}>
+            <strong>No messages yet</strong>
+            Kick off the conversation.
+          </div>
+        ) : withSeps.map((item, i) => item.kind === "sep" ? (
+          <div key={`s${i}`} className="mg-daysep">{item.label}</div>
+        ) : (
+          <div key={item.m.id} className={`mg-msg ${item.m.user_id === userId ? "mine" : ""}`}>
+            {item.m.user_id !== userId && (
+              <div className="sender">{senderProfiles[item.m.user_id]?.name ?? "Member"}</div>
+            )}
+            {item.m.body}
+            <div className="when">{fullTime(item.m.created_at)}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mg-composer">
+        <textarea
+          placeholder="Write to the group…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
