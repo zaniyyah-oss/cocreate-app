@@ -47,6 +47,8 @@ const SHELL_CSS = `
 .app-topbar-actions{display:flex;align-items:center;gap:8px;}
 .app-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
 .app-signout{background:transparent;border:1.5px solid rgba(20,20,20,0.12);color:#20201c;font-weight:700;font-size:12px;padding:7px 13px;border-radius:16px;font-family:'Poppins';cursor:pointer;}
+.app-topbar-profile{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#FBF8ED;color:#181A4D;text-decoration:none;border:1px solid rgba(20,20,20,0.08);}
+.app-topbar-profile svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 .app-side{display:none;}
 .app-main-wrap{min-width:0;display:flex;flex-direction:column;}
