@@ -25,7 +25,9 @@ function buildDesktopNav(labels: Record<string, string>) {
     { key: "explore" as const,     label: labels.explore_label     || "Explore",   to: "/explore",     icon: ICON.explore },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
     { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
+    { key: "messages" as const,    label: labels.messages_label    || "Messages",  to: "/messages",    icon: ICON.messages },
     { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile",     icon: ICON.profile },
+
   ];
 }
 
