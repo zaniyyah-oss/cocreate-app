@@ -346,14 +346,28 @@ function FriendsPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="fr-root">
         <div className="fr-shell">
-          <header className="fr-head">
-            <div className="fr-eyebrow">Community</div>
-            <h1 className="fr-title">Friends</h1>
-            <p className="fr-sub">Walk with a small circle. Friends is capped at 10 people so it stays personal.</p>
-            <div className={`fr-cap ${atCap ? "full" : ""}`}>
-              <span className="dot" />
-              {friendCount}/{FRIEND_CAP} friends
+          <header className="fr-head" style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "start", gap: 16 }}>
+            <div>
+              <div className="fr-eyebrow">Community</div>
+              <h1 className="fr-title">Friends</h1>
+              <p className="fr-sub">Walk with a small circle. Friends is capped at 10 people so it stays personal.</p>
+              <div className={`fr-cap ${atCap ? "full" : ""}`}>
+                <span className="dot" />
+                {friendCount}/{FRIEND_CAP} friends
+              </div>
             </div>
+            <button
+              className="fr-btn"
+              disabled={atCap}
+              title={atCap ? "Friends list full (10/10)" : "Find and add a friend"}
+              onClick={() => {
+                const el = document.getElementById("fr-find-input") as HTMLInputElement | null;
+                if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => el.focus(), 350); }
+              }}
+              style={{ padding: "11px 20px", fontSize: 13, whiteSpace: "nowrap" }}
+            >
+              {atCap ? "Friends list full (10/10)" : "+ Add friend"}
+            </button>
           </header>
 
           {/* Incoming requests */}
