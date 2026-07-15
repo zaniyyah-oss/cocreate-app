@@ -322,7 +322,7 @@ function MessagesPage() {
 
   if (ready && !userId) {
     return (
-      <AppShell current="profile">
+      <AppShell current="messages">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <div className="mg-root">
           <div className="mg-gate">
@@ -336,7 +336,7 @@ function MessagesPage() {
   }
 
   return (
-    <AppShell current="profile">
+    <AppShell current="messages">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="mg-root">
         <div className="mg-shell">
