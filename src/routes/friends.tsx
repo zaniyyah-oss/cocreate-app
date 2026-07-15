@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
+type Discipleship = Database["public"]["Tables"]["discipleships"]["Row"];
 
 const FRIEND_CAP = 10;
 
