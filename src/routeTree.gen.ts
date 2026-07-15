@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as FriendsRouteImport } from './routes/friends'
@@ -47,6 +48,11 @@ const SavedRoute = SavedRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesRoute = NotesRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof FriendsRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/friends': typeof FriendsRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/admin/content': typeof AdminContentRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/friends': typeof FriendsRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/messages'
     | '/notes'
+    | '/notifications'
     | '/profile'
     | '/saved'
     | '/admin/collections'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/messages'
     | '/notes'
+    | '/notifications'
     | '/profile'
     | '/saved'
     | '/admin/content'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/messages'
     | '/notes'
+    | '/notifications'
     | '/profile'
     | '/saved'
     | '/admin/collections'
@@ -378,6 +390,7 @@ export interface RootRouteChildren {
   FriendsRoute: typeof FriendsRoute
   MessagesRoute: typeof MessagesRoute
   NotesRoute: typeof NotesRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -401,6 +414,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes': {
@@ -659,6 +679,7 @@ const rootRouteChildren: RootRouteChildren = {
   FriendsRoute: FriendsRoute,
   MessagesRoute: MessagesRoute,
   NotesRoute: NotesRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
