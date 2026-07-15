@@ -104,10 +104,7 @@ const STORAGE_KEY = "cocreate:sidebar-collapsed";
 
 export function AppShell({ current, children }: { current?: NavKey; children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
-  });
+  const [collapsed, setCollapsed] = useState<boolean>(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navLabelsQ = usePageContent("site_nav");
   const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
