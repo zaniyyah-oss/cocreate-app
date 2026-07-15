@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-type Reminder = { id: string; time: string; days: number[]; label?: string };
+type Reminder = { id: string; time: string; days: number[]; label?: string; message?: string };
 type Config = { enabled: boolean; items: Reminder[] };
 
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const DAY_LONG = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DEFAULT_MESSAGE = "A quiet moment is waiting for you.";
 const DEFAULT: Config = {
   enabled: false,
-  items: [{ id: "r1", time: "07:00", days: [1, 2, 3, 4, 5], label: "Morning devotional" }],
+  items: [{ id: "r1", time: "07:00", days: [1, 2, 3, 4, 5], label: "Morning devotional", message: DEFAULT_MESSAGE }],
 };
 
 const LS_KEY = (uid: string) => `cocreate:reminders:${uid}`;
@@ -40,13 +41,18 @@ const CSS = `
 .dr-item-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .dr-time{font-family:'Poppins';font-size:14px;font-weight:700;color:#181A4D;border:1.5px solid rgba(20,20,20,0.12);border-radius:10px;padding:8px 10px;background:#fff;}
 .dr-label{flex:1;min-width:150px;font-family:'Poppins';font-size:13px;color:#181A4D;border:1.5px solid rgba(20,20,20,0.12);border-radius:10px;padding:8px 12px;background:#fff;}
+.dr-msg{width:100%;box-sizing:border-box;font-family:'Poppins';font-size:13px;color:#181A4D;border:1.5px solid rgba(20,20,20,0.12);border-radius:10px;padding:10px 12px;background:#fff;resize:vertical;min-height:60px;line-height:1.45;}
+.dr-field-label{font-family:'Poppins';font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#8a8678;margin-bottom:4px;display:block;}
 .dr-days{display:flex;gap:6px;flex-wrap:wrap;}
 .dr-day{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(20,20,20,0.12);background:#fff;color:#8a8678;font-family:'Poppins';font-weight:800;font-size:11.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .dr-day.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
 .dr-remove{background:transparent;border:none;color:#FF340C;font-family:'Poppins';font-weight:700;font-size:12px;cursor:pointer;padding:4px 8px;}
-.dr-add{background:transparent;border:1.5px dashed rgba(20,20,20,0.20);border-radius:12px;padding:12px;color:#181A4D;font-family:'Poppins';font-weight:800;font-size:12.5px;cursor:pointer;}
-.dr-add:hover{border-color:#181A4D;background:#FBF8ED;}
+.dr-add{background:#181A4D;border:none;border-radius:12px;padding:12px 18px;color:#fff;font-family:'Poppins';font-weight:800;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;align-self:flex-start;}
+.dr-add:hover{background:#0F4A42;}
+.dr-add.block{align-self:stretch;background:transparent;color:#181A4D;border:1.5px dashed rgba(20,20,20,0.20);}
+.dr-add.block:hover{border-color:#181A4D;background:#FBF8ED;}
 .dr-note{font-size:11.5px;color:#8a8678;font-style:italic;line-height:1.5;}
+.dr-empty{padding:18px;border:1.5px dashed rgba(20,20,20,0.15);border-radius:12px;background:#FBF8ED;color:#181A4D;font-size:13px;text-align:center;}
 `;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
@@ -96,8 +102,8 @@ export function DevotionalReminders({ userId }: { userId: string }) {
       if (delay < 0 || delay > 24 * 60 * 60 * 1000) continue;
       const id = window.setTimeout(() => {
         try {
-          new Notification("Time for your devotional", {
-            body: item.label || "A quiet moment is waiting for you.",
+          new Notification(item.label || "Time for your devotional", {
+            body: (item.message && item.message.trim()) || DEFAULT_MESSAGE,
             tag: `devotional-${item.id}`,
           });
         } catch { /* ignore */ }
@@ -115,7 +121,14 @@ export function DevotionalReminders({ userId }: { userId: string }) {
     const days = r.days.includes(day) ? r.days.filter((d) => d !== day) : [...r.days, day].sort();
     setItem(id, { days });
   };
-  const addReminder = () => update({ ...cfg, items: [...cfg.items, { id: uid(), time: "20:00", days: [0,1,2,3,4,5,6], label: "Evening devotional" }] });
+  const addReminder = () => {
+    const next: Config = {
+      ...cfg,
+      enabled: cfg.enabled || cfg.items.length === 0 ? true : cfg.enabled,
+      items: [...cfg.items, { id: uid(), time: "20:00", days: [0,1,2,3,4,5,6], label: "Evening devotional", message: DEFAULT_MESSAGE }],
+    };
+    update(next);
+  };
   const removeReminder = (id: string) => update({ ...cfg, items: cfg.items.filter((r) => r.id !== id) });
 
   const requestPerm = async () => {
@@ -132,7 +145,7 @@ export function DevotionalReminders({ userId }: { userId: string }) {
       <div className="dr-head">
         <div>
           <div className="k">Devotional reminders</div>
-          <div className="d">A gentle nudge to sit with your devotional. Set the times and days that fit your rhythm.</div>
+          <div className="d">A gentle nudge to sit with your devotional. Set the times, days, and the words you want to hear.</div>
         </div>
         <button
           className={`dr-toggle ${cfg.enabled ? "on" : ""}`}
@@ -141,67 +154,88 @@ export function DevotionalReminders({ userId }: { userId: string }) {
         />
       </div>
 
-      {cfg.enabled && (
-        <div className="dr-body">
-          {permission === "default" && (
-            <div className="dr-perm">
-              <span>Allow notifications so reminders can reach you.</span>
-              <button onClick={requestPerm}>Enable</button>
-            </div>
-          )}
-          {permission === "denied" && (
-            <div className="dr-perm" style={{ borderLeft: "3px solid #FF340C" }}>
-              <span>Notifications are blocked. Enable them in your browser settings to receive reminders.</span>
-            </div>
-          )}
-          {permission === "unsupported" && (
-            <div className="dr-perm">
-              <span>This browser doesn't support notifications. Reminders will still be saved.</span>
-            </div>
-          )}
+      <div className="dr-body">
+        {cfg.enabled && permission === "default" && (
+          <div className="dr-perm">
+            <span>Allow notifications so reminders can reach you.</span>
+            <button onClick={requestPerm}>Enable</button>
+          </div>
+        )}
+        {cfg.enabled && permission === "denied" && (
+          <div className="dr-perm" style={{ borderLeft: "3px solid #FF340C" }}>
+            <span>Notifications are blocked. Enable them in your browser settings to receive reminders.</span>
+          </div>
+        )}
+        {cfg.enabled && permission === "unsupported" && (
+          <div className="dr-perm">
+            <span>This browser doesn't support notifications. Reminders will still be saved.</span>
+          </div>
+        )}
 
-          {sorted.map((r) => {
-            const next = nextOccurrence(r.time, r.days);
-            return (
-              <div key={r.id} className="dr-item">
-                <div className="dr-item-row">
-                  <input
-                    type="time"
-                    className="dr-time"
-                    value={r.time}
-                    onChange={(e) => setItem(r.id, { time: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="dr-label"
-                    placeholder="Label (optional)"
-                    value={r.label ?? ""}
-                    onChange={(e) => setItem(r.id, { label: e.target.value })}
-                  />
-                  <button className="dr-remove" onClick={() => removeReminder(r.id)}>Remove</button>
-                </div>
-                <div className="dr-days">
-                  {DAYS.map((d, i) => (
-                    <button
-                      key={i}
-                      className={`dr-day ${r.days.includes(i) ? "on" : ""}`}
-                      onClick={() => toggleDay(r.id, i)}
-                      aria-label={DAY_LONG[i]}
-                      aria-pressed={r.days.includes(i)}
-                    >{d}</button>
-                  ))}
-                </div>
-                <div className="dr-note">{humanNext(next)}</div>
+        {sorted.length === 0 && (
+          <div className="dr-empty">No reminders yet. Add one to shape your daily rhythm.</div>
+        )}
+
+        {sorted.map((r) => {
+          const next = nextOccurrence(r.time, r.days);
+          return (
+            <div key={r.id} className="dr-item">
+              <div className="dr-item-row">
+                <input
+                  type="time"
+                  className="dr-time"
+                  value={r.time}
+                  onChange={(e) => setItem(r.id, { time: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="dr-label"
+                  placeholder="Title (e.g. Morning devotional)"
+                  value={r.label ?? ""}
+                  onChange={(e) => setItem(r.id, { label: e.target.value })}
+                />
+                <button className="dr-remove" onClick={() => removeReminder(r.id)}>Remove</button>
               </div>
-            );
-          })}
+              <div>
+                <label className="dr-field-label" htmlFor={`msg-${r.id}`}>Reminder message</label>
+                <textarea
+                  id={`msg-${r.id}`}
+                  className="dr-msg"
+                  placeholder={DEFAULT_MESSAGE}
+                  value={r.message ?? ""}
+                  onChange={(e) => setItem(r.id, { message: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div className="dr-days">
+                {DAYS.map((d, i) => (
+                  <button
+                    key={i}
+                    className={`dr-day ${r.days.includes(i) ? "on" : ""}`}
+                    onClick={() => toggleDay(r.id, i)}
+                    aria-label={DAY_LONG[i]}
+                    aria-pressed={r.days.includes(i)}
+                  >{d}</button>
+                ))}
+              </div>
+              <div className="dr-note">{humanNext(next)}</div>
+            </div>
+          );
+        })}
 
-          <button className="dr-add" onClick={addReminder}>+ Add another reminder</button>
+        <button
+          className={`dr-add ${sorted.length === 0 ? "block" : ""}`}
+          onClick={addReminder}
+        >
+          + Add reminder
+        </button>
+
+        {cfg.enabled && (
           <div className="dr-note">
             Reminders fire while CoCreate is open in a browser tab. For alerts when the app is closed, install CoCreate to your home screen.
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
