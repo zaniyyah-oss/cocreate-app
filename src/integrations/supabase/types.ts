@@ -784,6 +784,65 @@ export type Database = {
           },
         ]
       }
+      facilitator_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facilitator_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "facilitator_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facilitator_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          facilitator_id: string
+          id: string
+          invite_code: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          facilitator_id: string
+          id?: string
+          invite_code: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          facilitator_id?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -1021,6 +1080,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          facilitator_level: number | null
           id: string
           member_since: string
           name: string | null
@@ -1030,6 +1090,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          facilitator_level?: number | null
           id: string
           member_since?: string
           name?: string | null
@@ -1039,6 +1100,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          facilitator_level?: number | null
           id?: string
           member_since?: string
           name?: string | null
@@ -1358,12 +1420,32 @@ export type Database = {
     }
     Functions: {
       compute_user_recommendations: { Args: never; Returns: undefined }
+      get_facilitator_group_preview: {
+        Args: { _code: string }
+        Returns: {
+          description: string
+          facilitator_name: string
+          id: string
+          is_full: boolean
+          member_count: number
+          name: string
+        }[]
+      }
+      get_facilitator_level: { Args: { _user_id: string }; Returns: number }
       get_popular_content_ids: { Args: { _limit?: number }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_facilitator_group_member: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_facilitator_group_owner: {
+        Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
       is_thread_creator: {
@@ -1373,6 +1455,10 @@ export type Database = {
       is_thread_participant: {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
+      }
+      join_facilitator_group_by_code: {
+        Args: { _code: string }
+        Returns: string
       }
       publish_scheduled_content: { Args: never; Returns: undefined }
     }
