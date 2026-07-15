@@ -439,6 +439,7 @@ function FriendsPage() {
               <input
                 type="text"
                 placeholder="Search by name…"
+                id="fr-find-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
