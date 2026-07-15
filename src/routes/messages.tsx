@@ -148,10 +148,18 @@ function MessagesPage() {
   const search = Route.useSearch();
   const qc = useQueryClient();
   const [showNewGroup, setShowNewGroup] = useState(false);
+  const [winWidth, setWinWidth] = useState<number>(1024);
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
+  }, []);
+
+  useEffect(() => {
+    const update = () => setWinWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   // 1. Load user's threads (participant rows) + thread rows
@@ -375,7 +383,7 @@ function MessagesPage() {
             </div>
 
             {/* Thread view panel */}
-            <div className="mg-panel" style={{ display: !currentThreadId ? (window.innerWidth <= 820 ? "none" : "flex") : "flex" }}>
+            <div className="mg-panel" style={{ display: !currentThreadId ? (winWidth <= 820 ? "none" : "flex") : "flex" }}>
               {!currentThread ? (
                 <div className="mg-empty" style={{ margin: "auto" }}>
                   <strong>Pick a conversation</strong>
