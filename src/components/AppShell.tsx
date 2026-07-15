@@ -39,8 +39,7 @@ const SHELL_CSS = `
 .app-layout{display:grid;grid-template-columns:1fr;min-height:100vh;}
 
 /* Mobile top bar */
-.app-topbar{background:#fff;border-bottom:1px solid rgba(20,20,20,0.08);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
-.app-topbar::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:#fff;z-index:39;pointer-events:none;}
+.app-topbar{background:#fff;border-bottom:1px solid rgba(20,20,20,0.08);padding:calc(12px + env(safe-area-inset-top,0px)) 18px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
 .app-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
 .app-brand .mark{width:28px;height:28px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;}
 .app-brand .word{font-weight:900;font-size:18px;color:#181A4D;letter-spacing:-0.02em;}
