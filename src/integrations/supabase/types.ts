@@ -784,6 +784,41 @@ export type Database = {
           },
         ]
       }
+      facilitator_group_announcements: {
+        Row: {
+          body: string
+          created_at: string
+          group_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          group_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facilitator_group_announcements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "facilitator_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facilitator_group_members: {
         Row: {
           group_id: string
@@ -806,6 +841,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "facilitator_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "facilitator_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facilitator_group_messages: {
+        Row: {
+          body: string
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facilitator_group_messages_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "facilitator_groups"
@@ -1445,6 +1512,10 @@ export type Database = {
         Returns: boolean
       }
       is_facilitator_group_owner: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_facilitator_group_participant: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
