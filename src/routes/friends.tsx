@@ -223,6 +223,107 @@ function FriendsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["friendships", userId] }),
   });
 
+  // ---------------- Discipleship ----------------
+  const discQ = useQuery({
+    queryKey: ["discipleships", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discipleships")
+        .select("*")
+        .or(`mentor_id.eq.${userId},disciple_id.eq.${userId}`)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Discipleship[];
+    },
+  });
+  const discs = discQ.data ?? [];
+  const disciplersAccepted = discs.filter((d) => d.status === "accepted" && d.disciple_id === userId); // mentor = counterpart
+  const disciplesAccepted = discs.filter((d) => d.status === "accepted" && d.mentor_id === userId);   // disciple = counterpart
+  const discIncoming = discs.filter((d) => d.status === "pending" && d.requester_id !== userId);
+  const discOutgoing = discs.filter((d) => d.status === "pending" && d.requester_id === userId);
+
+  const discCounterpartIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const d of discs) s.add(d.mentor_id === userId ? d.disciple_id : d.mentor_id);
+    return Array.from(s);
+  }, [discs, userId]);
+
+  const discProfilesQ = useQuery({
+    queryKey: ["disc-profiles", discCounterpartIds.sort().join(",")],
+    enabled: discCounterpartIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id,name,avatar_url,member_since,streak_count,created_at,updated_at").in("id", discCounterpartIds);
+      if (error) throw error;
+      const map: Record<string, Profile> = {};
+      for (const p of (data ?? []) as Profile[]) map[p.id] = p;
+      return map;
+    },
+  });
+  const discProfiles = discProfilesQ.data ?? {};
+
+  const dq = discQuery.trim();
+  const discExistingIds = useMemo(() => {
+    const s = new Set<string>();
+    if (userId) s.add(userId);
+    for (const d of discs) s.add(d.mentor_id === userId ? d.disciple_id : d.mentor_id);
+    return s;
+  }, [discs, userId]);
+
+  const discSearchQ = useQuery({
+    queryKey: ["disc-search", dq, userId],
+    enabled: ready && !!userId && dq.length >= 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,name,avatar_url,member_since,streak_count,created_at,updated_at")
+        .ilike("name", `%${dq}%`)
+        .limit(20);
+      if (error) throw error;
+      return ((data ?? []) as Profile[]).filter((p) => !discExistingIds.has(p.id));
+    },
+  });
+
+  const sendDiscRequest = useMutation({
+    mutationFn: async (vars: { otherId: string; role: "discipler" | "disciple" }) => {
+      if (!userId) throw new Error("Not signed in");
+      // role = the role the OTHER person will fill
+      const mentor_id = vars.role === "discipler" ? vars.otherId : userId;
+      const disciple_id = vars.role === "discipler" ? userId : vars.otherId;
+      const { error } = await supabase.from("discipleships").insert({
+        mentor_id, disciple_id, requester_id: userId, status: "pending",
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      setToast(vars.role === "discipler" ? "Invited to disciple you" : "Invited to be your disciple");
+      qc.invalidateQueries({ queryKey: ["discipleships", userId] });
+    },
+    onError: (e: any) => setToast(e?.message?.includes("duplicate") ? "Already invited" : (e?.message ?? "Couldn't send request")),
+  });
+
+  const acceptDisc = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleships").update({ status: "accepted" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setToast("Discipleship started");
+      qc.invalidateQueries({ queryKey: ["discipleships", userId] });
+    },
+    onError: (e: any) => setToast(e?.message ?? "Couldn't accept"),
+  });
+
+  const removeDisc = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleships").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["discipleships", userId] }),
+  });
+
+
+
   if (ready && !userId) {
     return (
       <AppShell current="profile">
