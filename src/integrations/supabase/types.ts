@@ -718,6 +718,33 @@ export type Database = {
           },
         ]
       }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friendship_status"]
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           body: string
@@ -1195,6 +1222,7 @@ export type Database = {
         | "clip"
         | "promoted"
       devotional_medium: "scripture" | "podcast" | "reflect"
+      friendship_status: "pending" | "accepted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1333,6 +1361,7 @@ export const Constants = {
         "promoted",
       ],
       devotional_medium: ["scripture", "podcast", "reflect"],
+      friendship_status: ["pending", "accepted"],
     },
   },
 } as const
