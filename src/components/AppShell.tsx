@@ -5,7 +5,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { usePageContent } from "@/lib/page-content";
 
-export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library";
+export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "profile" | "library" | "messages";
 
 const ICON = {
   home:        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>,
