@@ -205,6 +205,9 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               {userId ? (
                 <>
                   <NotificationBell />
+                  <Link to="/profile" className="app-topbar-profile" aria-label="Profile">
+                    {ICON.profile}
+                  </Link>
                   <button className="app-signout" onClick={signOut}>Sign out</button>
                 </>
               ) : (
