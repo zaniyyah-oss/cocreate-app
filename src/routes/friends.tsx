@@ -78,7 +78,22 @@ const CSS = `
 .fr-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#181A4D;color:#fff;padding:11px 18px;border-radius:20px;font-size:12.5px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,0.2);z-index:80;}
 
 @media (max-width:640px){.fr-title{font-size:26px;} .fr-shell{padding:28px 18px 100px;}}
+
+.fr-modal-back{position:fixed;inset:0;background:rgba(20,20,28,0.55);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;}
+.fr-modal{background:#fff;border-radius:20px;width:100%;max-width:440px;padding:26px 24px;box-shadow:0 30px 60px rgba(0,0,0,0.3);}
+.fr-modal h3{margin:0 0 4px;font-size:20px;font-weight:900;color:#181A4D;letter-spacing:-0.02em;}
+.fr-modal p{margin:0 0 18px;font-size:13px;color:#8a8678;font-weight:500;line-height:1.5;}
+.fr-field{margin-bottom:14px;}
+.fr-field label{display:block;font-size:10.5px;font-weight:800;color:#8a8678;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.fr-field input, .fr-field select{width:100%;background:#FBF8ED;border:1.5px solid rgba(20,20,20,0.10);border-radius:14px;padding:11px 14px;font-family:'Poppins';font-size:13.5px;font-weight:500;color:#181A4D;outline:none;transition:border-color .15s ease;}
+.fr-field input:focus, .fr-field select:focus{border-color:#181A4D;}
+.fr-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fr-seg button{background:#FBF8ED;border:1.5px solid rgba(20,20,20,0.10);border-radius:14px;padding:10px;font-family:'Poppins';font-weight:800;font-size:12px;color:#8a8678;cursor:pointer;letter-spacing:-0.005em;transition:all .15s ease;}
+.fr-seg button.on{background:#181A4D;border-color:#181A4D;color:#fff;}
+.fr-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+.fr-err{font-size:12px;color:#FF340C;font-weight:700;margin-top:-6px;margin-bottom:10px;}
 `;
+
 
 function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
