@@ -8,6 +8,9 @@ import { AppShell } from "@/components/AppShell";
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
 type Discipleship = Database["public"]["Tables"]["discipleships"]["Row"];
+type DiscInvite = Database["public"]["Tables"]["discipleship_invites"]["Row"];
+
+
 
 const FRIEND_CAP = 10;
 
@@ -75,7 +78,22 @@ const CSS = `
 .fr-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#181A4D;color:#fff;padding:11px 18px;border-radius:20px;font-size:12.5px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,0.2);z-index:80;}
 
 @media (max-width:640px){.fr-title{font-size:26px;} .fr-shell{padding:28px 18px 100px;}}
+
+.fr-modal-back{position:fixed;inset:0;background:rgba(20,20,28,0.55);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;}
+.fr-modal{background:#fff;border-radius:20px;width:100%;max-width:440px;padding:26px 24px;box-shadow:0 30px 60px rgba(0,0,0,0.3);}
+.fr-modal h3{margin:0 0 4px;font-size:20px;font-weight:900;color:#181A4D;letter-spacing:-0.02em;}
+.fr-modal p{margin:0 0 18px;font-size:13px;color:#8a8678;font-weight:500;line-height:1.5;}
+.fr-field{margin-bottom:14px;}
+.fr-field label{display:block;font-size:10.5px;font-weight:800;color:#8a8678;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.fr-field input, .fr-field select{width:100%;background:#FBF8ED;border:1.5px solid rgba(20,20,20,0.10);border-radius:14px;padding:11px 14px;font-family:'Poppins';font-size:13.5px;font-weight:500;color:#181A4D;outline:none;transition:border-color .15s ease;}
+.fr-field input:focus, .fr-field select:focus{border-color:#181A4D;}
+.fr-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fr-seg button{background:#FBF8ED;border:1.5px solid rgba(20,20,20,0.10);border-radius:14px;padding:10px;font-family:'Poppins';font-weight:800;font-size:12px;color:#8a8678;cursor:pointer;letter-spacing:-0.005em;transition:all .15s ease;}
+.fr-seg button.on{background:#181A4D;border-color:#181A4D;color:#fff;}
+.fr-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+.fr-err{font-size:12px;color:#FF340C;font-weight:700;margin-top:-6px;margin-bottom:10px;}
 `;
+
 
 function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -323,6 +341,107 @@ function FriendsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["discipleships", userId] }),
   });
 
+  // ---------------- External invites (email / SMS) ----------------
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteRole, setInviteRole] = useState<"discipler" | "disciple">("discipler");
+  const [inviteChannel, setInviteChannel] = useState<"email" | "sms">("email");
+  const [inviteContact, setInviteContact] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteErr, setInviteErr] = useState<string | null>(null);
+
+  const invitesQ = useQuery({
+    queryKey: ["disc-invites", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discipleship_invites")
+        .select("*")
+        .eq("inviter_id", userId!)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as DiscInvite[];
+    },
+  });
+  const pendingInvites = invitesQ.data ?? [];
+
+  const sendExternalInvite = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("Not signed in");
+      const contact = inviteContact.trim();
+      if (!contact) throw new Error("Enter an email or phone number");
+      if (inviteChannel === "email") {
+        const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+        if (!ok) throw new Error("Enter a valid email");
+      } else {
+        const digits = contact.replace(/\D/g, "");
+        if (digits.length < 7) throw new Error("Enter a valid phone number");
+      }
+      const { data, error } = await supabase.from("discipleship_invites").insert({
+        inviter_id: userId,
+        role: inviteRole,
+        channel: inviteChannel,
+        contact,
+        invitee_name: inviteName.trim() || null,
+        status: "pending",
+      }).select().single();
+      if (error) throw error;
+      return data as DiscInvite;
+    },
+    onSuccess: (row) => {
+      // Open the user's mail/messages app pre-filled with an invite
+      const senderName = (typeof window !== "undefined" && window.sessionStorage.getItem("cocreate:name")) || "A friend";
+      const roleText = row.role === "discipler"
+        ? `${senderName} is inviting you to disciple them on CoCreate.`
+        : `${senderName} is inviting you to be their disciple on CoCreate.`;
+      const body = `${roleText}\n\nCoCreate is a quiet space for shared devotional practice. Join here: ${window.location.origin}/auth`;
+      if (row.channel === "email") {
+        const subject = row.role === "discipler" ? "Would you disciple me?" : "Would you be my disciple?";
+        window.location.href = `mailto:${encodeURIComponent(row.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      } else {
+        window.location.href = `sms:${encodeURIComponent(row.contact)}?&body=${encodeURIComponent(body)}`;
+      }
+      setToast("Invite ready to send");
+      setInviteOpen(false);
+      setInviteContact(""); setInviteName(""); setInviteErr(null);
+      qc.invalidateQueries({ queryKey: ["disc-invites", userId] });
+    },
+    onError: (e: any) => setInviteErr(e?.message ?? "Couldn't create invite"),
+  });
+
+  const cancelInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("discipleship_invites").update({ status: "canceled" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["disc-invites", userId] }),
+  });
+
+  const resendInvite = (row: DiscInvite) => {
+    const senderName = (typeof window !== "undefined" && window.sessionStorage.getItem("cocreate:name")) || "A friend";
+    const roleText = row.role === "discipler"
+      ? `${senderName} is inviting you to disciple them on CoCreate.`
+      : `${senderName} is inviting you to be their disciple on CoCreate.`;
+    const body = `${roleText}\n\nCoCreate is a quiet space for shared devotional practice. Join here: ${window.location.origin}/auth`;
+    if (row.channel === "email") {
+      const subject = row.role === "discipler" ? "Would you disciple me?" : "Would you be my disciple?";
+      window.location.href = `mailto:${encodeURIComponent(row.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    } else {
+      window.location.href = `sms:${encodeURIComponent(row.contact)}?&body=${encodeURIComponent(body)}`;
+    }
+  };
+
+  const openInviteModal = (role: "discipler" | "disciple") => {
+    setInviteRole(role);
+    setInviteChannel("email");
+    setInviteContact("");
+    setInviteName("");
+    setInviteErr(null);
+    setInviteOpen(true);
+  };
+
+
+
 
 
   if (ready && !userId) {
@@ -512,11 +631,53 @@ function FriendsPage() {
           {/* ============ Discipleship ============ */}
           <div style={{ height: 16, borderTop: "1px solid rgba(20,20,20,0.08)", margin: "24px 0 32px" }} />
 
-          <header className="fr-head" style={{ marginBottom: 20 }}>
-            <div className="fr-eyebrow">Discipleship</div>
-            <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
-            <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+          <header className="fr-head" style={{ marginBottom: 20, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "start", gap: 16 }}>
+            <div>
+              <div className="fr-eyebrow">Discipleship</div>
+              <h1 className="fr-title" style={{ fontSize: 26 }}>Walking together</h1>
+              <p className="fr-sub">Discipleship is separate from friends. Invite someone to disciple you, or invite someone to be your disciple.</p>
+            </div>
+            <div className="fr-btnrow" style={{ justifyContent: "flex-end" }}>
+              <button className="fr-btn ghost" style={{ padding: "10px 16px", fontSize: 12.5 }} onClick={() => openInviteModal("discipler")}>
+                + Invite discipler
+              </button>
+              <button className="fr-btn" style={{ padding: "10px 16px", fontSize: 12.5 }} onClick={() => openInviteModal("disciple")}>
+                + Invite disciple
+              </button>
+            </div>
           </header>
+
+          {/* Pending external invites (email / text) */}
+          {pendingInvites.length > 0 && (
+            <section className="fr-section">
+              <h2>Pending invites · {pendingInvites.length}</h2>
+              <div className="fr-list">
+                {pendingInvites.map((inv) => (
+                  <div key={inv.id} className="fr-row">
+                    <div className="fr-av" style={{ background: inv.role === "discipler" ? "#8B5A2B" : "#0F4A42" }}>
+                      {inv.channel === "email" ? (
+                        <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "#FBF8ED", fill: "none", strokeWidth: 2 }}><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "#FBF8ED", fill: "none", strokeWidth: 2 }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="fr-name">{inv.invitee_name || inv.contact}</div>
+                      <div className="fr-meta">
+                        Invited {inv.role === "discipler" ? "to disciple you" : "as your disciple"} · via {inv.channel === "email" ? "email" : "text"} · <span style={{ color: "#B8860B", fontWeight: 800 }}>Pending</span>
+                      </div>
+                    </div>
+                    <div className="fr-btnrow">
+                      <button className="fr-btn ghost" onClick={() => resendInvite(inv)}>Resend</button>
+                      <button className="fr-btn danger" disabled={cancelInvite.isPending} onClick={() => cancelInvite.mutate(inv.id)}>Cancel</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
 
           {/* Discipleship requests */}
           {discIncoming.length > 0 && (
@@ -670,7 +831,57 @@ function FriendsPage() {
             </section>
           )}
         </div>
+        {inviteOpen && (
+          <div className="fr-modal-back" onClick={(e) => { if (e.target === e.currentTarget) setInviteOpen(false); }}>
+            <div className="fr-modal" role="dialog" aria-label="Invite discipler or disciple">
+              <h3>Invite {inviteRole === "discipler" ? "a discipler" : "a disciple"}</h3>
+              <p>{inviteRole === "discipler" ? "Ask someone to disciple you — we'll open a pre-filled message for you to send." : "Ask someone to be your disciple — we'll open a pre-filled message for you to send."}</p>
+
+              <div className="fr-field">
+                <label>Role</label>
+                <div className="fr-seg">
+                  <button type="button" className={inviteRole === "discipler" ? "on" : ""} onClick={() => setInviteRole("discipler")}>They'll disciple me</button>
+                  <button type="button" className={inviteRole === "disciple" ? "on" : ""} onClick={() => setInviteRole("disciple")}>They'll be my disciple</button>
+                </div>
+              </div>
+
+              <div className="fr-field">
+                <label>Send via</label>
+                <div className="fr-seg">
+                  <button type="button" className={inviteChannel === "email" ? "on" : ""} onClick={() => setInviteChannel("email")}>Email</button>
+                  <button type="button" className={inviteChannel === "sms" ? "on" : ""} onClick={() => setInviteChannel("sms")}>Text</button>
+                </div>
+              </div>
+
+              <div className="fr-field">
+                <label>Their name (optional)</label>
+                <input type="text" value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="e.g. Sarah" maxLength={80} />
+              </div>
+
+              <div className="fr-field">
+                <label>{inviteChannel === "email" ? "Email address" : "Phone number"}</label>
+                <input
+                  type={inviteChannel === "email" ? "email" : "tel"}
+                  value={inviteContact}
+                  onChange={(e) => setInviteContact(e.target.value)}
+                  placeholder={inviteChannel === "email" ? "friend@example.com" : "+1 555 555 5555"}
+                  maxLength={120}
+                />
+              </div>
+
+              {inviteErr && <div className="fr-err">{inviteErr}</div>}
+
+              <div className="fr-modal-actions">
+                <button className="fr-btn ghost" onClick={() => setInviteOpen(false)}>Cancel</button>
+                <button className="fr-btn" disabled={sendExternalInvite.isPending} onClick={() => sendExternalInvite.mutate()}>
+                  {sendExternalInvite.isPending ? "Preparing…" : "Send invite"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {toast && <div className="fr-toast">{toast}</div>}
+
       </div>
     </AppShell>
   );
