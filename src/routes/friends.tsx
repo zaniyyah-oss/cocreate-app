@@ -106,6 +106,7 @@ function FriendsPage() {
   const qc = useQueryClient();
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [discQuery, setDiscQuery] = useState("");
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
