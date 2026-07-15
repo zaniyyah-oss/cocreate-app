@@ -267,6 +267,7 @@ function ProfilePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link to="/friends" style={{ background: "transparent", color: "#181A4D", fontWeight: 700, fontSize: 12.5, padding: "9px 16px", borderRadius: 20, textDecoration: "none", fontFamily: "Poppins", border: "1.5px solid rgba(20,20,20,0.10)" }}>Friends</Link>
             {isAdminQ.data && (
               <Link to="/admin/content" style={{ background: "#181A4D", color: "#fff", fontWeight: 800, fontSize: 12, padding: "9px 16px", borderRadius: 20, textDecoration: "none", fontFamily: "Poppins" }}>Admin</Link>
             )}
