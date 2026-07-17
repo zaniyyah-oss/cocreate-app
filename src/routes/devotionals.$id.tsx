@@ -215,9 +215,16 @@ const CSS = `
 .de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
 @media (min-width:768px){
   .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
-  .de-block.is-full > *, .ws-root.is-full > *{max-width:820px;margin-left:auto;margin-right:auto;}
+  .de-block.is-full > *, .ws-root.is-full > *{max-width:980px;margin-left:auto;margin-right:auto;}
+}
+@media (min-width:1200px){
+  .de-block.is-full{padding:84px 72px 100px;}
+  .de-block.is-full > *{max-width:1200px;}
+  .de-block.is-full.read{padding:80px 64px 100px;}
+  .de-block.is-full.read > *{max-width:1200px;}
 }
 .de-block.is-full .de-textarea{min-height:55vh;}
+.de-block.is-full.read .de-textarea{min-height:38vh;}
 .de-block.is-full.read .de-read-head,
 .de-block.is-full.read .de-read-part{padding-left:0;padding-right:0;}
 .de-block.is-full .de-cols{grid-template-columns:1fr;}
