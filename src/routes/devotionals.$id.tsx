@@ -212,7 +212,7 @@ const CSS = `
 .de-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
 .de-block-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
 .de-block-header .de-badge{margin-bottom:0;}
-.de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;}
+.de-block.is-full, .ws-root.is-full{position:fixed;inset:0;z-index:300;margin:0;border-radius:0;overflow-y:auto;padding:64px 20px 60px;background:#fff;border:none;max-width:100vw;display:block;}
 @media (min-width:768px){
   .de-block.is-full, .ws-root.is-full{padding:72px 48px 80px;}
   .de-block.is-full > *, .ws-root.is-full > *{max-width:980px;margin-left:auto;margin-right:auto;}
