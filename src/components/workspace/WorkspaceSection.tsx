@@ -131,8 +131,12 @@ const CSS = `
 /* focus mode passthrough */
 .ws-root.is-full{position:fixed;inset:0;z-index:400;background:#fff;margin:0;border:none;border-radius:0;overflow-y:auto;padding:64px 20px 80px;}
 @media (min-width:720px){
-  .ws-root.is-full{padding:64px 48px 80px;}
-  .ws-root.is-full > *{max-width:880px;margin-left:auto;margin-right:auto;}
+  .ws-root.is-full{padding:72px 48px 80px;}
+  .ws-root.is-full > *{max-width:980px;margin-left:auto;margin-right:auto;}
+}
+@media (min-width:1200px){
+  .ws-root.is-full{padding:84px 72px 100px;}
+  .ws-root.is-full > *{max-width:1200px;}
 }
 .ws-focus-btn{background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .ws-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
