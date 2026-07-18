@@ -542,7 +542,7 @@ function NoteBody({
         >
           Delete
         </button>
-        <span className="ws-savestatus">{save.isPending ? "Saving…" : savedFlash ? "Saved" : ""}</span>
+        <span className="ws-savestatus">{saving || pendingPatchRef.current ? "Saving…" : savedFlash ? "Saved" : ""}</span>
       </div>
     </div>
   );
