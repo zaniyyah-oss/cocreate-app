@@ -254,6 +254,34 @@ const CSS = `
 .de-hist-open{color:#181A4D;font-size:11.5px;font-weight:600;text-align:right;text-decoration:none;font-family:'Poppins',sans-serif;}
 .de-hist-open:hover{text-decoration:underline;}
 .de-streaknote{font-size:13px;color:#181A4D;margin:16px 4px 0;font-style:italic;opacity:0.9;font-family:'Poppins',sans-serif;}
+@media (max-width: 720px){
+  .de-hist-header{display:none;}
+  .de-hist-row{
+    grid-template-columns: 40px 58px 1fr;
+    grid-template-areas:
+      "day date entry"
+      ".   .    notes"
+      ".   .    focus"
+      ".   .    wstags"
+      ".   .    open";
+    row-gap:6px;
+    column-gap:8px;
+    padding:14px 14px;
+    border-radius:12px;
+    border-top:1px solid rgba(24,26,77,0.12);
+    margin-bottom:10px;
+    font-size:13px;
+  }
+  .de-hist-row:last-child{border-radius:12px;}
+  .de-hist-row > div:nth-child(1){grid-area:day;font-weight:600;color:#181A4D;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;padding-top:2px;}
+  .de-hist-row > div:nth-child(2){grid-area:date;font-weight:600;color:#181A4D;font-size:12px;padding-top:2px;}
+  .de-hist-row > div:nth-child(3){grid-area:entry;}
+  .de-hist-row > div:nth-child(4){grid-area:notes;}
+  .de-hist-row > div:nth-child(5){grid-area:focus;}
+  .de-hist-row > div:nth-child(6){grid-area:wstags;}
+  .de-hist-row > div:nth-child(7){grid-area:open;text-align:left !important;margin-top:2px;}
+  .de-hist-row > div:empty{display:none;}
+}
 .app-bottomnav{background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);}
 .app-bottomnav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8678;text-decoration:none;padding:4px 8px;transition:color .15s;min-width:52px;}
 .app-bottomnav a.active{color:#181A4D;}
