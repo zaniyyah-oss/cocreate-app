@@ -149,14 +149,17 @@ export function WorkspaceEditor({
 }
 
 function MobileBubble({ editor }: { editor: Editor }) {
+  // preventDefault on pointerdown (covers mouse + touch + pen) is required
+  // to stop iOS Safari from collapsing the selection before onClick fires.
+  const hold = (e: React.SyntheticEvent) => e.preventDefault();
   return (
     <div className="ws-bubble">
-      <button className={`ws-bb-btn ${editor.isActive("bold") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
-      <button className={`ws-bb-btn ${editor.isActive("italic") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button>
-      <button className={`ws-bb-btn ${editor.isActive("highlight") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleHighlight({ color: "#FDE68A" }).run()} title="Highlight">🖍</button>
-      <button className={`ws-bb-btn ${editor.isActive("heading", { level: 2 }) ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-      <button className={`ws-bb-btn ${editor.isActive("bulletList") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBulletList().run()}>•</button>
-      <button className={`ws-bb-btn ${editor.isActive("blockquote") ? "on" : ""}`} onMouseDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().toggleBlockquote().run()}>“”</button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("bold") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("italic") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("highlight") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleHighlight({ color: "#FDE68A" }).run()} title="Highlight">🖍</button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("heading", { level: 2 }) ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("bulletList") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBulletList().run()}>•</button>
+      <button type="button" className={`ws-bb-btn ${editor.isActive("blockquote") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBlockquote().run()}>“”</button>
     </div>
   );
 }
@@ -185,6 +188,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     <button
       type="button"
       className={`ws-tb-btn ${active ? "on" : ""}`}
+      onPointerDown={(e) => e.preventDefault()}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
