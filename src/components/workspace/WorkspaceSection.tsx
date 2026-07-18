@@ -385,25 +385,45 @@ function NoteBody({
   const [tagDraft, setTagDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPatchRef = useRef<Record<string, unknown> | null>(null);
+  const inFlightRef = useRef(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setTitle(item.title);
     setTags(item.tags);
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const save = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
-      if (guest) return;
+  // Core save: merges the buffered patch and writes once. Safe to call
+  // repeatedly — if a save is already in flight it re-runs after it settles
+  // so the newest keystrokes are never dropped.
+  const flushSave = async () => {
+    if (guest) return;
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (!pendingPatchRef.current) return;
+    if (inFlightRef.current) return;
+    const patch = pendingPatchRef.current;
+    pendingPatchRef.current = null;
+    inFlightRef.current = true;
+    setSaving(true);
+    try {
       const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
       if (error) throw error;
-    },
-    onSuccess: () => {
-      if (guest) return;
-      qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
-    },
-  });
+      // Refresh list quietly so tab titles / library reflect the latest
+      // without disturbing the active editor.
+      qc.invalidateQueries({ queryKey: ["workspace-items", userId], refetchType: "none" });
+    } catch (e) {
+      // Put the patch back (merged under any newer edits) so we retry.
+      pendingPatchRef.current = { ...(patch as any), ...(pendingPatchRef.current ?? {}) };
+      console.error("workspace save failed", e);
+    } finally {
+      inFlightRef.current = false;
+      setSaving(false);
+      if (pendingPatchRef.current) flushSave();
+    }
+  };
 
   const scheduleSave = (patch: Record<string, unknown>) => {
     if (guest) {
@@ -411,10 +431,35 @@ function NoteBody({
       onGuestGate?.("type");
       return;
     }
+    pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => save.mutate(patch), 700);
+    timerRef.current = setTimeout(() => { void flushSave(); }, 600);
   };
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  // Flush on tab hide (iOS PWA suspends aggressively), unmount, and warn on
+  // navigation with unsaved edits.
+  useEffect(() => {
+    const flush = () => { void flushSave(); };
+    const onVis = () => { if (document.visibilityState === "hidden") flush(); };
+    const onPageHide = () => flush();
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingPatchRef.current || inFlightRef.current) {
+        flush();
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      void flushSave();
+    };
+  }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const removeItem = useMutation({
     mutationFn: async () => {
