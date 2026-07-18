@@ -188,6 +188,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     <button
       type="button"
       className={`ws-tb-btn ${active ? "on" : ""}`}
+      onPointerDown={(e) => e.preventDefault()}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
