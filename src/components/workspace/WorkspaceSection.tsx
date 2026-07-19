@@ -384,9 +384,11 @@ function NoteBody({
   const [tags, setTags] = useState<string[]>(item.tags);
   const [tagDraft, setTagDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
+  const [hasPendingPatch, setHasPendingPatch] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPatchRef = useRef<Record<string, unknown> | null>(null);
   const inFlightRef = useRef(false);
+  const accessTokenRef = useRef<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -394,21 +396,60 @@ function NoteBody({
     setTags(item.tags);
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (guest) return;
+    let mounted = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (mounted) accessTokenRef.current = data.session?.access_token ?? null;
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      accessTokenRef.current = session?.access_token ?? null;
+    });
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, [guest]);
+
   // Core save: merges the buffered patch and writes once. Safe to call
   // repeatedly — if a save is already in flight it re-runs after it settles
   // so the newest keystrokes are never dropped.
-  const flushSave = async () => {
+  const flushSave = async (keepalive = false) => {
     if (guest) return;
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     if (!pendingPatchRef.current) return;
-    if (inFlightRef.current) return;
+    if (inFlightRef.current) {
+      if (keepalive) {
+        const lastChancePatch = pendingPatchRef.current;
+        pendingPatchRef.current = null;
+        setHasPendingPatch(false);
+        sendWorkspaceKeepalive(item.id, lastChancePatch, accessTokenRef.current);
+      }
+      return;
+    }
     const patch = pendingPatchRef.current;
     pendingPatchRef.current = null;
+    setHasPendingPatch(false);
     inFlightRef.current = true;
     setSaving(true);
     try {
-      const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
-      if (error) throw error;
+      if (keepalive) {
+        const ok = sendWorkspaceKeepalive(item.id, patch, accessTokenRef.current);
+        if (!ok) {
+          const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
+        if (error) throw error;
+      }
+      qc.setQueryData<WorkspaceItem[]>(["workspace-items", userId], (cur) =>
+        (cur ?? []).map((workspaceItem) =>
+          workspaceItem.id === item.id
+            ? ({ ...workspaceItem, ...patch, updated_at: new Date().toISOString() } as WorkspaceItem)
+            : workspaceItem,
+        ),
+      );
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
       // Refresh list quietly so tab titles / library reflect the latest
@@ -417,6 +458,7 @@ function NoteBody({
     } catch (e) {
       // Put the patch back (merged under any newer edits) so we retry.
       pendingPatchRef.current = { ...(patch as any), ...(pendingPatchRef.current ?? {}) };
+      setHasPendingPatch(true);
       console.error("workspace save failed", e);
     } finally {
       inFlightRef.current = false;
@@ -432,19 +474,21 @@ function NoteBody({
       return;
     }
     pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
+    setHasPendingPatch(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => { void flushSave(); }, 600);
   };
 
-  // Flush on tab hide (iOS PWA suspends aggressively), unmount, and warn on
-  // navigation with unsaved edits.
+  // Flush on blur, tab hide (iOS PWA suspends aggressively), unmount, and
+  // navigation. pagehide uses sendBeacon as a last-chance nonblocking write.
   useEffect(() => {
     const flush = () => { void flushSave(); };
+    const flushLastChance = () => { void flushSave(true); };
     const onVis = () => { if (document.visibilityState === "hidden") flush(); };
-    const onPageHide = () => flush();
+    const onPageHide = () => flushLastChance();
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pendingPatchRef.current || inFlightRef.current) {
-        flush();
+        flushLastChance();
         e.preventDefault();
         e.returnValue = "";
       }
@@ -457,7 +501,7 @@ function NoteBody({
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("beforeunload", onBeforeUnload);
       if (timerRef.current) clearTimeout(timerRef.current);
-      void flushSave();
+      void flushSave(true);
     };
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -532,6 +576,8 @@ function NoteBody({
         userId={userId}
         initialJSON={item.body}
         onChange={(json, text) => scheduleSave({ body: json, body_text: text })}
+        onBlur={() => { void flushSave(); }}
+        ignoreExternalUpdates={hasPendingPatch || saving}
       />
 
       <div className="ws-note-actions">
@@ -542,8 +588,31 @@ function NoteBody({
         >
           Delete
         </button>
-        <span className="ws-savestatus">{saving || pendingPatchRef.current ? "Saving…" : savedFlash ? "Saved" : ""}</span>
+        <span className="ws-savestatus">{saving || hasPendingPatch ? "Saving…" : savedFlash ? "Saved" : ""}</span>
       </div>
     </div>
   );
+}
+
+function sendWorkspaceKeepalive(itemId: string, patch: Record<string, unknown>, accessToken: string | null) {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+    if (!supabaseUrl || !supabaseKey || !accessToken) return false;
+    const url = `${supabaseUrl}/rest/v1/workspace_items?id=eq.${encodeURIComponent(itemId)}`;
+    void fetch(url, {
+      method: "PATCH",
+      keepalive: true,
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(patch),
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }

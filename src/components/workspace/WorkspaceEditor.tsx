@@ -55,15 +55,21 @@ export function WorkspaceEditor({
   userId,
   initialJSON,
   onChange,
+  onBlur,
+  ignoreExternalUpdates = false,
   placeholder,
 }: {
   userId: string;
   initialJSON: any;
   onChange: (json: any, text: string) => void;
+  onBlur?: () => void;
+  ignoreExternalUpdates?: boolean;
   placeholder?: string;
 }) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onBlurRef = useRef(onBlur);
+  onBlurRef.current = onBlur;
 
   const editor = useEditor({
     extensions: [
@@ -119,17 +125,25 @@ export function WorkspaceEditor({
     onUpdate: ({ editor }) => {
       onChangeRef.current(editor.getJSON(), editor.getText());
     },
+    onBlur: ({ editor }) => {
+      // iOS home-screen Safari can commit the final autocorrect/composition
+      // transaction at blur time. Capture the editor one last time, then ask
+      // the parent to flush immediately instead of waiting on a debounce timer.
+      onChangeRef.current(editor.getJSON(), editor.getText());
+      onBlurRef.current?.();
+    },
   });
 
   useEffect(() => {
     if (!editor) return;
+    if (ignoreExternalUpdates) return;
     if (editor.isFocused) return;
     if (!initialJSON || !Object.keys(initialJSON).length) return;
     const current = editor.getJSON();
     if (JSON.stringify(current) !== JSON.stringify(initialJSON)) {
       editor.commands.setContent(initialJSON, { emitUpdate: false });
     }
-  }, [editor, initialJSON]);
+  }, [editor, initialJSON, ignoreExternalUpdates]);
 
   if (!editor) return null;
 
