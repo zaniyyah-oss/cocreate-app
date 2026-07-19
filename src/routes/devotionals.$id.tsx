@@ -457,12 +457,21 @@ function EntryPage() {
   const [savingField, setSavingField] = useState<string | null>(null);
   const [savedField, setSavedField] = useState<string | null>(null);
   const hydratedRef = useRef<string>("");
+  const entrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
+  const entrySaveInFlightRef = useRef(false);
+  const currentEntryIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentEntryIdRef.current = currentEntry?.id ?? null;
+  }, [currentEntry?.id]);
 
   // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
   // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
   // For topical/temporary devotionals (non-default) with no existing entry for the day,
   // pre-fill Read/Pray/To-Do from the template's configured content.
   useEffect(() => {
+    if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
     const key = `${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
@@ -505,28 +514,58 @@ function EntryPage() {
 
 
 
-  const upsert = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
-      if (!userId) return;
-      if (currentEntry?.id) {
-        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", currentEntry.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("devotional_entries").insert({
-          user_id: userId, template_id: id, entry_date: selectedDate, ...patch,
-        } as any);
-        if (error) throw error;
-        trackEvent("devotional_entry_created", { template_id: id });
+  const applyEntryPatchToCache = (entryId: string | null, patch: Record<string, unknown>) => {
+    if (!userId) return;
+    qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => {
+      const existing = cur ?? [];
+      const now = new Date().toISOString();
+      if (entryId && existing.some((entry) => entry.id === entryId)) {
+        return existing.map((entry) => entry.id === entryId ? ({ ...entry, ...patch, updated_at: now } as Entry) : entry);
       }
-    },
-    onSuccess: (_r, vars) => {
-      qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
-      const key = Object.keys(vars)[0];
+      const match = existing.find((entry) => entry.entry_date === selectedDate && entry.template_id === id);
+      if (match) {
+        return existing.map((entry) => entry.id === match.id ? ({ ...entry, ...patch, updated_at: now } as Entry) : entry);
+      }
+      return existing;
+    });
+  };
+
+  const flushEntrySave = async () => {
+    if (!userId) return;
+    if (entrySaveTimerRef.current) { clearTimeout(entrySaveTimerRef.current); entrySaveTimerRef.current = null; }
+    if (!pendingEntryPatchRef.current) return;
+    if (entrySaveInFlightRef.current) return;
+    const patch = pendingEntryPatchRef.current;
+    pendingEntryPatchRef.current = null;
+    entrySaveInFlightRef.current = true;
+    try {
+      const entryId = currentEntryIdRef.current;
+      if (entryId) {
+        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", entryId);
+        if (error) throw error;
+        applyEntryPatchToCache(entryId, patch);
+      } else {
+        const { data, error } = await supabase.from("devotional_entries").insert({
+          user_id: userId, template_id: id, entry_date: selectedDate, ...patch,
+        } as any).select("id").single();
+        if (error) throw error;
+        currentEntryIdRef.current = data.id;
+        trackEvent("devotional_entry_created", { template_id: id });
+        applyEntryPatchToCache(data.id, patch);
+      }
+      const key = Object.keys(patch)[0];
       setSavingField(null);
       setSavedField(key);
       setTimeout(() => setSavedField((s) => (s === key ? null : s)), 1400);
-    },
-  });
+      qc.invalidateQueries({ queryKey: ["dev-entries", id, userId], refetchType: "none" });
+    } catch (e) {
+      pendingEntryPatchRef.current = { ...(patch as any), ...(pendingEntryPatchRef.current ?? {}) };
+      console.error("devotional entry save failed", e);
+    } finally {
+      entrySaveInFlightRef.current = false;
+      if (pendingEntryPatchRef.current) void flushEntrySave();
+    }
+  };
 
   // Ensure a devotional_entries row exists for today; return its id.
   // Used by the Workspace section, which needs an entry to attach items to.
@@ -555,14 +594,36 @@ function EntryPage() {
     return data.id;
   };
 
-  const debouncers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const scheduleSave = (field: SaveField, value: unknown) => {
     if (!ready) return;
     if (!userId) { guestNote("type"); return; }
     setSavingField(field);
-    if (debouncers.current[field]) clearTimeout(debouncers.current[field]!);
-    debouncers.current[field] = setTimeout(() => { upsert.mutate({ [field]: value }); }, 800);
+    pendingEntryPatchRef.current = { ...(pendingEntryPatchRef.current ?? {}), [field]: value };
+    if (entrySaveTimerRef.current) clearTimeout(entrySaveTimerRef.current);
+    entrySaveTimerRef.current = setTimeout(() => { void flushEntrySave(); }, 600);
   };
+
+  useEffect(() => {
+    if (!userId) return;
+    const flush = () => { void flushEntrySave(); };
+    const onVis = () => { if (document.visibilityState === "hidden") flush(); };
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) {
+        flush();
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("visibilitychange", onVis);
+      flush();
+    };
+  }, [userId, id, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Todo item helpers
   const addTodoItem = () => {
