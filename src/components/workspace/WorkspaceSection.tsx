@@ -384,6 +384,7 @@ function NoteBody({
   const [tags, setTags] = useState<string[]>(item.tags);
   const [tagDraft, setTagDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
+  const [hasPendingPatch, setHasPendingPatch] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPatchRef = useRef<Record<string, unknown> | null>(null);
   const inFlightRef = useRef(false);
@@ -397,18 +398,27 @@ function NoteBody({
   // Core save: merges the buffered patch and writes once. Safe to call
   // repeatedly — if a save is already in flight it re-runs after it settles
   // so the newest keystrokes are never dropped.
-  const flushSave = async () => {
+  const flushSave = async (keepalive = false) => {
     if (guest) return;
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     if (!pendingPatchRef.current) return;
     if (inFlightRef.current) return;
     const patch = pendingPatchRef.current;
     pendingPatchRef.current = null;
+    setHasPendingPatch(false);
     inFlightRef.current = true;
     setSaving(true);
     try {
-      const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
-      if (error) throw error;
+      if (keepalive && typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+        const ok = sendWorkspaceBeacon(item.id, patch);
+        if (!ok) {
+          const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
+        if (error) throw error;
+      }
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
       // Refresh list quietly so tab titles / library reflect the latest
@@ -417,6 +427,7 @@ function NoteBody({
     } catch (e) {
       // Put the patch back (merged under any newer edits) so we retry.
       pendingPatchRef.current = { ...(patch as any), ...(pendingPatchRef.current ?? {}) };
+      setHasPendingPatch(true);
       console.error("workspace save failed", e);
     } finally {
       inFlightRef.current = false;
@@ -432,19 +443,21 @@ function NoteBody({
       return;
     }
     pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
+    setHasPendingPatch(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => { void flushSave(); }, 600);
   };
 
-  // Flush on tab hide (iOS PWA suspends aggressively), unmount, and warn on
-  // navigation with unsaved edits.
+  // Flush on blur, tab hide (iOS PWA suspends aggressively), unmount, and
+  // navigation. pagehide uses sendBeacon as a last-chance nonblocking write.
   useEffect(() => {
     const flush = () => { void flushSave(); };
+    const flushLastChance = () => { void flushSave(true); };
     const onVis = () => { if (document.visibilityState === "hidden") flush(); };
-    const onPageHide = () => flush();
+    const onPageHide = () => flushLastChance();
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pendingPatchRef.current || inFlightRef.current) {
-        flush();
+        flushLastChance();
         e.preventDefault();
         e.returnValue = "";
       }
@@ -457,7 +470,7 @@ function NoteBody({
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("beforeunload", onBeforeUnload);
       if (timerRef.current) clearTimeout(timerRef.current);
-      void flushSave();
+      void flushSave(true);
     };
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -532,6 +545,8 @@ function NoteBody({
         userId={userId}
         initialJSON={item.body}
         onChange={(json, text) => scheduleSave({ body: json, body_text: text })}
+        onBlur={() => { void flushSave(); }}
+        ignoreExternalUpdates={hasPendingPatch || saving}
       />
 
       <div className="ws-note-actions">
@@ -542,8 +557,21 @@ function NoteBody({
         >
           Delete
         </button>
-        <span className="ws-savestatus">{saving || pendingPatchRef.current ? "Saving…" : savedFlash ? "Saved" : ""}</span>
+        <span className="ws-savestatus">{saving || hasPendingPatch ? "Saving…" : savedFlash ? "Saved" : ""}</span>
       </div>
     </div>
   );
+}
+
+function sendWorkspaceBeacon(itemId: string, patch: Record<string, unknown>) {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+    if (!supabaseUrl || !supabaseKey) return false;
+    const url = `${supabaseUrl}/rest/v1/workspace_items?id=eq.${encodeURIComponent(itemId)}`;
+    const blob = new Blob([JSON.stringify(patch)], { type: "application/json" });
+    return navigator.sendBeacon(url, blob);
+  } catch {
+    return false;
+  }
 }
