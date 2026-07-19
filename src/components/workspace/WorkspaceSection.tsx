@@ -388,12 +388,28 @@ function NoteBody({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPatchRef = useRef<Record<string, unknown> | null>(null);
   const inFlightRef = useRef(false);
+  const accessTokenRef = useRef<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setTitle(item.title);
     setTags(item.tags);
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (guest) return;
+    let mounted = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (mounted) accessTokenRef.current = data.session?.access_token ?? null;
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      accessTokenRef.current = session?.access_token ?? null;
+    });
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, [guest]);
 
   // Core save: merges the buffered patch and writes once. Safe to call
   // repeatedly — if a save is already in flight it re-runs after it settles
@@ -409,8 +425,8 @@ function NoteBody({
     inFlightRef.current = true;
     setSaving(true);
     try {
-      if (keepalive && typeof navigator !== "undefined" && "sendBeacon" in navigator) {
-        const ok = sendWorkspaceBeacon(item.id, patch);
+      if (keepalive) {
+        const ok = sendWorkspaceKeepalive(item.id, patch, accessTokenRef.current);
         if (!ok) {
           const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
           if (error) throw error;
@@ -563,14 +579,24 @@ function NoteBody({
   );
 }
 
-function sendWorkspaceBeacon(itemId: string, patch: Record<string, unknown>) {
+function sendWorkspaceKeepalive(itemId: string, patch: Record<string, unknown>, accessToken: string | null) {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
     const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-    if (!supabaseUrl || !supabaseKey) return false;
+    if (!supabaseUrl || !supabaseKey || !accessToken) return false;
     const url = `${supabaseUrl}/rest/v1/workspace_items?id=eq.${encodeURIComponent(itemId)}`;
-    const blob = new Blob([JSON.stringify(patch)], { type: "application/json" });
-    return navigator.sendBeacon(url, blob);
+    void fetch(url, {
+      method: "PATCH",
+      keepalive: true,
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(patch),
+    });
+    return true;
   } catch {
     return false;
   }
