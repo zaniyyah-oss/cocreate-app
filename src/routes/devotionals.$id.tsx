@@ -514,11 +514,14 @@ function EntryPage() {
 
 
 
-  const applyEntryPatchToCache = (entryId: string | null, patch: Record<string, unknown>) => {
+  const applyEntryPatchToCache = (entryId: string | null, patch: Record<string, unknown>, insertedEntry?: Entry) => {
     if (!userId) return;
     qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => {
       const existing = cur ?? [];
       const now = new Date().toISOString();
+      if (insertedEntry && !existing.some((entry) => entry.id === insertedEntry.id)) {
+        return [{ ...insertedEntry, ...patch } as Entry, ...existing];
+      }
       if (entryId && existing.some((entry) => entry.id === entryId)) {
         return existing.map((entry) => entry.id === entryId ? ({ ...entry, ...patch, updated_at: now } as Entry) : entry);
       }
@@ -547,11 +550,11 @@ function EntryPage() {
       } else {
         const { data, error } = await supabase.from("devotional_entries").insert({
           user_id: userId, template_id: id, entry_date: selectedDate, ...patch,
-        } as any).select("id").single();
+        } as any).select("*").single();
         if (error) throw error;
         currentEntryIdRef.current = data.id;
         trackEvent("devotional_entry_created", { template_id: id });
-        applyEntryPatchToCache(data.id, patch);
+        applyEntryPatchToCache(data.id, patch, data as Entry);
       }
       const key = Object.keys(patch)[0];
       setSavingField(null);
@@ -571,6 +574,7 @@ function EntryPage() {
   // Used by the Workspace section, which needs an entry to attach items to.
   const ensureEntry = async (): Promise<string | null> => {
     if (!userId) return null;
+    if (currentEntryIdRef.current) return currentEntryIdRef.current;
     if (currentEntry?.id) return currentEntry.id;
     const { data, error } = await supabase
       .from("devotional_entries")
