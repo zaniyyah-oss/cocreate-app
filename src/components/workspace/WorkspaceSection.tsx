@@ -435,6 +435,13 @@ function NoteBody({
         const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
         if (error) throw error;
       }
+      qc.setQueryData<WorkspaceItem[]>(["workspace-items", userId], (cur) =>
+        (cur ?? []).map((workspaceItem) =>
+          workspaceItem.id === item.id
+            ? ({ ...workspaceItem, ...patch, updated_at: new Date().toISOString() } as WorkspaceItem)
+            : workspaceItem,
+        ),
+      );
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
       // Refresh list quietly so tab titles / library reflect the latest
