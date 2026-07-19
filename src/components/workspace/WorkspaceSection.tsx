@@ -418,7 +418,15 @@ function NoteBody({
     if (guest) return;
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     if (!pendingPatchRef.current) return;
-    if (inFlightRef.current) return;
+    if (inFlightRef.current) {
+      if (keepalive) {
+        const lastChancePatch = pendingPatchRef.current;
+        pendingPatchRef.current = null;
+        setHasPendingPatch(false);
+        sendWorkspaceKeepalive(item.id, lastChancePatch, accessTokenRef.current);
+      }
+      return;
+    }
     const patch = pendingPatchRef.current;
     pendingPatchRef.current = null;
     setHasPendingPatch(false);
