@@ -1950,6 +1950,8 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
           );
         })}
       </div>
+      <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
     </div>
   );
 }
