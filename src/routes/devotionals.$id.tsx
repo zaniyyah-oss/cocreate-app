@@ -1375,6 +1375,28 @@ function useDevoContentDates(userId: string | null, startISO: string, endISO: st
   });
 }
 
+// Returns Map of ISO date -> topic name for any entry whose template has a topic.
+function useTopicalDates(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["topical-dates", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("devotional_entries")
+        .select("entry_date, devotional_templates!inner(topic_id, topics(name))")
+        .eq("user_id", userId!)
+        .gte("entry_date", startISO).lte("entry_date", endISO)
+        .not("devotional_templates.topic_id", "is", null);
+      const map = new Map<string, string>();
+      for (const row of (data ?? []) as any[]) {
+        const name = row.devotional_templates?.topics?.name;
+        if (name && row.entry_date) map.set(row.entry_date, name);
+      }
+      return map;
+    },
+  });
+}
+
 // Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
 const SAMPLE_NOTES: Record<number, string> = {
