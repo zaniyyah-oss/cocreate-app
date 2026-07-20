@@ -1340,6 +1340,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_events: {
+        Row: {
+          color: string
+          created_at: string
+          event_date: string
+          event_type: string
+          id: string
+          notes: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          event_date: string
+          event_type: string
+          id?: string
+          notes?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          id?: string
+          notes?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_recommendations: {
         Row: {
           computed_at: string
