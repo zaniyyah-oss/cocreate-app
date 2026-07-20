@@ -1337,8 +1337,45 @@ const MONTH_CAL_CSS = `
 }
 `;
 
-// Static sample data — replaced with live data in a later prompt.
-const SAMPLE_DEVO_DAYS = new Set([1,2,3,5,6,8,9,10,12,13,15,16,17,19,20]);
+// Shared hook: returns Set of ISO dates (YYYY-MM-DD) in [startISO, endISO]
+// where the user has ANY content across the 5 devotional sections
+// (Where Are You, Read, Pray, To-Do, Workspace) for any template.
+function useDevoContentDates(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["devo-content-dates", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const [entriesRes, wsRes] = await Promise.all([
+        supabase.from("devotional_entries")
+          .select("entry_date, where_text, reflect_text, scripture_text, pray_text, todo_text")
+          .eq("user_id", userId!)
+          .gte("entry_date", startISO).lte("entry_date", endISO),
+        supabase.from("workspace_items" as any)
+          .select("created_at, devotional_entry_id, title, content")
+          .eq("user_id", userId!)
+          .gte("created_at", startISO + "T00:00:00")
+          .lte("created_at", endISO + "T23:59:59"),
+      ]);
+      const dates = new Set<string>();
+      const nonEmpty = (v: unknown) => typeof v === "string" && v.trim().length > 0;
+      for (const e of (entriesRes.data ?? []) as any[]) {
+        const where = nonEmpty(e.where_text) || nonEmpty(e.reflect_text);
+        if (where || nonEmpty(e.scripture_text) || nonEmpty(e.pray_text) || nonEmpty(e.todo_text)) {
+          dates.add(e.entry_date);
+        }
+      }
+      for (const w of (wsRes.data ?? []) as any[]) {
+        if (nonEmpty(w.title) || nonEmpty(w.content)) {
+          dates.add((w.created_at ?? "").slice(0, 10));
+        }
+      }
+      dates.delete("");
+      return dates;
+    },
+  });
+}
+
+// Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
 const SAMPLE_NOTES: Record<number, string> = {
   3: "Rooted — Day 3",
@@ -1348,7 +1385,7 @@ const SAMPLE_NOTES: Record<number, string> = {
   29: "Motherhood — Day 1",
 };
 
-function MonthCalendarView({ templateId }: { templateId: string }) {
+function MonthCalendarView({ templateId, userId }: { templateId: string; userId: string | null }) {
   const navigate = useNavigate();
   const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
   const [cursor, setCursor] = useState<{ y: number; m: number }>(() => ({ y: todayD.getFullYear(), m: todayD.getMonth() }));
