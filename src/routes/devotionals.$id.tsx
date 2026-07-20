@@ -1733,6 +1733,20 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                     </div>
                   )}
                   {note && <div className="mcal-note">{note}</div>}
+                  {(eventsMap.get(c.iso) ?? []).length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4, alignItems: "flex-start" }}>
+                      {(eventsMap.get(c.iso) ?? []).slice(0, 3).map(ev => (
+                        <span key={ev.id} title={eventDisplayLabel(ev)}
+                          style={{
+                            display: "inline-block", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                            padding: "2px 8px", borderRadius: 999, background: ev.color,
+                            color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
+                          }}>
+                          {eventDisplayLabel(ev)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </button>
               );
             })}
