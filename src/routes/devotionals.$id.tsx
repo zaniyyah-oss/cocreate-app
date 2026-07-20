@@ -1828,6 +1828,11 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
   const devoDates = devoDatesQ.data ?? new Set<string>();
   const topicalQ = useTopicalDates(userId, isoDate(anchor), isoDate(endD));
   const topicalMap = topicalQ.data ?? new Map<string, string>();
+  const eventsQ = useUserEvents(userId, isoDate(anchor), isoDate(endD));
+  const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const qc = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
+  const [addDate, setAddDate] = useState<string>(isoDate(todayD));
 
   const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
   const rangeTitle =
