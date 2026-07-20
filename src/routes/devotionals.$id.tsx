@@ -1982,6 +1982,18 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                       {eventDisplayLabel(ev)}
                     </span>
                   ))}
+                  {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
+                    <button type="button" onClick={() => openDay(d)}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "4px 10px", borderRadius: 999, background: "#8A96E0",
+                        color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        border: "none", cursor: "pointer",
+                      }}
+                      title="Open to see these to-dos">
+                      {todoDueMap.get(isoDate(d))} to-do{todoDueMap.get(isoDate(d))! > 1 ? "s" : ""} due
+                    </button>
+                  )}
                 </div>
                 <textarea
                   className="wl-note"
