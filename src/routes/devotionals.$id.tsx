@@ -1398,6 +1398,212 @@ function useTopicalDates(userId: string | null, startISO: string, endISO: string
   });
 }
 
+// ============================================================================
+// User events (Prayer meeting, Bible study, Mentor meeting, Other)
+// ============================================================================
+
+type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
+type UserEvent = {
+  id: string;
+  event_date: string;
+  event_type: UserEventType;
+  title: string | null;
+  color: string;
+  notes: string | null;
+};
+
+const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
+  prayer_meeting: { label: "Prayer meeting", color: "#E990A2" },
+  bible_study: { label: "Bible study", color: "#FFAE00" },
+  mentor_meeting: { label: "Mentor meeting", color: "#8A96E0" },
+};
+
+const OTHER_COLOR_SWATCHES: { name: string; value: string }[] = [
+  { name: "Navy", value: "#181A4D" },
+  { name: "Teal", value: "#0F4A42" },
+  { name: "Amber", value: "#FFAE00" },
+  { name: "Periwinkle", value: "#8A96E0" },
+  { name: "Blush", value: "#E990A2" },
+  { name: "Limelight", value: "#DCE07A" },
+  { name: "Apple red", value: "#FF3B30" },
+  { name: "Neon yellow", value: "#EEFF00" },
+  { name: "Gray", value: "#9B9B93" },
+];
+const OTHER_DEFAULT_COLOR = "#9B9B93";
+
+function eventDisplayLabel(ev: UserEvent): string {
+  if (ev.event_type === "other") return ev.title?.trim() || "Event";
+  return EVENT_TYPE_META[ev.event_type].label;
+}
+
+function useUserEvents(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["user-events", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_events" as any)
+        .select("id,event_date,event_type,title,color,notes")
+        .eq("user_id", userId!)
+        .gte("event_date", startISO)
+        .lte("event_date", endISO)
+        .order("event_date", { ascending: true });
+      if (error) throw error;
+      const map = new Map<string, UserEvent[]>();
+      for (const row of (data ?? []) as unknown as UserEvent[]) {
+        const arr = map.get(row.event_date) ?? [];
+        arr.push(row);
+        map.set(row.event_date, arr);
+      }
+      return map;
+    },
+  });
+}
+
+function AddEventDialog({
+  open, onOpenChange, userId, defaultDate, onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string | null;
+  defaultDate: string;
+  onCreated: () => void;
+}) {
+  const [date, setDate] = useState(defaultDate);
+  const [type, setType] = useState<UserEventType>("prayer_meeting");
+  const [title, setTitle] = useState("");
+  const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setDate(defaultDate);
+      setType("prayer_meeting");
+      setTitle("");
+      setColor(OTHER_DEFAULT_COLOR);
+      setNotes("");
+      setErr(null);
+    }
+  }, [open, defaultDate]);
+
+  const isOther = type === "other";
+  const resolvedColor = isOther ? color : EVENT_TYPE_META[type].color;
+
+  const save = async () => {
+    if (!userId) { setErr("Please sign in to save events."); return; }
+    if (isOther && !title.trim()) { setErr("Add a name for this event."); return; }
+    setSaving(true); setErr(null);
+    const { error } = await supabase.from("user_events" as any).insert({
+      user_id: userId,
+      event_date: date,
+      event_type: type,
+      title: isOther ? title.trim() : null,
+      color: resolvedColor,
+      notes: notes.trim() || null,
+    });
+    setSaving(false);
+    if (error) { setErr(error.message); return; }
+    onCreated();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
+        <DialogHeader>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>Add new event</DialogTitle>
+        </DialogHeader>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+            Date
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+          </label>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {([
+                ["prayer_meeting", "Prayer meeting", "#E990A2"],
+                ["bible_study", "Bible study", "#FFAE00"],
+                ["mentor_meeting", "Mentor meeting", "#8A96E0"],
+                ["other", "Other", "#9B9B93"],
+              ] as const).map(([val, label, sw]) => {
+                const active = type === val;
+                return (
+                  <button key={val} type="button" onClick={() => setType(val)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 12px", borderRadius: 10,
+                      border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                      background: "#fff", cursor: "pointer",
+                      fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                      textAlign: "left",
+                    }}>
+                    <span style={{ width: 12, height: 12, borderRadius: 999, background: sw, flex: "none" }} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {isOther && (
+            <>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+                Name
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Concert, Retreat"
+                  style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+              </label>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D", marginBottom: 6 }}>Color</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {OTHER_COLOR_SWATCHES.map(sw => {
+                    const active = color === sw.value;
+                    return (
+                      <button key={sw.value} type="button" aria-label={sw.name}
+                        onClick={() => setColor(sw.value)}
+                        style={{
+                          width: 28, height: 28, borderRadius: 999,
+                          background: sw.value, cursor: "pointer",
+                          border: active ? "2px solid #181A4D" : "1px solid #E4DFCF",
+                          boxShadow: active ? "0 0 0 2px #fff inset" : "none",
+                        }} />
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+            Details <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14, resize: "vertical" }} />
+          </label>
+
+          {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
+
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+            <button type="button" onClick={() => onOpenChange(false)}
+              style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+              Cancel
+            </button>
+            <button type="button" onClick={save} disabled={saving}
+              style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+              {saving ? "Saving…" : "Add event"}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
 const SAMPLE_NOTES: Record<number, string> = {
