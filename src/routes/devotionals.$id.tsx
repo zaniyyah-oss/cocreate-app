@@ -1304,3 +1304,160 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
   );
 }
 
+
+// ============================================================================
+// Month calendar view — 7-column grid, static/sample data (wired up later)
+// ============================================================================
+
+const MONTH_CAL_CSS = `
+.mcal-wrap{font-family:'Poppins',sans-serif;color:#20201C;}
+.mcal-nav{display:flex;align-items:center;gap:14px;margin:2px 0 16px;}
+.mcal-nav .title{font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:#181A4D;letter-spacing:-0.01em;}
+.mcal-nav button{width:30px;height:30px;border-radius:50%;border:1px solid #E4DFCF;background:#fff;color:#181A4D;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+.mcal-nav button:hover{border-color:#181A4D;}
+.mcal-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.mcal-legend span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
+.mcal-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+.mcal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+.mcal-dow div{text-align:center;font-family:'Poppins',sans-serif;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#68655C;font-weight:600;}
+.mcal-weeks{display:grid;gap:6px;}
+.mcal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.mcal-cell{background:#fff;border:1px solid #E4DFCF;border-radius:14px;min-height:96px;padding:10px;position:relative;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.15s;font-family:'Poppins',sans-serif;text-align:left;}
+.mcal-cell:hover{border-color:#181A4D;}
+.mcal-cell.other{opacity:0.35;}
+.mcal-cell.today{box-shadow:inset 0 0 0 2px #181A4D;}
+.mcal-cell.devo{border-left:4px solid #DCE07A;}
+.mcal-cell.topical{border-right:4px solid #0F4A42;}
+.mcal-num{font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;color:#20201C;}
+.mcal-cell.other .mcal-num{color:#68655C;}
+.mcal-dots{display:flex;gap:4px;flex-wrap:wrap;}
+.mcal-dots .d{width:8px;height:8px;border-radius:50%;flex:none;}
+.mcal-note{font-family:'Poppins',sans-serif;font-size:11.5px;color:#68655C;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+@media(max-width:640px){
+  .mcal-cell{min-height:64px;padding:6px;border-radius:10px;gap:4px;}
+  .mcal-num{font-size:12px;}
+  .mcal-note{display:none;}
+  .mcal-nav .title{font-size:20px;}
+}
+`;
+
+// Static sample data — replaced with live data in a later prompt.
+const SAMPLE_DEVO_DAYS = new Set([1,2,3,5,6,8,9,10,12,13,15,16,17,19,20]);
+const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
+const SAMPLE_NOTES: Record<number, string> = {
+  3: "Rooted — Day 3",
+  9: "Still Waters — Day 9",
+  15: "Held — Day 15",
+  22: "Marriage — Day 2",
+  29: "Motherhood — Day 1",
+};
+
+function MonthCalendarView({ templateId }: { templateId: string }) {
+  const navigate = useNavigate();
+  const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
+  const [cursor, setCursor] = useState<{ y: number; m: number }>(() => ({ y: todayD.getFullYear(), m: todayD.getMonth() }));
+
+  const first = new Date(cursor.y, cursor.m, 1);
+  const startDow = first.getDay(); // 0=Sun..6=Sat, mockup uses Sun-start
+  const daysInMonth = new Date(cursor.y, cursor.m + 1, 0).getDate();
+  const prevMonthDays = new Date(cursor.y, cursor.m, 0).getDate();
+
+  // Build 6 weeks x 7 = 42 cells.
+  type Cell = { date: Date; iso: string; inMonth: boolean; dayNum: number };
+  const cells: Cell[] = [];
+  for (let i = 0; i < 42; i++) {
+    const offset = i - startDow;
+    const date = new Date(cursor.y, cursor.m, 1 + offset);
+    cells.push({
+      date,
+      iso: isoDate(date),
+      inMonth: date.getMonth() === cursor.m,
+      dayNum: date.getDate(),
+    });
+  }
+  const weeks: Cell[][] = [];
+  for (let w = 0; w < 6; w++) weeks.push(cells.slice(w * 7, w * 7 + 7));
+  // Trim trailing all-other-month week if unused.
+  while (weeks.length > 4 && weeks[weeks.length - 1].every(c => !c.inMonth)) weeks.pop();
+
+  const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  void prevMonthDays; // reserved
+
+  const isToday = (d: Date) =>
+    d.getFullYear() === todayD.getFullYear() && d.getMonth() === todayD.getMonth() && d.getDate() === todayD.getDate();
+
+  const openDay = (c: Cell) => {
+    if (c.date.getTime() > todayD.getTime()) return;
+    navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date: c.iso } as any });
+  };
+
+  return (
+    <div className="mcal-wrap">
+      <style dangerouslySetInnerHTML={{ __html: MONTH_CAL_CSS }} />
+
+      <div className="de-headtop" style={{ marginBottom: 6 }}>
+        <span className="de-headtitle-brand">Abide</span>
+        <span className="de-headarrow">→</span>
+        <span className="de-headdate">Month</span>
+      </div>
+      <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 27, fontWeight: 700, color: "#181A4D", letterSpacing: "-0.01em", margin: "2px 0 6px" }}>
+        Covered This Month
+      </div>
+      <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 14, color: "#20201C", opacity: 0.65, margin: "0 0 18px", maxWidth: 640 }}>
+        An overview of what came up continually over the month. Use this recap to help plan a few of your studies and workspaces.
+      </p>
+
+      <div className="mcal-nav">
+        <button aria-label="Previous month" onClick={() => setCursor(c => ({ y: c.m === 0 ? c.y - 1 : c.y, m: (c.m + 11) % 12 }))}>‹</button>
+        <div className="title">{monthTitle}</div>
+        <button aria-label="Next month" onClick={() => setCursor(c => ({ y: c.m === 11 ? c.y + 1 : c.y, m: (c.m + 1) % 12 }))}>›</button>
+      </div>
+
+      <div className="mcal-legend">
+        <span><span className="dot" style={{ background: "#DCE07A" }} /> Daily devotional</span>
+        <span><span className="dot" style={{ background: "#0F4A42" }} /> Topical devotional</span>
+      </div>
+
+      <div className="mcal-dow">{dowLabels.map(d => <div key={d}>{d}</div>)}</div>
+
+      <div className="mcal-weeks">
+        {weeks.map((week, wi) => (
+          <div key={wi} className="mcal-week">
+            {week.map(c => {
+              // Sample data only applies to the current real month for now.
+              const isCurrentRealMonth = c.date.getFullYear() === todayD.getFullYear() && c.date.getMonth() === todayD.getMonth();
+              const hasDevo = c.inMonth && isCurrentRealMonth && SAMPLE_DEVO_DAYS.has(c.dayNum);
+              const hasTopical = c.inMonth && isCurrentRealMonth && SAMPLE_TOPICAL_DAYS.has(c.dayNum);
+              const note = c.inMonth && isCurrentRealMonth ? SAMPLE_NOTES[c.dayNum] : undefined;
+              const cls = [
+                "mcal-cell",
+                c.inMonth ? "" : "other",
+                isToday(c.date) ? "today" : "",
+                hasDevo ? "devo" : "",
+                hasTopical ? "topical" : "",
+              ].filter(Boolean).join(" ");
+              return (
+                <button
+                  type="button"
+                  key={c.iso}
+                  className={cls}
+                  onClick={() => openDay(c)}
+                >
+                  <div className="mcal-num">{c.dayNum}</div>
+                  {(hasDevo || hasTopical) && (
+                    <div className="mcal-dots">
+                      {hasDevo && <span className="d" style={{ background: "#DCE07A" }} />}
+                      {hasTopical && <span className="d" style={{ background: "#0F4A42" }} />}
+                    </div>
+                  )}
+                  {note && <div className="mcal-note">{note}</div>}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
