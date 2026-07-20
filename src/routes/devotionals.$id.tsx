@@ -23,7 +23,7 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
-type TodoItem = { id: string; text: string; done: boolean };
+type TodoItem = { id: string; text: string; done: boolean; due_date?: string | null };
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
