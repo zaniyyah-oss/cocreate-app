@@ -1375,6 +1375,28 @@ function useDevoContentDates(userId: string | null, startISO: string, endISO: st
   });
 }
 
+// Returns Map of ISO date -> topic name for any entry whose template has a topic.
+function useTopicalDates(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["topical-dates", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("devotional_entries")
+        .select("entry_date, devotional_templates!inner(topic_id, topics(name))")
+        .eq("user_id", userId!)
+        .gte("entry_date", startISO).lte("entry_date", endISO)
+        .not("devotional_templates.topic_id", "is", null);
+      const map = new Map<string, string>();
+      for (const row of (data ?? []) as any[]) {
+        const name = row.devotional_templates?.topics?.name;
+        if (name && row.entry_date) map.set(row.entry_date, name);
+      }
+      return map;
+    },
+  });
+}
+
 // Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
 const SAMPLE_NOTES: Record<number, string> = {
@@ -1417,6 +1439,8 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const rangeEndISO = cells[cells.length - 1].iso;
   const devoDatesQ = useDevoContentDates(userId, rangeStartISO, rangeEndISO);
   const devoDates = devoDatesQ.data ?? new Set<string>();
+  const topicalQ = useTopicalDates(userId, rangeStartISO, rangeEndISO);
+  const topicalMap = topicalQ.data ?? new Map<string, string>();
 
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -1463,11 +1487,12 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
         {weeks.map((week, wi) => (
           <div key={wi} className="mcal-week">
             {week.map(c => {
-              // Devo tag is live per-day; topical + note previews are still sample.
+              // Devo + topical tags are live; note preview still sample.
               const isCurrentRealMonth = c.date.getFullYear() === todayD.getFullYear() && c.date.getMonth() === todayD.getMonth();
               const hasDevo = devoDates.has(c.iso);
-              const hasTopical = c.inMonth && isCurrentRealMonth && SAMPLE_TOPICAL_DAYS.has(c.dayNum);
-              const note = c.inMonth && isCurrentRealMonth ? SAMPLE_NOTES[c.dayNum] : undefined;
+              const topicalName = topicalMap.get(c.iso);
+              const hasTopical = !!topicalName;
+              const note = topicalName ?? (c.inMonth && isCurrentRealMonth ? SAMPLE_NOTES[c.dayNum] : undefined);
               const cls = [
                 "mcal-cell",
                 c.inMonth ? "" : "other",
@@ -1567,6 +1592,8 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
 
   const devoDatesQ = useDevoContentDates(userId, isoDate(anchor), isoDate(endD));
   const devoDates = devoDatesQ.data ?? new Set<string>();
+  const topicalQ = useTopicalDates(userId, isoDate(anchor), isoDate(endD));
+  const topicalMap = topicalQ.data ?? new Map<string, string>();
 
   const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
   const rangeTitle =
@@ -1622,7 +1649,7 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
             d.getFullYear() === todayD.getFullYear() && d.getMonth() === todayD.getMonth();
           const dayNum = d.getDate();
           const hasDevo = devoDates.has(isoDate(d));
-          const topicalName = isCurrentRealMonth ? SAMPLE_WEEK_TOPICAL[dayNum] : undefined;
+          const topicalName = topicalMap.get(isoDate(d));
           const note = isCurrentRealMonth ? SAMPLE_WEEK_NOTES[dayNum] : undefined;
           const isPast = d.getTime() < todayD.getTime();
           const today = isToday(d);
