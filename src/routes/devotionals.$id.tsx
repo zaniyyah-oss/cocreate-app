@@ -1539,8 +1539,7 @@ const WEEK_LIST_CSS = `
 }
 `;
 
-// Static sample data reused across Week/Month for now.
-const SAMPLE_WEEK_DEVO = new Set([1,2,3,5,6,8,9,10,12,13,15,16,17,19,20]);
+// Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_WEEK_TOPICAL: Record<number, string> = {
   21: "Marriage", 22: "Marriage", 23: "Marriage", 24: "Marriage", 25: "Marriage",
   29: "Motherhood", 30: "Motherhood", 31: "Motherhood",
@@ -1556,7 +1555,7 @@ function startOfWeekSunday(d: Date): Date {
   return x;
 }
 
-function WeekListView({ templateId }: { templateId: string }) {
+function WeekListView({ templateId, userId }: { templateId: string; userId: string | null }) {
   const navigate = useNavigate();
   const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
   const [anchor, setAnchor] = useState<Date>(() => startOfWeekSunday(todayD));
@@ -1565,6 +1564,9 @@ function WeekListView({ templateId }: { templateId: string }) {
     const d = new Date(anchor); d.setDate(anchor.getDate() + i); return d;
   });
   const endD = days[6];
+
+  const devoDatesQ = useDevoContentDates(userId, isoDate(anchor), isoDate(endD));
+  const devoDates = devoDatesQ.data ?? new Set<string>();
 
   const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
   const rangeTitle =
