@@ -778,11 +778,7 @@ function EntryPage() {
             {search.view === "month" ? (
               <MonthCalendarView templateId={id} />
             ) : search.view === "week" ? (
-              userId ? (
-                <HistoryView userId={userId} templateId={id} range="week" />
-              ) : (
-                <div style={{ textAlign: "center", padding: 40, color: "#8a8678" }}>Sign in to view your history.</div>
-              )
+              <WeekListView templateId={id} />
             ) : (
               <>
             {/* Focus-on chip row */}
