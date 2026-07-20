@@ -1685,6 +1685,8 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const topicalMap = topicalQ.data ?? new Map<string, string>();
   const eventsQ = useUserEvents(userId, rangeStartISO, rangeEndISO);
   const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const todoDueQ = useTodoDueDates(userId, rangeStartISO, rangeEndISO);
+  const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
