@@ -1413,6 +1413,11 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   // Trim trailing all-other-month week if unused.
   while (weeks.length > 4 && weeks[weeks.length - 1].every(c => !c.inMonth)) weeks.pop();
 
+  const rangeStartISO = cells[0].iso;
+  const rangeEndISO = cells[cells.length - 1].iso;
+  const devoDatesQ = useDevoContentDates(userId, rangeStartISO, rangeEndISO);
+  const devoDates = devoDatesQ.data ?? new Set<string>();
+
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   void prevMonthDays; // reserved
