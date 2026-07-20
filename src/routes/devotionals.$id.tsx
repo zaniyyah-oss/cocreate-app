@@ -1879,6 +1879,8 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
   const topicalMap = topicalQ.data ?? new Map<string, string>();
   const eventsQ = useUserEvents(userId, isoDate(anchor), isoDate(endD));
   const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const todoDueQ = useTodoDueDates(userId, isoDate(anchor), isoDate(endD));
+  const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
