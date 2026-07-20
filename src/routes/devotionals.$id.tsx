@@ -1783,6 +1783,7 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                         </span>
                       ))}
                     </div>
+                  )}
                   {(todoDueMap.get(c.iso) ?? 0) > 0 && (
                     <div style={{ marginTop: 4 }}>
                       <span title={`${todoDueMap.get(c.iso)} to-do${todoDueMap.get(c.iso)! > 1 ? "s" : ""} due — tap to open`}
