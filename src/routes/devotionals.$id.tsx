@@ -1592,6 +1592,8 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
 
   const devoDatesQ = useDevoContentDates(userId, isoDate(anchor), isoDate(endD));
   const devoDates = devoDatesQ.data ?? new Set<string>();
+  const topicalQ = useTopicalDates(userId, isoDate(anchor), isoDate(endD));
+  const topicalMap = topicalQ.data ?? new Map<string, string>();
 
   const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
   const rangeTitle =
