@@ -1649,7 +1649,7 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
             d.getFullYear() === todayD.getFullYear() && d.getMonth() === todayD.getMonth();
           const dayNum = d.getDate();
           const hasDevo = devoDates.has(isoDate(d));
-          const topicalName = isCurrentRealMonth ? SAMPLE_WEEK_TOPICAL[dayNum] : undefined;
+          const topicalName = topicalMap.get(isoDate(d)) ?? (isCurrentRealMonth ? SAMPLE_WEEK_TOPICAL[dayNum] : undefined);
           const note = isCurrentRealMonth ? SAMPLE_WEEK_NOTES[dayNum] : undefined;
           const isPast = d.getTime() < todayD.getTime();
           const today = isToday(d);
