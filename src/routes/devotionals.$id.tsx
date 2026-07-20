@@ -1439,6 +1439,8 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const rangeEndISO = cells[cells.length - 1].iso;
   const devoDatesQ = useDevoContentDates(userId, rangeStartISO, rangeEndISO);
   const devoDates = devoDatesQ.data ?? new Set<string>();
+  const topicalQ = useTopicalDates(userId, rangeStartISO, rangeEndISO);
+  const topicalMap = topicalQ.data ?? new Map<string, string>();
 
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
