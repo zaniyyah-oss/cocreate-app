@@ -159,6 +159,8 @@ const CSS = `
 .de-todo input[type=text].done{color:#8a8678;text-decoration:line-through;}
 .de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;}
 .de-todo-x:hover{color:#FF340C;}
+.de-todo-date{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:11px;color:#8A96E0;outline:none;padding:2px 4px;cursor:pointer;flex-shrink:0;width:110px;}
+.de-todo-date:hover{color:#181A4D;}
 .de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.25);color:#0F4A42;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.03em;padding:7px 12px;border-radius:6px;cursor:pointer;margin-top:8px;width:100%;transition:background .15s ease;}
 .de-todo-add:hover{background:rgba(15,74,66,0.06);}
 
