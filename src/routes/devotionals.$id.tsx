@@ -776,9 +776,9 @@ function EntryPage() {
             </div>
 
             {search.view === "month" ? (
-              <MonthCalendarView templateId={id} />
+              <MonthCalendarView templateId={id} userId={userId} />
             ) : search.view === "week" ? (
-              <WeekListView templateId={id} />
+              <WeekListView templateId={id} userId={userId} />
             ) : (
               <>
             {/* Focus-on chip row */}
