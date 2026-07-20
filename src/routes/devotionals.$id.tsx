@@ -1871,10 +1871,16 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
         An overview of what you've covered, worked on, and worked through with the Lord over the course of this week.
       </p>
 
-      <div className="wlist-nav">
-        <button aria-label="Previous week" onClick={() => shiftWeek(-1)}>‹</button>
-        <div className="title">{rangeTitle}</div>
-        <button aria-label="Next week" onClick={() => shiftWeek(1)}>›</button>
+      <div className="wlist-nav" style={{ justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button aria-label="Previous week" onClick={() => shiftWeek(-1)}>‹</button>
+          <div className="title">{rangeTitle}</div>
+          <button aria-label="Next week" onClick={() => shiftWeek(1)}>›</button>
+        </div>
+        <button type="button" onClick={() => { setAddDate(isoDate(todayD)); setAddOpen(true); }}
+          style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          + Add new
+        </button>
       </div>
 
       <div className="wlist-legend">
