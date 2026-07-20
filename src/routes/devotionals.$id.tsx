@@ -945,6 +945,13 @@ function EntryPage() {
                             value={it.text}
                             onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
                           />
+                          <input
+                            type="date"
+                            className="de-todo-date"
+                            value={it.due_date ?? ""}
+                            onChange={(e) => updateTodoItem(idx, { due_date: e.target.value || null })}
+                            title="Due date (optional)"
+                          />
                           <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
                         </div>
                       ))}
