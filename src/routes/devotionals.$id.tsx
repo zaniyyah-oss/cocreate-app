@@ -1463,9 +1463,9 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
         {weeks.map((week, wi) => (
           <div key={wi} className="mcal-week">
             {week.map(c => {
-              // Sample data only applies to the current real month for now.
+              // Devo tag is live per-day; topical + note previews are still sample.
               const isCurrentRealMonth = c.date.getFullYear() === todayD.getFullYear() && c.date.getMonth() === todayD.getMonth();
-              const hasDevo = c.inMonth && isCurrentRealMonth && SAMPLE_DEVO_DAYS.has(c.dayNum);
+              const hasDevo = devoDates.has(c.iso);
               const hasTopical = c.inMonth && isCurrentRealMonth && SAMPLE_TOPICAL_DAYS.has(c.dayNum);
               const note = c.inMonth && isCurrentRealMonth ? SAMPLE_NOTES[c.dayNum] : undefined;
               const cls = [
