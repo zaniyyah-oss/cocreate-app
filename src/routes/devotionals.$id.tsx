@@ -23,7 +23,7 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
-type TodoItem = { id: string; text: string; done: boolean };
+type TodoItem = { id: string; text: string; done: boolean; due_date?: string | null };
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
@@ -159,6 +159,8 @@ const CSS = `
 .de-todo input[type=text].done{color:#8a8678;text-decoration:line-through;}
 .de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;}
 .de-todo-x:hover{color:#FF340C;}
+.de-todo-date{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:11px;color:#8A96E0;outline:none;padding:2px 4px;cursor:pointer;flex-shrink:0;width:110px;}
+.de-todo-date:hover{color:#181A4D;}
 .de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.25);color:#0F4A42;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.03em;padding:7px 12px;border-radius:6px;cursor:pointer;margin-top:8px;width:100%;transition:background .15s ease;}
 .de-todo-add:hover{background:rgba(15,74,66,0.06);}
 
@@ -945,6 +947,13 @@ function EntryPage() {
                             value={it.text}
                             onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
                           />
+                          <input
+                            type="date"
+                            className="de-todo-date"
+                            value={it.due_date ?? ""}
+                            onChange={(e) => updateTodoItem(idx, { due_date: e.target.value || null })}
+                            title="Due date (optional)"
+                          />
                           <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
                         </div>
                       ))}
@@ -1436,6 +1445,32 @@ function eventDisplayLabel(ev: UserEvent): string {
   return EVENT_TYPE_META[ev.event_type].label;
 }
 
+// Returns Map of ISO date -> count of to-do items due on that date (across all entries).
+function useTodoDueDates(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["todo-due-dates", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("todo_items")
+        .eq("user_id", userId!)
+        .not("todo_items", "is", null);
+      if (error) throw error;
+      const map = new Map<string, number>();
+      for (const row of (data ?? []) as any[]) {
+        const items = Array.isArray(row.todo_items) ? row.todo_items : [];
+        for (const it of items) {
+          const d = typeof it?.due_date === "string" ? it.due_date : null;
+          if (!d || d < startISO || d > endISO) continue;
+          map.set(d, (map.get(d) ?? 0) + 1);
+        }
+      }
+      return map;
+    },
+  });
+}
+
 function useUserEvents(userId: string | null, startISO: string, endISO: string) {
   return useQuery({
     queryKey: ["user-events", userId, startISO, endISO],
@@ -1650,6 +1685,8 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const topicalMap = topicalQ.data ?? new Map<string, string>();
   const eventsQ = useUserEvents(userId, rangeStartISO, rangeEndISO);
   const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const todoDueQ = useTodoDueDates(userId, rangeStartISO, rangeEndISO);
+  const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
@@ -1747,6 +1784,18 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                       ))}
                     </div>
                   )}
+                  {(todoDueMap.get(c.iso) ?? 0) > 0 && (
+                    <div style={{ marginTop: 4 }}>
+                      <span title={`${todoDueMap.get(c.iso)} to-do${todoDueMap.get(c.iso)! > 1 ? "s" : ""} due — tap to open`}
+                        style={{
+                          display: "inline-block", padding: "2px 8px", borderRadius: 999,
+                          background: "#8A96E0", color: "#fff",
+                          fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
+                        }}>
+                        {todoDueMap.get(c.iso)} to-do{todoDueMap.get(c.iso)! > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -1830,6 +1879,8 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
   const topicalMap = topicalQ.data ?? new Map<string, string>();
   const eventsQ = useUserEvents(userId, isoDate(anchor), isoDate(endD));
   const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const todoDueQ = useTodoDueDates(userId, isoDate(anchor), isoDate(endD));
+  const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
@@ -1931,6 +1982,18 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                       {eventDisplayLabel(ev)}
                     </span>
                   ))}
+                  {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
+                    <button type="button" onClick={() => openDay(d)}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "4px 10px", borderRadius: 999, background: "#8A96E0",
+                        color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        border: "none", cursor: "pointer",
+                      }}
+                      title="Open to see these to-dos">
+                      {todoDueMap.get(isoDate(d))} to-do{todoDueMap.get(isoDate(d))! > 1 ? "s" : ""} due
+                    </button>
+                  )}
                 </div>
                 <textarea
                   className="wl-note"
