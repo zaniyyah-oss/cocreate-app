@@ -778,11 +778,7 @@ function EntryPage() {
             {search.view === "month" ? (
               <MonthCalendarView templateId={id} />
             ) : search.view === "week" ? (
-              userId ? (
-                <HistoryView userId={userId} templateId={id} range="week" />
-              ) : (
-                <div style={{ textAlign: "center", padding: 40, color: "#8a8678" }}>Sign in to view your history.</div>
-              )
+              <WeekListView templateId={id} />
             ) : (
               <>
             {/* Focus-on chip row */}
@@ -1457,6 +1453,176 @@ function MonthCalendarView({ templateId }: { templateId: string }) {
             })}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Week list view — one row per day, static/sample data (wired up later)
+// ============================================================================
+
+const WEEK_LIST_CSS = `
+.wlist-wrap{font-family:'Poppins',sans-serif;color:#20201C;}
+.wlist-nav{display:flex;align-items:center;gap:14px;margin:2px 0 16px;}
+.wlist-nav .title{font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:#181A4D;letter-spacing:-0.01em;}
+.wlist-nav button{width:30px;height:30px;border-radius:50%;border:1px solid #E4DFCF;background:#fff;color:#181A4D;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+.wlist-nav button:hover{border-color:#181A4D;}
+.wlist-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.wlist-legend span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
+.wlist-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+.wlist{display:flex;flex-direction:column;gap:10px;}
+.wl-day{background:#fff;border:1px solid #E4DFCF;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:start;font-family:'Poppins',sans-serif;}
+.wl-day.today{box-shadow:inset 0 0 0 2px #181A4D;}
+.wl-day.devo{border-left:4px solid #DCE07A;}
+.wl-day.topical{border-right:4px solid #0F4A42;}
+.wl-date{text-align:center;}
+.wl-date .dow{font-family:'Poppins',sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#68655C;font-weight:700;}
+.wl-date .num{font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:#181A4D;}
+.wl-body{display:flex;flex-direction:column;gap:9px;min-width:0;}
+.wl-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.wl-tag{font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;padding:5px 11px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;line-height:1.4;}
+.wl-tag .tdot{width:6px;height:6px;border-radius:50%;flex:none;}
+.wl-tag.devo{background:#DCE07A;color:#181A4D;}
+.wl-tag.topical{background:#0F4A42;color:#fff;}
+.wl-tag.empty{background:rgba(32,32,28,0.05);color:#a8a396;font-weight:600;}
+.wl-note{width:100%;border:1px dashed #E4DFCF;border-radius:10px;padding:9px 11px;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;background:transparent;min-height:34px;}
+.wl-note::placeholder{color:#a8a396;}
+.wl-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.wl-link{font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:600;color:#181A4D;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;}
+.wl-chip{font-family:'Poppins',sans-serif;font-size:11px;color:#68655C;border:1px solid #E4DFCF;background:#fff;border-radius:999px;padding:4px 10px;cursor:pointer;}
+@media(max-width:520px){
+  .wl-day{grid-template-columns:48px 1fr;padding:14px;}
+  .wl-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center;}
+}
+`;
+
+// Static sample data reused across Week/Month for now.
+const SAMPLE_WEEK_DEVO = new Set([1,2,3,5,6,8,9,10,12,13,15,16,17,19,20]);
+const SAMPLE_WEEK_TOPICAL: Record<number, string> = {
+  21: "Marriage", 22: "Marriage", 23: "Marriage", 24: "Marriage", 25: "Marriage",
+  29: "Motherhood", 30: "Motherhood", 31: "Motherhood",
+};
+const SAMPLE_WEEK_NOTES: Record<number, string> = {
+  3: "Ask Maya about the retreat dates.",
+  16: "Slow morning — no calls before 9.",
+};
+
+function startOfWeekSunday(d: Date): Date {
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - x.getDay());
+  return x;
+}
+
+function WeekListView({ templateId }: { templateId: string }) {
+  const navigate = useNavigate();
+  const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
+  const [anchor, setAnchor] = useState<Date>(() => startOfWeekSunday(todayD));
+
+  const days: Date[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(anchor); d.setDate(anchor.getDate() + i); return d;
+  });
+  const endD = days[6];
+
+  const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
+  const rangeTitle =
+    anchor.getMonth() === endD.getMonth()
+      ? `${monthShort(anchor)} ${anchor.getDate()} – ${endD.getDate()}`
+      : `${monthShort(anchor)} ${anchor.getDate()} – ${monthShort(endD)} ${endD.getDate()}`;
+
+  const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  const isToday = (d: Date) =>
+    d.getFullYear() === todayD.getFullYear() && d.getMonth() === todayD.getMonth() && d.getDate() === todayD.getDate();
+
+  const openDay = (d: Date) => {
+    if (d.getTime() > todayD.getTime()) return;
+    navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date: isoDate(d) } as any });
+  };
+
+  const shiftWeek = (delta: number) => {
+    const n = new Date(anchor); n.setDate(anchor.getDate() + delta * 7);
+    setAnchor(n);
+  };
+
+  return (
+    <div className="wlist-wrap">
+      <style dangerouslySetInnerHTML={{ __html: WEEK_LIST_CSS }} />
+
+      <div className="de-headtop" style={{ marginBottom: 6 }}>
+        <span className="de-headtitle-brand">Abide</span>
+        <span className="de-headarrow">→</span>
+        <span className="de-headdate">This week</span>
+      </div>
+      <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 27, fontWeight: 700, color: "#181A4D", letterSpacing: "-0.01em", margin: "2px 0 6px" }}>
+        Covered This Week
+      </div>
+      <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 14, color: "#20201C", opacity: 0.65, margin: "0 0 18px", maxWidth: 640 }}>
+        An overview of what you've covered, worked on, and worked through with the Lord over the course of this week.
+      </p>
+
+      <div className="wlist-nav">
+        <button aria-label="Previous week" onClick={() => shiftWeek(-1)}>‹</button>
+        <div className="title">{rangeTitle}</div>
+        <button aria-label="Next week" onClick={() => shiftWeek(1)}>›</button>
+      </div>
+
+      <div className="wlist-legend">
+        <span><span className="dot" style={{ background: "#DCE07A" }} /> Daily devotional</span>
+        <span><span className="dot" style={{ background: "#0F4A42" }} /> Topical devotional</span>
+      </div>
+
+      <div className="wlist">
+        {days.map(d => {
+          const isCurrentRealMonth =
+            d.getFullYear() === todayD.getFullYear() && d.getMonth() === todayD.getMonth();
+          const dayNum = d.getDate();
+          const hasDevo = isCurrentRealMonth && SAMPLE_WEEK_DEVO.has(dayNum);
+          const topicalName = isCurrentRealMonth ? SAMPLE_WEEK_TOPICAL[dayNum] : undefined;
+          const note = isCurrentRealMonth ? SAMPLE_WEEK_NOTES[dayNum] : undefined;
+          const isPast = d.getTime() < todayD.getTime();
+          const today = isToday(d);
+          const cls = [
+            "wl-day",
+            today ? "today" : "",
+            hasDevo ? "devo" : "",
+            topicalName ? "topical" : "",
+          ].filter(Boolean).join(" ");
+
+          return (
+            <div key={isoDate(d)} className={cls}>
+              <div className="wl-date">
+                <div className="dow">{dowLabels[d.getDay()]}</div>
+                <div className="num">{dayNum}</div>
+              </div>
+              <div className="wl-body">
+                <div className="wl-tags">
+                  {hasDevo ? (
+                    <span className="wl-tag devo"><span className="tdot" style={{ background: "#181A4D" }} />Devotional</span>
+                  ) : isPast ? (
+                    <span className="wl-tag empty">— not entered</span>
+                  ) : null}
+                  {topicalName && (
+                    <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
+                  )}
+                </div>
+                <textarea
+                  className="wl-note"
+                  defaultValue={note ?? ""}
+                  placeholder={isPast ? "No note added" : "Add a note for this day…"}
+                  rows={1}
+                />
+              </div>
+              <div className="wl-actions">
+                {hasDevo ? (
+                  <button type="button" className="wl-link" onClick={() => openDay(d)}>View workspace</button>
+                ) : (
+                  <button type="button" className="wl-chip" onClick={() => openDay(d)}>+ plan</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
