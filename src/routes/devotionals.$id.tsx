@@ -1445,6 +1445,32 @@ function eventDisplayLabel(ev: UserEvent): string {
   return EVENT_TYPE_META[ev.event_type].label;
 }
 
+// Returns Map of ISO date -> count of to-do items due on that date (across all entries).
+function useTodoDueDates(userId: string | null, startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["todo-due-dates", userId, startISO, endISO],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("todo_items")
+        .eq("user_id", userId!)
+        .not("todo_items", "is", null);
+      if (error) throw error;
+      const map = new Map<string, number>();
+      for (const row of (data ?? []) as any[]) {
+        const items = Array.isArray(row.todo_items) ? row.todo_items : [];
+        for (const it of items) {
+          const d = typeof it?.due_date === "string" ? it.due_date : null;
+          if (!d || d < startISO || d > endISO) continue;
+          map.set(d, (map.get(d) ?? 0) + 1);
+        }
+      }
+      return map;
+    },
+  });
+}
+
 function useUserEvents(userId: string | null, startISO: string, endISO: string) {
   return useQuery({
     queryKey: ["user-events", userId, startISO, endISO],
