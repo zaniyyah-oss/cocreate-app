@@ -1921,6 +1921,16 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                   {topicalName && (
                     <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
                   )}
+                  {(eventsMap.get(isoDate(d)) ?? []).map(ev => (
+                    <span key={ev.id}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "4px 10px", borderRadius: 999, background: ev.color,
+                        color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                      }}>
+                      {eventDisplayLabel(ev)}
+                    </span>
+                  ))}
                 </div>
                 <textarea
                   className="wl-note"
