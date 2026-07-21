@@ -323,9 +323,11 @@ export function WorkspaceSection({
               {isFocused ? "✕ Exit focus" : "⛶ Focus"}
             </button>
           )}
-          <button className="ws-newbtn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
-            {createItem.isPending ? "Opening…" : "+ New note"}
-          </button>
+          {!isHistory && (
+            <button className="ws-newbtn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
+              {createItem.isPending ? "Opening…" : "+ New note"}
+            </button>
+          )}
         </div>
       </div>
 
