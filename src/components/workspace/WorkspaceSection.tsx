@@ -351,29 +351,33 @@ export function WorkspaceSection({
       {itemsQ.isLoading ? (
         <div className="ws-empty-body">Loading…</div>
       ) : !activeNote ? (
-        <div className="ws-empty-body">No open notes. Start a new one to begin.</div>
+        <div className="ws-empty-body">
+          {isHistory ? "No notes were created on this day." : "No open notes. Start a new one to begin."}
+        </div>
       ) : (
         <NoteBody key={activeNote.id} item={activeNote} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
       )}
 
-      <div className="ws-library-strip">
-        <div className="ws-library-head">
-          <span className="lbl">from your library</span>
-          <Link to="/notes">Open library →</Link>
-        </div>
-        {libraryItems.length === 0 ? (
-          <div className="ws-libempty">Nothing filed away yet. Save a note to start your library.</div>
-        ) : (
-          <div className="ws-libgrid">
-            {libraryItems.map((it) => (
-              <button key={it.id} className="ws-libitem" onClick={() => reopen.mutate(it.id)}>
-                <b>{it.title?.trim() || toPreview(it.body_text) || "Untitled"}</b>
-                {it.tags[0] ? <span className="tg"> · #{it.tags[0]}</span> : null}
-              </button>
-            ))}
+      {!isHistory && (
+        <div className="ws-library-strip">
+          <div className="ws-library-head">
+            <span className="lbl">from your library</span>
+            <Link to="/notes">Open library →</Link>
           </div>
-        )}
-      </div>
+          {libraryItems.length === 0 ? (
+            <div className="ws-libempty">Nothing filed away yet. Save a note to start your library.</div>
+          ) : (
+            <div className="ws-libgrid">
+              {libraryItems.map((it) => (
+                <button key={it.id} className="ws-libitem" onClick={() => reopen.mutate(it.id)}>
+                  <b>{it.title?.trim() || toPreview(it.body_text) || "Untitled"}</b>
+                  {it.tags[0] ? <span className="tg"> · #{it.tags[0]}</span> : null}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
