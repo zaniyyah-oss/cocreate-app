@@ -833,8 +833,7 @@ function EntryPage() {
               </div>
             </div>
 
-
-
+            <TodayEventsBanner userId={userId} dateISO={selectedDate} />
 
             <div className="de-shell-inner">
               {/* Mobile-only quick jump to each section */}
@@ -1497,32 +1496,42 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
 }
 
 function AddEventDialog({
-  open, onOpenChange, userId, defaultDate, onCreated,
+  open, onOpenChange, userId, defaultDate, event, onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   userId: string | null;
   defaultDate: string;
-  onCreated: () => void;
+  event?: UserEvent | null;
+  onSaved: () => void;
 }) {
+  const isEdit = !!event;
   const [date, setDate] = useState(defaultDate);
   const [type, setType] = useState<UserEventType>("prayer_meeting");
   const [title, setTitle] = useState("");
   const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (event) {
+      setDate(event.event_date);
+      setType(event.event_type);
+      setTitle(event.title ?? "");
+      setColor(event.color || OTHER_DEFAULT_COLOR);
+      setNotes(event.notes ?? "");
+    } else {
       setDate(defaultDate);
       setType("prayer_meeting");
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
-      setErr(null);
     }
-  }, [open, defaultDate]);
+    setErr(null);
+  }, [open, defaultDate, event]);
 
   const isOther = type === "other";
   const resolvedColor = isOther ? color : EVENT_TYPE_META[type].color;
@@ -1531,17 +1540,33 @@ function AddEventDialog({
     if (!userId) { setErr("Please sign in to save events."); return; }
     if (isOther && !title.trim()) { setErr("Add a name for this event."); return; }
     setSaving(true); setErr(null);
-    const { error } = await supabase.from("user_events" as any).insert({
-      user_id: userId,
+    const payload = {
       event_date: date,
       event_type: type,
       title: isOther ? title.trim() : null,
       color: resolvedColor,
       notes: notes.trim() || null,
-    });
+    };
+    let error;
+    if (isEdit && event) {
+      ({ error } = await supabase.from("user_events" as any).update(payload).eq("id", event.id));
+    } else {
+      ({ error } = await supabase.from("user_events" as any).insert({ user_id: userId, ...payload }));
+    }
     setSaving(false);
     if (error) { setErr(error.message); return; }
-    onCreated();
+    onSaved();
+    onOpenChange(false);
+  };
+
+  const remove = async () => {
+    if (!event) return;
+    if (!confirm("Delete this event?")) return;
+    setDeleting(true); setErr(null);
+    const { error } = await supabase.from("user_events" as any).delete().eq("id", event.id);
+    setDeleting(false);
+    if (error) { setErr(error.message); return; }
+    onSaved();
     onOpenChange(false);
   };
 
@@ -1549,7 +1574,7 @@ function AddEventDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
         <DialogHeader>
-          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>Add new event</DialogTitle>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? "Edit event" : "Add new event"}</DialogTitle>
         </DialogHeader>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
@@ -1624,19 +1649,102 @@ function AddEventDialog({
 
           {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
 
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
-            <button type="button" onClick={() => onOpenChange(false)}
-              style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
-              Cancel
-            </button>
-            <button type="button" onClick={save} disabled={saving}
-              style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
-              {saving ? "Saving…" : "Add event"}
-            </button>
+          <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 4, flexWrap: "wrap" }}>
+            <div>
+              {isEdit && (
+                <button type="button" onClick={remove} disabled={deleting || saving}
+                  style={{ padding: "10px 16px", borderRadius: 999, border: "1.5px solid #FF3B30", background: "#fff", color: "#FF3B30", cursor: deleting ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                  {deleting ? "Deleting…" : "Delete"}
+                </button>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" onClick={() => onOpenChange(false)}
+                style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={save} disabled={saving || deleting}
+                style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                {saving ? "Saving…" : isEdit ? "Save changes" : "Add event"}
+              </button>
+            </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ============================================================================
+// Today events banner — soft-tinted chips (Today's visual language)
+// ============================================================================
+
+
+function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO: string }) {
+  const qc = useQueryClient();
+  const eventsQ = useUserEvents(userId, dateISO, dateISO);
+  const events = eventsQ.data?.get(dateISO) ?? [];
+  const [addOpen, setAddOpen] = useState(false);
+  const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
+  const onSaved = () => qc.invalidateQueries({ queryKey: ["user-events"] });
+
+  if (!userId) return null;
+  if (events.length === 0) {
+    // Still show a compact "+ Add" affordance so users can add from Today.
+    return (
+      <>
+        <div style={{ margin: "0 0 18px" }}>
+          <button type="button" onClick={() => setAddOpen(true)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "7px 14px", borderRadius: 999, background: "#fff",
+              border: "1.5px dashed #E4DFCF", color: "#68655C",
+              fontFamily: "'Poppins',sans-serif", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+            }}>
+            + Add event today
+          </button>
+        </div>
+        <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={dateISO} onSaved={onSaved} />
+      </>
+    );
+  }
+
+  return (
+    <div style={{ margin: "0 0 20px" }}>
+      <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#68655C", marginBottom: 8 }}>
+        {events.length} thing{events.length === 1 ? "" : "s"} today
+      </div>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2, scrollbarWidth: "none" }}>
+        {events.map(ev => (
+          <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "7px 14px", borderRadius: 999,
+              background: hexToRgba(ev.color, 0.2),
+              border: `2px solid ${ev.color}`,
+              color: "#181A4D",
+              fontFamily: "'Poppins',sans-serif", fontSize: 12.5, fontWeight: 700,
+              whiteSpace: "nowrap", flex: "none", cursor: "pointer",
+            }}>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: ev.color, flex: "none" }} />
+            {eventDisplayLabel(ev)}
+          </button>
+        ))}
+        <button type="button" onClick={() => setAddOpen(true)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "8px 14px", borderRadius: 999, background: "#fff",
+            border: "1.5px dashed #E4DFCF", color: "#68655C",
+            fontFamily: "'Poppins',sans-serif", fontSize: 12.5, fontWeight: 700,
+            flex: "none", cursor: "pointer",
+          }}>
+          + Add
+        </button>
+      </div>
+      <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={dateISO} onSaved={onSaved} />
+      <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
+        defaultDate={editEvent?.event_date ?? dateISO} event={editEvent} onSaved={onSaved} />
+    </div>
   );
 }
 
@@ -1931,6 +2039,7 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
+  const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const [todoOpen, setTodoOpen] = useState(false);
   const [todoDate, setTodoDate] = useState<string>(isoDate(todayD));
 
@@ -2022,11 +2131,14 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                   {(eventsMap.get(c.iso) ?? []).length > 0 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4, alignItems: "flex-start" }}>
                       {(eventsMap.get(c.iso) ?? []).slice(0, 3).map(ev => (
-                        <span key={ev.id} title={eventDisplayLabel(ev)}
+                        <span key={ev.id} title={eventDisplayLabel(ev)} role="button" tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setEditEvent(ev); } }}
                           style={{
                             display: "inline-block", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             padding: "2px 8px", borderRadius: 999, background: ev.color,
                             color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
+                            cursor: "pointer",
                           }}>
                           {eventDisplayLabel(ev)}
                         </span>
@@ -2052,7 +2164,10 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
         ))}
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
-        onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
+        defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
@@ -2143,6 +2258,7 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
+  const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const [todoOpen, setTodoOpen] = useState(false);
   const [todoDate, setTodoDate] = useState<string>(isoDate(todayD));
   const [planOpen, setPlanOpen] = useState(false);
@@ -2242,14 +2358,15 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                     <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
                   )}
                   {(eventsMap.get(isoDate(d)) ?? []).map(ev => (
-                    <span key={ev.id}
+                    <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "4px 10px", borderRadius: 999, background: ev.color,
                         color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        border: "none", cursor: "pointer",
                       }}>
                       {eventDisplayLabel(ev)}
-                    </span>
+                    </button>
                   ))}
                   {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
                     <button type="button" onClick={() => openDay(d)}
@@ -2288,7 +2405,10 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
         })}
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
-        onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
+        defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
