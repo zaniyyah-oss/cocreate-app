@@ -105,7 +105,14 @@ const CSS = `
 .de-headquote,.de-headref{display:none;}
 
 /* Card + badge */
-.de-block{background:#fff;border-radius:14px;padding:20px 22px;margin-bottom:14px;border:1px solid rgba(24,26,77,0.12);}
+.de-block{background:#fff;border-radius:14px;padding:20px 22px;margin-bottom:14px;border:1px solid rgba(24,26,77,0.12);min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box;}
+.de-block *{min-width:0;max-width:100%;}
+.de-textarea{box-sizing:border-box;max-width:100%;overflow-wrap:anywhere;word-break:break-word;}
+.de-shell{min-width:0;}
+@media (max-width:899px){
+  .de-shell{padding-left:16px;padding-right:16px;overflow-x:hidden;}
+  .de-block{padding:16px 14px;}
+}
 .de-badge{display:inline-block;font-weight:600;font-size:11px;letter-spacing:0.03em;text-transform:uppercase;padding:5px 12px;border-radius:6px;color:#FBF8ED;margin-bottom:12px;font-family:'Poppins',sans-serif;}
 .de-badge.where{background:#181A4D;}
 .de-badge.read{background:#FFAE00;color:#181A4D;margin-bottom:6px;}
