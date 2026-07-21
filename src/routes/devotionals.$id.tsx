@@ -2132,11 +2132,14 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                   {(eventsMap.get(c.iso) ?? []).length > 0 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4, alignItems: "flex-start" }}>
                       {(eventsMap.get(c.iso) ?? []).slice(0, 3).map(ev => (
-                        <span key={ev.id} title={eventDisplayLabel(ev)}
+                        <span key={ev.id} title={eventDisplayLabel(ev)} role="button" tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setEditEvent(ev); } }}
                           style={{
                             display: "inline-block", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             padding: "2px 8px", borderRadius: 999, background: ev.color,
                             color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
+                            cursor: "pointer",
                           }}>
                           {eventDisplayLabel(ev)}
                         </span>
@@ -2162,7 +2165,10 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
         ))}
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
-        onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
+        defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
