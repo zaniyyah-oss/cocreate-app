@@ -2359,14 +2359,15 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                     <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
                   )}
                   {(eventsMap.get(isoDate(d)) ?? []).map(ev => (
-                    <span key={ev.id}
+                    <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "4px 10px", borderRadius: 999, background: ev.color,
                         color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        border: "none", cursor: "pointer",
                       }}>
                       {eventDisplayLabel(ev)}
-                    </span>
+                    </button>
                   ))}
                   {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
                     <button type="button" onClick={() => openDay(d)}
