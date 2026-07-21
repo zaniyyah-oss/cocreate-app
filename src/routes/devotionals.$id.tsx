@@ -2368,17 +2368,22 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                   {topicalName && (
                     <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
                   )}
-                  {(eventsMap.get(isoDate(d)) ?? []).map(ev => (
+                  {(eventsMap.get(isoDate(d)) ?? []).map(ev => {
+                    const light = isLightEventBg(ev.color);
+                    const fg = light ? "#181A4D" : "#fff";
+                    return (
                     <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "4px 10px", borderRadius: 999, background: ev.color,
-                        color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        padding: "4px 10px", borderRadius: light ? 6 : 999, background: ev.color,
+                        color: fg, fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
                         border: "none", cursor: "pointer",
                       }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: fg, flexShrink: 0, display: "inline-block" }} />
                       {eventDisplayLabel(ev)}
                     </button>
-                  ))}
+                    );
+                  })}
                   {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
                     <button type="button" onClick={() => openDay(d)}
                       style={{
