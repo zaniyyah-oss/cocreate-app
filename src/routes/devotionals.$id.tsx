@@ -1445,6 +1445,12 @@ function eventDisplayLabel(ev: UserEvent): string {
   return EVENT_TYPE_META[ev.event_type].label;
 }
 
+// Light background colors that need navy text (and rectangular tile) on Week/Month.
+const LIGHT_EVENT_BGS = new Set(["#DCE07A", "#EEFF00", "#CAC307", "#FBF8ED"].map(s => s.toUpperCase()));
+function isLightEventBg(hex: string): boolean {
+  return LIGHT_EVENT_BGS.has((hex || "").toUpperCase());
+}
+
 // Returns Map of ISO date -> count of to-do items due on that date (across all entries).
 function useTodoDueDates(userId: string | null, startISO: string, endISO: string) {
   return useQuery({
