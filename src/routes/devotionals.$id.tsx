@@ -2074,7 +2074,7 @@ const WEEK_LIST_CSS = `
 .wlist-nav button{width:30px;height:30px;border-radius:50%;border:1px solid #E4DFCF;background:#fff;color:#181A4D;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;}
 .wlist-nav button:hover{border-color:#181A4D;}
 .wlist-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
-.wlist-legend span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
+.wlist-legend > span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
 .wlist-legend .dot{width:8px;height:8px;min-width:8px;min-height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .wlist-add-btn{white-space:nowrap;min-width:max-content;flex-shrink:0;}
 .wlist{display:flex;flex-direction:column;gap:10px;}
