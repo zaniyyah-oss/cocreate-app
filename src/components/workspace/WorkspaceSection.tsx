@@ -154,6 +154,7 @@ export function WorkspaceSection({
   focusItemId,
   guest = false,
   onGuestGate,
+  historyEntryId = null,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
@@ -163,7 +164,10 @@ export function WorkspaceSection({
   focusItemId?: string;
   guest?: boolean;
   onGuestGate?: (kind: "type" | "save") => void;
+  /** When set, show notes tied to this past devotional entry (all statuses) instead of the live open-notes list. */
+  historyEntryId?: string | null;
 }) {
+  const isHistory = !!historyEntryId;
   const qc = useQueryClient();
   const [guestItems, setGuestItems] = useState<WorkspaceItem[]>([]);
   const itemsQ = useQuery({
@@ -183,20 +187,28 @@ export function WorkspaceSection({
   const items = guest ? guestItems : (itemsQ.data ?? []);
 
   const openNotes = useMemo(
-    () =>
-      items
+    () => {
+      if (isHistory) {
+        return items
+          .filter((i) => i.devotional_entry_id === historyEntryId)
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      }
+      return items
         .filter((i) => i.status === "open")
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
-    [items]
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    },
+    [items, isHistory, historyEntryId]
   );
 
   const libraryItems = useMemo(
     () =>
-      items
-        .filter((i) => i.status === "closed")
-        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-        .slice(0, 3),
-    [items]
+      isHistory
+        ? []
+        : items
+            .filter((i) => i.status === "closed")
+            .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+            .slice(0, 3),
+    [items, isHistory]
   );
 
   const [activeId, setActiveId] = useState<string | null>(null);
