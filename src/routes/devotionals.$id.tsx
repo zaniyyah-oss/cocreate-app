@@ -2269,6 +2269,11 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
               <div className="wl-actions">
                 {hasDevo ? (
                   <button type="button" className="wl-link" onClick={() => openDay(d)}>View workspace</button>
+                ) : d.getTime() > todayD.getTime() ? (
+                  <button type="button" className="wl-chip"
+                    onClick={() => { setPlanDate(isoDate(d)); setPlanOpen(true); }}>
+                    + Plan
+                  </button>
                 ) : (
                   <button type="button" className="wl-chip" onClick={() => openDay(d)}>+ plan</button>
                 )}
@@ -2279,6 +2284,19 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
         onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
+          qc.invalidateQueries({ queryKey: ["dev-entries"] });
+          qc.invalidateQueries({ queryKey: ["devo-content-dates"] });
+        }} />
+      <PlanDayDialog open={planOpen} onOpenChange={setPlanOpen} userId={userId} templateId={templateId} defaultDate={planDate}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
+          qc.invalidateQueries({ queryKey: ["dev-entries"] });
+          qc.invalidateQueries({ queryKey: ["devo-content-dates"] });
+          qc.invalidateQueries({ queryKey: ["topical-dates"] });
+        }} />
     </div>
   );
 }
