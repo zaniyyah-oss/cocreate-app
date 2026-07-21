@@ -6,6 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { usePageContent } from "@/lib/page-content";
 import { brandColor } from "@/lib/brand-palette";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -685,6 +686,17 @@ function HomePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const heroQ = usePageContent("home_hero");
   const hero = heroQ.data ?? {};
+  const navigate = useNavigate({ from: "/" });
+  const isMobile = useIsMobile();
+
+  // On mobile, the first time the app is opened go straight to the workspace
+  // instead of the content page. The Home tab remains reachable afterwards.
+  useEffect(() => {
+    if (typeof window === "undefined" || isMobile !== true) return;
+    if (window.sessionStorage.getItem("cocreate:home_redirect_done")) return;
+    window.sessionStorage.setItem("cocreate:home_redirect_done", "1");
+    navigate({ to: "/devotionals", replace: true });
+  }, [isMobile, navigate]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
