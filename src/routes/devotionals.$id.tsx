@@ -1930,6 +1930,8 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
+  const [todoOpen, setTodoOpen] = useState(false);
+  const [todoDate, setTodoDate] = useState<string>(isoDate(todayD));
 
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const dowLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
