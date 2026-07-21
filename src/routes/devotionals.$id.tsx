@@ -833,8 +833,7 @@ function EntryPage() {
               </div>
             </div>
 
-
-
+            <TodayEventsBanner userId={userId} dateISO={selectedDate} />
 
             <div className="de-shell-inner">
               {/* Mobile-only quick jump to each section */}
