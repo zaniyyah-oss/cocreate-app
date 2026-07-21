@@ -2406,7 +2406,10 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
         })}
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
-        onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
+        defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
