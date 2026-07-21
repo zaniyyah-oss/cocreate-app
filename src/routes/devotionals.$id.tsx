@@ -127,7 +127,7 @@ const CSS = `
   .de-jump{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 2px 12px;margin:0 0 6px;scrollbar-width:none;}
   .de-jump::-webkit-scrollbar{display:none;}
   .de-jump a{flex:0 0 auto;font-family:'Poppins',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.03em;text-transform:uppercase;color:#181A4D;text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid rgba(24,26,77,0.14);background:#fff;display:inline-flex;align-items:center;gap:7px;line-height:1;}
-  .de-jump a .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0;}
+  .de-jump a .dot{width:9px;height:9px;min-width:9px;min-height:9px;border-radius:99px;flex-shrink:0;}
   .de-jump a.read .dot{background:#FFAE00;}
   .de-jump a.read .dot{background:#FFAE00;}
   .de-jump a.pray .dot{background:#E990A2;}
@@ -1323,7 +1323,7 @@ const MONTH_CAL_CSS = `
 .mcal-nav button:hover{border-color:#181A4D;}
 .mcal-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 .mcal-legend span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
-.mcal-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+.mcal-legend .dot{width:8px;height:8px;min-width:8px;min-height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .mcal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
 .mcal-dow div{text-align:center;font-family:'Poppins',sans-serif;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#68655C;font-weight:600;}
 .mcal-weeks{display:grid;gap:6px;}
@@ -1337,7 +1337,7 @@ const MONTH_CAL_CSS = `
 .mcal-num{font-family:'Poppins',sans-serif;font-size:13.5px;font-weight:700;color:#20201C;}
 .mcal-cell.other .mcal-num{color:#68655C;}
 .mcal-dots{display:flex;gap:4px;flex-wrap:wrap;}
-.mcal-dots .d{width:8px;height:8px;border-radius:50%;flex:none;}
+.mcal-dots .d{width:8px;height:8px;min-width:8px;min-height:8px;border-radius:50%;flex-shrink:0;}
 .mcal-note{font-family:'Poppins',sans-serif;font-size:11.5px;color:#68655C;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 @media(max-width:640px){
   .mcal-cell{min-height:64px;padding:6px;border-radius:10px;gap:4px;}
@@ -2074,7 +2074,7 @@ const WEEK_LIST_CSS = `
 .wlist-nav button:hover{border-color:#181A4D;}
 .wlist-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 .wlist-legend span{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:#181A4D;background:#fff;border:1px solid #E4DFCF;border-radius:999px;padding:6px 12px;}
-.wlist-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+.wlist-legend .dot{width:8px;height:8px;min-width:8px;min-height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .wlist{display:flex;flex-direction:column;gap:10px;}
 .wl-day{background:#fff;border:1px solid #E4DFCF;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:start;font-family:'Poppins',sans-serif;}
 .wl-day.today{box-shadow:inset 0 0 0 2px #181A4D;}
@@ -2086,7 +2086,7 @@ const WEEK_LIST_CSS = `
 .wl-body{display:flex;flex-direction:column;gap:9px;min-width:0;}
 .wl-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .wl-tag{font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;padding:5px 11px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;line-height:1.4;}
-.wl-tag .tdot{width:6px;height:6px;border-radius:50%;flex:none;}
+.wl-tag .tdot{width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%;flex-shrink:0;}
 .wl-tag.devo{background:#DCE07A;color:#181A4D;}
 .wl-tag.topical{background:#0F4A42;color:#fff;}
 .wl-tag.empty{background:rgba(32,32,28,0.05);color:#a8a396;font-weight:600;}
