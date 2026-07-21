@@ -1639,6 +1639,246 @@ function AddEventDialog({
   );
 }
 
+// ============================================================================
+// Plan-this-day dialog — writes Read/Pray/To-Do straight into that day's
+// devotional_entries row (creating the row if needed). Used by future-day
+// "+ Plan" on This Week.
+// ============================================================================
+
+function PlanDayDialog({
+  open, onOpenChange, userId, templateId, defaultDate, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string | null;
+  templateId: string;
+  defaultDate: string;
+  onSaved: () => void;
+}) {
+  const [scriptureRef, setScriptureRef] = useState("");
+  const [scriptureText, setScriptureText] = useState("");
+  const [prayText, setPrayText] = useState("");
+  const [todoText, setTodoText] = useState("");
+  const [items, setItems] = useState<TodoItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open || !userId) return;
+    let alive = true;
+    setLoading(true); setErr(null);
+    (async () => {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("scripture_reference, scripture_text, pray_text, todo_text, todo_items")
+        .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
+        .maybeSingle();
+      if (!alive) return;
+      if (error) setErr(error.message);
+      const e = data as any;
+      setScriptureRef(e?.scripture_reference ?? "");
+      setScriptureText(e?.scripture_text ?? "");
+      setPrayText(e?.pray_text ?? "");
+      setTodoText(e?.todo_text ?? "");
+      setItems(Array.isArray(e?.todo_items) ? (e.todo_items as TodoItem[]) : []);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [open, userId, templateId, defaultDate]);
+
+  const addItem = () =>
+    setItems((cur) => [...cur, { id: crypto.randomUUID(), text: "", done: false, due_date: defaultDate }]);
+  const updateItem = (idx: number, patch: Partial<TodoItem>) =>
+    setItems((cur) => cur.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  const removeItem = (idx: number) =>
+    setItems((cur) => cur.filter((_, i) => i !== idx));
+
+  const save = async () => {
+    if (!userId) { setErr("Please sign in to plan this day."); return; }
+    setSaving(true); setErr(null);
+    const cleaned = items.filter((it) => it.text.trim().length > 0)
+      .map((it) => ({ ...it, due_date: it.due_date ?? defaultDate }));
+    const patch = {
+      scripture_reference: scriptureRef,
+      scripture_text: scriptureText,
+      pray_text: prayText,
+      todo_text: todoText,
+      todo_items: cleaned,
+    };
+    const { data: existing } = await supabase
+      .from("devotional_entries").select("id")
+      .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
+      .maybeSingle();
+    const res = existing?.id
+      ? await supabase.from("devotional_entries").update(patch as any).eq("id", existing.id)
+      : await supabase.from("devotional_entries").insert({
+          user_id: userId, template_id: templateId, entry_date: defaultDate, ...patch,
+        } as any);
+    setSaving(false);
+    if (res.error) { setErr(res.error.message); return; }
+    onSaved();
+    onOpenChange(false);
+  };
+
+  const dateLabel = new Date(defaultDate + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const fieldLabel: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#181A4D" };
+  const input: React.CSSProperties = { padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14, width: "100%" };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[560px]" style={{ fontFamily: "'Poppins',sans-serif", maxHeight: "90vh", overflowY: "auto" }}>
+        <DialogHeader>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>Plan this day</DialogTitle>
+          <div style={{ fontSize: 13, color: "#68655C", marginTop: 2 }}>{dateLabel}</div>
+        </DialogHeader>
+        {loading ? (
+          <div style={{ padding: 20, color: "#68655C", fontSize: 14 }}>Loading…</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={fieldLabel}>Read</div>
+              <input type="text" placeholder="What scripture will you read?"
+                value={scriptureRef} onChange={(e) => setScriptureRef(e.target.value)} style={input} />
+              <textarea rows={3} placeholder="What do you want to notice? Any prompts?"
+                value={scriptureText} onChange={(e) => setScriptureText(e.target.value)}
+                style={{ ...input, resize: "vertical" }} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={fieldLabel}>Pray</div>
+              <textarea rows={4} placeholder="What do you want to bring to God on this day?"
+                value={prayText} onChange={(e) => setPrayText(e.target.value)}
+                style={{ ...input, resize: "vertical" }} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={fieldLabel}>To-Do</div>
+              <textarea rows={3} placeholder="What are you being called to do on this day?"
+                value={todoText} onChange={(e) => setTodoText(e.target.value)}
+                style={{ ...input, resize: "vertical" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                {items.map((it, idx) => (
+                  <div key={it.id} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <input type="checkbox" checked={it.done}
+                      onChange={(e) => updateItem(idx, { done: e.target.checked })} />
+                    <input type="text" placeholder="A small, specific step"
+                      value={it.text} onChange={(e) => updateItem(idx, { text: e.target.value })}
+                      style={{ ...input, flex: 1 }} />
+                    <button type="button" onClick={() => removeItem(idx)} aria-label="Remove"
+                      style={{ border: "none", background: "transparent", color: "#8a8678", fontSize: 20, cursor: "pointer", padding: "0 6px" }}>×</button>
+                  </div>
+                ))}
+                <button type="button" onClick={addItem}
+                  style={{ alignSelf: "flex-start", background: "transparent", border: "1px dashed #8A96E0", color: "#8A96E0", padding: "6px 12px", borderRadius: 999, fontFamily: "inherit", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  + Add a check-off step
+                </button>
+              </div>
+            </div>
+
+            {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+              <button type="button" onClick={() => onOpenChange(false)}
+                style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={save} disabled={saving}
+                style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                {saving ? "Saving…" : "Save plan"}
+              </button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
+// New-to-do dialog — adds a single check-off to-do to a chosen date's entry.
+// Item is appended to that day's todo_items with due_date=that day, so it
+// surfaces at the top of that day's To-Do section like any planned-ahead item.
+// ============================================================================
+
+function NewTodoDialog({
+  open, onOpenChange, userId, templateId, defaultDate, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string | null;
+  templateId: string;
+  defaultDate: string;
+  onSaved: () => void;
+}) {
+  const [date, setDate] = useState(defaultDate);
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) { setDate(defaultDate); setText(""); setErr(null); }
+  }, [open, defaultDate]);
+
+  const save = async () => {
+    if (!userId) { setErr("Please sign in to add a to-do."); return; }
+    if (!text.trim()) { setErr("Add what you want to do."); return; }
+    setSaving(true); setErr(null);
+    const { data: existing } = await supabase
+      .from("devotional_entries").select("id, todo_items")
+      .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", date)
+      .maybeSingle();
+    const newItem: TodoItem = { id: crypto.randomUUID(), text: text.trim(), done: false, due_date: date };
+    let res;
+    if (existing?.id) {
+      const cur = Array.isArray((existing as any).todo_items) ? ((existing as any).todo_items as TodoItem[]) : [];
+      res = await supabase.from("devotional_entries").update({ todo_items: [...cur, newItem] } as any).eq("id", existing.id);
+    } else {
+      res = await supabase.from("devotional_entries").insert({
+        user_id: userId, template_id: templateId, entry_date: date, todo_items: [newItem],
+      } as any);
+    }
+    setSaving(false);
+    if (res.error) { setErr(res.error.message); return; }
+    onSaved();
+    onOpenChange(false);
+  };
+
+  const input: React.CSSProperties = { padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
+        <DialogHeader>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>New to-do</DialogTitle>
+        </DialogHeader>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+            What are you going to do?
+            <input type="text" value={text} onChange={(e) => setText(e.target.value)}
+              placeholder="e.g. Text mom, Reach out to Sarah" style={input} autoFocus />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+            Due date
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
+          </label>
+          {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+            <button type="button" onClick={() => onOpenChange(false)}
+              style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+              Cancel
+            </button>
+            <button type="button" onClick={save} disabled={saving}
+              style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+              {saving ? "Saving…" : "Add to-do"}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Static sample data — topical + notes still sample; devo tag now live.
 const SAMPLE_TOPICAL_DAYS = new Set([21,22,23,24,25,29,30,31]);
 const SAMPLE_NOTES: Record<number, string> = {
