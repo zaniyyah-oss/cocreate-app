@@ -2040,6 +2040,7 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
+  const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const [todoOpen, setTodoOpen] = useState(false);
   const [todoDate, setTodoDate] = useState<string>(isoDate(todayD));
 
