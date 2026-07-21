@@ -1445,6 +1445,12 @@ function eventDisplayLabel(ev: UserEvent): string {
   return EVENT_TYPE_META[ev.event_type].label;
 }
 
+// Light background colors that need navy text (and rectangular tile) on Week/Month.
+const LIGHT_EVENT_BGS = new Set(["#DCE07A", "#EEFF00", "#CAC307", "#FBF8ED"].map(s => s.toUpperCase()));
+function isLightEventBg(hex: string): boolean {
+  return LIGHT_EVENT_BGS.has((hex || "").toUpperCase());
+}
+
 // Returns Map of ISO date -> count of to-do items due on that date (across all entries).
 function useTodoDueDates(userId: string | null, startISO: string, endISO: string) {
   return useQuery({
@@ -2130,19 +2136,24 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
                   {note && <div className="mcal-note">{note}</div>}
                   {(eventsMap.get(c.iso) ?? []).length > 0 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4, alignItems: "flex-start" }}>
-                      {(eventsMap.get(c.iso) ?? []).slice(0, 3).map(ev => (
+                      {(eventsMap.get(c.iso) ?? []).slice(0, 3).map(ev => {
+                        const light = isLightEventBg(ev.color);
+                        const fg = light ? "#181A4D" : "#fff";
+                        return (
                         <span key={ev.id} title={eventDisplayLabel(ev)} role="button" tabIndex={0}
                           onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setEditEvent(ev); } }}
                           style={{
-                            display: "inline-block", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                            padding: "2px 8px", borderRadius: 999, background: ev.color,
-                            color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
+                            display: "inline-flex", alignItems: "center", gap: 4, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap",
+                            padding: "2px 8px", borderRadius: light ? 6 : 999, background: ev.color,
+                            color: fg, fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700,
                             cursor: "pointer",
                           }}>
-                          {eventDisplayLabel(ev)}
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0, display: "inline-block" }} />
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{eventDisplayLabel(ev)}</span>
                         </span>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   {(todoDueMap.get(c.iso) ?? 0) > 0 && (
@@ -2357,17 +2368,22 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
                   {topicalName && (
                     <span className="wl-tag topical"><span className="tdot" style={{ background: "#fff" }} />{topicalName}</span>
                   )}
-                  {(eventsMap.get(isoDate(d)) ?? []).map(ev => (
+                  {(eventsMap.get(isoDate(d)) ?? []).map(ev => {
+                    const light = isLightEventBg(ev.color);
+                    const fg = light ? "#181A4D" : "#fff";
+                    return (
                     <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "4px 10px", borderRadius: 999, background: ev.color,
-                        color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
+                        padding: "4px 10px", borderRadius: light ? 6 : 999, background: ev.color,
+                        color: fg, fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700,
                         border: "none", cursor: "pointer",
                       }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: fg, flexShrink: 0, display: "inline-block" }} />
                       {eventDisplayLabel(ev)}
                     </button>
-                  ))}
+                    );
+                  })}
                   {(todoDueMap.get(isoDate(d)) ?? 0) > 0 && (
                     <button type="button" onClick={() => openDay(d)}
                       style={{
