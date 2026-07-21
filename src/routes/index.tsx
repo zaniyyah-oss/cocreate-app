@@ -6,6 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { usePageContent } from "@/lib/page-content";
 import { brandColor } from "@/lib/brand-palette";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
