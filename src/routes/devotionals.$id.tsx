@@ -1968,13 +1968,13 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
           <div className="title">{monthTitle}</div>
           <button aria-label="Next month" onClick={() => setCursor(c => ({ y: c.m === 11 ? c.y + 1 : c.y, m: (c.m + 1) % 12 }))}>›</button>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => { setTodoDate(isoDate(todayD)); setTodoOpen(true); }}
-            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#fff", color: "#181A4D", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button type="button" className="mcal-add-btn" onClick={() => { setTodoDate(isoDate(todayD)); setTodoOpen(true); }}
+            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#fff", color: "#181A4D", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", minWidth: "max-content", flexShrink: 0 }}>
             + New To-Do
           </button>
-          <button type="button" onClick={() => { setAddDate(isoDate(todayD)); setAddOpen(true); }}
-            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button type="button" className="mcal-add-btn" onClick={() => { setAddDate(isoDate(todayD)); setAddOpen(true); }}
+            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", minWidth: "max-content", flexShrink: 0 }}>
             + New Event
           </button>
         </div>
@@ -2188,13 +2188,13 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
           <div className="title">{rangeTitle}</div>
           <button aria-label="Next week" onClick={() => shiftWeek(1)}>›</button>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => { setTodoDate(isoDate(todayD)); setTodoOpen(true); }}
-            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#fff", color: "#181A4D", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button type="button" className="wlist-add-btn" onClick={() => { setTodoDate(isoDate(todayD)); setTodoOpen(true); }}
+            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#fff", color: "#181A4D", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", minWidth: "max-content", flexShrink: 0 }}>
             + New To-Do
           </button>
-          <button type="button" onClick={() => { setAddDate(isoDate(todayD)); setAddOpen(true); }}
-            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button type="button" className="wlist-add-btn" onClick={() => { setAddDate(isoDate(todayD)); setAddOpen(true); }}
+            style={{ width: "auto", padding: "6px 14px", borderRadius: 999, border: "1px solid #181A4D", background: "#181A4D", color: "#fff", fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", minWidth: "max-content", flexShrink: 0 }}>
             + New Event
           </button>
         </div>
