@@ -2138,6 +2138,10 @@ function WeekListView({ templateId, userId }: { templateId: string; userId: stri
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
+  const [todoOpen, setTodoOpen] = useState(false);
+  const [todoDate, setTodoDate] = useState<string>(isoDate(todayD));
+  const [planOpen, setPlanOpen] = useState(false);
+  const [planDate, setPlanDate] = useState<string>(isoDate(todayD));
 
   const monthShort = (d: Date) => d.toLocaleDateString(undefined, { month: "short" });
   const rangeTitle =
