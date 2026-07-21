@@ -2100,6 +2100,9 @@ const WEEK_LIST_CSS = `
 @media(max-width:520px){
   .wl-day{grid-template-columns:48px 1fr;padding:14px;}
   .wl-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center;}
+  .wlist-nav .title{font-size:18px;}
+  .wlist-nav{gap:10px;}
+  .wlist-nav > div:first-child{gap:10px;}
 }
 `;
 
