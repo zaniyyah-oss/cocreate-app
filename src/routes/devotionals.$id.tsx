@@ -2052,6 +2052,12 @@ function MonthCalendarView({ templateId, userId }: { templateId: string; userId:
       </div>
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={addDate}
         onCreated={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
+          qc.invalidateQueries({ queryKey: ["dev-entries"] });
+          qc.invalidateQueries({ queryKey: ["devo-content-dates"] });
+        }} />
     </div>
   );
 }
