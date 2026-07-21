@@ -1000,6 +1000,7 @@ function EntryPage() {
                   focusItemId={search.ws}
                   guest={isGuest}
                   onGuestGate={guestNote}
+                  historyEntryId={selectedDate !== todayISO() ? (currentEntry?.id ?? null) : null}
                 />
               </div>
 
