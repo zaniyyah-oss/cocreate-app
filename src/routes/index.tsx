@@ -454,6 +454,20 @@ function HomeIconBar() {
   );
 }
 
+function HomeTourBar() {
+  return (
+    <div className="hp-tourbar">
+      <div className="wrap">
+        <Link to="/tour" className="hp-tourbar-pill">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span>Tour the Workspace</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
 function HomeMasthead({ signedIn }: { signedIn: boolean }) {
   const topicsQ = useTopics();
   const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
