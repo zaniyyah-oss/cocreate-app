@@ -134,10 +134,18 @@ const CSS = `
 function TopicPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const topicQ = useQuery({
