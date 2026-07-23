@@ -1422,9 +1422,11 @@ export type Database = {
         Row: {
           body: Json
           body_text: string
+          closed_at: string | null
           created_at: string
           devotional_entry_id: string | null
           id: string
+          pinned: boolean
           status: string
           tags: string[]
           title: string
@@ -1434,9 +1436,11 @@ export type Database = {
         Insert: {
           body?: Json
           body_text?: string
+          closed_at?: string | null
           created_at?: string
           devotional_entry_id?: string | null
           id?: string
+          pinned?: boolean
           status?: string
           tags?: string[]
           title?: string
@@ -1446,9 +1450,11 @@ export type Database = {
         Update: {
           body?: Json
           body_text?: string
+          closed_at?: string | null
           created_at?: string
           devotional_entry_id?: string | null
           id?: string
+          pinned?: boolean
           status?: string
           tags?: string[]
           title?: string
