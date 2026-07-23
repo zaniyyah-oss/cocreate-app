@@ -1574,42 +1574,63 @@ export function AddEventDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
         <DialogHeader>
-          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? "Edit event" : "Add new event"}</DialogTitle>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? (isFocus ? "Edit focus item" : "Edit event") : (isFocus ? "Add focus item" : "Add new event")}</DialogTitle>
         </DialogHeader>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Item type</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {(["event", "focus"] as const).map((v) => {
+                const active = itemType === v;
+                return (
+                  <button key={v} type="button" onClick={() => setItemType(v)}
+                    style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                      background: active ? "#181A4D" : "#fff", color: active ? "#DCE07A" : "#181A4D",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, textAlign: "center",
+                    }}>
+                    {v === "event" ? "Event" : "Focus item"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
             Date
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
               style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
           </label>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {([
-                ["prayer_meeting", "Prayer meeting", "#E990A2"],
-                ["bible_study", "Bible study", "#FFAE00"],
-                ["mentor_meeting", "Mentor meeting", "#8A96E0"],
-                ["other", "Other", "#9B9B93"],
-              ] as const).map(([val, label, sw]) => {
-                const active = type === val;
-                return (
-                  <button key={val} type="button" onClick={() => setType(val)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "10px 12px", borderRadius: 10,
-                      border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
-                      background: "#fff", cursor: "pointer",
-                      fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
-                      textAlign: "left",
-                    }}>
-                    <span style={{ width: 12, height: 12, borderRadius: 999, background: sw, flex: "none" }} />
-                    {label}
-                  </button>
-                );
-              })}
+          {!isFocus && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {([
+                  ["prayer_meeting", "Prayer meeting", "#E990A2"],
+                  ["bible_study", "Bible study", "#FFAE00"],
+                  ["mentor_meeting", "Mentor meeting", "#8A96E0"],
+                  ["other", "Other", "#9B9B93"],
+                ] as const).map(([val, label, sw]) => {
+                  const active = type === val;
+                  return (
+                    <button key={val} type="button" onClick={() => setType(val)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "10px 12px", borderRadius: 10,
+                        border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                        background: "#fff", cursor: "pointer",
+                        fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                        textAlign: "left",
+                      }}>
+                      <span style={{ width: 12, height: 12, borderRadius: 999, background: sw, flex: "none" }} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {isOther && (
             <>
