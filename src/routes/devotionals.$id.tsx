@@ -6,10 +6,10 @@ import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { ResizableTextarea } from "@/components/ResizableTextarea";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
+
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
@@ -714,24 +714,11 @@ function EntryPage() {
 
 
   return (
+    <AppShell current="devotionals">
     <div className="de-root">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <nav className="de-nav">
-        <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-        <NavMenu />
-        <div className="de-navright">
-          {isGuest ? (
-            <Link to="/auth" className="de-signin">Sign in</Link>
-          ) : (
-            <>
-              <Link to="/profile" className="de-navavatar" aria-label="Profile" title="Profile">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
-              </Link>
-              <NotificationBell />
-            </>
-          )}
-        </div>
-      </nav>
+
+
 
       <div className="de-shell">
         {templateQ.isLoading ? (
@@ -1025,7 +1012,7 @@ function EntryPage() {
         )}
       </div>
 
-      <MobileBottomNav />
+      
 
       {/* keep navigate reference to avoid unused warning */}
       <span style={{ display: "none" }} aria-hidden onClick={() => navigate({ to: "/devotionals" })} />
@@ -1075,6 +1062,7 @@ function EntryPage() {
         </div>
       )}
     </div>
+    </AppShell>
   );
 }
 
