@@ -40,9 +40,14 @@ const CSS = `
 @media (max-width:719px){.ws-tagrow{position:static;top:auto;padding:0 4px 8px;margin:0 0 4px;}}
 .ws-root.is-full .ws-tagrow{position:sticky;top:0;padding:8px 20px;margin:0 -20px;z-index:61;}
 @media (min-width:720px){.ws-root.is-full .ws-tagrow{margin:0 -48px;padding:10px 48px 8px;}}
-.ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;}
-.ws-tag button{background:none;border:none;color:#0F4A42;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
+.ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;position:relative;}
+.ws-tag .label{cursor:pointer;user-select:none;}
+.ws-tag button{background:none;border:none;color:inherit;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
 .ws-tag button:hover{opacity:1;}
+.ws-tag-pop{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:12px;padding:8px;display:grid;grid-template-columns:repeat(5,20px);gap:6px;box-shadow:0 8px 24px rgba(24,26,77,0.15);z-index:80;}
+.ws-tag-sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(24,26,77,0.15);cursor:pointer;padding:0;}
+.ws-tag-sw.reset{background:repeating-linear-gradient(45deg,#fff,#fff 3px,#eee 3px,#eee 6px);}
+.ws-tag-sw.on{outline:2px solid #181A4D;outline-offset:1px;}
 .ws-tag-input{background:transparent;border:1px dashed rgba(24,26,77,0.15);color:#20201C;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;font-family:'Poppins',sans-serif;outline:none;width:88px;}
 .ws-tag-input:focus{border-color:#181A4D;border-style:solid;color:#181A4D;}
 .ws-tag-input::placeholder{color:#20201C;opacity:0.5;}
@@ -188,6 +193,55 @@ const CSS = `
 function toPreview(text: string): string {
   return (text || "").replace(/\s+/g, " ").trim().slice(0, 140);
 }
+
+const TAG_PALETTE: { name: string; value: string }[] = [
+  { name: "Teal", value: "#B7DDD3" },
+  { name: "Sky", value: "#C7D8F5" },
+  { name: "Peach", value: "#FFD3B6" },
+  { name: "Blush", value: "#F4C2CD" },
+  { name: "Yellow", value: "#FDE68A" },
+  { name: "Lime", value: "#DCE07A" },
+  { name: "Lilac", value: "#D6CDF0" },
+  { name: "Mint", value: "#C6EAD8" },
+  { name: "Sand", value: "#E8DEC5" },
+];
+
+function useTagColors(userId: string, guest: boolean) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ["user-tag-colors", userId],
+    enabled: !guest && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_tag_colors" as any).select("tag,color").eq("user_id", userId);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of (data as any[]) || []) map[r.tag] = r.color;
+      return map;
+    },
+  });
+  const [guestMap, setGuestMap] = useState<Record<string, string>>({});
+  const colors = guest ? guestMap : (query.data ?? {});
+
+  const setColor = async (tag: string, color: string | null) => {
+    if (guest) {
+      setGuestMap((m) => {
+        const n = { ...m };
+        if (color) n[tag] = color; else delete n[tag];
+        return n;
+      });
+      return;
+    }
+    if (!color) {
+      await supabase.from("user_tag_colors" as any).delete().eq("user_id", userId).eq("tag", tag);
+    } else {
+      await supabase.from("user_tag_colors" as any)
+        .upsert({ user_id: userId, tag, color }, { onConflict: "user_id,tag" });
+    }
+    qc.invalidateQueries({ queryKey: ["user-tag-colors", userId] });
+  };
+  return { colors, setColor };
+}
+
 
 export function WorkspaceSection({
   userId,
@@ -565,6 +619,8 @@ function NoteBody({
   onGuestUpdate?: (patch: Partial<WorkspaceItem>) => void;
 }) {
   const qc = useQueryClient();
+  const { colors: tagColors, setColor: setTagColor } = useTagColors(userId, guest);
+  const [openColorFor, setOpenColorFor] = useState<string | null>(null);
   const [title, setTitle] = useState(item.title);
   const [tags, setTags] = useState<string[]>(item.tags);
   const [tagDraft, setTagDraft] = useState("");
@@ -734,13 +790,41 @@ function NoteBody({
         }}
       />
 
-      <div className="ws-tagrow">
-        {tags.map((t) => (
-          <span key={t} className="ws-tag">
-            #{t}
-            <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
-          </span>
-        ))}
+      <div className="ws-tagrow" onClick={(e) => {
+        if (!(e.target as HTMLElement).closest(".ws-tag")) setOpenColorFor(null);
+      }}>
+        {tags.map((t) => {
+          const c = tagColors[t];
+          const style = c ? { background: c, color: "#181A4D" } : undefined;
+          return (
+            <span key={t} className="ws-tag" style={style}>
+              <span
+                className="label"
+                onClick={() => setOpenColorFor(openColorFor === t ? null : t)}
+                title="Click to pick a color"
+              >#{t}</span>
+              <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
+              {openColorFor === t && (
+                <div className="ws-tag-pop" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className={`ws-tag-sw reset ${!c ? "on" : ""}`}
+                    title="No color"
+                    onClick={() => { void setTagColor(t, null); setOpenColorFor(null); }}
+                  />
+                  {TAG_PALETTE.map((p) => (
+                    <button
+                      key={p.value}
+                      className={`ws-tag-sw ${c === p.value ? "on" : ""}`}
+                      style={{ background: p.value }}
+                      title={p.name}
+                      onClick={() => { void setTagColor(t, p.value); setOpenColorFor(null); }}
+                    />
+                  ))}
+                </div>
+              )}
+            </span>
+          );
+        })}
         <input
           className="ws-tag-input"
           placeholder="+ tag"
