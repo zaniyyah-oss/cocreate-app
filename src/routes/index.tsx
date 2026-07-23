@@ -331,6 +331,7 @@ const CSS = `
 .hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
 .hp-mast-media-link:hover{background:#FBF8ED;}
 .hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-media-link--listen svg{color:#3B82F6;}
 .hp-mast-media-dot{width:10px;height:10px;border-radius:50%;background:#FF340C;display:inline-block;}
 .hp-mast-search-form{display:flex;align-items:center;gap:6px;}
 .hp-mast-search-form input{width:160px;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#181A4D;outline:none;transition:border-color .15s;}
