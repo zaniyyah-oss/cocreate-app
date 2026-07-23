@@ -173,6 +173,24 @@ function NotesLibrary({ userId }: { userId: string }) {
     },
   });
 
+  const tagColorsQ = useQuery({
+    queryKey: ["user-tag-colors", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_tag_colors" as any)
+        .select("tag,color")
+        .eq("user_id", userId);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of (data as any[]) || []) {
+        map[normalizeTag(r.tag)] = r.color;
+      }
+      return map;
+    },
+  });
+  const tagColors = tagColorsQ.data ?? {};
+  const colorFor = (t: string) => tagColors[normalizeTag(t)];
+
   const docs = docsQ.data ?? [];
 
   // Build canonical tag options: normalized -> display + count.
@@ -308,9 +326,16 @@ function NotesLibrary({ userId }: { userId: string }) {
                   </div>
                   {d.tags && d.tags.length > 0 && (
                     <div className="nt-doc-tags">
-                      {d.tags.slice(0, 3).map((t, i) => (
-                        <span key={`${d.id}-${t}-${i}`} className="nt-doc-tag">{displayTag(t)}</span>
-                      ))}
+                      {d.tags.slice(0, 3).map((t, i) => {
+                        const c = colorFor(t);
+                        return (
+                          <span
+                            key={`${d.id}-${t}-${i}`}
+                            className="nt-doc-tag"
+                            style={c ? { background: c, color: "#181A4D" } : undefined}
+                          >{displayTag(t)}</span>
+                        );
+                      })}
                     </div>
                   )}
                   {preview && <div className="nt-doc-preview">{preview}</div>}
@@ -364,6 +389,7 @@ function NotesLibrary({ userId }: { userId: string }) {
                 key={d.id}
                 doc={d}
                 userId={userId}
+                colorFor={colorFor}
                 onClose={() => closePanel(d.id)}
               />
             ))
@@ -379,10 +405,12 @@ function NotesLibrary({ userId }: { userId: string }) {
 function DocPanel({
   doc,
   userId,
+  colorFor,
   onClose,
 }: {
   doc: Doc;
   userId: string;
+  colorFor: (t: string) => string | undefined;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
@@ -482,13 +510,17 @@ function DocPanel({
     schedule({ tags: next });
   };
 
-  const primaryTag = tags[0] ? displayTag(tags[0]) : null;
+  const primaryTagRaw = tags[0] ?? null;
+  const primaryTag = primaryTagRaw ? displayTag(primaryTagRaw) : null;
+  const primaryColor = primaryTagRaw ? colorFor(primaryTagRaw) : undefined;
 
   return (
     <div className="nt-panel">
       <header className="nt-panel-header">
         <div className="nt-panel-header-info">
-          {primaryTag && <div className="nt-tag-pill">{primaryTag}</div>}
+          {primaryTag && (
+            <div className="nt-tag-pill" style={primaryColor ? { background: primaryColor, color: "#181A4D" } : undefined}>{primaryTag}</div>
+          )}
           <div className="nt-p-title">{title?.trim() || "Untitled"}</div>
           <div className="nt-p-date">{formatLong(doc.updated_at)}</div>
         </div>
@@ -527,12 +559,15 @@ function DocPanel({
         )}
 
         <div className="nt-panel-tagrow">
-          {tags.map((t) => (
-            <span key={t} className="nt-panel-tag">
-              #{displayTag(t)}
-              {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>}
-            </span>
-          ))}
+          {tags.map((t) => {
+            const c = colorFor(t);
+            return (
+              <span key={t} className="nt-panel-tag" style={c ? { background: c, color: "#181A4D" } : undefined}>
+                #{displayTag(t)}
+                {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag" style={c ? { color: "#181A4D" } : undefined}>×</button>}
+              </span>
+            );
+          })}
           {editing && (
             <input
               className="nt-tag-input"
