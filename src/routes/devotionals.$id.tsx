@@ -84,6 +84,9 @@ const CSS = `
 .de-navmenu a:hover{color:#181A4D;background:#FBF8ED;}
 .de-navmenu a.active{background:#DCE07A;color:#181A4D;}
 .de-navright{display:flex;align-items:center;gap:10px;}
+.de-navavatar{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#FBF8ED;color:#181A4D;text-decoration:none;border:1px solid rgba(20,20,20,0.08);transition:background .15s;}
+.de-navavatar:hover{background:#DCE07A;}
+.de-navavatar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 @media (min-width:820px){.de-navmenu{display:flex;}}
 .de-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
 .de-shell-inner{padding:0;}
