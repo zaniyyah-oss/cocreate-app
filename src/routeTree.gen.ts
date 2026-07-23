@@ -9,12 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchRouteImport } from './routes/watch'
 import { Route as TourRouteImport } from './routes/tour'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as ListenRouteImport } from './routes/listen'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as ExploreRouteImport } from './routes/explore'
@@ -43,9 +46,19 @@ import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
 import { Route as AdminCollectionsIdRouteImport } from './routes/admin.collections.$id'
 
+const WatchRoute = WatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TourRoute = TourRouteImport.update({
   id: '/tour',
   path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedRoute = SavedRouteImport.update({
@@ -71,6 +84,11 @@ const NotesRoute = NotesRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListenRoute = ListenRouteImport.update({
+  id: '/listen',
+  path: '/listen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -218,12 +236,15 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -251,12 +272,15 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -286,12 +310,15 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -323,12 +350,15 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
+    | '/watch'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -356,12 +386,15 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
+    | '/watch'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -390,12 +423,15 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
+    | '/watch'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -426,12 +462,15 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   FriendsRoute: typeof FriendsRoute
   GroupsRoute: typeof GroupsRoute
+  ListenRoute: typeof ListenRoute
   MessagesRoute: typeof MessagesRoute
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
+  SearchRoute: typeof SearchRoute
   TourRoute: typeof TourRoute
+  WatchRoute: typeof WatchRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
@@ -441,11 +480,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watch': {
+      id: '/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof WatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tour': {
       id: '/tour'
       path: '/tour'
       fullPath: '/tour'
       preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved': {
@@ -481,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listen': {
+      id: '/listen'
+      path: '/listen'
+      fullPath: '/listen'
+      preLoaderRoute: typeof ListenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -739,12 +799,15 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   FriendsRoute: FriendsRoute,
   GroupsRoute: GroupsRoute,
+  ListenRoute: ListenRoute,
   MessagesRoute: MessagesRoute,
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
+  SearchRoute: SearchRoute,
   TourRoute: TourRoute,
+  WatchRoute: WatchRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,

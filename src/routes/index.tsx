@@ -318,13 +318,25 @@ const CSS = `
 .hp-mast-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:8px;min-width:200px;z-index:50;display:flex;flex-direction:column;}
 .hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
 .hp-mast-more-menu a:hover{background:#FBF8ED;}
-.hp-mast-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
+.hp-mast-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
 .hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
 .hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
 /* Signed-in masthead: hide the auth CTAs (icon bar handles nav) but ALWAYS keep the brand */
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
+
+.hp-mast-media{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
+.hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
+.hp-mast-media-link:hover{background:#FBF8ED;}
+.hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-media-dot{width:10px;height:10px;border-radius:50%;background:#FF340C;display:inline-block;}
+.hp-mast-search-form{display:flex;align-items:center;gap:6px;}
+.hp-mast-search-form input{width:160px;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#181A4D;outline:none;transition:border-color .15s;}
+.hp-mast-search-form input:focus{border-color:#181A4D;}
+.hp-mast-search-form button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#181A4D;color:#fff;border:none;border-radius:8px;cursor:pointer;}
+.hp-mast-search-form button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+@media(max-width:420px){.hp-mast-media-link span{display:none;}.hp-mast-media-dot{margin:0;}.hp-mast-search-form input{width:120px;}}
 
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
 .hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
@@ -528,7 +540,58 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             </>
           )}
         </div>
+        <MediaNav />
       </div>
+    </div>
+  );
+}
+
+function MediaNav() {
+  const navigate = useNavigate({ from: "/" });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const s = query.trim();
+    if (!s) return;
+    navigate({ to: "/search", search: { q: s } as any });
+    setSearchOpen(false);
+    setQuery("");
+  };
+  return (
+    <div className="hp-mast-media">
+      <Link to="/watch" className="hp-mast-media-link" aria-label="Watch">
+        <span className="hp-mast-media-dot" />
+        <span>Watch</span>
+      </Link>
+      <Link to="/listen" className="hp-mast-media-link" aria-label="Listen">
+        <svg viewBox="0 0 24 24"><path d="M3 14v3a2 2 0 0 0 2 2h1l2-3h-3a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h3l-2-3H5a2 2 0 0 0-2 2z"/><path d="M17 14v3a2 2 0 0 1-2 2h-1l-2-3h3a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1h-3l2-3h1a2 2 0 0 1 2 2z"/><path d="M7 10v4M17 10v4"/></svg>
+        <span>Listen</span>
+      </Link>
+      {searchOpen ? (
+        <form className="hp-mast-search-form" onSubmit={submit} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && !query.trim()) setSearchOpen(false); }}>
+          <input
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          <button type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          className="hp-mast-media-link"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search"
+        >
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Search</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -883,7 +946,7 @@ function SiteFooter() {
     e.preventDefault();
     const s = q.trim();
     if (!s) return;
-    navigate({ to: "/explore", search: { q: s } as any });
+    navigate({ to: "/search", search: { q: s } as any });
   };
   const col = (title: string, links: { label: string; to?: string; slug?: string }[]) => (
     <div>
