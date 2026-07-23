@@ -282,6 +282,7 @@ export function WorkspaceSection({
   });
 
   const items = guest ? guestItems : (itemsQ.data ?? []);
+  const { colors: parentTagColors } = useTagColors(userId, guest);
 
   const openNotes = useMemo(
     () => {
@@ -486,7 +487,12 @@ export function WorkspaceSection({
               return (
                 <div key={n.id} className={`ws-rc ${n.pinned ? "pinned" : ""}`} onClick={() => setPreviewId(n.id)} role="button" tabIndex={0}>
                   <div className="ws-rc-top">
-                    {n.tags[0] && <span className="ws-rc-tag">#{n.tags[0]}</span>}
+                    {n.tags[0] && (
+                      <span
+                        className="ws-rc-tag"
+                        style={parentTagColors[n.tags[0]] ? { background: parentTagColors[n.tags[0]], color: "#181A4D" } : undefined}
+                      >#{n.tags[0]}</span>
+                    )}
                     {isNewToday && !n.pinned && <span className="ws-rc-flag">✦ new today</span>}
                     <button
                       className={`ws-rc-pin ${n.pinned ? "active" : ""}`}
