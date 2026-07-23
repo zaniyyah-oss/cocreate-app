@@ -173,6 +173,24 @@ function NotesLibrary({ userId }: { userId: string }) {
     },
   });
 
+  const tagColorsQ = useQuery({
+    queryKey: ["user-tag-colors", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_tag_colors" as any)
+        .select("tag,color")
+        .eq("user_id", userId);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of (data as any[]) || []) {
+        map[normalizeTag(r.tag)] = r.color;
+      }
+      return map;
+    },
+  });
+  const tagColors = tagColorsQ.data ?? {};
+  const colorFor = (t: string) => tagColors[normalizeTag(t)];
+
   const docs = docsQ.data ?? [];
 
   // Build canonical tag options: normalized -> display + count.
