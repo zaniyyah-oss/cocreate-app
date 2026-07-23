@@ -108,7 +108,8 @@ const SHELL_CSS = `
   /* Collapsed sidebar variant */
   .app-shell.collapsed .app-layout{grid-template-columns:68px 1fr;}
   .app-shell.collapsed .app-side{padding:20px 8px;}
-  .app-shell.collapsed .app-side-head{justify-content:center;padding:0;}
+  .app-shell.collapsed .app-side-head{flex-direction:column;justify-content:center;align-items:center;gap:6px;padding:0;margin-bottom:18px;}
+  .app-shell.collapsed .app-side-logo{justify-content:center;}
   .app-shell.collapsed .app-side-logo .word{display:none;}
   .app-shell.collapsed .app-side-item{justify-content:center;padding:11px 0;}
   .app-shell.collapsed .app-side-item .lbl{display:none;}
