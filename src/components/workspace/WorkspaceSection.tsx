@@ -13,6 +13,8 @@ export type WorkspaceItem = {
   body_text: string;
   tags: string[];
   status: "open" | "closed";
+  pinned?: boolean;
+  closed_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -140,7 +142,44 @@ const CSS = `
 }
 .ws-focus-btn{background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .ws-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
+
+/* ---- Pinned & recent-today strip ---- */
+.ws-recent{margin:2px 0 16px;}
+.ws-recent-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;gap:12px;}
+.ws-recent-title{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#181A4D;display:inline-flex;align-items:center;gap:6px;}
+.ws-recent-title .dot{width:6px;height:6px;border-radius:50%;background:#E990A2;display:inline-block;}
+.ws-recent-sub{font-size:11.5px;color:#8a8678;}
+.ws-recent-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.ws-recent-scroll::-webkit-scrollbar{height:6px;}
+.ws-recent-scroll::-webkit-scrollbar-thumb{background:rgba(24,26,77,0.15);border-radius:4px;}
+.ws-rc{flex:0 0 220px;background:#FBF8ED;border:1px solid rgba(24,26,77,0.10);border-radius:12px;padding:11px 12px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;text-align:left;font-family:'Poppins',sans-serif;}
+.ws-rc:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(24,26,77,0.08);border-color:#181A4D;}
+.ws-rc.pinned{border-color:#181A4D;}
+.ws-rc-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;min-height:20px;}
+.ws-rc-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:#DCE07A;color:#181A4D;white-space:nowrap;}
+.ws-rc-flag{font-size:10px;font-weight:600;color:#9A6B00;white-space:nowrap;}
+.ws-rc-pin{margin-left:auto;background:none;border:none;cursor:pointer;padding:2px;color:#8a8678;font-size:14px;line-height:1;}
+.ws-rc-pin.active{color:#181A4D;}
+.ws-rc-title{font-size:13px;font-weight:700;color:#181A4D;margin:0 0 4px;line-height:1.3;}
+.ws-rc-snippet{font-size:11.5px;color:#5B5B54;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ws-rc-status{font-size:10px;color:#8a8678;font-weight:500;margin-top:6px;}
+.ws-rc-empty{font-size:12px;color:#8a8678;padding:6px 2px;}
+
+/* ---- Preview overlay ---- */
+.ws-ov{position:fixed;inset:0;background:rgba(24,26,77,0.35);display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;z-index:500;}
+.ws-ov-panel{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);font-family:'Poppins',sans-serif;}
+.ws-ov-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(24,26,77,0.10);gap:8px;flex-wrap:wrap;}
+.ws-ov-mode{font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8a8678;}
+.ws-ov-actions{display:flex;gap:8px;}
+.ws-ov-btn{background:none;border:1px solid rgba(24,26,77,0.15);color:#20201C;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;}
+.ws-ov-btn.primary{background:#181A4D;color:#DCE07A;border-color:#181A4D;}
+.ws-ov-btn.pin.active{color:#181A4D;border-color:#181A4D;}
+.ws-ov-body{padding:18px 22px 24px;}
+.ws-ov-body h3{color:#181A4D;font-size:17px;margin:0 0 8px;}
+.ws-ov-body .body{font-size:13.5px;line-height:1.6;color:#3A3A34;white-space:pre-wrap;}
+.ws-ov-meta{font-size:11px;color:#8a8678;margin-top:14px;padding-top:12px;border-top:1px solid rgba(24,26,77,0.10);}
 `;
+
 
 function toPreview(text: string): string {
   return (text || "").replace(/\s+/g, " ").trim().slice(0, 140);
@@ -281,7 +320,46 @@ export function WorkspaceSection({
     },
   });
 
+  const togglePin = useMutation({
+    mutationFn: async (it: WorkspaceItem) => {
+      const next = !it.pinned;
+      if (guest) {
+        setGuestItems((cur) => cur.map((i) => (i.id === it.id ? { ...i, pinned: next } : i)));
+        return next;
+      }
+      const { error } = await supabase.from("workspace_items" as any).update({ pinned: next }).eq("id", it.id);
+      if (error) throw error;
+      return next;
+    },
+    onSuccess: () => {
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+    },
+  });
+
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewItem = items.find((i) => i.id === previewId) ?? null;
+
+  const isToday = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
+  const recentItems = useMemo(() => {
+    if (isHistory) return [];
+    const pinned = items.filter((i) => i.pinned);
+    const pinnedIds = new Set(pinned.map((i) => i.id));
+    const todayItems = items.filter(
+      (i) => !pinnedIds.has(i.id) && (isToday(i.created_at) || (i.status === "closed" && isToday(i.closed_at ?? i.updated_at))),
+    );
+    const sortDesc = (arr: WorkspaceItem[]) =>
+      arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return [...sortDesc(pinned), ...sortDesc(todayItems)];
+  }, [items, isHistory]);
+
   const activeNote = openNotes.find((n) => n.id === activeId) ?? null;
+
 
   const lastFocusRef = useRef<string | null>(null);
   useEffect(() => {
@@ -331,7 +409,46 @@ export function WorkspaceSection({
         </div>
       </div>
 
+      {!isHistory && (
+        <div className="ws-recent">
+          <div className="ws-recent-head">
+            <div className="ws-recent-title"><span className="dot" /> Pinned &amp; recent today</div>
+            <div className="ws-recent-sub">Tap to review · won't open in edit mode</div>
+          </div>
+          <div className="ws-recent-scroll">
+            {recentItems.length === 0 ? (
+              <div className="ws-rc-empty">Nothing pinned or closed yet today.</div>
+            ) : recentItems.map((n) => {
+              const isNewToday = isToday(n.created_at);
+              const label = n.status === "closed"
+                ? `Closed · ${new Date(n.closed_at ?? n.updated_at).toLocaleDateString()}`
+                : isNewToday
+                  ? "Created today"
+                  : `Edited ${new Date(n.updated_at).toLocaleDateString()}`;
+              return (
+                <div key={n.id} className={`ws-rc ${n.pinned ? "pinned" : ""}`} onClick={() => setPreviewId(n.id)} role="button" tabIndex={0}>
+                  <div className="ws-rc-top">
+                    {n.tags[0] && <span className="ws-rc-tag">#{n.tags[0]}</span>}
+                    {isNewToday && !n.pinned && <span className="ws-rc-flag">✦ new today</span>}
+                    <button
+                      className={`ws-rc-pin ${n.pinned ? "active" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); togglePin.mutate(n); }}
+                      aria-label={n.pinned ? "Unpin" : "Pin"}
+                      title={n.pinned ? "Unpin" : "Pin"}
+                    >{n.pinned ? "★" : "☆"}</button>
+                  </div>
+                  <div className="ws-rc-title">{n.title?.trim() || toPreview(n.body_text) || "Untitled"}</div>
+                  <div className="ws-rc-snippet">{toPreview(n.body_text) || "—"}</div>
+                  <div className="ws-rc-status">{label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {openNotes.length > 0 && (
+
         <div className="ws-notetabs" role="tablist">
           {openNotes.map((n) => (
             <button
@@ -378,9 +495,43 @@ export function WorkspaceSection({
           )}
         </div>
       )}
+
+      {previewItem && (
+        <div className="ws-ov" onClick={() => setPreviewId(null)}>
+          <div className="ws-ov-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="ws-ov-head">
+              <div className="ws-ov-mode">◷ Viewing · not editing</div>
+              <div className="ws-ov-actions">
+                <button
+                  className={`ws-ov-btn pin ${previewItem.pinned ? "active" : ""}`}
+                  onClick={() => togglePin.mutate(previewItem)}
+                >{previewItem.pinned ? "★ Pinned" : "☆ Pin"}</button>
+                <button
+                  className="ws-ov-btn primary"
+                  onClick={() => {
+                    const id = previewItem.id;
+                    setPreviewId(null);
+                    if (previewItem.status === "closed") reopen.mutate(id);
+                    else setActiveId(id);
+                  }}
+                >Edit note</button>
+                <button className="ws-ov-btn" onClick={() => setPreviewId(null)}>Close</button>
+              </div>
+            </div>
+            <div className="ws-ov-body">
+              <h3>{previewItem.title?.trim() || "Untitled"}</h3>
+              <div className="body">{previewItem.body_text || "—"}</div>
+              <div className="ws-ov-meta">
+                Created {new Date(previewItem.created_at).toLocaleString()} · last edited {new Date(previewItem.updated_at).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function NoteBody({
   item,
