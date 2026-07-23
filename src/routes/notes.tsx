@@ -510,13 +510,17 @@ function DocPanel({
     schedule({ tags: next });
   };
 
-  const primaryTag = tags[0] ? displayTag(tags[0]) : null;
+  const primaryTagRaw = tags[0] ?? null;
+  const primaryTag = primaryTagRaw ? displayTag(primaryTagRaw) : null;
+  const primaryColor = primaryTagRaw ? colorFor(primaryTagRaw) : undefined;
 
   return (
     <div className="nt-panel">
       <header className="nt-panel-header">
         <div className="nt-panel-header-info">
-          {primaryTag && <div className="nt-tag-pill">{primaryTag}</div>}
+          {primaryTag && (
+            <div className="nt-tag-pill" style={primaryColor ? { background: primaryColor, color: "#181A4D" } : undefined}>{primaryTag}</div>
+          )}
           <div className="nt-p-title">{title?.trim() || "Untitled"}</div>
           <div className="nt-p-date">{formatLong(doc.updated_at)}</div>
         </div>
