@@ -58,6 +58,7 @@ export function WorkspaceEditor({
   onBlur,
   ignoreExternalUpdates = false,
   placeholder,
+  editable = true,
 }: {
   userId: string;
   initialJSON: any;
@@ -65,6 +66,7 @@ export function WorkspaceEditor({
   onBlur?: () => void;
   ignoreExternalUpdates?: boolean;
   placeholder?: string;
+  editable?: boolean;
 }) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
