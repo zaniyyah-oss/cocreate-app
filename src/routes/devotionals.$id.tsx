@@ -1012,7 +1012,7 @@ function EntryPage() {
         )}
       </div>
 
-      <MobileBottomNav />
+      
 
       {/* keep navigate reference to avoid unused warning */}
       <span style={{ display: "none" }} aria-hidden onClick={() => navigate({ to: "/devotionals" })} />
