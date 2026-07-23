@@ -69,6 +69,85 @@ const readTimeOf = (c: ContentPreview) => {
   return "";
 };
 
+/* ---------- Filler / demo content ---------- */
+const DEMO_AUTHORS = ["Ada Blackwell", "Jonah Rivers", "Naomi Cole", "Micah Tran", "Ruth Adeyemi", "Silas Park", "Hannah Osei", "Elias Moreno"];
+const DEMO_TITLES: Record<string, string[]> = {
+  latest: [
+    "The quiet work of becoming: notes from a slow season",
+    "What we mean when we say 'called'",
+    "A liturgy for Monday mornings",
+    "On the friendships that stay",
+    "Rebuilding after the plan fell through",
+    "The gospel in ordinary time",
+  ],
+  identity: [
+    "Daughterhood is not a phase",
+    "Sonship without performance",
+    "The name beneath the name",
+    "Becoming, unhurried",
+    "When healing feels like grief",
+  ],
+  marriage: [
+    "Partnership as practice, not performance",
+    "The fight that changed everything",
+    "Intimacy after the hard year",
+    "Engaged, and terrified, and hopeful",
+    "How we learned to say the hard thing",
+  ],
+  parenting: [
+    "The early years are the small years",
+    "Discipling without control",
+    "Teens, tenderly",
+    "Single parenting and the weight of enough",
+    "A prayer for the child who left",
+  ],
+  ministry: [
+    "Calling is not a spotlight",
+    "Serving from a full cup",
+    "Leadership that lays things down",
+    "Notes on burnout",
+    "The pulpit and the kitchen table",
+  ],
+  streaming: [
+    "The Room: episode 12 — Rest as resistance",
+    "Teaching: on the wilderness season",
+    "Clip: 'You were not made to hustle for love'",
+    "Podcast: raising kids who love the church",
+    "Teaching: what marriage teaches us about God",
+  ],
+  spotlight: [
+    "The essay that started it all",
+    "A letter to my younger self in ministry",
+    "How we practice sabbath now",
+    "On leaving well",
+  ],
+};
+const DEMO_EXCERPT = "A short, warm read on how faith actually shows up in the everyday — the kitchen, the calendar, the conversation you keep avoiding.";
+
+function makeDemo(kind: keyof typeof DEMO_TITLES, count: number, offset = 0, type: ContentType = "essay"): ContentPreview[] {
+  const titles = DEMO_TITLES[kind];
+  return Array.from({ length: count }).map((_, i) => {
+    const seed = `${kind}-${i + offset}`;
+    const title = titles[(i + offset) % titles.length];
+    return {
+      id: `demo-${seed}`,
+      title,
+      excerpt: DEMO_EXCERPT,
+      author_name: DEMO_AUTHORS[(i + offset) % DEMO_AUTHORS.length],
+      published_at: new Date(Date.now() - (i + offset + 1) * 36 * 3600 * 1000).toISOString(),
+      thumbnail_url: IMG_FALLBACK(seed, 800, 500),
+      cover_image_url: IMG_FALLBACK(seed, 800, 500),
+      type,
+      topic_id: null,
+      slug: seed,
+      read_time_minutes: 4 + ((i + offset) % 6),
+      body: null,
+    } as unknown as ContentPreview;
+  });
+}
+const padDemo = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+  real.length >= needed ? real : [...real, ...makeDemo(kind, needed - real.length, real.length, type)];
+
 /* ============================================================ */
 /*  CSS                                                          */
 /* ============================================================ */
