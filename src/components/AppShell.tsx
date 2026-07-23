@@ -248,7 +248,12 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
       )}
       <div className="app-layout">
         {/* Desktop sidebar */}
-        <aside className="app-side" aria-label="Primary">
+        <aside
+          className="app-side"
+          aria-label="Primary"
+          onMouseEnter={() => focusActive && setSideRevealed(true)}
+          onMouseLeave={() => focusActive && setSideRevealed(false)}
+        >
           <div className="app-side-head">
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
