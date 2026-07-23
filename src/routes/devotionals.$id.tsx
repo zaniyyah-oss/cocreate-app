@@ -344,10 +344,10 @@ function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items: Array<{ to: string; label: string; match?: string[] }> = [
     { to: "/", label: "Home" },
-    { to: "/explore", label: "Explore" },
     { to: "/devotionals", label: "Workspace" },
-    { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
-    { to: "/profile", label: "Profile" },
+    { to: "/calendar", label: "Calendar" },
+    { to: "/explore", label: "Bookmarks" },
+    { to: "/notes", label: "Notes" },
   ];
   const isActive = (it: { to: string; match?: string[] }) => {
     if (it.match?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
