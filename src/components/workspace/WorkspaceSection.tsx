@@ -13,6 +13,8 @@ export type WorkspaceItem = {
   body_text: string;
   tags: string[];
   status: "open" | "closed";
+  pinned?: boolean;
+  closed_at?: string | null;
   created_at: string;
   updated_at: string;
 };
