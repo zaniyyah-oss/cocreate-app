@@ -1,21 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
-import { usePageContent } from "@/lib/page-content";
-import { brandColor } from "@/lib/brand-palette";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
   head: () => ({
     meta: [
-      { title: "CoCreate — Building what's been entrusted to you" },
-      { name: "description", content: "Essays, teachings, podcasts, and devotionals to help you build what's been entrusted to you — with him, not just for him." },
+      { title: "CoCreate — Essays, teachings & practices for how you actually live" },
+      { name: "description", content: "A publication for identity, marriage, parenting, ministry, and marketplace — essays, teachings, podcasts, and practices to help you build with him, not just for him." },
       { property: "og:title", content: "CoCreate" },
-      { property: "og:description", content: "A calm home for essays, teachings, podcasts, clips, and devotional practices." },
+      { property: "og:description", content: "A publication for identity, marriage, parenting, ministry, and marketplace." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -25,682 +23,729 @@ export const Route = createFileRoute("/")({
 type ContentPreview = Database["public"]["Views"]["content_items_public"]["Row"];
 type ContentType = Database["public"]["Enums"]["content_type"];
 
-const IMG_FALLBACK = (id: string) => `https://picsum.photos/seed/${id}/600/400`;
+const IMG_FALLBACK = (id: string, w = 800, h = 500) => `https://picsum.photos/seed/${id}/${w}/${h}`;
 
-const routeForType = (t: ContentType) =>
+const routeForType = (t: ContentType | null | undefined) =>
   t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
 
-const STICKY_COLORS = ["limelight", "blush", "amber", "teal"] as const;
-type StickyColor = typeof STICKY_COLORS[number];
-
-const CSS = `
-.hp-root{--cream:#FBF8ED;--navy:#181A4D;--teal:#0F4A42;--lime:#CAC307;--limelight:#DCE07A;--amber:#FFAE00;--burgundy:#441B07;--blush:#E990A2;--ink:#20201C;--hair:rgba(24,26,77,0.12);padding:26px 20px 90px;max-width:1360px;margin:0 auto;width:100%;font-family:'Poppins',sans-serif;color:var(--ink);}
-@media (min-width:900px){.hp-root{padding:34px 44px 90px;}}
-
-.hp-hero h1{font-weight:900;font-size:28px;color:var(--navy);margin:0 0 8px;letter-spacing:-0.01em;line-height:1.1;}
-.hp-hero p{font-size:14px;color:var(--ink);opacity:0.65;margin:0 0 24px;max-width:640px;line-height:1.55;}
-@media (min-width:900px){.hp-hero h1{font-size:36px;} .hp-hero p{font-size:15px;}}
-
-.hp-widgetrow{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:32px;}
-@media (min-width:900px){.hp-widgetrow{grid-template-columns:1.3fr 1fr;}}
-
-.hp-scripture{background:#fff;border:1px solid var(--hair);border-radius:16px;padding:22px 26px;position:relative;overflow:hidden;}
-.hp-scripture::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--teal);}
-.hp-sw-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:12px;}
-.hp-sw-badge{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--teal);}
-.hp-sw-shuffle{font-size:11.5px;font-weight:600;color:var(--navy);opacity:0.55;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;}
-.hp-sw-shuffle:hover{opacity:1;}
-.hp-sw-verse{font-size:18px;font-weight:600;color:var(--navy);line-height:1.4;margin-bottom:6px;}
-.hp-sw-ref{font-size:12.5px;color:var(--ink);opacity:0.55;font-weight:600;}
-
-.hp-postit{background:#fff;border:1px solid var(--hair);border-radius:16px;padding:20px 22px;}
-.hp-pw-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-.hp-pw-title{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--navy);opacity:0.55;}
-.hp-pw-add{font-size:11.5px;font-weight:600;color:var(--navy);background:var(--limelight);border-radius:999px;padding:5px 12px;cursor:pointer;border:none;font-family:inherit;}
-.hp-cork{display:flex;gap:10px;flex-wrap:wrap;}
-.hp-postit-note{width:100px;height:100px;border-radius:4px;padding:10px;font-size:11.5px;font-weight:600;line-height:1.35;box-shadow:0 3px 8px rgba(24,26,77,0.08);position:relative;cursor:pointer;overflow:hidden;word-wrap:break-word;}
-.hp-postit-note.limelight{background:var(--limelight);color:var(--navy);}
-.hp-postit-note.blush{background:var(--blush);color:var(--burgundy);}
-.hp-postit-note.amber{background:var(--amber);color:var(--navy);}
-.hp-postit-note.teal{background:var(--teal);color:var(--cream);}
-.hp-postit-note .hp-note-del{position:absolute;top:2px;right:5px;font-size:14px;opacity:0;background:none;border:none;cursor:pointer;color:inherit;font-family:inherit;}
-.hp-postit-note:hover .hp-note-del{opacity:0.7;}
-.hp-postit-add{width:100px;height:100px;background:transparent;border:1.5px dashed var(--hair);display:flex;align-items:center;justify-content:center;color:var(--navy);opacity:0.4;font-size:22px;cursor:pointer;font-family:inherit;border-radius:4px;}
-.hp-note-editor{width:100%;background:#fff;border:1px solid var(--hair);border-radius:8px;padding:10px;margin-top:12px;display:flex;flex-direction:column;gap:8px;}
-.hp-note-editor textarea{border:1px solid var(--hair);border-radius:6px;padding:8px;font-family:inherit;font-size:12px;resize:vertical;min-height:60px;}
-.hp-note-editor .row{display:flex;gap:6px;align-items:center;justify-content:space-between;}
-.hp-note-swatch{width:20px;height:20px;border-radius:4px;border:2px solid transparent;cursor:pointer;}
-.hp-note-swatch.on{border-color:var(--navy);}
-.hp-note-editor button{background:var(--navy);color:#fff;border:none;padding:6px 12px;font-size:11.5px;font-weight:700;border-radius:99px;cursor:pointer;font-family:inherit;}
-.hp-note-signin{font-size:12px;color:var(--ink);opacity:0.55;padding:8px 0;}
-
-.hp-shortrow{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:34px;}
-@media (min-width:640px){.hp-shortrow{grid-template-columns:repeat(3,1fr);gap:16px;}}
-.hp-shortcard{border-radius:14px;overflow:hidden;position:relative;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;color:#fff;background-size:cover;background-position:center;background-color:var(--navy);cursor:pointer;text-decoration:none;}
-.hp-shortcard::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.05),rgba(24,26,77,0.88));}
-.hp-shortcard .z{position:relative;z-index:2;color:#fff;}
-.hp-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;padding:4px 9px;border-radius:5px;position:absolute;top:12px;left:12px;z-index:2;}
-.hp-pill.ad{background:var(--amber);color:var(--navy);}
-.hp-pill.clip{background:rgba(255,255,255,0.22);color:#fff;backdrop-filter:blur(6px);}
-.hp-shortcard .headline{font-size:15px;font-weight:700;line-height:1.3;margin-bottom:4px;}
-.hp-shortcard .sub{font-size:11px;opacity:0.75;font-weight:600;}
-.hp-playicon{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
-.hp-cta{display:inline-block;margin-top:10px;background:var(--limelight);color:var(--navy);font-size:11px;font-weight:700;padding:6px 13px;border-radius:999px;}
-
-.hp-sectionlabel{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px;}
-.hp-sectionlabel .title{font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--navy);opacity:0.55;}
-.hp-sectionlabel .count{background:rgba(24,26,77,0.08);border-radius:999px;padding:2px 9px;font-size:11px;color:var(--navy);}
-
-.hp-compactgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:40px;}
-@media (min-width:640px){.hp-compactgrid{grid-template-columns:repeat(3,1fr);}}
-@media (min-width:1024px){.hp-compactgrid{grid-template-columns:repeat(4,1fr);gap:14px;}}
-.hp-compactcard{background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--hair);cursor:pointer;text-decoration:none;color:inherit;display:block;transition:transform .18s ease, box-shadow .18s ease;}
-.hp-compactcard:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,0.06);}
-.hp-compactthumb{height:96px;background-size:cover;background-position:center;position:relative;background-color:var(--limelight);overflow:hidden;}
-.hp-compactthumb img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(0.15) contrast(1.05);}
-.hp-compactthumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.45;pointer-events:none;}
-.hp-compactthumb.teaching::after{background:#FFAE00;}
-.hp-compactthumb.essay::after,.hp-compactthumb.blog::after{background:#DCE07A;}
-.hp-compactthumb.podcast::after{background:#0F4A42;}
-.hp-compactthumb.clip::after{background:#CAC307;}
-.hp-ctag{position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;padding:3px 8px;border-radius:4px;color:#fff;}
-.hp-ctag.podcast{background:var(--teal);}
-.hp-ctag.essay{background:var(--navy);}
-.hp-ctag.teaching{background:var(--amber);color:var(--navy);}
-.hp-ctag.blog{background:var(--burgundy);}
-.hp-ctag.clip{background:var(--lime);color:var(--navy);}
-.hp-ctag.promoted{background:var(--amber);color:var(--navy);}
-.hp-compactbody{padding:12px 13px;}
-.hp-compacttitle{font-size:13px;font-weight:700;color:var(--navy);margin:0 0 3px;line-height:1.3;}
-.hp-compactref{font-size:10.5px;color:var(--teal);font-weight:600;}
-
-.hp-campaign{margin-top:10px;}
-.hp-campaign-eyebrow{font-size:11.5px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;}
-.hp-campaign-title{font-size:24px;font-weight:900;color:var(--navy);margin:0 0 6px;letter-spacing:-0.01em;}
-@media (min-width:900px){.hp-campaign-title{font-size:26px;}}
-
-.hp-campaign-explainer{background:#fff;border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin:0 0 14px;width:100%;box-sizing:border-box;}
-.hp-campaign-explainer p{margin:0;font-size:13px;color:var(--ink);opacity:0.7;line-height:1.6;}
-.hp-campaign-top{display:block;margin:14px 0 20px;}
-.hp-qlabel{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px;display:block;}
-
-.hp-banner{position:relative;border-radius:16px;overflow:hidden;min-height:200px;background:linear-gradient(120deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;width:100%;box-sizing:border-box;}
-.hp-banner.hasimg::before{content:'';position:absolute;inset:0;background:#DCE07A;mix-blend-mode:multiply;opacity:0.4;}
-.hp-uploadhint{text-align:center;color:var(--cream);position:relative;z-index:2;}
-.hp-uploadhint .icon{width:38px;height:38px;border:2px dashed rgba(251,248,237,0.5);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;}
-.hp-uploadhint .label{font-size:12.5px;font-weight:600;opacity:0.85;}
-.hp-replacebtn{position:absolute;bottom:14px;right:14px;background:rgba(251,248,237,0.15);border:1px solid rgba(251,248,237,0.4);color:var(--cream);font-size:11px;font-weight:600;padding:6px 13px;border-radius:999px;cursor:pointer;font-family:inherit;z-index:3;}
-
-.hp-writeup{width:100%;margin:18px 0 24px;}
-.hp-writeup h3{font-size:15px;font-weight:800;color:var(--navy);margin:0 0 8px;}
-.hp-writeup p{font-size:14px;color:var(--ink);opacity:0.78;line-height:1.65;margin:0;}
-
-.hp-cliprow{display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0;}
-@media (min-width:640px){.hp-cliprow{grid-template-columns:1fr 1fr;}}
-.hp-clipcard{border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/10;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;color:#fff;background-size:cover;background-position:center;background-color:var(--navy);cursor:pointer;text-decoration:none;}
-.hp-clipcard::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.05),rgba(24,26,77,0.82));}
-.hp-clipcard .z{position:relative;z-index:2;color:#fff;}
-.hp-pill-mini{position:absolute;top:14px;left:14px;z-index:2;background:var(--amber);color:var(--navy);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;padding:4px 10px;border-radius:5px;}
-.hp-pill-mini.intro{background:var(--limelight);}
-.hp-clipplay{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
-.hp-cliptitle{font-size:17px;font-weight:700;line-height:1.3;margin:0 0 5px;}
-.hp-clipmeta{font-size:11.5px;opacity:0.75;font-weight:600;}
-
-.hp-devopromo{background:var(--navy);border-radius:14px;padding:22px 26px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin:20px 0;flex-wrap:wrap;}
-.hp-devopromo h4{color:var(--limelight);font-size:17px;font-weight:800;margin:0 0 6px;}
-.hp-devopromo p{color:var(--cream);opacity:0.72;font-size:12.5px;margin:0;max-width:460px;line-height:1.5;}
-.hp-devopromo .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;}
-.hp-addbtn2{background:var(--limelight);color:var(--navy);font-size:12px;font-weight:700;padding:9px 18px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
-.hp-seeinside{color:var(--cream);opacity:0.75;font-size:11.5px;font-weight:600;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;}
-
-.hp-collection-grid{display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:auto;gap:14px;}
-@media (min-width:900px){.hp-collection-grid{grid-template-columns:repeat(4,1fr);grid-auto-rows:130px;}}
-.hp-cc{background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--hair);display:flex;flex-direction:column;position:relative;text-decoration:none;color:inherit;cursor:pointer;}
-@media (min-width:900px){
-  .hp-cc-lead{grid-column:1 / 3;grid-row:1 / 3;}
-  .hp-cc-medium{grid-column:3 / 5;grid-row:1;flex-direction:row;}
-  .hp-cc-halfwide{grid-column:span 2;}
+/* Relative time — "2 hours ago", "Yesterday", "2 days ago", etc. */
+function relTime(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const diff = Math.max(0, now - then);
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"} ago`;
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  if (d === 1) return "Yesterday";
+  if (d < 7) return `${d} days ago`;
+  if (d < 30) return `${Math.floor(d / 7)} week${Math.floor(d / 7) === 1 ? "" : "s"} ago`;
+  if (d < 365) return `${Math.floor(d / 30)} month${Math.floor(d / 30) === 1 ? "" : "s"} ago`;
+  return `${Math.floor(d / 365)} year${Math.floor(d / 365) === 1 ? "" : "s"} ago`;
 }
-.hp-cc-lead .hp-cc-thumb{height:60%;min-height:170px;background-size:cover;background-position:center;background-color:var(--limelight);}
-.hp-cc-lead .hp-cc-body{padding:16px 18px;flex:1;}
-.hp-cc-lead .hp-cc-title{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 6px;line-height:1.25;}
-.hp-cc-lead .hp-cc-desc{font-size:12.5px;color:var(--ink);opacity:0.65;line-height:1.4;margin:0;}
 
-.hp-cc-medium .hp-cc-thumb{width:100%;height:120px;background-size:cover;background-position:center;background-color:var(--limelight);flex-shrink:0;}
-@media (min-width:900px){.hp-cc-medium .hp-cc-thumb{width:42%;height:auto;}}
-.hp-cc-medium .hp-cc-body{padding:13px 15px;flex:1;display:flex;flex-direction:column;}
-.hp-cc-medium .hp-cc-title{font-size:13.5px;font-weight:700;color:var(--navy);margin:0 0 4px;line-height:1.3;}
-.hp-cc-medium .hp-cc-meta{font-size:10.5px;opacity:0.55;font-weight:600;margin-top:auto;}
+/* Take the opening line(s) of the body — first ~180 chars, no markdown symbols. */
+function openingLines(body: string | null | undefined, max = 160): string {
+  if (!body) return "";
+  const clean = body
+    .replace(/[#*_>`~]/g, "")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (clean.length <= max) return clean;
+  return clean.slice(0, max).replace(/\s+\S*$/, "") + "…";
+}
 
-.hp-cc-halfwide{flex-direction:row;}
-.hp-cc-halfwide .hp-cc-thumb{width:38%;background-size:cover;background-position:center;flex-shrink:0;background-color:var(--limelight);}
-.hp-cc-halfwide .hp-cc-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;}
-.hp-cc-halfwide .hp-cc-title{font-size:13px;font-weight:700;color:var(--navy);margin:0 0 3px;}
-.hp-cc-halfwide .hp-cc-meta{font-size:10px;opacity:0.55;font-weight:600;margin-top:auto;}
-.hp-cc-thumb{position:relative;}
-.hp-cc-thumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.45;pointer-events:none;}
-.hp-cc-thumb.teaching::after{background:#FFAE00;}
-.hp-cc-thumb.essay::after,.hp-cc-thumb.blog::after{background:#DCE07A;}
-.hp-cc-thumb.podcast::after{background:#0F4A42;}
-.hp-cc-thumb.clip::after{background:#CAC307;}
+const coverOf = (c: ContentPreview) => (c as any).cover_image_url || c.thumbnail_url || IMG_FALLBACK(c.id ?? "x");
+const readTimeOf = (c: ContentPreview) => {
+  const rt = (c as any).read_time_minutes as number | null | undefined;
+  if (rt && rt > 0) return `${rt} min read`;
+  const words = (((c as any).body as string | undefined) ?? "").split(/\s+/).filter(Boolean).length;
+  if (words > 0) return `${Math.max(1, Math.round(words / 220))} min read`;
+  return "";
+};
 
-.hp-seeallbtn{display:block;width:fit-content;margin:22px auto 0;background:transparent;border:1.5px solid var(--navy);color:var(--navy);font-size:12.5px;font-weight:700;padding:10px 22px;border-radius:999px;cursor:pointer;text-decoration:none;font-family:inherit;}
+/* ============================================================ */
+/*  CSS                                                          */
+/* ============================================================ */
+const CSS = `
+.hp{--navy:#181A4D;--navy-2:#22245e;--lime:#CAC307;--limelight:#DCE07A;--teal:#0F4A42;--amber:#FFAE00;--burgundy:#441B07;--blush:#E990A2;--cream:#FBF8ED;--ink:#20201C;--periwinkle:#6C6FD4;font-family:'Poppins',sans-serif;color:var(--ink);background:var(--cream);}
+.hp a{text-decoration:none;color:inherit;}
+.hp *{box-sizing:border-box;}
+.hp .wrap{max-width:1240px;margin:0 auto;padding:0 24px;}
+@media(min-width:900px){.hp .wrap{padding:0 40px;}}
 
-.hp-skel{background:#fff;border-radius:12px;height:160px;border:1px solid var(--hair);position:relative;overflow:hidden;}
-.hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);animation:hp-shim 1.4s infinite;}
+/* Topic quick-links row */
+.hp-topics{background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);box-shadow:0 1px 3px rgba(24,26,77,0.04);}
+.hp-topics .wrap{display:flex;align-items:center;gap:24px;padding-top:14px;padding-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.hp-topics a{font-size:13.5px;font-weight:600;color:#514c3d;white-space:nowrap;flex-shrink:0;}
+.hp-topics a:hover,.hp-topics a.is-active{color:var(--navy);}
+
+/* Section frames */
+.hp-section{padding:44px 0;}
+.hp-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.hp-eyebrow .bar{width:4px;height:18px;background:var(--teal);border-radius:2px;}
+.hp-eyebrow h2{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:0;}
+.hp-eyebrow .see-all{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--teal);white-space:nowrap;}
+
+/* Latest */
+.hp-latest-grid{display:grid;grid-template-columns:1fr;gap:26px;}
+@media(min-width:900px){.hp-latest-grid{grid-template-columns:1.4fr 1fr;}}
+.hp-lead{display:block;}
+.hp-lead .art{border-radius:16px;height:280px;margin-bottom:16px;background-size:cover;background-position:center;background-color:var(--navy);}
+@media(min-width:900px){.hp-lead .art{height:340px;}}
+.hp-lead h3{font-size:22px;font-weight:800;color:var(--navy);line-height:1.25;margin:0 0 8px;}
+@media(min-width:900px){.hp-lead h3{font-size:28px;}}
+.hp-lead p{font-size:14.5px;color:#6b6656;line-height:1.55;margin:0 0 10px;}
+.hp-meta{font-size:12px;color:#9a9484;font-weight:600;}
+.hp-side{display:flex;flex-direction:column;gap:18px;}
+.hp-side-item{display:flex;gap:14px;align-items:flex-start;}
+.hp-side-item .thumb{width:96px;height:72px;border-radius:10px;flex-shrink:0;background-size:cover;background-position:center;background-color:var(--limelight);}
+.hp-side-item h4{font-size:14.5px;font-weight:700;color:var(--navy);line-height:1.35;margin:0 0 4px;}
+.hp-side-item .hp-meta{font-size:11.5px;}
+
+/* Topic sections */
+.hp-topic-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:640px){.hp-topic-grid{grid-template-columns:repeat(2,1fr);}}
+@media(min-width:900px){.hp-topic-grid{grid-template-columns:repeat(3,1fr);}}
+.hp-tcard{display:block;}
+.hp-tcard .art{border-radius:14px;height:168px;margin-bottom:12px;background-size:cover;background-position:center;background-color:var(--limelight);}
+.hp-tcard h4{font-size:16px;font-weight:700;color:var(--navy);margin:0 0 6px;line-height:1.3;}
+.hp-tcard p{font-size:13px;color:#6b6656;line-height:1.55;margin:0 0 8px;}
+
+/* Full-bleed burgundy collection */
+.hp-collection{background:var(--burgundy);padding:68px 0 60px;margin:8px 0 0;}
+.hp-collection-heading{font-size:36px;font-weight:900;color:var(--cream);margin:0 0 10px;letter-spacing:-0.01em;line-height:1.05;}
+@media(min-width:900px){.hp-collection-heading{font-size:46px;}}
+.hp-collection-sub{font-size:15px;color:rgba(255,255,255,0.75);max-width:580px;line-height:1.55;margin:0 0 40px;}
+.hp-col-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-top:1px solid rgba(255,255,255,0.18);padding-top:26px;margin-bottom:26px;flex-wrap:wrap;}
+.hp-col-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;}
+.hp-col-header h3{font-size:22px;font-weight:800;color:#fff;margin:0 0 6px;}
+@media(min-width:900px){.hp-col-header h3{font-size:24px;}}
+.hp-col-header p{font-size:13.5px;color:rgba(255,255,255,0.7);margin:0;max-width:480px;}
+.hp-col-actions{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex-shrink:0;}
+@media(min-width:640px){.hp-col-actions{align-items:flex-end;}}
+.hp-add-btn{background:var(--cream);color:var(--burgundy);font-weight:700;font-size:13px;padding:11px 20px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;}
+.hp-see-inside{font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;white-space:nowrap;}
+.hp-col-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+@media(min-width:900px){.hp-col-grid{grid-template-columns:1.4fr 1fr;}}
+.hp-col-left,.hp-col-right{display:flex;flex-direction:column;gap:18px;}
+.hp-col-lead{background:#fff;border-radius:14px;overflow:hidden;display:block;}
+.hp-col-lead .art{height:220px;background-size:cover;background-position:center;background-color:var(--limelight);}
+@media(min-width:900px){.hp-col-lead .art{height:260px;}}
+.hp-col-lead .body{padding:18px 20px;}
+.hp-col-lead h4{font-size:18px;font-weight:700;color:var(--navy);margin:0 0 6px;}
+.hp-col-lead p{font-size:13px;color:#6b6656;line-height:1.5;margin:0;}
+.hp-col-hcard{background:#fff;border-radius:14px;overflow:hidden;display:flex;flex:1;}
+.hp-col-hcard .thumb{width:42%;flex-shrink:0;background-size:cover;background-position:center;background-color:var(--limelight);}
+.hp-col-hcard .body{padding:16px 18px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
+.hp-col-hcard h5{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 6px;line-height:1.35;}
+.hp-col-hcard .byline{font-size:12px;color:#9a9484;font-weight:600;}
+.hp-see-collection-wrap{text-align:center;margin-top:26px;}
+.hp-see-collection-btn{display:inline-block;border:1.5px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;font-size:13.5px;padding:12px 24px;border-radius:999px;}
+
+/* Navy interruption modules */
+.hp-navy{background:var(--navy);padding:52px 0;}
+.hp-navy .hp-eyebrow .bar{background:var(--limelight);}
+.hp-navy .hp-eyebrow h2{color:var(--limelight);}
+.hp-navy .hp-eyebrow .see-all{color:var(--limelight);}
+
+.hp-stream-row{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:900px){.hp-stream-row{grid-template-columns:1.5fr 1fr;}}
+.hp-stream-feature{position:relative;border-radius:16px;overflow:hidden;height:280px;background-size:cover;background-position:center;background-color:var(--navy-2);display:flex;align-items:flex-end;padding:22px;color:#fff;}
+@media(min-width:900px){.hp-stream-feature{height:320px;}}
+.hp-stream-feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.15),rgba(13,14,46,0.85));}
+.hp-stream-feature .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;z-index:2;}
+.hp-stream-feature .play svg{width:18px;height:18px;fill:var(--navy);}
+.hp-stream-feature .label{position:relative;z-index:2;color:#fff;font-weight:700;font-size:16px;line-height:1.35;}
+.hp-stream-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.hp-stream-mini{border-radius:12px;height:148px;padding:12px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;background-size:cover;background-position:center;background-color:var(--navy-2);position:relative;overflow:hidden;}
+.hp-stream-mini::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(13,14,46,0.82));}
+.hp-stream-mini span{position:relative;z-index:2;font-size:12.5px;font-weight:700;line-height:1.35;}
+
+.hp-spot-row{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:900px){.hp-spot-row{grid-template-columns:1.5fr 1fr;}}
+.hp-spot-feature{position:relative;border-radius:16px;overflow:hidden;height:280px;background-size:cover;background-position:center;background-color:var(--navy-2);display:flex;flex-direction:column;justify-content:flex-end;padding:24px;color:#fff;cursor:pointer;}
+@media(min-width:900px){.hp-spot-feature{height:320px;}}
+.hp-spot-feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(13,14,46,0.85));}
+.hp-spot-feature > *{position:relative;z-index:2;}
+.hp-spot-feature .dots{display:flex;gap:5px;margin-bottom:12px;}
+.hp-spot-feature .dots span{width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,0.3);cursor:pointer;transition:background .15s;}
+.hp-spot-feature .dots span.active{background:var(--limelight);}
+.hp-spot-feature h3{font-size:20px;font-weight:800;margin:0 0 4px;line-height:1.3;}
+@media(min-width:900px){.hp-spot-feature h3{font-size:22px;}}
+.hp-spot-feature .meta-light{font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;}
+.hp-spot-list{display:flex;flex-direction:column;gap:0;}
+.hp-spot-list a{display:block;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
+.hp-spot-list a:first-child{padding-top:0;}
+.hp-spot-list a:last-child{border-bottom:none;}
+.hp-spot-list .tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--limelight);margin-bottom:5px;display:block;}
+.hp-spot-list h5{font-size:14px;font-weight:700;color:#fff;margin:0;line-height:1.4;}
+
+/* Footer */
+.hp-footer{background:var(--navy);color:var(--cream);padding-top:44px;}
+.hp-footer-search{display:flex;align-items:center;background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:40px;gap:10px;}
+.hp-footer-search input{border:none;outline:none;flex:1;font-family:'Poppins';font-size:14px;color:var(--ink);background:transparent;}
+.hp-footer-search svg{width:18px;height:18px;color:#9a9484;flex-shrink:0;}
+.hp-footer-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:26px 20px;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,0.12);}
+@media(min-width:640px){.hp-footer-cols{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:1024px){.hp-footer-cols{grid-template-columns:repeat(6,1fr);}}
+.hp-footer-cols h6{font-size:13px;font-weight:700;color:#fff;margin:0 0 14px;}
+.hp-footer-cols a{display:block;font-size:13px;color:rgba(251,248,237,0.65);margin-bottom:10px;}
+.hp-footer-cols a:hover{color:var(--limelight);}
+.hp-footer-brand-row{display:flex;align-items:center;justify-content:space-between;padding:26px 0;gap:20px;flex-wrap:wrap;}
+.hp-brand{display:flex;align-items:center;gap:10px;}
+.hp-brand .badge{width:34px;height:34px;border-radius:9px;background:var(--limelight);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;}
+.hp-brand .word{font-weight:900;font-size:19px;color:#fff;}
+.hp-footer-social{display:flex;gap:14px;align-items:center;}
+.hp-footer-social .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(251,248,237,0.55);margin-right:4px;}
+.hp-icon-circle{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;}
+.hp-icon-circle svg{width:14px;height:14px;fill:#fff;}
+.hp-app-badges{display:flex;gap:10px;flex-wrap:wrap;}
+.hp-app-pill{display:flex;align-items:center;gap:6px;border:1px dashed rgba(255,255,255,0.3);border-radius:8px;padding:7px 12px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.7);}
+.hp-footer-legal{display:flex;justify-content:space-between;align-items:center;padding:18px 0 28px;font-size:12px;color:rgba(251,248,237,0.5);flex-wrap:wrap;gap:10px;}
+.hp-footer-legal .links{display:flex;gap:18px;flex-wrap:wrap;}
+.hp-footer-legal a:hover{color:var(--limelight);}
+
+/* skeletons */
+.hp-skel{background:#fff;border-radius:12px;height:120px;position:relative;overflow:hidden;}
+.hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.04),transparent);animation:hp-shim 1.4s infinite;}
 @keyframes hp-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
-
-.hp-footer{margin-top:56px;padding-top:34px;border-top:1px solid var(--hair);}
-.hp-footer-label{font-size:10.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);opacity:0.6;margin:0 0 12px;}
-.hp-footer-label + .hp-footer-pills + .hp-footer-label{margin-top:22px;}
-.hp-footer-pills{display:flex;flex-wrap:wrap;gap:8px;}
-.hp-footer-pill{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--hair);color:var(--navy);background:#fff;font-family:inherit;text-decoration:none;display:inline-block;transition:all .12s;}
-.hp-footer-pill:hover{border-color:var(--navy);}
-.hp-footer-pill.teaching:hover{background:#FFAE00;border-color:#FFAE00;color:var(--navy);}
-.hp-footer-pill.essay:hover,.hp-footer-pill.blog:hover{background:#DCE07A;border-color:#DCE07A;color:var(--navy);}
-.hp-footer-pill.podcast:hover{background:#0F4A42;border-color:#0F4A42;color:#FBF8ED;}
 `;
 
-/* ---------------- Scripture Widget ---------------- */
-function TodayScripture() {
-  const qc = useQueryClient();
-  const q = useQuery({
-    queryKey: ["today-scripture"],
+/* ============================================================ */
+/*  Data                                                         */
+/* ============================================================ */
+
+type TopicRow = Database["public"]["Tables"]["topics"]["Row"] & {
+  display_name?: string | null;
+  sort_order?: number | null;
+};
+
+function useTopics() {
+  return useQuery({
+    queryKey: ["hp-topics"],
     queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("daily_scriptures").select("verse_text, reference");
+      const { data, error } = await (supabase.from as any)("topics").select("*").order("sort_order").order("name");
       if (error) throw error;
-      const list = (data ?? []) as { verse_text: string; reference: string }[];
-      if (list.length === 0) return null;
-      // pick by day-of-year for stable "today" default
-      const seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-      return list[seed % list.length];
+      return (data ?? []) as TopicRow[];
     },
+    staleTime: 5 * 60_000,
   });
-  const [override, setOverride] = useState<{ verse_text: string; reference: string } | null>(null);
-
-  const shuffle = async () => {
-    const { data } = await (supabase.from as any)("daily_scriptures").select("verse_text, reference");
-    const list = (data ?? []) as { verse_text: string; reference: string }[];
-    if (list.length === 0) return;
-    const idx = Math.floor(Math.random() * list.length);
-    setOverride(list[idx]);
-    qc.setQueryData(["today-scripture"], list[idx]);
-  };
-
-  const v = override ?? q.data;
-
-  return (
-    <div className="hp-scripture">
-      <div className="hp-sw-head">
-        <span className="hp-sw-badge">Today's scripture</span>
-        <button className="hp-sw-shuffle" onClick={shuffle}>↻ New verse</button>
-      </div>
-      <div className="hp-sw-verse">{v ? `"${v.verse_text}"` : "\u00a0"}</div>
-      <div className="hp-sw-ref">{v?.reference ?? ""}</div>
-    </div>
-  );
 }
 
-/* ---------------- Sticky Notes Widget ---------------- */
-type StickyNote = { id: string; body: string; color: StickyColor; rotation: number; position: number };
-
-function StickyNotes({ userId }: { userId: string | null }) {
-  const qc = useQueryClient();
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [color, setColor] = useState<StickyColor>("limelight");
-
-  const q = useQuery({
-    queryKey: ["sticky-notes", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("sticky_notes")
-        .select("id, body, color, rotation, position")
-        .order("position", { ascending: true })
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as StickyNote[];
-    },
-  });
-
-  const add = async () => {
-    if (!userId || !draft.trim()) return;
-    const rotation = Math.floor(Math.random() * 7) - 3;
-    await (supabase.from as any)("sticky_notes").insert({
-      user_id: userId, body: draft.trim().slice(0, 160), color, rotation, position: (q.data?.length ?? 0),
-    });
-    setDraft("");
-    setEditing(false);
-    qc.invalidateQueries({ queryKey: ["sticky-notes", userId] });
-  };
-
-  const del = async (id: string) => {
-    await (supabase.from as any)("sticky_notes").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["sticky-notes", userId] });
-  };
-
-  const notes = q.data ?? [];
-
-  return (
-    <div className="hp-postit">
-      <div className="hp-pw-head">
-        <span className="hp-pw-title">Notes to self</span>
-        {userId && <button className="hp-pw-add" onClick={() => setEditing((e) => !e)}>+ New note</button>}
-      </div>
-      {!userId ? (
-        <div className="hp-note-signin">
-          <Link to="/auth" style={{ color: "#181A4D", fontWeight: 700 }}>Sign in</Link> to keep private notes here.
-        </div>
-      ) : (
-        <>
-          <div className="hp-cork">
-            {notes.map((n) => (
-              <div key={n.id} className={`hp-postit-note ${n.color}`} style={{ transform: `rotate(${n.rotation}deg)` }}>
-                <button className="hp-note-del" onClick={() => del(n.id)} aria-label="Delete note">×</button>
-                {n.body}
-              </div>
-            ))}
-            <button className="hp-postit-add" onClick={() => setEditing(true)}>+</button>
-          </div>
-          {editing && (
-            <div className="hp-note-editor">
-              <textarea
-                autoFocus
-                maxLength={160}
-                placeholder="A short note to yourself…"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-              />
-              <div className="row">
-                <div style={{ display: "flex", gap: 6 }}>
-                  {STICKY_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      className={`hp-note-swatch ${c === color ? "on" : ""}`}
-                      style={{
-                        background: c === "limelight" ? "#DCE07A" : c === "blush" ? "#E990A2" : c === "amber" ? "#FFAE00" : "#0F4A42",
-                      }}
-                      onClick={() => setColor(c)}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
-                <button onClick={add}>Save</button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ---------------- Short-form Row ---------------- */
-function ShortFormRow() {
-  const q = useQuery({
-    queryKey: ["home-short-form"],
-    queryFn: async () => {
-      const [promoRes, clipRes] = await Promise.all([
-        supabase.from("content_items_public").select("*").eq("type", "promoted").order("published_at", { ascending: false }).limit(1),
-        supabase.from("content_items_public").select("*").eq("type", "clip").order("published_at", { ascending: false }).limit(2),
-      ]);
-      return {
-        promo: (promoRes.data ?? [])[0] as ContentPreview | undefined,
-        clips: (clipRes.data ?? []) as ContentPreview[],
-      };
-    },
-  });
-  const navigate = useNavigate();
-
-  if (q.isLoading || !q.data) {
-    return (
-      <div className="hp-shortrow">
-        {[0, 1, 2].map((i) => <div key={i} className="hp-skel" style={{ aspectRatio: "3/4", height: "auto" }} />)}
-      </div>
-    );
-  }
-
-  const { promo, clips } = q.data;
-  const items: Array<{ kind: "promo" | "clip"; item: ContentPreview }> = [];
-  if (promo) items.push({ kind: "promo", item: promo });
-  clips.forEach((c) => items.push({ kind: "clip", item: c }));
-  if (items.length === 0) return null;
-
-  const fmtDur = (s: number | null) => {
-    if (!s) return "";
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  return (
-    <div className="hp-shortrow">
-      {items.slice(0, 3).map(({ kind, item }) => {
-        const bg = item.thumbnail_url || IMG_FALLBACK(item.id ?? "x");
-        const onClick = () => {
-          if (kind === "promo" && item.external_url) { window.open(item.external_url, "_blank"); return; }
-          if (item.id) navigate({ to: "/essays/$id", params: { id: item.id } });
-        };
-        return (
-          <div key={item.id ?? `${kind}-x`} className="hp-shortcard" style={{ backgroundImage: `url(${bg})` }} onClick={onClick}>
-            <span className={`hp-pill ${kind === "promo" ? "ad" : "clip"}`}>
-              {kind === "promo" ? "Promoted" : `↻ Clip · ${fmtDur(item.duration_seconds ?? null)}`}
-            </span>
-            <div className="z">
-              {kind === "clip" && (
-                <div className="hp-playicon">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#181A4D"><path d="M8 5v14l11-7z" /></svg>
-                </div>
-              )}
-              <div className="headline">{kind === "clip" ? `"${item.title}"` : item.title}</div>
-              <div className="sub">{item.excerpt ?? item.author_name ?? ""}</div>
-              {kind === "promo" && <span className="hp-cta">Shop now</span>}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ---------------- Featured Grid ---------------- */
-function FeaturedGrid() {
-  const q = useQuery({
-    queryKey: ["home-featured"],
+function useLatest(limit = 5) {
+  return useQuery({
+    queryKey: ["hp-latest", limit],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("content_items_public")
         .select("*")
-        .in("type", ["teaching", "essay", "podcast", "blog"])
         .order("published_at", { ascending: false, nullsFirst: false })
-        .limit(8);
+        .limit(limit);
       if (error) throw error;
       return (data ?? []) as ContentPreview[];
     },
   });
-  const items = q.data ?? [];
-
-  return (
-    <>
-      <div className="hp-sectionlabel">
-        <span className="title">Featured</span>
-        {!q.isLoading && <span className="count">{items.length}</span>}
-      </div>
-      <div className="hp-compactgrid">
-        {q.isLoading
-          ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-skel" />)
-          : items.map((c) => {
-              const t = (c.type ?? "essay") as ContentType;
-              const route = routeForType(t);
-              return (
-                <Link key={c.id ?? ""} to={route as any} params={{ id: c.id! } as any} className="hp-compactcard">
-                  <div className={`hp-compactthumb ${t}`}>
-                    <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} loading="lazy" />
-                    <span className={`hp-ctag ${t}`}>{t}</span>
-                  </div>
-                  <div className="hp-compactbody">
-                    <h4 className="hp-compacttitle">{c.title}</h4>
-                    {c.scripture_reference && <div className="hp-compactref">{c.scripture_reference}</div>}
-                  </div>
-                </Link>
-              );
-            })}
-      </div>
-    </>
-  );
 }
 
-/* ---------------- Collection Preview ---------------- */
-type CollectionRow = {
-  id: string;
-  slug: string;
-  title: string;
-  eyebrow: string | null;
-  week_number: number | null;
-  banner_url: string | null;
-  writeup_title: string | null;
-  writeup_body: string | null;
-  intro_video_content_id: string | null;
-  featured_clip_content_id: string | null;
-  devotional_template_id: string | null;
-  tag_color: string | null;
-};
-
-function CollectionPreview({ isAdmin }: { isAdmin: boolean }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const q = useQuery({
-    queryKey: ["home-collection"],
+function useByTopic(topicId: string | undefined, limit = 3) {
+  return useQuery({
+    queryKey: ["hp-topic", topicId, limit],
+    enabled: !!topicId,
     queryFn: async () => {
-      const { data: col } = await (supabase.from as any)("collections")
+      const { data, error } = await supabase
+        .from("content_items_public")
         .select("*")
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const collection = col as CollectionRow | null;
-      if (!collection) return null;
-
-      const [itemsRes, clipsRes, tplRes] = await Promise.all([
-        (supabase.from as any)("collection_items")
-          .select("position, layout_slot, content:content_items_public(*)")
-          .eq("collection_id", collection.id)
-          .order("position", { ascending: true }),
-        supabase.from("content_items_public").select("*").in(
-          "id",
-          [collection.intro_video_content_id, collection.featured_clip_content_id].filter(Boolean) as string[],
-        ),
-        collection.devotional_template_id
-          ? (supabase.from as any)("devotional_templates").select("id, slug, title").eq("id", collection.devotional_template_id).maybeSingle()
-          : Promise.resolve({ data: null }),
-      ]);
-
-      const items = (itemsRes.data ?? []) as Array<{ position: number; layout_slot: string; content: ContentPreview | null }>;
-      const clips = (clipsRes.data ?? []) as ContentPreview[];
-      const intro = clips.find((c) => c.id === collection.intro_video_content_id) ?? null;
-      const feat = clips.find((c) => c.id === collection.featured_clip_content_id) ?? null;
-      const template = (tplRes as any)?.data ?? null;
-
-      return { collection, items, intro, feat, template };
+        .eq("topic_id", topicId!)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []) as ContentPreview[];
     },
   });
+}
 
-  const [userId, setUserId] = useState<string | null>(null);
-  const [addedLocal, setAddedLocal] = useState(false);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
-    return () => sub.subscription.unsubscribe();
-  }, []);
-  const addedQ = useQuery({
-    queryKey: ["home-devo-added", userId, q.data?.template?.id],
-    enabled: !!userId && !!q.data?.template?.id,
-    queryFn: async () => {
-      const { data } = await (supabase.from as any)("saved_items")
-        .select("id").eq("user_id", userId!).eq("devotional_template_id", q.data!.template!.id).limit(1);
-      return (data ?? []).length > 0;
-    },
-  });
-  const isAdded = addedLocal || !!addedQ.data;
-  const addToAbide = async () => {
-    const tpl = q.data?.template;
-    if (!tpl) return;
-    if (!userId) { navigate({ to: "/devotionals" }); return; }
-    await (supabase.from as any)("saved_items").upsert(
-      { user_id: userId, devotional_template_id: tpl.id },
-      { onConflict: "user_id,devotional_template_id" },
-    );
-    setAddedLocal(true);
-  };
+/* ============================================================ */
+/*  Sections                                                     */
+/* ============================================================ */
 
-  const replaceBanner = async () => {
-    if (!q.data?.collection) return;
-    const url = window.prompt("Paste an image URL for the banner:", q.data.collection.banner_url ?? "");
-    if (url == null) return;
-    await (supabase.from as any)("collections").update({ banner_url: url }).eq("id", q.data.collection.id);
-    qc.invalidateQueries({ queryKey: ["home-collection"] });
-  };
-
-  if (q.isLoading) return <div className="hp-skel" style={{ height: 240 }} />;
-  if (!q.data?.collection) return null;
-
-  const { collection, items, intro, feat } = q.data;
-  const lead = items.find((i) => i.layout_slot === "lead")?.content;
-  const medium = items.find((i) => i.layout_slot === "medium")?.content;
-  const halves = items.filter((i) => i.layout_slot === "half").map((i) => i.content).filter(Boolean) as ContentPreview[];
-
-  const fmtDur = (s: number | null | undefined) => {
-    if (!s) return "";
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  const goContent = (c: ContentPreview | null | undefined) => {
-    if (!c?.id) return;
-    navigate({ to: routeForType((c.type ?? "essay") as ContentType) as any, params: { id: c.id } as any });
-  };
-
+function TopicsNav() {
+  const topicsQ = useTopics();
+  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
+  const list = (topicsQ.data ?? [])
+    .filter((t) => primary.includes(t.slug))
+    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
   return (
-    <div className="hp-campaign">
-      <div>
-        <div className="hp-campaign-eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {(() => {
-            const bc = brandColor(collection.tag_color);
-            return bc ? (
-              <span style={{ display: "inline-block", background: bc.hex, color: bc.onHex, fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 999 }}>
-                {collection.title}
-              </span>
-            ) : null;
-          })()}
-          <span>{collection.eyebrow ?? "A collection"}</span>
-        </div>
-        <h2 className="hp-campaign-title">{collection.title}</h2>
+    <div className="hp-topics">
+      <div className="wrap">
+        {list.map((t) => (
+          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
+            {t.display_name || t.name}
+          </Link>
+        ))}
       </div>
-
-      <div className="hp-campaign-top">
-        <div className="hp-campaign-explainer">
-          <span className="hp-qlabel">What's a collection?</span>
-          <p>A handful of pieces released together because they're circling the same question from different angles. There's no order to follow and no badge for finishing it. New pieces keep releasing as the collection goes on — read or watch whichever one meets you where you are.</p>
-        </div>
-        <div className={`hp-banner${collection.banner_url ? " hasimg" : ""}`} style={collection.banner_url ? { backgroundImage: `url(${collection.banner_url})` } : undefined}>
-        {!collection.banner_url && (
-          <div className="hp-uploadhint">
-            <div className="icon">⬆</div>
-            <div className="label">Upload campaign banner image</div>
-          </div>
-        )}
-        {isAdmin && <button className="hp-replacebtn" onClick={replaceBanner}>Replace image</button>}
-      </div>
-      </div>
-
-      {collection.writeup_body && (
-        <div className="hp-writeup">
-          {collection.writeup_title && <h3>{collection.writeup_title}</h3>}
-          <p>{collection.writeup_body}</p>
-        </div>
-      )}
-
-      {(intro || feat) && (
-        <div className="hp-cliprow">
-          {intro && (
-            <div className="hp-clipcard" style={{ backgroundImage: `url(${intro.thumbnail_url || IMG_FALLBACK(intro.id ?? "i")})` }} onClick={() => goContent(intro)}>
-              <span className="hp-pill-mini intro">Watch · what this collection is</span>
-              <div className="z">
-                <div className="hp-clipplay"><svg width="14" height="14" viewBox="0 0 24 24" fill="#181A4D"><path d="M8 5v14l11-7z" /></svg></div>
-                <div className="hp-cliptitle">{intro.title}</div>
-                <div className="hp-clipmeta">{fmtDur(intro.duration_seconds)}{intro.excerpt ? ` · ${intro.excerpt}` : ""}</div>
-              </div>
-            </div>
-          )}
-          {feat && (
-            <div className="hp-clipcard" style={{ backgroundImage: `url(${feat.thumbnail_url || IMG_FALLBACK(feat.id ?? "f")})` }} onClick={() => goContent(feat)}>
-              <span className="hp-pill-mini">Clip · {fmtDur(feat.duration_seconds)}</span>
-              <div className="z">
-                <div className="hp-clipplay"><svg width="14" height="14" viewBox="0 0 24 24" fill="#181A4D"><path d="M8 5v14l11-7z" /></svg></div>
-                <div className="hp-cliptitle">"{feat.title}"</div>
-                <div className="hp-clipmeta">{feat.excerpt ?? ""}</div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {collection.devotional_template_id && q.data.template && (
-        <div className="hp-devopromo">
-          <div className="left">
-            <h4>{`New devotional layer — ${q.data.template.title || collection.title}`}</h4>
-            <p>A guided companion inside Abide. Some days it's scripture and reflection; some days a podcast episode unlocks fresh, timed to where you are in it.</p>
-          </div>
-          <div className="right">
-            <button
-              className="hp-addbtn2"
-              onClick={addToAbide}
-              disabled={isAdded}
-              style={isAdded ? { opacity: 0.75, cursor: "default", border: "none", fontFamily: "inherit" } : { border: "none", fontFamily: "inherit", cursor: "pointer" }}
-            >
-              {isAdded ? "✓ Added to my Abide" : "+ Add to my Abide"}
-            </button>
-            <Link
-              to="/devotionals/$slug/overview"
-              params={{ slug: q.data.template.slug || q.data.template.id }}
-              className="hp-seeinside"
-              style={{ color: "#FBF8ED", textDecoration: "underline" }}
-            >
-              See what's inside →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {(lead || medium || halves.length > 0) && (
-        <div className="hp-collection-grid">
-          {lead && (
-            <div className="hp-cc hp-cc-lead" onClick={() => goContent(lead)}>
-              <div className={`hp-cc-thumb ${(lead.type ?? 'essay')}`} style={{ backgroundImage: `url(${lead.thumbnail_url || IMG_FALLBACK(lead.id ?? "l")})` }} />
-              <div className="hp-cc-body">
-                <h3 className="hp-cc-title">{lead.title}</h3>
-                {lead.excerpt && <p className="hp-cc-desc">{lead.excerpt}</p>}
-              </div>
-            </div>
-          )}
-          {medium && (
-            <div className="hp-cc hp-cc-medium" onClick={() => goContent(medium)}>
-              <div className={`hp-cc-thumb ${(medium.type ?? 'essay')}`} style={{ backgroundImage: `url(${medium.thumbnail_url || IMG_FALLBACK(medium.id ?? "m")})` }} />
-              <div className="hp-cc-body">
-                <h4 className="hp-cc-title">{medium.title}</h4>
-                <div className="hp-cc-meta">{medium.author_name ?? medium.excerpt ?? ""}</div>
-              </div>
-            </div>
-          )}
-          {halves.map((h) => (
-            <div key={h.id ?? ""} className="hp-cc hp-cc-halfwide" onClick={() => goContent(h)}>
-              <div className={`hp-cc-thumb ${(h.type ?? 'essay')}`} style={{ backgroundImage: `url(${h.thumbnail_url || IMG_FALLBACK(h.id ?? "h")})` }} />
-              <div className="hp-cc-body">
-                <h4 className="hp-cc-title">{h.title}</h4>
-                <div className="hp-cc-meta">{h.author_name ?? h.excerpt ?? ""}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-seeallbtn">
-        See all pieces from this collection →
-      </Link>
     </div>
   );
 }
 
-/* ---------------- Page ---------------- */
+function LatestSection() {
+  const q = useLatest(5);
+  const items = q.data ?? [];
+  const lead = items[0];
+  const sides = items.slice(1, 5);
+
+  return (
+    <div className="wrap hp-section" style={{ paddingBottom: 64 }}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>Latest</h2>
+      </div>
+      {q.isLoading ? (
+        <div className="hp-latest-grid">
+          <div className="hp-skel" style={{ height: 340 }} />
+          <div className="hp-side">
+            {[0, 1, 2, 3].map((i) => <div key={i} className="hp-skel" style={{ height: 72 }} />)}
+          </div>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="hp-meta">No articles yet.</div>
+      ) : (
+        <div className="hp-latest-grid">
+          {lead && (
+            <Link
+              to={routeForType(lead.type) as any}
+              params={{ id: lead.id! } as any}
+              className="hp-lead"
+            >
+              <div className="art" style={{ backgroundImage: `url(${coverOf(lead)})` }} />
+              <h3>{lead.title}</h3>
+              {lead.excerpt && <p>{lead.excerpt}</p>}
+              <div className="hp-meta">
+                {(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}
+              </div>
+            </Link>
+          )}
+          <div className="hp-side">
+            {sides.map((s) => (
+              <Link key={s.id ?? ""} to={routeForType(s.type) as any} params={{ id: s.id! } as any} className="hp-side-item">
+                <div className="thumb" style={{ backgroundImage: `url(${coverOf(s)})` }} />
+                <div>
+                  <h4>{s.title}</h4>
+                  <div className="hp-meta">{relTime(s.published_at)}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopicSection({ topic, label, id }: { topic: TopicRow | undefined; label: string; id: string }) {
+  const q = useByTopic(topic?.id, 3);
+  const items = q.data ?? [];
+  if (!topic) return null;
+  return (
+    <div className="wrap hp-section" id={id}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>{label}</h2>
+        <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>
+      </div>
+      {q.isLoading ? (
+        <div className="hp-topic-grid">
+          {[0, 1, 2].map((i) => <div key={i} className="hp-skel" style={{ height: 240 }} />)}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="hp-meta">Nothing published in this topic yet.</div>
+      ) : (
+        <div className="hp-topic-grid">
+          {items.map((c) => (
+            <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+              <h4>{c.title}</h4>
+              <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+              <div className="hp-meta">{readTimeOf(c)}</div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Featured Collection */
+type CollectionRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  description_md: string | null;
+  cover_image_url: string | null;
+  banner_url: string | null;
+  is_featured?: boolean | null;
+};
+
+function FeaturedCollectionSection() {
+  const q = useQuery({
+    queryKey: ["hp-featured-collection"],
+    queryFn: async () => {
+      // Prefer is_featured; fall back to most recent published.
+      const { data: featData } = await (supabase.from as any)("collections")
+        .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
+        .eq("status", "published")
+        .eq("is_featured", true)
+        .limit(1);
+      let col = (featData ?? [])[0] as CollectionRow | undefined;
+      if (!col) {
+        const { data: recent } = await (supabase.from as any)("collections")
+          .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
+          .eq("status", "published")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(1);
+        col = (recent ?? [])[0];
+      }
+      if (!col) return null;
+      const { data: itemsData } = await (supabase.from as any)("collection_items")
+        .select("position, layout_slot, content:content_items_public(*)")
+        .eq("collection_id", col.id)
+        .order("position", { ascending: true })
+        .limit(6);
+      const items = ((itemsData ?? []) as Array<{ position: number; layout_slot: string; content: ContentPreview | null }>)
+        .map((r) => r.content)
+        .filter((c): c is ContentPreview => !!c);
+      return { collection: col, items };
+    },
+  });
+
+  if (q.isLoading) {
+    return (
+      <div className="hp-collection">
+        <div className="wrap"><div className="hp-skel" style={{ height: 400, background: "rgba(255,255,255,0.05)" }} /></div>
+      </div>
+    );
+  }
+  if (!q.data) return null;
+  const { collection, items } = q.data;
+  const lead = items[0];
+  const paired = items[1];
+  const rest = items.slice(2, 5);
+  const cover = collection.cover_image_url || collection.banner_url;
+
+  return (
+    <div className="hp-collection">
+      <div className="wrap">
+        <h2 className="hp-collection-heading">Collections</h2>
+        <p className="hp-collection-sub">
+          A handful of pieces released together, circling one question from a few different angles. No order to follow, nothing to finish.
+        </p>
+
+        <div className="hp-col-header">
+          <div>
+            <div className="hp-col-eyebrow">Featured Now</div>
+            <h3>{collection.title}</h3>
+            {(collection.description || collection.description_md) && (
+              <p>{collection.description || collection.description_md}</p>
+            )}
+          </div>
+          <div className="hp-col-actions">
+            <button className="hp-add-btn" type="button">+ Add to my Abide</button>
+            <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-inside">
+              See what's inside →
+            </Link>
+          </div>
+        </div>
+
+        <div className="hp-col-grid">
+          <div className="hp-col-left">
+            {lead && (
+              <Link to={routeForType(lead.type) as any} params={{ id: lead.id! } as any} className="hp-col-lead">
+                <div className="art" style={{ backgroundImage: `url(${coverOf(lead) || (cover ?? "")})` }} />
+                <div className="body">
+                  <h4>{lead.title}</h4>
+                  {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
+                </div>
+              </Link>
+            )}
+            {paired && (
+              <Link to={routeForType(paired.type) as any} params={{ id: paired.id! } as any} className="hp-col-hcard">
+                <div className="thumb" style={{ backgroundImage: `url(${coverOf(paired)})` }} />
+                <div className="body">
+                  <h5>{paired.title}</h5>
+                  <div className="byline">{paired.author_name ?? ""}</div>
+                </div>
+              </Link>
+            )}
+          </div>
+          <div className="hp-col-right">
+            {rest.map((c) => (
+              <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-col-hcard">
+                <div className="thumb" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+                <div className="body">
+                  <h5>{c.title}</h5>
+                  <div className="byline">{c.author_name ?? ""}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="hp-see-collection-wrap">
+          <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-collection-btn">
+            See all pieces from this collection →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Streaming (navy) */
+function StreamingSection() {
+  const q = useQuery({
+    queryKey: ["hp-streaming"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("content_items_public")
+        .select("*")
+        .in("type", ["podcast", "teaching", "clip"])
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(5);
+      return (data ?? []) as ContentPreview[];
+    },
+  });
+  const items = q.data ?? [];
+  const feature = items[0];
+  const grid = items.slice(1, 5);
+  if (!q.isLoading && items.length === 0) return null;
+
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow">
+          <div className="bar" />
+          <h2>Now Streaming in The Room</h2>
+          <Link to="/explore" className="see-all">See all →</Link>
+        </div>
+        <div className="hp-stream-row">
+          {feature ? (
+            <Link
+              to={routeForType(feature.type) as any}
+              params={{ id: feature.id! } as any}
+              className="hp-stream-feature"
+              style={{ backgroundImage: `url(${coverOf(feature)})` }}
+            >
+              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
+              <span className="label">{feature.title}</span>
+            </Link>
+          ) : <div className="hp-skel" style={{ height: 320 }} />}
+          <div className="hp-stream-mini-grid">
+            {grid.map((c) => (
+              <Link
+                key={c.id ?? ""}
+                to={routeForType(c.type) as any}
+                params={{ id: c.id! } as any}
+                className="hp-stream-mini"
+                style={{ backgroundImage: `url(${coverOf(c)})` }}
+              >
+                <span>{c.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Spotlight (navy, rotating) */
+function SpotlightSection() {
+  const q = useLatest(6);
+  const items = q.data ?? [];
+  const [idx, setIdx] = useState(0);
+  const feats = items.slice(0, 4);
+  const list = items.slice(0, 4);
+  useEffect(() => {
+    if (feats.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % feats.length), 6000);
+    return () => clearInterval(t);
+  }, [feats.length]);
+  const featureItems = feats;
+  const feature = featureItems[Math.min(idx, Math.max(0, featureItems.length - 1))];
+  const topicsQ = useTopics();
+  const topicById = useMemo(() => {
+    const m = new Map<string, TopicRow>();
+    (topicsQ.data ?? []).forEach((t) => m.set(t.id, t));
+    return m;
+  }, [topicsQ.data]);
+
+  if (!q.isLoading && items.length === 0) return null;
+
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow">
+          <div className="bar" />
+          <h2>In Case You Missed It</h2>
+        </div>
+        <div className="hp-spot-row">
+          {feature ? (
+            <Link
+              to={routeForType(feature.type) as any}
+              params={{ id: feature.id! } as any}
+              className="hp-spot-feature"
+              style={{ backgroundImage: `url(${coverOf(feature)})` }}
+            >
+              <div className="dots">
+                {featureItems.map((_, i) => (
+                  <span
+                    key={i}
+                    className={i === idx ? "active" : ""}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIdx(i); }}
+                  />
+                ))}
+              </div>
+              <h3>{feature.title}</h3>
+              <div className="meta-light">{feature.excerpt ?? feature.author_name ?? ""}</div>
+            </Link>
+          ) : <div className="hp-skel" style={{ height: 320 }} />}
+          <div className="hp-spot-list">
+            {list.map((c) => {
+              const t = c.topic_id ? topicById.get(c.topic_id) : undefined;
+              return (
+                <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any}>
+                  {t && <span className="tag">{t.display_name || t.name}</span>}
+                  <h5>{c.title}</h5>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Footer */
+function SiteFooter() {
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const s = q.trim();
+    if (!s) return;
+    navigate({ to: "/explore", search: { q: s } as any });
+  };
+  const col = (title: string, links: { label: string; to?: string; slug?: string }[]) => (
+    <div>
+      <h6>{title}</h6>
+      {links.map((l) => (
+        l.slug ? (
+          <Link key={l.label} to="/topics/$slug" params={{ slug: l.slug }}>{l.label}</Link>
+        ) : (
+          <a key={l.label} href={l.to ?? "#"}>{l.label}</a>
+        )
+      ))}
+    </div>
+  );
+
+  return (
+    <footer className="hp-footer">
+      <div className="wrap">
+        <form className="hp-footer-search" onSubmit={submit}>
+          <input
+            type="text"
+            placeholder="Search CoCreate…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        </form>
+
+        <div className="hp-footer-cols">
+          {col("Identity", [
+            { label: "Daughterhood", slug: "identity" },
+            { label: "Sonhood", slug: "identity" },
+            { label: "Becoming", slug: "identity" },
+            { label: "Grief & Healing", slug: "identity" },
+          ])}
+          {col("Marriage", [
+            { label: "Partnership", slug: "marriage" },
+            { label: "Conflict", slug: "marriage" },
+            { label: "Intimacy", slug: "marriage" },
+            { label: "Engaged", slug: "marriage" },
+          ])}
+          {col("Parenting", [
+            { label: "Early Years", slug: "parenting" },
+            { label: "Discipleship", slug: "parenting" },
+            { label: "Teens", slug: "parenting" },
+            { label: "Single Parenting", slug: "parenting" },
+          ])}
+          {col("Ministry", [
+            { label: "Calling", slug: "ministry" },
+            { label: "Serving", slug: "ministry" },
+            { label: "Leadership", slug: "ministry" },
+            { label: "Burnout", slug: "ministry" },
+          ])}
+          {col("Marketplace", [
+            { label: "Work & Faith", slug: "career" },
+            { label: "Leadership", slug: "career" },
+            { label: "Ambition", slug: "business" },
+            { label: "Rest", slug: "career" },
+          ])}
+          {col("Company", [
+            { label: "About", to: "#" },
+            { label: "Contact", to: "#" },
+            { label: "Store", to: "#" },
+          ])}
+        </div>
+
+        <div className="hp-footer-brand-row">
+          <div className="hp-brand">
+            <div className="badge">C</div>
+            <div className="word">CoCreate</div>
+          </div>
+          <div className="hp-footer-social">
+            <span className="lbl">FOLLOW</span>
+            <a className="hp-icon-circle" href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M13 22v-8h3l1-4h-4V7.5C13 6.4 13.4 6 14.6 6H17V2.1C16.6 2 15.3 2 13.9 2 11 2 9 3.8 9 7.1V10H6v4h3v8h4z" /></svg></a>
+            <a className="hp-icon-circle" href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" stroke="#fff" strokeWidth="2" /></svg></a>
+            <a className="hp-icon-circle" href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#fff" strokeWidth="1.8" /><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" strokeWidth="1.8" /></svg></a>
+          </div>
+          <div className="hp-app-badges">
+            <div className="hp-app-pill">📱 iOS — Coming Soon</div>
+            <div className="hp-app-pill">▶ Android — Coming Soon</div>
+          </div>
+        </div>
+
+        <div className="hp-footer-legal">
+          <div>© {new Date().getFullYear()} CoCreate. All rights reserved.</div>
+          <div className="links">
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="#">Help Center</a>
+            <a href="#">Sitemap</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ============================================================ */
+/*  Page                                                         */
+/* ============================================================ */
 function HomePage() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const heroQ = usePageContent("home_hero");
-  const hero = heroQ.data ?? {};
+  const topicsQ = useTopics();
   const navigate = useNavigate({ from: "/" });
   const isMobile = useIsMobile();
 
-  // On mobile, the first time the app is opened go straight to the workspace
-  // instead of the content page. The Home tab remains reachable afterwards.
+  // Mobile first-open: redirect to workspace (kept from previous behavior).
   useEffect(() => {
     if (typeof window === "undefined" || isMobile !== true) return;
     if (window.sessionStorage.getItem("cocreate:home_redirect_done")) return;
@@ -708,73 +753,23 @@ function HomePage() {
     navigate({ to: "/devotionals", replace: true });
   }, [isMobile, navigate]);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!userId) { setIsAdmin(false); return; }
-    (supabase.rpc as any)("has_role", { _user_id: userId, _role: "admin" }).then((res: any) => setIsAdmin(!!res.data));
-  }, [userId]);
+  const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
   return (
     <AppShell current="home">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="hp-root">
-        <div className="hp-hero">
-          <h1>{hero.heading || "Building what's been entrusted to you."}</h1>
-          <p>{hero.subheading || "Essays, teachings, podcasts, and devotionals to help you build what's been entrusted to you — your life, your work, your calling — with him, not just for him."}</p>
-        </div>
-
-        <div className="hp-widgetrow">
-          <TodayScripture />
-          <StickyNotes userId={userId} />
-        </div>
-
-        <ShortFormRow />
-        <FeaturedGrid />
-        <CollectionPreview isAdmin={isAdmin} />
-        <TopicsFooter />
+      <div className="hp">
+        <TopicsNav />
+        <LatestSection />
+        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" />
+        <FeaturedCollectionSection />
+        <StreamingSection />
+        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" />
+        <SpotlightSection />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" />
+        <SiteFooter />
       </div>
     </AppShell>
-  );
-}
-
-function TopicsFooter() {
-  const topicsQ = useQuery({
-    queryKey: ["topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("topics").select("*").order("name");
-      if (error) throw error;
-      return data as Database["public"]["Tables"]["topics"]["Row"][];
-    },
-  });
-  const formats: { key: ContentType; label: string }[] = [
-    { key: "teaching", label: "Teaching" },
-    { key: "essay", label: "Essay" },
-    { key: "podcast", label: "Podcast" },
-    { key: "blog", label: "Blog" },
-  ];
-  return (
-    <div className="hp-footer">
-      <div className="hp-footer-label">Browse by topic</div>
-      <div className="hp-footer-pills">
-        {topicsQ.data?.map((t) => (
-          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} className="hp-footer-pill">
-            {t.name}
-          </Link>
-        ))}
-      </div>
-      <div className="hp-footer-label" style={{ marginTop: 22 }}>Format</div>
-      <div className="hp-footer-pills">
-        {formats.map((f) => (
-          <Link key={f.key} to="/explore" className={`hp-footer-pill ${f.key}`}>
-            {f.label}
-          </Link>
-        ))}
-      </div>
-    </div>
   );
 }
