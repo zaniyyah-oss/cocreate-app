@@ -1393,14 +1393,16 @@ function useTopicalDates(userId: string | null, startISO: string, endISO: string
 // User events (Prayer meeting, Bible study, Mentor meeting, Other)
 // ============================================================================
 
-type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
-type UserEvent = {
+export type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
+export type UserEventItemType = "event" | "focus";
+export type UserEvent = {
   id: string;
   event_date: string;
   event_type: UserEventType;
   title: string | null;
   color: string;
   notes: string | null;
+  item_type?: UserEventItemType;
 };
 
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
