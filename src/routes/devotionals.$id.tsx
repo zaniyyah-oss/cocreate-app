@@ -7,6 +7,7 @@ import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { ResizableTextarea } from "@/components/ResizableTextarea";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
 
@@ -83,6 +84,9 @@ const CSS = `
 .de-navmenu a:hover{color:#181A4D;background:#FBF8ED;}
 .de-navmenu a.active{background:#DCE07A;color:#181A4D;}
 .de-navright{display:flex;align-items:center;gap:10px;}
+.de-navavatar{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#FBF8ED;color:#181A4D;text-decoration:none;border:1px solid rgba(20,20,20,0.08);transition:background .15s;}
+.de-navavatar:hover{background:#DCE07A;}
+.de-navavatar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 @media (min-width:820px){.de-navmenu{display:flex;}}
 .de-shell{max-width:1360px;margin:0 auto;padding:28px 36px 120px;}
 .de-shell-inner{padding:0;}
@@ -343,10 +347,10 @@ function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items: Array<{ to: string; label: string; match?: string[] }> = [
     { to: "/", label: "Home" },
-    { to: "/explore", label: "Explore" },
     { to: "/devotionals", label: "Workspace" },
-    { to: "/saved", label: "Library", match: ["/saved", "/notes"] },
-    { to: "/profile", label: "Profile" },
+    { to: "/calendar", label: "Calendar" },
+    { to: "/explore", label: "Bookmarks" },
+    { to: "/notes", label: "Notes" },
   ];
   const isActive = (it: { to: string; match?: string[] }) => {
     if (it.match?.some((p) => pathname === p || pathname.startsWith(p + "/"))) return true;
@@ -715,8 +719,18 @@ function EntryPage() {
       <nav className="de-nav">
         <Link to="/" className="de-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
         <NavMenu />
-        <div className="de-navright">{isGuest && <Link to="/auth" className="de-signin">Sign in</Link>}</div>
-
+        <div className="de-navright">
+          {isGuest ? (
+            <Link to="/auth" className="de-signin">Sign in</Link>
+          ) : (
+            <>
+              <NotificationBell />
+              <Link to="/profile" className="de-navavatar" aria-label="Profile" title="Profile">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+              </Link>
+            </>
+          )}
+        </div>
       </nav>
 
       <div className="de-shell">
