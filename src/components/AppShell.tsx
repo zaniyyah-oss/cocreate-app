@@ -276,12 +276,12 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           <button
             type="button"
             className="app-side-focus-btn"
-            onClick={() => setFocusMode(true)}
-            title="Enter focus mode"
-            aria-label="Enter focus mode"
+            onClick={() => { setFocusMode((f) => !f); setSideRevealed(false); }}
+            title={focusActive ? "Exit focus mode" : "Enter focus mode"}
+            aria-label={focusActive ? "Exit focus mode" : "Enter focus mode"}
           >
             <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-            <span className="lbl">Focus mode</span>
+            <span className="lbl">{focusActive ? "Exit focus" : "Focus mode"}</span>
           </button>
 
           {desktopNav.map((n) => {
