@@ -8,6 +8,7 @@ import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { ResizableTextarea } from "@/components/ResizableTextarea";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarDayView } from "@/components/CalendarDayView";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
