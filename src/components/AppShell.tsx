@@ -150,17 +150,20 @@ const SHELL_CSS = `
   }
 }
 
-/* Exit-focus pill — sits at the top center of the page, scrolls away with content
-   so it never overlaps text mid-page. Users can scroll back up to exit. */
-.app-focus-exit{
-  position:absolute;top:calc(12px + env(safe-area-inset-top,0));left:50%;transform:translateX(-50%);z-index:70;
-  display:none;align-items:center;gap:6px;background:#181A4D;color:#fff;
-  border:none;border-radius:999px;padding:8px 14px;font-family:'Poppins',sans-serif;
-  font-weight:700;font-size:12px;letter-spacing:0.02em;cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,0.18);
+/* Focus mode hint bubble — shows briefly when entering focus mode */
+.app-focus-hint{
+  position:fixed;top:calc(16px + env(safe-area-inset-top,0));left:50%;transform:translateX(-50%);z-index:70;
+  display:inline-flex;align-items:center;gap:8px;background:#181A4D;color:#fff;
+  border-radius:999px;padding:10px 16px;font-family:'Poppins',sans-serif;
+  font-weight:600;font-size:12.5px;letter-spacing:0.01em;
+  box-shadow:0 8px 24px rgba(0,0,0,0.18);
+  animation:focusHintIn .25s ease-out, focusHintOut .35s ease-in 4.2s forwards;
+  pointer-events:none;max-width:calc(100vw - 32px);text-align:center;
 }
-.app-focus-exit svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-.app-shell.is-focus .app-focus-exit{display:inline-flex;}
+.app-focus-hint svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+@keyframes focusHintIn{from{opacity:0;transform:translate(-50%,-8px);}to{opacity:1;transform:translate(-50%,0);}}
+@keyframes focusHintOut{to{opacity:0;transform:translate(-50%,-8px);}}
+@media (max-width:1023px){.app-focus-hint{font-size:11.5px;padding:9px 14px;}}
 
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 `;
