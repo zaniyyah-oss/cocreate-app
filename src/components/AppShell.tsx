@@ -178,7 +178,7 @@ const SHELL_CSS = `
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
 const FOCUS_KEY = "cocreate:workspace-focus";
 
-export function AppShell({ current, children }: { current?: NavKey; children: ReactNode }) {
+export function AppShell({ current, children, hideSideWhenSignedOut }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
