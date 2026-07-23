@@ -19,10 +19,10 @@ const ICON = {
 function buildMobileNav(labels: Record<string, string>) {
   return [
     { key: "home" as const,        label: labels.home_label        || "Home",      to: "/" },
-    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore" },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals" },
-    { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved", matchPaths: ["/saved", "/notes"] },
-    { key: "messages" as const,    label: labels.messages_label    || "Messages",  to: "/messages" },
+    { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar" },
+    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore" },
+    { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes" },
   ];
 }
 
