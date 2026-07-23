@@ -334,10 +334,9 @@ const CSS = `
 .hp-tourbar-pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .hp-iconbar{background:var(--navy);padding:14px 0;}
 
-.hp-iconbar .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;}
-.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;}
-.hp-iconbar-right{display:flex;align-items:center;gap:8px;justify-self:end;flex-shrink:0;}
-.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:rgba(255,255,255,0.72);transition:background .15s,color .15s;}
+.hp-iconbar .wrap{display:flex;align-items:center;justify-content:center;}
+.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:10px;}
+.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;transition:background .15s,color .15s;}
 .hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
 .hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
 .hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -445,8 +444,6 @@ function HomeIconBar() {
               {it.icon}
             </Link>
           ))}
-        </div>
-        <div className="hp-iconbar-right">
           <span className="hp-iconbar-bell"><NotificationBell /></span>
           <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
