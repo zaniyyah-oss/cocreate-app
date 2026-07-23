@@ -326,9 +326,16 @@ function NotesLibrary({ userId }: { userId: string }) {
                   </div>
                   {d.tags && d.tags.length > 0 && (
                     <div className="nt-doc-tags">
-                      {d.tags.slice(0, 3).map((t, i) => (
-                        <span key={`${d.id}-${t}-${i}`} className="nt-doc-tag">{displayTag(t)}</span>
-                      ))}
+                      {d.tags.slice(0, 3).map((t, i) => {
+                        const c = colorFor(t);
+                        return (
+                          <span
+                            key={`${d.id}-${t}-${i}`}
+                            className="nt-doc-tag"
+                            style={c ? { background: c, color: "#181A4D" } : undefined}
+                          >{displayTag(t)}</span>
+                        );
+                      })}
                     </div>
                   )}
                   {preview && <div className="nt-doc-preview">{preview}</div>}
