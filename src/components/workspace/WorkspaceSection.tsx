@@ -40,9 +40,14 @@ const CSS = `
 @media (max-width:719px){.ws-tagrow{position:static;top:auto;padding:0 4px 8px;margin:0 0 4px;}}
 .ws-root.is-full .ws-tagrow{position:sticky;top:0;padding:8px 20px;margin:0 -20px;z-index:61;}
 @media (min-width:720px){.ws-root.is-full .ws-tagrow{margin:0 -48px;padding:10px 48px 8px;}}
-.ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;}
-.ws-tag button{background:none;border:none;color:#0F4A42;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
+.ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;position:relative;}
+.ws-tag .label{cursor:pointer;user-select:none;}
+.ws-tag button{background:none;border:none;color:inherit;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
 .ws-tag button:hover{opacity:1;}
+.ws-tag-pop{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:12px;padding:8px;display:grid;grid-template-columns:repeat(5,20px);gap:6px;box-shadow:0 8px 24px rgba(24,26,77,0.15);z-index:80;}
+.ws-tag-sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(24,26,77,0.15);cursor:pointer;padding:0;}
+.ws-tag-sw.reset{background:repeating-linear-gradient(45deg,#fff,#fff 3px,#eee 3px,#eee 6px);}
+.ws-tag-sw.on{outline:2px solid #181A4D;outline-offset:1px;}
 .ws-tag-input{background:transparent;border:1px dashed rgba(24,26,77,0.15);color:#20201C;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;font-family:'Poppins',sans-serif;outline:none;width:88px;}
 .ws-tag-input:focus{border-color:#181A4D;border-style:solid;color:#181A4D;}
 .ws-tag-input::placeholder{color:#20201C;opacity:0.5;}
