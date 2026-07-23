@@ -165,7 +165,7 @@ const CSS = `
 .hp-topics a:hover,.hp-topics a.is-active{color:var(--navy);}
 
 /* Section frames */
-.hp-section{padding:44px 0;}
+.hp-section{padding:60px 0;}
 .hp-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
 .hp-eyebrow .bar{width:4px;height:18px;background:var(--teal);border-radius:2px;}
 .hp-eyebrow h2{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:0;}
@@ -380,7 +380,7 @@ function LatestSection() {
   const sides = items.slice(1, 5);
 
   return (
-    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 64 }}>
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 88 }}>
 
       <div className="hp-eyebrow">
         <div className="bar" />
@@ -428,12 +428,12 @@ function LatestSection() {
   );
 }
 
-function TopicSection({ topic, label, id, demoKind }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES }) {
+function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES; style?: React.CSSProperties }) {
   const q = useByTopic(topic?.id, 3);
   const real = q.data ?? [];
   const items = padDemo(real, demoKind, 3);
   return (
-    <div className="wrap hp-section" id={id}>
+    <div className="wrap hp-section" id={id} style={style}>
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>{label}</h2>
@@ -845,10 +845,10 @@ function HomePage() {
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
         <FeaturedCollectionSection />
         <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" />
+        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 80 }} />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 80, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
