@@ -335,7 +335,7 @@ const CSS = `
 .hp-iconbar{background:var(--navy);padding:14px 0;}
 
 .hp-iconbar .wrap{display:flex;align-items:center;justify-content:center;}
-.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:0;}
+.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:10px;}
 .hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;transition:background .15s,color .15s;}
 .hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
 .hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
