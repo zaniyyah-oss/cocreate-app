@@ -406,6 +406,7 @@ function DocPanel({
   useEffect(() => {
     setTitle(doc.title);
     setTags(doc.tags ?? []);
+    setEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.id]);
 
