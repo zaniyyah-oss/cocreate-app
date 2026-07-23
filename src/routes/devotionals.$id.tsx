@@ -1704,7 +1704,7 @@ export function AddEventDialog({
 function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO: string }) {
   const qc = useQueryClient();
   const eventsQ = useUserEvents(userId, dateISO, dateISO);
-  const events = eventsQ.data?.get(dateISO) ?? [];
+  const events = (eventsQ.data?.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event");
   const [addOpen, setAddOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const onSaved = () => qc.invalidateQueries({ queryKey: ["user-events"] });
