@@ -540,7 +540,58 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             </>
           )}
         </div>
+        <MediaNav />
       </div>
+    </div>
+  );
+}
+
+function MediaNav() {
+  const navigate = useNavigate({ from: "/" });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const s = query.trim();
+    if (!s) return;
+    navigate({ to: "/search", search: { q: s } as any });
+    setSearchOpen(false);
+    setQuery("");
+  };
+  return (
+    <div className="hp-mast-media">
+      <Link to="/watch" className="hp-mast-media-link" aria-label="Watch">
+        <span className="hp-mast-media-dot" />
+        <span>Watch</span>
+      </Link>
+      <Link to="/listen" className="hp-mast-media-link" aria-label="Listen">
+        <svg viewBox="0 0 24 24"><path d="M3 14v3a2 2 0 0 0 2 2h1l2-3h-3a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h3l-2-3H5a2 2 0 0 0-2 2z"/><path d="M17 14v3a2 2 0 0 1-2 2h-1l-2-3h3a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1h-3l2-3h1a2 2 0 0 1 2 2z"/><path d="M7 10v4M17 10v4"/></svg>
+        <span>Listen</span>
+      </Link>
+      {searchOpen ? (
+        <form className="hp-mast-search-form" onSubmit={submit} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && !query.trim()) setSearchOpen(false); }}>
+          <input
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          <button type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          className="hp-mast-media-link"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search"
+        >
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Search</span>
+        </button>
+      )}
     </div>
   );
 }
