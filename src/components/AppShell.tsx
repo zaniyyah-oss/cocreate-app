@@ -90,6 +90,8 @@ const SHELL_CSS = `
   .app-side-item:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-item.active{background:#DCE07A;color:#181A4D;}
   .app-side-divider{height:1px;background:rgba(24,26,77,0.08);margin:10px 10px;}
+  .app-side-label{font-size:10px;font-weight:800;color:#8a8678;text-transform:uppercase;letter-spacing:0.08em;margin:8px 14px 6px;}
+  .app-shell.collapsed .app-side-label{display:none;}
   .app-side-foot{margin-top:auto;padding:12px 8px 4px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .app-topbar{display:none;}
   .app-bottomnav{display:none;}
@@ -182,6 +184,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           {desktopNav.map((group, gi) => (
             <div key={gi}>
               {gi > 0 && <div className="app-side-divider" />}
+              {gi === 1 && <div className="app-side-label">YOUR REFERENCE</div>}
               {group.map((n) => (
                 <Link
                   key={n.key}
