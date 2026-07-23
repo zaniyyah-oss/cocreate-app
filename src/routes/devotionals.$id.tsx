@@ -767,7 +767,6 @@ function EntryPage() {
               </div>
             )}
             {/* View switcher */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
             {/* View switcher: Entry vs Day + Full week link */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 12, flexWrap: "wrap" }}>
               <div className="de-viewtabs">
