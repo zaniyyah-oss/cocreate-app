@@ -178,7 +178,7 @@ const SHELL_CSS = `
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
 const FOCUS_KEY = "cocreate:workspace-focus";
 
-export function AppShell({ current, children, hideSideWhenSignedOut }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean }) {
+export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed] = useState<boolean>(true);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
@@ -236,7 +236,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
   }, [focusActive]);
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${hideSideWhenSignedOut && !userId ? " no-side" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${(hideSide || (hideSideWhenSignedOut && !userId)) ? " no-side" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       {focusActive && (
         <>

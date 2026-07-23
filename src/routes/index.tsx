@@ -316,6 +316,14 @@ const CSS = `
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
+
+/* Signed-in home: horizontal navy icon bar (replaces the left rail) */
+.hp-iconbar{background:var(--navy);padding:14px 0;}
+.hp-iconbar .wrap{display:flex;align-items:center;gap:10px;}
+.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:rgba(255,255,255,0.72);transition:background .15s,color .15s;}
+.hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
+.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 `;
 
 /* ============================================================ */
@@ -387,6 +395,27 @@ function TopicsNav() {
         {list.map((t) => (
           <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
             {t.display_name || t.name}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HomeIconBar() {
+  const items = [
+    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg> },
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> },
+    { to: "/explore", label: "Bookmarks", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg> },
+  ];
+  return (
+    <div className="hp-iconbar">
+      <div className="wrap">
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+            {it.icon}
           </Link>
         ))}
       </div>
@@ -903,9 +932,10 @@ function HomePage() {
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
   return (
-    <AppShell current="home" hideSideWhenSignedOut>
+    <AppShell current="home" hideSide>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hp">
+        {signedIn && <HomeIconBar />}
         <HomeMasthead signedIn={signedIn} />
         <LatestSection />
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
