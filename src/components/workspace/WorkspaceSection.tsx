@@ -495,9 +495,43 @@ export function WorkspaceSection({
           )}
         </div>
       )}
+
+      {previewItem && (
+        <div className="ws-ov" onClick={() => setPreviewId(null)}>
+          <div className="ws-ov-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="ws-ov-head">
+              <div className="ws-ov-mode">◷ Viewing · not editing</div>
+              <div className="ws-ov-actions">
+                <button
+                  className={`ws-ov-btn pin ${previewItem.pinned ? "active" : ""}`}
+                  onClick={() => togglePin.mutate(previewItem)}
+                >{previewItem.pinned ? "★ Pinned" : "☆ Pin"}</button>
+                <button
+                  className="ws-ov-btn primary"
+                  onClick={() => {
+                    const id = previewItem.id;
+                    setPreviewId(null);
+                    if (previewItem.status === "closed") reopen.mutate(id);
+                    else setActiveId(id);
+                  }}
+                >Edit note</button>
+                <button className="ws-ov-btn" onClick={() => setPreviewId(null)}>Close</button>
+              </div>
+            </div>
+            <div className="ws-ov-body">
+              <h3>{previewItem.title?.trim() || "Untitled"}</h3>
+              <div className="body">{previewItem.body_text || "—"}</div>
+              <div className="ws-ov-meta">
+                Created {new Date(previewItem.created_at).toLocaleString()} · last edited {new Date(previewItem.updated_at).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function NoteBody({
   item,
