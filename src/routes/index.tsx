@@ -319,21 +319,18 @@ const CSS = `
 .hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
 .hp-mast-more-menu a:hover{background:#FBF8ED;}
 .hp-mast-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
-.hp-mast-tour{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed rgba(24,26,77,0.35);color:var(--navy);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:999px;background:transparent;font-family:'Poppins';cursor:pointer;text-decoration:none;}
-.hp-mast-tour:hover{border-color:var(--navy);background:#FBF8ED;}
 .hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
 .hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
 .hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
-/* Signed-in masthead: hide the auth/tour CTAs (icon bar handles nav) but ALWAYS keep the brand */
+/* Signed-in masthead: hide the auth CTAs (icon bar handles nav) but ALWAYS keep the brand */
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
 
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
 .hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
 .hp-tourbar .wrap{display:flex;align-items:center;}
-.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight);font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
-.hp-tourbar-pill:hover{color:#fff;border-color:#fff;}
+.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight) !important;font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
+.hp-tourbar-pill:hover{color:#fff !important;border-color:#fff !important;}
 .hp-tourbar-pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .hp-iconbar{background:var(--navy);padding:14px 0;}
 
@@ -527,9 +524,6 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           )}
         </div>
         <div className="hp-mast-actions">
-          <Link to="/tour" className="hp-mast-tour" title="Take a guided tour of the Workspace">
-            Tour the Workspace
-          </Link>
           {!signedIn && (
             <>
               <Link to="/auth" className="hp-mast-signin">Sign in</Link>
