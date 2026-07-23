@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchRouteImport } from './routes/watch'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -43,6 +44,11 @@ import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
 import { Route as AdminCollectionsIdRouteImport } from './routes/admin.collections.$id'
 
+const WatchRoute = WatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TourRoute = TourRouteImport.update({
   id: '/tour',
   path: '/tour',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/tour': typeof TourRoute
+  '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/saved'
     | '/tour'
+    | '/watch'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/saved'
     | '/tour'
+    | '/watch'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/saved'
     | '/tour'
+    | '/watch'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
   TourRoute: typeof TourRoute
+  WatchRoute: typeof WatchRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
@@ -441,6 +454,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watch': {
+      id: '/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof WatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tour': {
       id: '/tour'
       path: '/tour'
@@ -745,6 +765,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
   TourRoute: TourRoute,
+  WatchRoute: WatchRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
