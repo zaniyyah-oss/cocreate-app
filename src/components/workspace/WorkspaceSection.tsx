@@ -521,7 +521,19 @@ export function WorkspaceSection({
             </div>
             <div className="ws-ov-body">
               <h3>{previewItem.title?.trim() || "Untitled"}</h3>
-              <div className="body">{previewItem.body_text || "—"}</div>
+              <div className="body">
+                {previewItem.body && Object.keys(previewItem.body).length ? (
+                  <WorkspaceEditor
+                    key={previewItem.id}
+                    userId={previewItem.user_id}
+                    initialJSON={previewItem.body}
+                    onChange={() => {}}
+                    editable={false}
+                  />
+                ) : (
+                  <div style={{ whiteSpace: "pre-wrap" }}>{previewItem.body_text || "—"}</div>
+                )}
+              </div>
               <div className="ws-ov-meta">
                 Created {new Date(previewItem.created_at).toLocaleString()} · last edited {new Date(previewItem.updated_at).toLocaleString()}
               </div>
