@@ -51,7 +51,14 @@ const formatLong = (iso: string) =>
 
 // ─── Layout / styles ────────────────────────────────────────────────
 const NOTES_CSS = `
-.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 190px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 140px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-panel-body .ws-editor-content, .nt-panel-body .ProseMirror{font-size:13.5px;line-height:1.55;}
+.nt-panel-body .ws-editor-content h1, .nt-panel-body .ProseMirror h1{font-size:20px;}
+.nt-panel-body .ws-editor-content h2, .nt-panel-body .ProseMirror h2{font-size:17px;}
+.nt-panel-body .ws-editor-content h3, .nt-panel-body .ProseMirror h3{font-size:15px;}
+.nt-edit-btn{background:#FBF8ED;border:1px solid rgba(24,26,77,0.15);color:#181A4D;border-radius:999px;padding:5px 14px;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;cursor:pointer;margin-right:4px;}
+.nt-edit-btn:hover{background:#DCE07A;border-color:#CAC307;}
+.nt-edit-btn.active{background:#181A4D;color:#DCE07A;border-color:#181A4D;}
 .nt-list-col{width:320px;flex-shrink:0;background:#fff;border-right:1px solid rgba(24,26,77,0.07);display:flex;flex-direction:column;}
 .nt-list-header{padding:18px 18px 12px;border-bottom:1px solid rgba(24,26,77,0.06);}
 .nt-list-header .title{font-weight:900;font-size:19px;color:#181A4D;letter-spacing:-0.01em;margin-bottom:12px;}
@@ -263,7 +270,7 @@ function NotesLibrary({ userId }: { userId: string }) {
     <div className="nt-frame">
       <aside className="nt-list-col">
         <div className="nt-list-header">
-          <div className="title">Documents</div>
+          <div className="title">Notes</div>
           <div className="nt-filter">
             <label htmlFor="nt-tag-filter">Filter by tag</label>
             <select
@@ -390,6 +397,7 @@ function DocPanel({
   const [savedFlash, setSavedFlash] = useState(false);
   const [hasPending, setHasPending] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Record<string, unknown> | null>(null);
@@ -398,6 +406,7 @@ function DocPanel({
   useEffect(() => {
     setTitle(doc.title);
     setTags(doc.tags ?? []);
+    setEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.id]);
 
@@ -490,6 +499,16 @@ function DocPanel({
         </div>
         <button
           type="button"
+          className={`nt-edit-btn ${editing ? "active" : ""}`}
+          onClick={() => {
+            if (editing) void flushSave();
+            setEditing((v) => !v);
+          }}
+        >
+          {editing ? "Done" : "Edit"}
+        </button>
+        <button
+          type="button"
           className="nt-panel-close"
           onClick={() => { void flushSave(); onClose(); }}
           aria-label="Close panel"
@@ -498,35 +517,43 @@ function DocPanel({
         </button>
       </header>
       <div className="nt-panel-body">
-        <input
-          className="nt-panel-title-input"
-          placeholder="Untitled"
-          value={title}
-          onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
-          onBlur={() => { void flushSave(); }}
-        />
+        {editing ? (
+          <input
+            className="nt-panel-title-input"
+            placeholder="Untitled"
+            value={title}
+            onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
+            onBlur={() => { void flushSave(); }}
+          />
+        ) : (
+          <div className="nt-panel-title-input" style={{ cursor: "default" }}>
+            {title?.trim() || "Untitled"}
+          </div>
+        )}
 
         <div className="nt-panel-tagrow">
           {tags.map((t) => (
             <span key={t} className="nt-panel-tag">
               #{displayTag(t)}
-              <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
+              {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>}
             </span>
           ))}
-          <input
-            className="nt-tag-input"
-            placeholder="+ tag"
-            value={tagDraft}
-            onChange={(e) => setTagDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === ",") {
-                e.preventDefault();
-                addTag(tagDraft);
-                setTagDraft("");
-              }
-            }}
-            onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
-          />
+          {editing && (
+            <input
+              className="nt-tag-input"
+              placeholder="+ tag"
+              value={tagDraft}
+              onChange={(e) => setTagDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addTag(tagDraft);
+                  setTagDraft("");
+                }
+              }}
+              onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
+            />
+          )}
         </div>
 
         <WorkspaceEditor
@@ -535,6 +562,7 @@ function DocPanel({
           onChange={(json, text) => schedule({ body: json, body_text: text })}
           onBlur={() => { void flushSave(); }}
           ignoreExternalUpdates={hasPending || saving}
+          editable={editing}
         />
 
         <div className="nt-panel-actions">
