@@ -790,13 +790,41 @@ function NoteBody({
         }}
       />
 
-      <div className="ws-tagrow">
-        {tags.map((t) => (
-          <span key={t} className="ws-tag">
-            #{t}
-            <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
-          </span>
-        ))}
+      <div className="ws-tagrow" onClick={(e) => {
+        if (!(e.target as HTMLElement).closest(".ws-tag")) setOpenColorFor(null);
+      }}>
+        {tags.map((t) => {
+          const c = tagColors[t];
+          const style = c ? { background: c, color: "#181A4D" } : undefined;
+          return (
+            <span key={t} className="ws-tag" style={style}>
+              <span
+                className="label"
+                onClick={() => setOpenColorFor(openColorFor === t ? null : t)}
+                title="Click to pick a color"
+              >#{t}</span>
+              <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
+              {openColorFor === t && (
+                <div className="ws-tag-pop" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className={`ws-tag-sw reset ${!c ? "on" : ""}`}
+                    title="No color"
+                    onClick={() => { void setTagColor(t, null); setOpenColorFor(null); }}
+                  />
+                  {TAG_PALETTE.map((p) => (
+                    <button
+                      key={p.value}
+                      className={`ws-tag-sw ${c === p.value ? "on" : ""}`}
+                      style={{ background: p.value }}
+                      title={p.name}
+                      onClick={() => { void setTagColor(t, p.value); setOpenColorFor(null); }}
+                    />
+                  ))}
+                </div>
+              )}
+            </span>
+          );
+        })}
         <input
           className="ws-tag-input"
           placeholder="+ tag"
