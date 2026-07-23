@@ -946,7 +946,7 @@ function SiteFooter() {
     e.preventDefault();
     const s = q.trim();
     if (!s) return;
-    navigate({ to: "/explore", search: { q: s } as any });
+    navigate({ to: "/search", search: { q: s } as any });
   };
   const col = (title: string, links: { label: string; to?: string; slug?: string }[]) => (
     <div>
