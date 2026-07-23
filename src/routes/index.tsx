@@ -294,6 +294,27 @@ const CSS = `
 .hp-skel{background:#fff;border-radius:12px;height:120px;position:relative;overflow:hidden;}
 .hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.04),transparent);animation:hp-shim 1.4s infinite;}
 @keyframes hp-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+/* Full-width masthead (signed-out) */
+.hp-masthead{background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);}
+.hp-masthead .wrap{display:flex;align-items:center;gap:20px;padding-top:18px;padding-bottom:18px;}
+.hp-mast-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.hp-mast-brand .mark{width:32px;height:32px;background:var(--limelight);color:var(--navy);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;}
+.hp-mast-brand .word{font-weight:900;font-size:20px;color:var(--navy);letter-spacing:-0.02em;}
+.hp-mast-links{display:none;flex:1;align-items:center;gap:22px;overflow-x:auto;min-width:0;}
+@media(min-width:900px){.hp-mast-links{display:flex;}}
+.hp-mast-links a{font-size:13.5px;font-weight:600;color:#514c3d;white-space:nowrap;}
+.hp-mast-links a:hover{color:var(--navy);}
+.hp-mast-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
+.hp-mast-tour{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed rgba(24,26,77,0.35);color:var(--navy);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:999px;background:transparent;font-family:'Poppins';cursor:pointer;text-decoration:none;}
+.hp-mast-tour:hover{border-color:var(--navy);background:#FBF8ED;}
+.hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
+.hp-mast-subscribe{background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
+.hp-mast-subscribe:hover{background:var(--navy-2);}
+/* Compact masthead for signed-in (rail already provides logo/CTAs) */
+.hp-masthead.is-inline .hp-mast-brand{display:none;}
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
 `;
 
 /* ============================================================ */
