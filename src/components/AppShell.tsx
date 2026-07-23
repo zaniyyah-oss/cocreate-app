@@ -144,8 +144,14 @@ const FOCUS_KEY = "cocreate:workspace-focus";
 
 export function AppShell({ current, children }: { current?: NavKey; children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(false);
-  const [focusMode, setFocusMode] = useState<boolean>(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(STORAGE_KEY) === "1";
+  });
+  const [focusMode, setFocusMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(FOCUS_KEY) === "1";
+  });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navLabelsQ = usePageContent("site_nav");
   const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
@@ -156,12 +162,6 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCollapsed(window.localStorage.getItem(STORAGE_KEY) === "1");
-      setFocusMode(window.localStorage.getItem(FOCUS_KEY) === "1");
-    }
-  }, []);
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
