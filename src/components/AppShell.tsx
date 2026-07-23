@@ -227,22 +227,26 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   const isNotes = pathname === "/notes";
   const focusActive = focusMode;
   const [sideRevealed, setSideRevealed] = useState(false);
+  const [showFocusHint, setShowFocusHint] = useState(false);
+
+  useEffect(() => {
+    if (!focusActive) { setShowFocusHint(false); return; }
+    setShowFocusHint(true);
+    const t = window.setTimeout(() => setShowFocusHint(false), 4800);
+    return () => window.clearTimeout(t);
+  }, [focusActive]);
 
   return (
     <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       {focusActive && (
         <>
-          <button
-            type="button"
-            className="app-focus-exit"
-            onClick={() => { setFocusMode(false); setSideRevealed(false); }}
-            aria-label="Exit focus mode"
-            title="Exit focus mode"
-          >
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            <span>Exit focus</span>
-          </button>
+          {showFocusHint && (
+            <div className="app-focus-hint" role="status" aria-live="polite">
+              <svg viewBox="0 0 24 24"><path d="M4 12h10M10 6l-6 6 6 6"/></svg>
+              <span>Focus mode on — hover the left edge to bring the menu back.</span>
+            </div>
+          )}
           <div
             className="app-focus-hover-zone"
             onMouseEnter={() => setSideRevealed(true)}
