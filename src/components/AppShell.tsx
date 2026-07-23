@@ -52,8 +52,13 @@ const SHELL_CSS = `
 .app-main-wrap{min-width:0;display:flex;flex-direction:column;}
 .app-main{flex:1;min-width:0;padding-bottom:calc(84px + env(safe-area-inset-bottom,0));}
 
-/* Notes page is full-bleed, no card container */
+/* Notes page is full-bleed, no card container, viewport-locked so internal panels scroll independently */
 .app-shell.is-notes .app-main{padding-bottom:0;}
+@media (min-width:1024px){
+  .app-shell.is-notes, .app-shell.is-notes .app-layout{height:100vh;min-height:0;overflow:hidden;}
+  .app-shell.is-notes .app-main-wrap{height:100vh;min-height:0;overflow:hidden;}
+  .app-shell.is-notes .app-main{height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+}
 
 /* Fixed mobile bottom nav — always visible while scrolling */
 .app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
