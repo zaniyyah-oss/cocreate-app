@@ -35,8 +35,11 @@ const CSS = `
 .ws-note-body{}
 .ws-note-title{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:600;font-size:14.5px;color:#181A4D;margin-bottom:8px;padding:0;outline:none;}
 .ws-note-title::placeholder{color:#181A4D;opacity:0.35;}
-.ws-tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;padding-right:16px;overflow:visible;}
-@media (min-width:720px){.ws-tagrow{padding-right:24px;}}
+.ws-tagrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 22px 8px;margin:0 -22px 0;background:#fff;position:sticky;top:58px;z-index:46;overflow:visible;}
+@media (min-width:720px){.ws-tagrow{padding-right:28px;}}
+@media (max-width:719px){.ws-tagrow{position:static;top:auto;padding:0 4px 8px;margin:0 0 4px;}}
+.ws-root.is-full .ws-tagrow{position:sticky;top:0;padding:8px 20px;margin:0 -20px;z-index:61;}
+@media (min-width:720px){.ws-root.is-full .ws-tagrow{margin:0 -48px;padding:10px 48px 8px;}}
 .ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;}
 .ws-tag button{background:none;border:none;color:#0F4A42;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
 .ws-tag button:hover{opacity:1;}
@@ -45,14 +48,14 @@ const CSS = `
 .ws-tag-input::placeholder{color:#20201C;opacity:0.5;}
 
 .ws-editor{border:none;background:transparent;position:relative;scroll-margin-top:110px;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:58px;z-index:45;margin:-20px -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
-.ws-root.is-full .ws-toolbar{position:sticky;top:0;background:#fff;padding:10px 0 8px;margin:-64px -20px 12px;padding-left:20px;padding-right:20px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);z-index:60;}
+.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:98px;z-index:45;margin:0 -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+.ws-root.is-full .ws-toolbar{position:sticky;top:40px;background:#fff;padding:10px 0 8px;margin:0 -20px 12px;padding-left:20px;padding-right:20px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);z-index:60;}
 @media (min-width:720px){
   .ws-root.is-full .ws-toolbar{margin-left:-48px;margin-right:-48px;padding-left:48px;padding-right:48px;}
 }
 @media (max-width:719px){
   .ws-toolbar{position:static;top:auto;bottom:auto;background:#fff;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);padding:6px 8px;margin:0 -22px 14px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
-  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:0 -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
   .ws-editor-content{padding-top:12px;}
 }
 @media (min-width:720px) and (max-width:1180px), (hover:none), (pointer:coarse){
