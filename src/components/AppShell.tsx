@@ -126,16 +126,43 @@ const SHELL_CSS = `
   .app-shell.collapsed .app-side-focus-btn{padding:10px 0;margin:0 0 14px;}
   .app-shell.collapsed .app-side-focus-btn .lbl{display:none;}
 
-
-  /* Focus mode: hide sidebar, show slim top bar with hamburger on desktop */
-  .app-shell.is-focus .app-side{display:none;}
+  /* Focus mode (desktop): sidebar becomes a hidden overlay, revealed on hover of left edge */
   .app-shell.is-focus .app-layout{grid-template-columns:1fr;}
-  .app-shell.is-focus .app-topbar{display:flex;padding:12px 24px;}
+  .app-shell.is-focus .app-side{
+    position:fixed;top:0;left:0;height:100vh;width:236px;z-index:60;
+    transform:translateX(-100%);transition:transform .2s ease;
+    box-shadow:0 12px 40px rgba(0,0,0,0.12);
+  }
+  .app-shell.is-focus.collapsed .app-side{width:68px;}
+  .app-shell.is-focus.side-revealed .app-side{transform:translateX(0);}
 }
-.app-topbar-menu{background:transparent;border:none;padding:6px;cursor:pointer;color:#181A4D;display:none;align-items:center;justify-content:center;border-radius:8px;margin-right:4px;}
-.app-topbar-menu:hover{background:#FBF8ED;}
-.app-topbar-menu svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.app-shell.is-focus .app-topbar-menu{display:inline-flex;}
+
+/* Focus mode: hide chrome so the page fills the screen */
+.app-shell.is-focus .app-topbar{display:none;}
+.app-shell.is-focus .app-bottomnav{display:none;}
+.app-shell.is-focus .app-main{padding-bottom:0;}
+
+/* Hover trigger strip on the far left in focus mode (desktop only, hover-capable) */
+.app-focus-hover-zone{display:none;}
+@media (min-width:1024px) and (hover:hover){
+  .app-shell.is-focus .app-focus-hover-zone{
+    display:block;position:fixed;top:0;left:0;width:14px;height:100vh;z-index:59;
+  }
+}
+
+/* Floating exit-focus pill — always visible when in focus mode so touch users can leave */
+.app-focus-exit{
+  position:fixed;top:calc(12px + env(safe-area-inset-top,0));left:12px;z-index:70;
+  display:none;align-items:center;gap:6px;background:#181A4D;color:#fff;
+  border:none;border-radius:999px;padding:8px 12px;font-family:'Poppins',sans-serif;
+  font-weight:700;font-size:12px;letter-spacing:0.02em;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.18);
+}
+.app-focus-exit svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.app-shell.is-focus .app-focus-exit{display:inline-flex;}
+@media (min-width:1024px) and (hover:hover){
+  .app-shell.is-focus.side-revealed .app-focus-exit{opacity:0;pointer-events:none;transition:opacity .15s;}
+}
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 `;
 
@@ -196,14 +223,38 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
 
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
   const isNotes = pathname === "/notes";
-  const focusActive = isWorkspace && focusMode;
+  const focusActive = focusMode;
+  const [sideRevealed, setSideRevealed] = useState(false);
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
+      {focusActive && (
+        <>
+          <button
+            type="button"
+            className="app-focus-exit"
+            onClick={() => { setFocusMode(false); setSideRevealed(false); }}
+            aria-label="Exit focus mode"
+            title="Exit focus mode"
+          >
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>Exit focus</span>
+          </button>
+          <div
+            className="app-focus-hover-zone"
+            onMouseEnter={() => setSideRevealed(true)}
+          />
+        </>
+      )}
       <div className="app-layout">
         {/* Desktop sidebar */}
-        <aside className="app-side" aria-label="Primary">
+        <aside
+          className="app-side"
+          aria-label="Primary"
+          onMouseEnter={() => focusActive && setSideRevealed(true)}
+          onMouseLeave={() => focusActive && setSideRevealed(false)}
+        >
           <div className="app-side-head">
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
@@ -226,12 +277,12 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           <button
             type="button"
             className="app-side-focus-btn"
-            onClick={() => setFocusMode(true)}
-            title="Enter focus mode"
-            aria-label="Enter focus mode"
+            onClick={() => { setFocusMode((f) => !f); setSideRevealed(false); }}
+            title={focusActive ? "Exit focus mode" : "Enter focus mode"}
+            aria-label={focusActive ? "Exit focus mode" : "Enter focus mode"}
           >
             <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-            <span className="lbl">Focus mode</span>
+            <span className="lbl">{focusActive ? "Exit focus" : "Focus mode"}</span>
           </button>
 
           {desktopNav.map((n) => {
