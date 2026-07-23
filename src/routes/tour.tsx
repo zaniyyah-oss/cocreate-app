@@ -28,6 +28,14 @@ const CSS = `
 .tour-hero .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
 .tour-btn{display:inline-flex;align-items:center;gap:8px;background:#DCE07A;color:#181A4D;font-weight:800;font-size:13px;padding:11px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
 .tour-btn.secondary{background:transparent;color:#fff;border:1.5px dashed rgba(255,255,255,0.4);}
+.tour-back{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,0.28);border-radius:999px;padding:8px 14px;text-decoration:none;transition:all .15s ease;}
+.tour-back:hover{color:#fff;border-color:#DCE07A;background:rgba(255,255,255,0.06);}
+.tour-section{background:#fff;border-radius:16px;padding:24px;box-shadow:0 12px 40px rgba(24,26,77,0.06);}
+.tour-section h2{font-size:18px;font-weight:800;color:#181A4D;margin:0 0 12px;}
+.tour-section p{font-size:14px;line-height:1.6;color:#4a4538;margin:0 0 16px;}
+.tour-section ul{margin:0 0 0 18px;padding:0;}
+.tour-section li{font-size:14px;line-height:1.6;color:#4a4538;margin-bottom:6px;}
+.tour-section strong{color:#181A4D;}
 .tour-mock{background:#fff;border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(24,26,77,0.08);}
 .tour-mock h2{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 4px;}
 .tour-mock .date{font-size:12px;color:#9a9484;font-weight:600;margin-bottom:16px;}
@@ -72,6 +80,8 @@ function TourPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tour">
         <div className="wrap">
+          <Link to="/" className="tour-back">← Back home</Link>
+
           <div className="tour-hero">
             <div className="tour-eyebrow">Guided tour</div>
             <h1>The Workspace, in about two minutes.</h1>
@@ -102,6 +112,21 @@ function TourPage() {
                 <p>• Call mom<br/>• 20-min walk after lunch<br/>• Send Sarah the passage from this morning</p>
               </div>
             </div>
+          </div>
+
+          <div className="tour-section" style={{ marginTop: "24px" }}>
+            <h2>What is the Workspace?</h2>
+            <p>
+              The workspace is the heart of CoCreate — a single page where your daily devotional, prayer,
+              notes, and to-do list live together. Rather than jumping between apps, everything you need
+              for your time with God is in one calm, focused place.
+            </p>
+            <ul>
+              <li><strong>Read:</strong> a Scripture or devotional reading for the day, with context and next steps.</li>
+              <li><strong>Pray:</strong> a private space to type out prayers, reflections, and anything the reading brought up.</li>
+              <li><strong>To-Do:</strong> capture what you want to carry into the day — actions, reminders, or people to reach out to.</li>
+              <li><strong>Notes & Calendar:</strong> your saved thoughts and upcoming events, all tied to the same day.</li>
+            </ul>
           </div>
         </div>
 
