@@ -599,10 +599,11 @@ function StreamingSection() {
       return (data ?? []) as ContentPreview[];
     },
   });
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "streaming", 5, "podcast");
   const feature = items[0];
   const grid = items.slice(1, 5);
-  if (!q.isLoading && items.length === 0) return null;
+
 
   return (
     <div className="hp-navy">
