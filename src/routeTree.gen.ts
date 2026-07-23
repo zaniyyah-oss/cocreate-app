@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as TourRouteImport } from './routes/tour'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -53,6 +54,11 @@ const WatchRoute = WatchRouteImport.update({
 const TourRoute = TourRouteImport.update({
   id: '/tour',
   path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedRoute = SavedRouteImport.update({
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -271,6 +278,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/content': typeof AdminContentRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
     | '/watch'
     | '/admin/collections'
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
     | '/watch'
     | '/admin/content'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/search'
     | '/tour'
     | '/watch'
     | '/admin/collections'
@@ -456,6 +468,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
+  SearchRoute: typeof SearchRoute
   TourRoute: typeof TourRoute
   WatchRoute: typeof WatchRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -479,6 +492,13 @@ declare module '@tanstack/react-router' {
       path: '/tour'
       fullPath: '/tour'
       preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved': {
@@ -785,6 +805,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
+  SearchRoute: SearchRoute,
   TourRoute: TourRoute,
   WatchRoute: WatchRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
