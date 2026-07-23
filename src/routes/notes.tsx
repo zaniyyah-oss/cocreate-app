@@ -151,9 +151,7 @@ function NotesPage() {
     <AppShell current="notes">
       <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
       <style dangerouslySetInnerHTML={{ __html: NOTES_CSS }} />
-      <div className="sv-shell" style={{ maxWidth: 1400, paddingLeft: 20, paddingRight: 20 }}>
-        <h1 className="sv-h1">Notes</h1>
-        <p className="sv-sub">Every workspace document you've written — open one to read or edit without leaving this page.</p>
+      <div className="sv-shell" style={{ maxWidth: 1400, paddingLeft: 20, paddingRight: 20, paddingTop: 0 }}>
         {userId ? <NotesLibrary userId={userId} /> : null}
       </div>
     </AppShell>
