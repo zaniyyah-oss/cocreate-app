@@ -264,20 +264,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
             </Link>
-            <div className="app-side-head-actions">
-              <button
-                className="app-side-toggle"
-                onClick={() => setCollapsed((c) => !c)}
-                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {collapsed ? (
-                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-                ) : (
-                  <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-                )}
-              </button>
-            </div>
+            <div className="app-side-head-actions" />
           </div>
           <button
             type="button"
