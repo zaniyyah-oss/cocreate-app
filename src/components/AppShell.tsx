@@ -244,7 +244,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
   }, [focusActive]);
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${hideSideWhenSignedOut && !userId ? " no-side" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       {focusActive && (
         <>
