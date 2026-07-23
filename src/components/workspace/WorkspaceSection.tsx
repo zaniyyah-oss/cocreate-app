@@ -35,8 +35,11 @@ const CSS = `
 .ws-note-body{}
 .ws-note-title{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:600;font-size:14.5px;color:#181A4D;margin-bottom:8px;padding:0;outline:none;}
 .ws-note-title::placeholder{color:#181A4D;opacity:0.35;}
-.ws-tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;padding-right:16px;overflow:visible;}
-@media (min-width:720px){.ws-tagrow{padding-right:24px;}}
+.ws-tagrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 22px 8px;margin:0 -22px 0;background:#fff;position:sticky;top:58px;z-index:46;overflow:visible;}
+@media (min-width:720px){.ws-tagrow{padding-right:28px;}}
+@media (max-width:719px){.ws-tagrow{position:static;top:auto;padding:0 4px 8px;margin:0 0 4px;}}
+.ws-root.is-full .ws-tagrow{position:sticky;top:0;padding:8px 20px;margin:0 -20px;z-index:61;}
+@media (min-width:720px){.ws-root.is-full .ws-tagrow{margin:0 -48px;padding:10px 48px 8px;}}
 .ws-tag{background:rgba(15,74,66,0.08);color:#0F4A42;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;}
 .ws-tag button{background:none;border:none;color:#0F4A42;font-size:12px;cursor:pointer;padding:0;line-height:1;opacity:0.55;}
 .ws-tag button:hover{opacity:1;}
