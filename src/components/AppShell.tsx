@@ -101,7 +101,9 @@ const SHELL_CSS = `
   .app-shell.collapsed .app-side-logo .word{display:none;}
   .app-shell.collapsed .app-side-item{justify-content:center;padding:11px 0;}
   .app-shell.collapsed .app-side-item .lbl{display:none;}
+  .app-side-foot-actions{display:flex;align-items:center;gap:8px;}
   .app-shell.collapsed .app-side-foot{flex-direction:column;padding:12px 0 4px;}
+  .app-shell.collapsed .app-side-foot .app-side-foot-actions{flex-direction:column;}
   .app-shell.collapsed .app-side-foot .app-signout,
   .app-shell.collapsed .app-side-foot .app-signin{display:none;}
 }
@@ -201,7 +203,17 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           <div className="app-side-foot">
             {userId ? (
               <>
-                <NotificationBell />
+                <div className="app-side-foot-actions">
+                  <NotificationBell />
+                  <Link
+                    to="/profile"
+                    className={`app-side-profile${pathname.startsWith("/profile") ? " active" : ""}`}
+                    aria-label="Profile"
+                    title="Profile"
+                  >
+                    {ICON.profile}
+                  </Link>
+                </div>
                 <button className="app-signout" onClick={signOut}>Sign out</button>
               </>
             ) : (
