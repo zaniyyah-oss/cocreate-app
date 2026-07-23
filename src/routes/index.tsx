@@ -434,11 +434,19 @@ function HomeIconBar() {
   return (
     <div className="hp-iconbar">
       <div className="wrap">
-        {items.map((it) => (
-          <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
-            {it.icon}
+        <div className="hp-iconbar-nav">
+          {items.map((it) => (
+            <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+              {it.icon}
+            </Link>
+          ))}
+        </div>
+        <div className="hp-iconbar-right">
+          <span className="hp-iconbar-bell"><NotificationBell /></span>
+          <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
           </Link>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -450,6 +458,13 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
   const list = (topicsQ.data ?? [])
     .filter((t) => primary.includes(t.slug))
     .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = () => setMoreOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [moreOpen]);
   return (
     <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
       <div className="wrap">
@@ -458,12 +473,37 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <div className="word">CoCreate</div>
         </Link>
         <nav className="hp-mast-links">
-          {list.map((t) => (
-            <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
+          {list.map((t, i) => (
+            <Link
+              key={t.id}
+              to="/topics/$slug"
+              params={{ slug: t.slug }}
+              className={i >= 4 ? "mast-link-hide-md" : i >= 2 ? "mast-link-hide-sm" : ""}
+            >
               {t.display_name || t.name}
             </Link>
           ))}
         </nav>
+        <div className="hp-mast-more">
+          <button
+            type="button"
+            className="hp-mast-more-btn"
+            onClick={(e) => { e.stopPropagation(); setMoreOpen((v) => !v); }}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
+          >
+            More <span aria-hidden>▾</span>
+          </button>
+          {moreOpen && (
+            <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+              {list.map((t) => (
+                <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
+                  {t.display_name || t.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="hp-mast-actions">
           <Link to="/tour" className="hp-mast-tour" title="Take a guided tour of the Workspace">
             Tour the Workspace
