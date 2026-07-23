@@ -498,19 +498,24 @@ function FeaturedCollectionSection() {
     },
   });
 
-  if (q.isLoading) {
-    return (
-      <div className="hp-collection">
-        <div className="wrap"><div className="hp-skel" style={{ height: 400, background: "rgba(255,255,255,0.05)" }} /></div>
-      </div>
-    );
-  }
-  if (!q.data) return null;
-  const { collection, items } = q.data;
+  const demoCollection: CollectionRow = {
+    id: "demo-collection",
+    slug: "abide-in-the-ordinary",
+    title: "Abide in the Ordinary",
+    description: "Six pieces on finding God in the middle of a regular Tuesday — the commute, the laundry, the quiet after the kids finally sleep.",
+    description_md: null,
+    cover_image_url: IMG_FALLBACK("collection-cover", 1200, 700),
+    banner_url: null,
+    is_featured: true,
+  };
+  const demoItems = makeDemo("latest", 5, 20);
+  const collection = q.data?.collection ?? demoCollection;
+  const items = q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
   const lead = items[0];
   const paired = items[1];
   const rest = items.slice(2, 5);
   const cover = collection.cover_image_url || collection.banner_url;
+
 
   return (
     <div className="hp-collection">
