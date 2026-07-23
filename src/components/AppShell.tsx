@@ -178,15 +178,20 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               )}
             </button>
           </div>
-          {desktopNav.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              className={`app-side-item${isActive(n) ? " active" : ""}`}
-              title={collapsed ? n.label : undefined}
-            >
-              {n.icon}<span className="lbl">{n.label}</span>
-            </Link>
+          {desktopNav.map((group, gi) => (
+            <div key={gi}>
+              {gi > 0 && <div className="app-side-divider" />}
+              {group.map((n) => (
+                <Link
+                  key={n.key}
+                  to={n.to}
+                  className={`app-side-item${isActive(n) ? " active" : ""}`}
+                  title={collapsed ? n.label : undefined}
+                >
+                  {n.icon}<span className="lbl">{n.label}</span>
+                </Link>
+              ))}
+            </div>
           ))}
           <div className="app-side-foot">
             {userId ? (
