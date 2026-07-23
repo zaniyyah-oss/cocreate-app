@@ -380,7 +380,7 @@ function LatestSection() {
   const sides = items.slice(1, 5);
 
   return (
-    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 64 }}>
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 88 }}>
 
       <div className="hp-eyebrow">
         <div className="bar" />
