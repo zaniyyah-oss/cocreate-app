@@ -2012,7 +2012,7 @@ const SAMPLE_NOTES: Record<number, string> = {
   29: "Motherhood — Day 1",
 };
 
-function MonthCalendarView({ templateId, userId }: { templateId: string; userId: string | null }) {
+export function MonthCalendarView({ templateId, userId }: { templateId: string; userId: string | null }) {
   const navigate = useNavigate();
   const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
   const [cursor, setCursor] = useState<{ y: number; m: number }>(() => ({ y: todayD.getFullYear(), m: todayD.getMonth() }));
