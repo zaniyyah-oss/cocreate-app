@@ -320,7 +320,46 @@ export function WorkspaceSection({
     },
   });
 
+  const togglePin = useMutation({
+    mutationFn: async (it: WorkspaceItem) => {
+      const next = !it.pinned;
+      if (guest) {
+        setGuestItems((cur) => cur.map((i) => (i.id === it.id ? { ...i, pinned: next } : i)));
+        return next;
+      }
+      const { error } = await supabase.from("workspace_items" as any).update({ pinned: next }).eq("id", it.id);
+      if (error) throw error;
+      return next;
+    },
+    onSuccess: () => {
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+    },
+  });
+
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewItem = items.find((i) => i.id === previewId) ?? null;
+
+  const isToday = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
+  const recentItems = useMemo(() => {
+    if (isHistory) return [];
+    const pinned = items.filter((i) => i.pinned);
+    const pinnedIds = new Set(pinned.map((i) => i.id));
+    const todayItems = items.filter(
+      (i) => !pinnedIds.has(i.id) && (isToday(i.created_at) || (i.status === "closed" && isToday(i.closed_at ?? i.updated_at))),
+    );
+    const sortDesc = (arr: WorkspaceItem[]) =>
+      arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return [...sortDesc(pinned), ...sortDesc(todayItems)];
+  }, [items, isHistory]);
+
   const activeNote = openNotes.find((n) => n.id === activeId) ?? null;
+
 
   const lastFocusRef = useRef<string | null>(null);
   useEffect(() => {
