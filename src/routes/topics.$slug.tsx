@@ -255,6 +255,15 @@ function TopicPage() {
             </div>
             <h1 className="tp-title">{topic?.name ?? humanize(slug)}</h1>
             <p className="tp-desc">{desc}</p>
+            <button
+              type="button"
+              className={`tp-follow ${isFollowing ? "on" : ""}`}
+              onClick={toggleFollow}
+              disabled={followQ.isLoading}
+            >
+              <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>
+              {isFollowing ? "Following" : "Follow topic"}
+            </button>
           </div>
           <div className="tp-count">{totalCount} {totalCount === 1 ? "piece" : "pieces"}</div>
         </div>
