@@ -374,12 +374,14 @@ function TopicsNav() {
 
 function LatestSection() {
   const q = useLatest(5);
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "latest", 5);
   const lead = items[0];
   const sides = items.slice(1, 5);
 
   return (
-    <div className="wrap hp-section" style={{ paddingBottom: 64 }}>
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 64 }}>
+
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>Latest</h2>
