@@ -150,19 +150,18 @@ const SHELL_CSS = `
   }
 }
 
-/* Floating exit-focus pill — always visible when in focus mode so touch users can leave */
+/* Exit-focus pill — sits at the top center of the page, scrolls away with content
+   so it never overlaps text mid-page. Users can scroll back up to exit. */
 .app-focus-exit{
-  position:fixed;top:calc(12px + env(safe-area-inset-top,0));left:12px;z-index:70;
+  position:absolute;top:calc(12px + env(safe-area-inset-top,0));left:50%;transform:translateX(-50%);z-index:70;
   display:none;align-items:center;gap:6px;background:#181A4D;color:#fff;
-  border:none;border-radius:999px;padding:8px 12px;font-family:'Poppins',sans-serif;
+  border:none;border-radius:999px;padding:8px 14px;font-family:'Poppins',sans-serif;
   font-weight:700;font-size:12px;letter-spacing:0.02em;cursor:pointer;
   box-shadow:0 6px 18px rgba(0,0,0,0.18);
 }
 .app-focus-exit svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 .app-shell.is-focus .app-focus-exit{display:inline-flex;}
-@media (min-width:1024px) and (hover:hover){
-  .app-shell.is-focus.side-revealed .app-focus-exit{opacity:0;pointer-events:none;transition:opacity .15s;}
-}
+
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 `;
 
