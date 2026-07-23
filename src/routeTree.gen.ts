@@ -16,6 +16,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as ListenRouteImport } from './routes/listen'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as ExploreRouteImport } from './routes/explore'
@@ -77,6 +78,11 @@ const NotesRoute = NotesRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListenRoute = ListenRouteImport.update({
+  id: '/listen',
+  path: '/listen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/listen'
     | '/messages'
     | '/notes'
     | '/notifications'
@@ -438,6 +450,7 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   FriendsRoute: typeof FriendsRoute
   GroupsRoute: typeof GroupsRoute
+  ListenRoute: typeof ListenRoute
   MessagesRoute: typeof MessagesRoute
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listen': {
+      id: '/listen'
+      path: '/listen'
+      fullPath: '/listen'
+      preLoaderRoute: typeof ListenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -759,6 +779,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   FriendsRoute: FriendsRoute,
   GroupsRoute: GroupsRoute,
+  ListenRoute: ListenRoute,
   MessagesRoute: MessagesRoute,
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
