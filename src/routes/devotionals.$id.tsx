@@ -814,8 +814,6 @@ function EntryPage() {
             <div className="de-headcard">
               <div className="de-headcard-inner">
                 <div className="de-headtop">
-                  <span className="de-headtitle-brand">{t.title}</span>
-                  <span className="de-headarrow">→</span>
                   <span className="de-headdate">{formatDate(selectedDate)}</span>
                 </div>
                 <input
