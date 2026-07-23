@@ -222,7 +222,8 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
 
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
   const isNotes = pathname === "/notes";
-  const focusActive = isWorkspace && focusMode;
+  const focusActive = focusMode;
+  const [sideRevealed, setSideRevealed] = useState(false);
 
   return (
     <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}`}>
