@@ -724,10 +724,10 @@ function EntryPage() {
             <Link to="/auth" className="de-signin">Sign in</Link>
           ) : (
             <>
-              <NotificationBell />
               <Link to="/profile" className="de-navavatar" aria-label="Profile" title="Profile">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
               </Link>
+              <NotificationBell />
             </>
           )}
         </div>
