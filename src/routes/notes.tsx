@@ -499,6 +499,16 @@ function DocPanel({
         </div>
         <button
           type="button"
+          className={`nt-edit-btn ${editing ? "active" : ""}`}
+          onClick={() => {
+            if (editing) void flushSave();
+            setEditing((v) => !v);
+          }}
+        >
+          {editing ? "Done" : "Edit"}
+        </button>
+        <button
+          type="button"
           className="nt-panel-close"
           onClick={() => { void flushSave(); onClose(); }}
           aria-label="Close panel"
@@ -507,35 +517,43 @@ function DocPanel({
         </button>
       </header>
       <div className="nt-panel-body">
-        <input
-          className="nt-panel-title-input"
-          placeholder="Untitled"
-          value={title}
-          onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
-          onBlur={() => { void flushSave(); }}
-        />
+        {editing ? (
+          <input
+            className="nt-panel-title-input"
+            placeholder="Untitled"
+            value={title}
+            onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
+            onBlur={() => { void flushSave(); }}
+          />
+        ) : (
+          <div className="nt-panel-title-input" style={{ cursor: "default" }}>
+            {title?.trim() || "Untitled"}
+          </div>
+        )}
 
         <div className="nt-panel-tagrow">
           {tags.map((t) => (
             <span key={t} className="nt-panel-tag">
               #{displayTag(t)}
-              <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
+              {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>}
             </span>
           ))}
-          <input
-            className="nt-tag-input"
-            placeholder="+ tag"
-            value={tagDraft}
-            onChange={(e) => setTagDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === ",") {
-                e.preventDefault();
-                addTag(tagDraft);
-                setTagDraft("");
-              }
-            }}
-            onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
-          />
+          {editing && (
+            <input
+              className="nt-tag-input"
+              placeholder="+ tag"
+              value={tagDraft}
+              onChange={(e) => setTagDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addTag(tagDraft);
+                  setTagDraft("");
+                }
+              }}
+              onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
+            />
+          )}
         </div>
 
         <WorkspaceEditor
@@ -544,6 +562,7 @@ function DocPanel({
           onChange={(json, text) => schedule({ body: json, body_text: text })}
           onBlur={() => { void flushSave(); }}
           ignoreExternalUpdates={hasPending || saving}
+          editable={editing}
         />
 
         <div className="nt-panel-actions">
