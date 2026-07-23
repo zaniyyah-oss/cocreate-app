@@ -393,6 +393,43 @@ function TopicsNav() {
   );
 }
 
+function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+  const topicsQ = useTopics();
+  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
+  const list = (topicsQ.data ?? [])
+    .filter((t) => primary.includes(t.slug))
+    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
+  return (
+    <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
+      <div className="wrap">
+        <Link to="/" className="hp-mast-brand">
+          <div className="mark">C</div>
+          <div className="word">CoCreate</div>
+        </Link>
+        <nav className="hp-mast-links">
+          {list.map((t) => (
+            <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
+              {t.display_name || t.name}
+            </Link>
+          ))}
+        </nav>
+        <div className="hp-mast-actions">
+          <Link to="/tour" className="hp-mast-tour" title="Take a guided tour of the Workspace">
+            Tour the Workspace
+          </Link>
+          {!signedIn && (
+            <>
+              <Link to="/auth" className="hp-mast-signin">Sign in</Link>
+              <Link to="/auth" search={{ mode: "signup" } as any} className="hp-mast-subscribe">Subscribe</Link>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function LatestSection() {
   const q = useLatest(5);
   const real = q.data ?? [];
