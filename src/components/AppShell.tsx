@@ -161,34 +161,38 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
             </Link>
-            <button
-              className="app-side-toggle"
-              onClick={() => setCollapsed((c) => !c)}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              ) : (
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              )}
-            </button>
-          </div>
-          {desktopNav.map((group, gi) => (
-            <div key={gi}>
-              {gi > 0 && <div className="app-side-divider" />}
-              {gi === 1 && <div className="app-side-label">YOUR REFERENCE</div>}
-              {group.map((n) => (
-                <Link
-                  key={n.key}
-                  to={n.to}
-                  className={`app-side-item${isActive(n) ? " active" : ""}`}
-                  title={collapsed ? n.label : undefined}
-                >
-                  {n.icon}<span className="lbl">{n.label}</span>
-                </Link>
-              ))}
+            <div className="app-side-head-actions">
+              <button
+                className="app-side-toggle"
+                onClick={() => setCollapsed((c) => !c)}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? (
+                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+                )}
+              </button>
+              <Link
+                to="/profile"
+                className={`app-side-profile${pathname.startsWith("/profile") ? " active" : ""}`}
+                aria-label="Profile"
+                title="Profile"
+              >
+                {ICON.profile}
+              </Link>
             </div>
+          </div>
+          {desktopNav.map((n) => (
+            <Link
+              key={n.key}
+              to={n.to}
+              className={`app-side-item${isActive(n) ? " active" : ""}`}
+              title={collapsed ? n.label : undefined}
+            >
+              {n.icon}<span className="lbl">{n.label}</span>
+            </Link>
           ))}
           <div className="app-side-foot">
             {userId ? (
