@@ -87,6 +87,11 @@ const CSS = `
 .tp-title{font-size:52px;font-weight:900;color:#181A4D;letter-spacing:-0.04em;line-height:1.02;margin:0 0 14px;}
 .tp-desc{font-size:16px;line-height:1.65;color:#20201c;max-width:640px;margin:0;font-weight:500;}
 .tp-count{background:#FBF8ED;color:#181A4D;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:99px;white-space:nowrap;}
+.tp-follow{background:#181A4D;color:#fff;border:none;font-family:'Poppins',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-top:14px;}
+.tp-follow:hover{background:#0F4A42;}
+.tp-follow.on{background:#DCE07A;color:#181A4D;}
+.tp-follow.on:hover{background:#FFAE00;}
+.tp-follow svg{width:14px;height:14px;fill:currentColor;}
 
 .tp-shell{max-width:1080px;margin:0 auto;padding:52px 28px 100px;}
 .tp-section{margin-bottom:56px;}
