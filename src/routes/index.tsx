@@ -209,7 +209,7 @@ const CSS = `
 .hp-col-actions{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex-shrink:0;}
 @media(min-width:640px){.hp-col-actions{align-items:flex-end;}}
 .hp-add-btn{background:var(--navy);color:#fff;font-weight:700;font-size:13px;padding:11px 20px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;}
-.hp-see-inside{font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;white-space:nowrap;}
+.hp .hp-see-inside{font-size:12.5px;font-weight:600;color:#fff;text-decoration:underline;white-space:nowrap;}
 .hp-col-grid{display:grid;grid-template-columns:1fr;gap:18px;}
 @media(min-width:900px){.hp-col-grid{grid-template-columns:1.4fr 1fr;}}
 .hp-col-left,.hp-col-right{display:flex;flex-direction:column;gap:18px;}
@@ -225,7 +225,7 @@ const CSS = `
 .hp-col-hcard h5{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 6px;line-height:1.35;}
 .hp-col-hcard .byline{font-size:12px;color:#9a9484;font-weight:600;}
 .hp-see-collection-wrap{text-align:center;margin-top:26px;}
-.hp-see-collection-btn{display:inline-block;border:1.5px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;font-size:13.5px;padding:12px 24px;border-radius:999px;}
+.hp .hp-see-collection-btn{display:inline-block;border:1.5px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;font-size:13.5px;padding:12px 24px;border-radius:999px;}
 
 /* Navy interruption modules */
 .hp-navy{background:var(--navy);padding:52px 0;}
