@@ -51,7 +51,7 @@ const formatLong = (iso: string) =>
 
 // ─── Layout / styles ────────────────────────────────────────────────
 const NOTES_CSS = `
-.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 140px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-frame{width:100%;height:100%;background:#FBF8ED;display:flex;overflow:hidden;font-family:'Poppins',sans-serif;}
 .nt-panel-body .ws-editor-content, .nt-panel-body .ProseMirror{font-size:13.5px;line-height:1.55;}
 .nt-panel-body .ws-editor-content h1, .nt-panel-body .ProseMirror h1{font-size:20px;}
 .nt-panel-body .ws-editor-content h2, .nt-panel-body .ProseMirror h2{font-size:17px;}
