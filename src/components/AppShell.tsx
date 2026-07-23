@@ -166,6 +166,13 @@ const SHELL_CSS = `
 @media (max-width:1023px){.app-focus-hint{font-size:11.5px;padding:9px 14px;}}
 
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
+
+/* Signed-out home: hide desktop rail entirely so content is full-bleed */
+@media (min-width:1024px){
+  .app-shell.no-side .app-layout{grid-template-columns:1fr;}
+  .app-shell.no-side .app-side{display:none;}
+  .app-shell.no-side .app-topbar{display:none;}
+}
 `;
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
