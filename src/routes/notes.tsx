@@ -51,7 +51,14 @@ const formatLong = (iso: string) =>
 
 // ─── Layout / styles ────────────────────────────────────────────────
 const NOTES_CSS = `
-.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 190px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 140px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-panel-body .ws-editor-content, .nt-panel-body .ProseMirror{font-size:13.5px;line-height:1.55;}
+.nt-panel-body .ws-editor-content h1, .nt-panel-body .ProseMirror h1{font-size:20px;}
+.nt-panel-body .ws-editor-content h2, .nt-panel-body .ProseMirror h2{font-size:17px;}
+.nt-panel-body .ws-editor-content h3, .nt-panel-body .ProseMirror h3{font-size:15px;}
+.nt-edit-btn{background:#FBF8ED;border:1px solid rgba(24,26,77,0.15);color:#181A4D;border-radius:999px;padding:5px 14px;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;cursor:pointer;margin-right:4px;}
+.nt-edit-btn:hover{background:#DCE07A;border-color:#CAC307;}
+.nt-edit-btn.active{background:#181A4D;color:#DCE07A;border-color:#181A4D;}
 .nt-list-col{width:320px;flex-shrink:0;background:#fff;border-right:1px solid rgba(24,26,77,0.07);display:flex;flex-direction:column;}
 .nt-list-header{padding:18px 18px 12px;border-bottom:1px solid rgba(24,26,77,0.06);}
 .nt-list-header .title{font-weight:900;font-size:19px;color:#181A4D;letter-spacing:-0.01em;margin-bottom:12px;}
