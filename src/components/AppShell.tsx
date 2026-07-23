@@ -69,6 +69,9 @@ const SHELL_CSS = `
   /* Workspace pages: nav sits at end of page, not fixed */
   .app-shell.is-workspace .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
   .app-shell.is-workspace .app-main{padding-bottom:0;}
+
+  /* Notes page: full-bleed list + panel, nav sits at end of page */
+  .app-shell.is-notes .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
 }
 
 @media (min-width:1024px){
