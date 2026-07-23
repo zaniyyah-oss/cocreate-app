@@ -80,6 +80,8 @@ function TourPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tour">
         <div className="wrap">
+          <Link to="/" className="tour-back">← Back home</Link>
+
           <div className="tour-hero">
             <div className="tour-eyebrow">Guided tour</div>
             <h1>The Workspace, in about two minutes.</h1>
@@ -110,6 +112,21 @@ function TourPage() {
                 <p>• Call mom<br/>• 20-min walk after lunch<br/>• Send Sarah the passage from this morning</p>
               </div>
             </div>
+          </div>
+
+          <div className="tour-section" style={{ marginTop: "24px" }}>
+            <h2>What is the Workspace?</h2>
+            <p>
+              The workspace is the heart of CoCreate — a single page where your daily devotional, prayer,
+              notes, and to-do list live together. Rather than jumping between apps, everything you need
+              for your time with God is in one calm, focused place.
+            </p>
+            <ul>
+              <li><strong>Read:</strong> a Scripture or devotional reading for the day, with context and next steps.</li>
+              <li><strong>Pray:</strong> a private space to type out prayers, reflections, and anything the reading brought up.</li>
+              <li><strong>To-Do:</strong> capture what you want to carry into the day — actions, reminders, or people to reach out to.</li>
+              <li><strong>Notes & Calendar:</strong> your saved thoughts and upcoming events, all tied to the same day.</li>
+            </ul>
           </div>
         </div>
 
