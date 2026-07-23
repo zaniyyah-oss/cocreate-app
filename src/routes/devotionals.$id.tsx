@@ -6,10 +6,10 @@ import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { ResizableTextarea } from "@/components/ResizableTextarea";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { NotificationBell } from "@/components/NotificationBell";
+import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
+
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
