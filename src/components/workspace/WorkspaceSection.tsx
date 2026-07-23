@@ -48,8 +48,8 @@ const CSS = `
 .ws-tag-input::placeholder{color:#20201C;opacity:0.5;}
 
 .ws-editor{border:none;background:transparent;position:relative;scroll-margin-top:110px;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:58px;z-index:45;margin:-20px -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
-.ws-root.is-full .ws-toolbar{position:sticky;top:0;background:#fff;padding:10px 0 8px;margin:-64px -20px 12px;padding-left:20px;padding-right:20px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);z-index:60;}
+.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;position:sticky;top:98px;z-index:45;margin:0 -22px 12px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+.ws-root.is-full .ws-toolbar{position:sticky;top:40px;background:#fff;padding:10px 0 8px;margin:0 -20px 12px;padding-left:20px;padding-right:20px;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);z-index:60;}
 @media (min-width:720px){
   .ws-root.is-full .ws-toolbar{margin-left:-48px;margin-right:-48px;padding-left:48px;padding-right:48px;}
 }
