@@ -1347,6 +1347,7 @@ export type Database = {
           event_date: string
           event_type: string
           id: string
+          item_type: string
           notes: string | null
           title: string | null
           updated_at: string
@@ -1358,6 +1359,7 @@ export type Database = {
           event_date: string
           event_type: string
           id?: string
+          item_type?: string
           notes?: string | null
           title?: string | null
           updated_at?: string
@@ -1369,6 +1371,7 @@ export type Database = {
           event_date?: string
           event_type?: string
           id?: string
+          item_type?: string
           notes?: string | null
           title?: string | null
           updated_at?: string

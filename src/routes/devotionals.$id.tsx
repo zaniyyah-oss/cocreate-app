@@ -8,6 +8,7 @@ import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { ResizableTextarea } from "@/components/ResizableTextarea";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarDayView } from "@/components/CalendarDayView";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
@@ -369,6 +370,7 @@ function EntryPage() {
   const search = Route.useSearch();
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
+  const [workspaceMode, setWorkspaceMode] = useState<"entry" | "day">("entry");
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
   // Lock body scroll when a section is focused
@@ -765,32 +767,49 @@ function EntryPage() {
               </div>
             )}
             {/* View switcher */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
+            {/* View switcher: Entry vs Day + Full week link */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 12, flexWrap: "wrap" }}>
               <div className="de-viewtabs">
-                {(["today", "week", "month"] as const).map((v) => (
-                  <button
-                    key={v}
-                    className={search.view === v ? "active" : ""}
-                    onClick={() =>
-                      navigate({
-                        to: "/devotionals/$id",
-                        params: { id },
-                        search: (prev: any) => ({ ...prev, view: v === "today" ? undefined : v }),
-                      })
-                    }
-                  >
-                    {v === "today" ? "Today" : v === "week" ? "This week" : "Month"}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className={workspaceMode === "entry" ? "active" : ""}
+                  onClick={() => setWorkspaceMode("entry")}
+                >
+                  Entry
+                </button>
+                <button
+                  type="button"
+                  className={workspaceMode === "day" ? "active" : ""}
+                  onClick={() => setWorkspaceMode("day")}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                  </svg>
+                  Day
+                </button>
               </div>
+              <Link
+                to="/calendar"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  color: "#0F4A42", fontWeight: 700, fontSize: 12.5,
+                  textDecoration: "none", fontFamily: "'Poppins',sans-serif",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                </svg>
+                Full week
+                <span>→</span>
+              </Link>
             </div>
 
-            {search.view === "month" ? (
-              <MonthCalendarView templateId={id} userId={userId} />
-            ) : search.view === "week" ? (
-              <WeekListView templateId={id} userId={userId} />
+            {workspaceMode === "day" ? (
+              <CalendarDayView userId={userId} initialDate={selectedDate} defaultTemplateId={id} />
             ) : (
               <>
+
 
             <div className="de-headcard">
               <div className="de-headcard-inner">
@@ -1393,14 +1412,16 @@ function useTopicalDates(userId: string | null, startISO: string, endISO: string
 // User events (Prayer meeting, Bible study, Mentor meeting, Other)
 // ============================================================================
 
-type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
-type UserEvent = {
+export type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
+export type UserEventItemType = "event" | "focus";
+export type UserEvent = {
   id: string;
   event_date: string;
   event_type: UserEventType;
   title: string | null;
   color: string;
   notes: string | null;
+  item_type?: UserEventItemType;
 };
 
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
@@ -1466,7 +1487,7 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes")
+        .select("id,event_date,event_type,title,color,notes,item_type")
         .eq("user_id", userId!)
         .gte("event_date", startISO)
         .lte("event_date", endISO)
@@ -1483,8 +1504,8 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
   });
 }
 
-function AddEventDialog({
-  open, onOpenChange, userId, defaultDate, event, onSaved,
+export function AddEventDialog({
+  open, onOpenChange, userId, defaultDate, event, onSaved, defaultItemType,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -1492,9 +1513,11 @@ function AddEventDialog({
   defaultDate: string;
   event?: UserEvent | null;
   onSaved: () => void;
+  defaultItemType?: UserEventItemType;
 }) {
   const isEdit = !!event;
   const [date, setDate] = useState(defaultDate);
+  const [itemType, setItemType] = useState<UserEventItemType>(defaultItemType ?? "event");
   const [type, setType] = useState<UserEventType>("prayer_meeting");
   const [title, setTitle] = useState("");
   const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
@@ -1507,33 +1530,40 @@ function AddEventDialog({
     if (!open) return;
     if (event) {
       setDate(event.event_date);
+      setItemType(event.item_type ?? "event");
       setType(event.event_type);
       setTitle(event.title ?? "");
       setColor(event.color || OTHER_DEFAULT_COLOR);
       setNotes(event.notes ?? "");
     } else {
       setDate(defaultDate);
-      setType("prayer_meeting");
+      setItemType(defaultItemType ?? "event");
+      // Focus items are always custom (no fixed subtype)
+      setType(defaultItemType === "focus" ? "other" : "prayer_meeting");
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
     }
     setErr(null);
-  }, [open, defaultDate, event]);
+  }, [open, defaultDate, event, defaultItemType]);
 
-  const isOther = type === "other";
-  const resolvedColor = isOther ? color : EVENT_TYPE_META[type].color;
+  const isFocus = itemType === "focus";
+  // Focus items force custom (title + color)
+  const effectiveType: UserEventType = isFocus ? "other" : type;
+  const isOther = effectiveType === "other";
+  const resolvedColor = isOther ? color : EVENT_TYPE_META[effectiveType].color;
 
   const save = async () => {
-    if (!userId) { setErr("Please sign in to save events."); return; }
-    if (isOther && !title.trim()) { setErr("Add a name for this event."); return; }
+    if (!userId) { setErr("Please sign in to save."); return; }
+    if (isOther && !title.trim()) { setErr(isFocus ? "Add a name for this focus item." : "Add a name for this event."); return; }
     setSaving(true); setErr(null);
     const payload = {
       event_date: date,
-      event_type: type,
+      event_type: effectiveType,
       title: isOther ? title.trim() : null,
       color: resolvedColor,
       notes: notes.trim() || null,
+      item_type: itemType,
     };
     let error;
     if (isEdit && event) {
@@ -1546,6 +1576,7 @@ function AddEventDialog({
     onSaved();
     onOpenChange(false);
   };
+
 
   const remove = async () => {
     if (!event) return;
@@ -1562,42 +1593,63 @@ function AddEventDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
         <DialogHeader>
-          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? "Edit event" : "Add new event"}</DialogTitle>
+          <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? (isFocus ? "Edit focus item" : "Edit event") : (isFocus ? "Add focus item" : "Add new event")}</DialogTitle>
         </DialogHeader>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Item type</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {(["event", "focus"] as const).map((v) => {
+                const active = itemType === v;
+                return (
+                  <button key={v} type="button" onClick={() => setItemType(v)}
+                    style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                      background: active ? "#181A4D" : "#fff", color: active ? "#DCE07A" : "#181A4D",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, textAlign: "center",
+                    }}>
+                    {v === "event" ? "Event" : "Focus item"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
             Date
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
               style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
           </label>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {([
-                ["prayer_meeting", "Prayer meeting", "#E990A2"],
-                ["bible_study", "Bible study", "#FFAE00"],
-                ["mentor_meeting", "Mentor meeting", "#8A96E0"],
-                ["other", "Other", "#9B9B93"],
-              ] as const).map(([val, label, sw]) => {
-                const active = type === val;
-                return (
-                  <button key={val} type="button" onClick={() => setType(val)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "10px 12px", borderRadius: 10,
-                      border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
-                      background: "#fff", cursor: "pointer",
-                      fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
-                      textAlign: "left",
-                    }}>
-                    <span style={{ width: 12, height: 12, borderRadius: 999, background: sw, flex: "none" }} />
-                    {label}
-                  </button>
-                );
-              })}
+          {!isFocus && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {([
+                  ["prayer_meeting", "Prayer meeting", "#E990A2"],
+                  ["bible_study", "Bible study", "#FFAE00"],
+                  ["mentor_meeting", "Mentor meeting", "#8A96E0"],
+                  ["other", "Other", "#9B9B93"],
+                ] as const).map(([val, label, sw]) => {
+                  const active = type === val;
+                  return (
+                    <button key={val} type="button" onClick={() => setType(val)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "10px 12px", borderRadius: 10,
+                        border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                        background: "#fff", cursor: "pointer",
+                        fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                        textAlign: "left",
+                      }}>
+                      <span style={{ width: 12, height: 12, borderRadius: 999, background: sw, flex: "none" }} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {isOther && (
             <>
@@ -1671,7 +1723,7 @@ function AddEventDialog({
 function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO: string }) {
   const qc = useQueryClient();
   const eventsQ = useUserEvents(userId, dateISO, dateISO);
-  const events = eventsQ.data?.get(dateISO) ?? [];
+  const events = (eventsQ.data?.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event");
   const [addOpen, setAddOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const onSaved = () => qc.invalidateQueries({ queryKey: ["user-events"] });
