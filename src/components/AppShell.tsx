@@ -89,6 +89,7 @@ const SHELL_CSS = `
   .app-side-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
   .app-side-item:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-item.active{background:#DCE07A;color:#181A4D;}
+  .app-side-divider{height:1px;background:rgba(24,26,77,0.08);margin:10px 10px;}
   .app-side-foot{margin-top:auto;padding:12px 8px 4px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .app-topbar{display:none;}
   .app-bottomnav{display:none;}
