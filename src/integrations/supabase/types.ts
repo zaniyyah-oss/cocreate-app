@@ -1418,6 +1418,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tag_colors: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          tag: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          tag: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          tag?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workspace_items: {
         Row: {
           body: Json
