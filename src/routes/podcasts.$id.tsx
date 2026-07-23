@@ -10,13 +10,13 @@ export const Route = createFileRoute("/podcasts/$id")({
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins, sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This episode didn't load</h1>
       <p style={{ color: "#8a8678" }}>{error.message}</p>
-      <Link to="/explore" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Explore</Link>
+      <Link to="/" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Home</Link>
     </div>
   ),
   notFoundComponent: () => (
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins, sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>Episode not found</h1>
-      <Link to="/explore" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Explore</Link>
+      <Link to="/" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Home</Link>
     </div>
   ),
   head: () => ({
