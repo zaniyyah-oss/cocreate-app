@@ -34,7 +34,7 @@ function buildDesktopNav(labels: Record<string, string>) {
 
 const SHELL_CSS = `
 .app-shell, .app-shell *{box-sizing:border-box;}
-.app-shell{min-height:100vh;background:#eee9d9;color:#20201c;font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased;}
+.app-shell{position:relative;min-height:100vh;background:#eee9d9;color:#20201c;font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased;}
 .app-layout{display:grid;grid-template-columns:1fr;min-height:100vh;}
 
 /* Mobile top bar */
