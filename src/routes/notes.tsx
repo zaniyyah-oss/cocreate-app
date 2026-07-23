@@ -270,7 +270,7 @@ function NotesLibrary({ userId }: { userId: string }) {
     <div className="nt-frame">
       <aside className="nt-list-col">
         <div className="nt-list-header">
-          <div className="title">Documents</div>
+          <div className="title">Notes</div>
           <div className="nt-filter">
             <label htmlFor="nt-tag-filter">Filter by tag</label>
             <select
