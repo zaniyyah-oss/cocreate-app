@@ -180,10 +180,7 @@ const FOCUS_KEY = "cocreate:workspace-focus";
 
 export function AppShell({ current, children, hideSideWhenSignedOut }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
-  });
+  const [collapsed] = useState<boolean>(true);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(FOCUS_KEY) === "1";
