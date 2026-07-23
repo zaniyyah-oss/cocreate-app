@@ -83,9 +83,16 @@ function TourPage() {
     <AppShell current="devotionals" hideSideWhenSignedOut>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tour">
-        <div className="wrap">
-          <Link to="/" className="tour-back">← Back home</Link>
+        <div className="tour-topbar">
+          <div className="wrap">
+            <Link to="/" className="tour-back">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back home
+            </Link>
+          </div>
+        </div>
 
+        <div className="wrap">
           <div className="tour-hero">
             <div className="tour-eyebrow">Guided tour</div>
             <h1>The Workspace, in about two minutes.</h1>
@@ -119,17 +126,17 @@ function TourPage() {
           </div>
 
           <div className="tour-section" style={{ marginTop: "24px" }}>
-            <h2>What is the Workspace?</h2>
+            <h2>Notes & Calendar</h2>
             <p>
-              The workspace is the heart of CoCreate — a single page where your daily devotional, prayer,
-              notes, and to-do list live together. Rather than jumping between apps, everything you need
-              for your time with God is in one calm, focused place.
+              Beyond the daily workspace, CoCreate gives you a place to keep longer thoughts and track the
+              rhythm of your week. Your notes live alongside your calendar, so nothing gets lost between
+              devotional time and daily life.
             </p>
             <ul>
-              <li><strong>Read:</strong> a Scripture or devotional reading for the day, with context and next steps.</li>
-              <li><strong>Pray:</strong> a private space to type out prayers, reflections, and anything the reading brought up.</li>
-              <li><strong>To-Do:</strong> capture what you want to carry into the day — actions, reminders, or people to reach out to.</li>
-              <li><strong>Notes & Calendar:</strong> your saved thoughts and upcoming events, all tied to the same day.</li>
+              <li><strong>Notes:</strong> capture ideas, prayers, Scripture highlights, and reflections in a simple, searchable library.</li>
+              <li><strong>Tags:</strong> organize notes by topic, season, or project so you can find them again quickly.</li>
+              <li><strong>Calendar:</strong> see events, prayer meetings, and to-do due dates in one place, tied to the days they matter.</li>
+              <li><strong>Connection:</strong> things you save in the workspace can flow into your notes and calendar, keeping everything in one consistent place.</li>
             </ul>
           </div>
         </div>
