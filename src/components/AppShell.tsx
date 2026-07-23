@@ -163,6 +163,7 @@ const SHELL_CSS = `
 @media (min-width:1024px) and (hover:hover){
   .app-shell.is-focus.side-revealed .app-focus-exit{opacity:0;pointer-events:none;transition:opacity .15s;}
 }
+.app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 `;
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
