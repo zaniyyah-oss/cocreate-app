@@ -52,6 +52,9 @@ const SHELL_CSS = `
 .app-main-wrap{min-width:0;display:flex;flex-direction:column;}
 .app-main{flex:1;min-width:0;padding-bottom:calc(84px + env(safe-area-inset-bottom,0));}
 
+/* Notes page is full-bleed, no card container */
+.app-shell.is-notes .app-main{padding-bottom:0;}
+
 /* Fixed mobile bottom nav — always visible while scrolling */
 .app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
 .app-bottomnav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8678;text-decoration:none;padding:4px 8px;transition:color .15s;min-width:52px;}
@@ -66,6 +69,9 @@ const SHELL_CSS = `
   /* Workspace pages: nav sits at end of page, not fixed */
   .app-shell.is-workspace .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
   .app-shell.is-workspace .app-main{padding-bottom:0;}
+
+  /* Notes page: full-bleed list + panel, nav sits at end of page */
+  .app-shell.is-notes .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
 }
 
 @media (min-width:1024px){
@@ -156,9 +162,10 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   };
 
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
+  const isNotes = pathname === "/notes";
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       <div className="app-layout">
         {/* Desktop sidebar */}

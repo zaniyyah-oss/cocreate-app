@@ -51,7 +51,7 @@ const formatLong = (iso: string) =>
 
 // ─── Layout / styles ────────────────────────────────────────────────
 const NOTES_CSS = `
-.nt-frame{max-width:1400px;margin:0 auto;background:#FBF8ED;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(24,26,77,0.08);display:flex;height:calc(100vh - 140px);min-height:520px;font-family:'Poppins',sans-serif;border:1px solid rgba(24,26,77,0.06);}
+.nt-frame{width:100%;height:100%;background:#FBF8ED;display:flex;overflow:hidden;font-family:'Poppins',sans-serif;}
 .nt-panel-body .ws-editor-content, .nt-panel-body .ProseMirror{font-size:13.5px;line-height:1.55;}
 .nt-panel-body .ws-editor-content h1, .nt-panel-body .ProseMirror h1{font-size:20px;}
 .nt-panel-body .ws-editor-content h2, .nt-panel-body .ProseMirror h2{font-size:17px;}
@@ -120,9 +120,8 @@ const NOTES_CSS = `
 .nt-panel-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#8a8678;font-size:12.5px;text-align:center;padding:32px;}
 
 @media (max-width:820px){
-  .nt-frame{flex-direction:column;height:auto;min-height:0;}
+  .nt-frame{flex-direction:column;}
   .nt-list-col{width:100%;max-height:280px;}
-  .nt-panel-region{min-height:60vh;}
   .nt-layout-toolbar .label,
   .nt-layout-btn:nth-child(3),
   .nt-layout-btn:nth-child(4){display:none;}
@@ -151,9 +150,7 @@ function NotesPage() {
     <AppShell current="notes">
       <style dangerouslySetInnerHTML={{ __html: SAVED_CSS }} />
       <style dangerouslySetInnerHTML={{ __html: NOTES_CSS }} />
-      <div className="sv-shell" style={{ maxWidth: 1400, paddingLeft: 20, paddingRight: 20, paddingTop: 0 }}>
-        {userId ? <NotesLibrary userId={userId} /> : null}
-      </div>
+      {userId ? <NotesLibrary userId={userId} /> : null}
     </AppShell>
   );
 }
