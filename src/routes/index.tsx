@@ -883,6 +883,13 @@ function HomePage() {
   const topicsQ = useTopics();
   const navigate = useNavigate({ from: "/" });
   const isMobile = useIsMobile();
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session?.user.id));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s?.user.id));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // Mobile first-open: redirect to workspace (kept from previous behavior).
   useEffect(() => {
@@ -895,10 +902,10 @@ function HomePage() {
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
   return (
-    <AppShell current="home">
+    <AppShell current="home" hideSideWhenSignedOut>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hp">
-        <TopicsNav />
+        <HomeMasthead signedIn={signedIn} />
         <LatestSection />
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
         <FeaturedCollectionSection />
@@ -913,3 +920,4 @@ function HomePage() {
     </AppShell>
   );
 }
+
