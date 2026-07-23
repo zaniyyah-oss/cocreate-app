@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -189,16 +189,28 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               </button>
             </div>
           </div>
-          {desktopNav.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              className={`app-side-item${isActive(n) ? " active" : ""}`}
-              title={collapsed ? n.label : undefined}
-            >
-              {n.icon}<span className="lbl">{n.label}</span>
-            </Link>
-          ))}
+          {desktopNav.map((n) => {
+            const item = (
+              <Link
+                key={n.key}
+                to={n.to}
+                className={`app-side-item${isActive(n) ? " active" : ""}`}
+                title={collapsed ? n.label : undefined}
+              >
+                {n.icon}<span className="lbl">{n.label}</span>
+              </Link>
+            );
+            if (n.key === "explore") {
+              return (
+                <Fragment key={n.key}>
+                  <div className="app-side-divider" />
+                  <div className="app-side-label">Your reference</div>
+                  {item}
+                </Fragment>
+              );
+            }
+            return item;
+          })}
           <div className="app-side-foot">
             {userId ? (
               <>
