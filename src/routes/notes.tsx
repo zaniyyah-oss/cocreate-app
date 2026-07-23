@@ -120,9 +120,8 @@ const NOTES_CSS = `
 .nt-panel-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#8a8678;font-size:12.5px;text-align:center;padding:32px;}
 
 @media (max-width:820px){
-  .nt-frame{flex-direction:column;height:auto;min-height:0;}
+  .nt-frame{flex-direction:column;}
   .nt-list-col{width:100%;max-height:280px;}
-  .nt-panel-region{min-height:60vh;}
   .nt-layout-toolbar .label,
   .nt-layout-btn:nth-child(3),
   .nt-layout-btn:nth-child(4){display:none;}
