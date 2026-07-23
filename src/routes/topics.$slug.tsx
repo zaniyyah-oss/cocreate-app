@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
@@ -87,6 +87,11 @@ const CSS = `
 .tp-title{font-size:52px;font-weight:900;color:#181A4D;letter-spacing:-0.04em;line-height:1.02;margin:0 0 14px;}
 .tp-desc{font-size:16px;line-height:1.65;color:#20201c;max-width:640px;margin:0;font-weight:500;}
 .tp-count{background:#FBF8ED;color:#181A4D;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:99px;white-space:nowrap;}
+.tp-follow{background:#181A4D;color:#fff;border:none;font-family:'Poppins',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:10px 18px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-top:14px;}
+.tp-follow:hover{background:#0F4A42;}
+.tp-follow.on{background:#DCE07A;color:#181A4D;}
+.tp-follow.on:hover{background:#FFAE00;}
+.tp-follow svg{width:14px;height:14px;fill:currentColor;}
 
 .tp-shell{max-width:1080px;margin:0 auto;padding:52px 28px 100px;}
 .tp-section{margin-bottom:56px;}
@@ -129,10 +134,18 @@ const CSS = `
 function TopicPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const topicQ = useQuery({
@@ -197,12 +210,39 @@ function TopicPage() {
     navigate({ to: meta.route, params: { id: c.id } });
   };
 
+  const followQ = useQuery({
+    queryKey: ["topic-follow", userId, topic?.id],
+    enabled: !!userId && !!topic?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topic_subscriptions")
+        .select("id")
+        .eq("user_id", userId!)
+        .eq("topic_id", topic!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.id ?? null;
+    },
+  });
+  const isFollowing = !!followQ.data;
+  const toggleFollow = async () => {
+    if (!userId) { navigate({ to: "/auth" }); return; }
+    if (!topic) return;
+    if (followQ.data) {
+      await supabase.from("topic_subscriptions").delete().eq("id", followQ.data);
+    } else {
+      await supabase.from("topic_subscriptions").insert({ user_id: userId, topic_id: topic.id });
+    }
+    qc.invalidateQueries({ queryKey: ["topic-follow", userId, topic.id] });
+    qc.invalidateQueries({ queryKey: ["bookmarked-topics", userId] });
+  };
+
   return (
     <AppShell>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tp-root">
       <div style={{ padding: "16px 24px 0", maxWidth: 1200, margin: "0 auto" }}>
-        <Link to="/explore" className="tp-back">← Back to Explore</Link>
+        <Link to="/explore" className="tp-back">← Back to bookmarks</Link>
       </div>
 
 
@@ -215,6 +255,15 @@ function TopicPage() {
             </div>
             <h1 className="tp-title">{topic?.name ?? humanize(slug)}</h1>
             <p className="tp-desc">{desc}</p>
+            <button
+              type="button"
+              className={`tp-follow ${isFollowing ? "on" : ""}`}
+              onClick={toggleFollow}
+              disabled={followQ.isLoading}
+            >
+              <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>
+              {isFollowing ? "Following" : "Follow topic"}
+            </button>
           </div>
           <div className="tp-count">{totalCount} {totalCount === 1 ? "piece" : "pieces"}</div>
         </div>

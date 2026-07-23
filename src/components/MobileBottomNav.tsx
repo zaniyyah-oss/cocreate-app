@@ -6,7 +6,7 @@ export type NavKey = "home" | "explore" | "devotionals" | "saved" | "notes" | "p
 
 const ICON = {
   home:        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>,
-  explore:     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>,
+  explore:     <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
   devotionals: <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M8 7h8M8 11h5"/></svg>,
   saved:       <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
   notes:       <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>,
@@ -18,7 +18,7 @@ const ICON = {
 function buildMobileNav(labels: Record<string, string>) {
   return [
     { key: "home" as const,        label: labels.home_label        || "Home",      to: "/" },
-    { key: "explore" as const,     label: labels.explore_label     || "Explore",   to: "/explore" },
+    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore" },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals" },
     { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved", matchPaths: ["/saved", "/notes"] },
     { key: "messages" as const,    label: labels.messages_label    || "Messages",  to: "/messages" },

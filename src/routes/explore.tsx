@@ -1,19 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
-import { RecommendedRow } from "@/components/RecommendedRow";
 
 export const Route = createFileRoute("/explore")({
-  component: ExplorePage,
+  component: BookmarksPage,
   head: () => ({
     meta: [
-      { title: "Explore — CoCreate" },
-      { name: "description", content: "Browse essays, teachings, podcasts, blogs, and devotional templates across every topic on CoCreate." },
-      { property: "og:title", content: "Explore CoCreate" },
-      { property: "og:description", content: "Filter essays, teachings, podcasts, and devotionals by topic on CoCreate." },
+      { title: "Bookmarks — CoCreate" },
+      { name: "description", content: "Your saved topics and content on CoCreate — the conversations you're following and the pieces you plan to return to." },
+      { property: "og:title", content: "Your bookmarks on CoCreate" },
+      { property: "og:description", content: "Topics you follow and content you saved for later — all in one place." },
     ],
   }),
 });
@@ -22,83 +21,72 @@ type Topic = Database["public"]["Tables"]["topics"]["Row"];
 type ContentPreview = Database["public"]["Views"]["content_items_public"]["Row"];
 type ContentType = Database["public"]["Enums"]["content_type"];
 
-const TYPE_META: Record<ContentType, { label: string; cls: string }> = {
-  teaching: { label: "Teaching", cls: "teaching" },
-  essay: { label: "Essay", cls: "essay" },
-  podcast: { label: "Podcast", cls: "podcast" },
-  blog: { label: "Blog", cls: "essay" },
-  clip: { label: "Clip", cls: "podcast" },
-  promoted: { label: "Promoted", cls: "teaching" },
+const TOPIC_COLORS: Record<string, string> = {
+  amber: "#F5B301", teal: "#0F4A42", lime: "#DCE07A", "light-green": "#C7E39B",
+  coral: "#FF340C", navy: "#181A4D", cream: "#FBF8ED", brown: "#441B07",
+};
+const topicColor = (k?: string | null) => (k && TOPIC_COLORS[k]) || "#0F4A42";
+
+const TYPE_META: Record<ContentType, { label: string; bg: string; fg: string }> = {
+  teaching: { label: "Teaching", bg: "#FFAE00", fg: "#181A4D" },
+  essay:    { label: "Essay",    bg: "#DCE07A", fg: "#181A4D" },
+  podcast:  { label: "Podcast",  bg: "#0F4A42", fg: "#FBF8ED" },
+  blog:     { label: "Blog",     bg: "#DCE07A", fg: "#181A4D" },
+  clip:     { label: "Clip",     bg: "#CAC307", fg: "#181A4D" },
+  promoted: { label: "Featured", bg: "#FFAE00", fg: "#181A4D" },
 };
 
-const TYPE_OPTIONS: ContentType[] = ["teaching", "essay", "podcast", "blog"];
+const routeForType = (t: ContentType) =>
+  t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
 
 const CSS = `
-.ex-root{font-family:'Poppins',sans-serif;background:#eee9d9;color:#20201c;min-height:100vh;}
-.ex-root *{box-sizing:border-box;}
-.ex-nav{background:#fff;border-bottom:1px solid rgba(20,20,20,0.08);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.ex-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.ex-brand .mark{width:28px;height:28px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;}
-.ex-brand .word{font-weight:900;font-size:19px;color:#181A4D;letter-spacing:-0.02em;}
-.ex-navlinks{display:flex;gap:6px;align-items:center;}
-.ex-navlink{color:#20201c;text-decoration:none;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:16px;}
-.ex-navlink.active{background:#DCE07A;color:#181A4D;}
-.ex-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;font-family:'Poppins';border:none;cursor:pointer;}
-.ex-signout{background:transparent;border:1.5px solid rgba(20,20,20,0.12);color:#20201c;font-weight:700;font-size:12px;padding:8px 14px;border-radius:16px;font-family:'Poppins';cursor:pointer;}
-.ex-shell{max-width:1400px;margin:0 auto;padding:34px 28px 80px;}
-.ex-h1{font-size:34px;font-weight:900;letter-spacing:-0.03em;color:#181A4D;margin:0 0 6px;}
-.ex-sub{font-size:14px;color:#8a8678;font-weight:500;margin-bottom:22px;}
-.ex-flabel{font-size:10.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#181A4D;margin:14px 0 10px;}
-.ex-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
-.ex-pill{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid rgba(20,20,20,0.08);color:#181A4D;background:#fff;font-family:'Poppins';transition:all .12s;}
-.ex-pill:hover{border-color:#181A4D;}
-.ex-pill.on{background:#181A4D;border-color:#181A4D;color:#fff;}
-.ex-typepill.on.teaching{background:#FFAE00;border-color:#FFAE00;color:#181A4D;}
-.ex-typepill.on.essay,.ex-typepill.on.blog{background:#DCE07A;border-color:#DCE07A;color:#181A4D;}
-.ex-typepill.on.podcast{background:#0F4A42;border-color:#0F4A42;color:#FBF8ED;}
-.ex-typepill.on.devotional{background:#CAC307;border-color:#CAC307;color:#181A4D;}
-.ex-clear{background:none;border:none;color:#8a8678;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Poppins';margin-left:6px;text-decoration:underline;}
-.ex-count{font-size:12px;color:#8a8678;font-weight:600;margin:18px 0 14px;}
-.ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-@media (max-width: 900px){.ex-grid{grid-template-columns:1fr;}}
-.ex-card{background:#fff;border:1px solid rgba(20,20,20,0.08);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s;}
-.ex-card:hover{transform:translateY(-3px);}
-.ex-thumb{position:relative;height:150px;overflow:hidden;}
-.ex-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(0.2) contrast(1.05);}
-.ex-thumb::after{content:'';position:absolute;inset:0;mix-blend-mode:multiply;opacity:0.55;}
-.ex-thumb.teaching::after{background:#FFAE00;}
-.ex-thumb.essay::after,.ex-thumb.blog::after{background:#DCE07A;}
-.ex-thumb.podcast::after{background:#0F4A42;}
-.ex-thumb.devotional::after{background:#CAC307;}
-.ex-tag{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
-.ex-tag.teaching{background:#FFAE00;color:#181A4D;}
-.ex-tag.essay,.ex-tag.blog{background:#DCE07A;color:#181A4D;}
-.ex-tag.podcast{background:#0F4A42;color:#FBF8ED;}
-.ex-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1;}
-.ex-scr{font-size:10.5px;color:#0F4A42;font-weight:700;margin-bottom:6px;}
-.ex-title{font-size:16px;font-weight:800;color:#181A4D;letter-spacing:-0.01em;margin:0 0 6px;line-height:1.3;}
-.ex-desc{font-size:12.5px;color:#8a8678;line-height:1.55;margin:0 0 12px;}
-.ex-meta{display:flex;align-items:center;justify-content:space-between;margin-top:auto;font-size:11px;color:#8a8678;font-weight:600;}
-.ex-actions{display:flex;gap:8px;}
-.ex-act{background:none;border:none;padding:4px;color:#8a8678;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;font-family:'Poppins';}
-.ex-act:hover{color:#181A4D;}
-.ex-act svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
-.ex-empty{background:#fff;border:1.5px dashed rgba(20,20,20,0.14);border-radius:16px;padding:44px 28px;text-align:center;margin-top:14px;}
-.ex-empty h3{font-size:18px;font-weight:800;color:#181A4D;margin:0 0 8px;letter-spacing:-0.01em;}
-.ex-empty p{font-size:13px;color:#8a8678;margin:0 0 16px;}
-.ex-empty button{background:#181A4D;color:#fff;font-weight:700;font-size:12px;padding:9px 18px;border-radius:20px;border:none;font-family:'Poppins';cursor:pointer;}
-.ex-skel{background:#fff;border:1px solid rgba(20,20,20,0.06);border-radius:16px;height:290px;animation:pulse 1.4s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
-.ex-signprompt{background:#FBF8ED;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:12px;padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
-.ex-signprompt p{margin:0;font-size:13px;color:#181A4D;font-weight:600;}
-.ex-modal{position:fixed;inset:0;background:rgba(24,26,77,0.35);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
-.ex-modalcard{background:#fff;border-radius:18px;padding:28px;max-width:400px;width:100%;text-align:center;}
-.ex-modalcard h3{font-size:20px;font-weight:900;color:#181A4D;margin:0 0 8px;letter-spacing:-0.01em;}
-.ex-modalcard p{font-size:13px;color:#8a8678;margin:0 0 18px;line-height:1.5;}
-.ex-modalcard .row{display:flex;gap:10px;justify-content:center;}
-`;
+.bm-root{font-family:'Poppins',sans-serif;background:#eee9d9;color:#20201c;min-height:100vh;}
+.bm-root *{box-sizing:border-box;}
+.bm-shell{max-width:1080px;margin:0 auto;padding:38px 28px 90px;}
+.bm-h1{font-size:34px;font-weight:900;letter-spacing:-0.03em;color:#181A4D;margin:0 0 6px;}
+.bm-sub{font-size:14px;color:#8a8678;font-weight:500;margin:0 0 28px;max-width:560px;line-height:1.55;}
 
-const IMG_FALLBACK = (id: string) => `https://picsum.photos/seed/${id}/600/400`;
+.bm-signgate{background:#fff;border:1px solid rgba(20,20,20,0.08);border-left:4px solid #FF340C;border-radius:14px;padding:22px;max-width:560px;margin-bottom:26px;}
+.bm-signgate h3{font-size:16px;font-weight:800;color:#181A4D;margin:0 0 6px;}
+.bm-signgate p{font-size:13.5px;color:#8a8678;margin:0 0 14px;line-height:1.55;}
+.bm-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:20px;text-decoration:none;display:inline-block;}
+
+.bm-section{margin-bottom:48px;}
+.bm-shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px;}
+.bm-shead h2{font-size:13px;font-weight:800;color:#8a8678;letter-spacing:0.14em;text-transform:uppercase;margin:0;display:flex;align-items:center;gap:10px;}
+.bm-shead h2 .count{background:#FBF8ED;color:#181A4D;font-size:11px;padding:2px 9px;border-radius:99px;letter-spacing:0;}
+.bm-shead a{font-size:12px;font-weight:700;color:#181A4D;text-decoration:none;opacity:0.7;}
+.bm-shead a:hover{opacity:1;}
+
+.bm-topics{display:flex;flex-wrap:wrap;gap:10px;}
+.bm-topic{background:#fff;border:1px solid rgba(20,20,20,0.08);border-radius:14px;padding:12px 16px;display:inline-flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s, box-shadow .15s;text-decoration:none;color:inherit;}
+.bm-topic:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,0.06);}
+.bm-topic .dot{width:10px;height:10px;border-radius:50%;}
+.bm-topic .name{font-size:13.5px;font-weight:800;color:#181A4D;letter-spacing:-0.005em;}
+.bm-topic .rm{background:none;border:none;color:#8a8678;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;font-family:inherit;}
+.bm-topic .rm:hover{color:#FF340C;}
+
+.bm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
+.bm-card{background:#fff;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .18s, box-shadow .18s;border:1px solid rgba(20,20,20,0.06);display:flex;flex-direction:column;position:relative;}
+.bm-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,0.08);}
+.bm-thumb{width:100%;aspect-ratio:16/10;background:#DCE07A;position:relative;overflow:hidden;}
+.bm-thumb img{width:100%;height:100%;object-fit:cover;}
+.bm-rt{position:absolute;top:10px;left:10px;font-size:9.5px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:12px;}
+.bm-cbody{padding:14px 16px 16px;}
+.bm-cbody h3{font-size:14.5px;font-weight:800;color:#181A4D;letter-spacing:-0.01em;margin:0 0 6px;line-height:1.35;}
+.bm-cbody .a{font-size:11.5px;color:#8a8678;font-weight:600;}
+.bm-crm{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.92);color:#181A4D;border:none;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;opacity:0;transition:opacity .15s;}
+.bm-card:hover .bm-crm{opacity:1;}
+.bm-crm:hover{background:#FF340C;color:#fff;}
+
+.bm-empty{background:#fff;border:1.5px dashed rgba(20,20,20,0.12);border-radius:14px;padding:28px 24px;text-align:center;color:#8a8678;font-size:13.5px;line-height:1.6;}
+.bm-empty strong{display:block;color:#181A4D;font-weight:800;font-size:15px;margin-bottom:6px;}
+.bm-empty a{color:#181A4D;font-weight:700;text-decoration:underline;}
+
+.bm-skel{background:#fff;border:1px solid rgba(20,20,20,0.06);border-radius:14px;height:220px;position:relative;overflow:hidden;}
+.bm-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.7),transparent);animation:bm-shim 1.4s infinite;}
+@keyframes bm-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+`;
 
 function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -116,168 +104,162 @@ function useAuth() {
   return { userId, ready };
 }
 
-function ExplorePage() {
+function BookmarksPage() {
   const navigate = useNavigate();
-  const { userId } = useAuth();
-  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
-  const [selectedTypes, setSelectedTypes] = useState<Set<ContentType>>(new Set());
-  const [gatePrompt, setGatePrompt] = useState<string | null>(null);
-
-  const topicsQ = useQuery({
-    queryKey: ["topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("topics").select("*").order("name");
-      if (error) throw error;
-      return data as Topic[];
-    },
-  });
-
-  const contentQ = useQuery({
-    queryKey: ["content-public"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("content_items_public")
-        .select("*")
-        .order("published_at", { ascending: false, nullsFirst: false });
-      if (error) throw error;
-      return (data ?? []) as ContentPreview[];
-    },
-  });
+  const qc = useQueryClient();
+  const { userId, ready } = useAuth();
 
   useEffect(() => {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
   }, []);
 
-  const filtered = useMemo(() => {
-    const items = contentQ.data ?? [];
-    return items.filter((c) => {
-      if (selectedTopics.size > 0 && (!c.topic_id || !selectedTopics.has(c.topic_id))) return false;
-      if (selectedTypes.size > 0 && (!c.type || !selectedTypes.has(c.type))) return false;
-      return true;
-    });
-  }, [contentQ.data, selectedTopics, selectedTypes]);
+  const topicsQ = useQuery({
+    queryKey: ["bookmarked-topics", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topic_subscriptions")
+        .select("topic_id, created_at, topic:topics(*)")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => r.topic as Topic).filter(Boolean);
+    },
+  });
 
-  const toggle = <T,>(set: Set<T>, v: T, setter: (s: Set<T>) => void) => {
-    const next = new Set(set);
-    next.has(v) ? next.delete(v) : next.add(v);
-    setter(next);
+  const savedQ = useQuery({
+    queryKey: ["bookmarked-content", userId],
+    enabled: ready && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("saved_items")
+        .select("id, content_item_id, saved_at")
+        .eq("user_id", userId!)
+        .not("content_item_id", "is", null)
+        .order("saved_at", { ascending: false });
+      if (error) throw error;
+      const ids = (data ?? []).map((r: any) => r.content_item_id).filter(Boolean) as string[];
+      if (ids.length === 0) return [] as Array<{ id: string; content: ContentPreview }>;
+      const { data: content } = await supabase
+        .from("content_items_public")
+        .select("*")
+        .in("id", ids);
+      const map = new Map<string, ContentPreview>();
+      (content ?? []).forEach((c) => { if (c.id) map.set(c.id, c as ContentPreview); });
+      return (data ?? [])
+        .map((r: any) => ({ id: r.id as string, content: map.get(r.content_item_id) }))
+        .filter((r) => !!r.content) as Array<{ id: string; content: ContentPreview }>;
+    },
+  });
+
+  const removeTopic = async (topicId: string) => {
+    if (!userId) return;
+    await supabase.from("topic_subscriptions").delete().eq("user_id", userId).eq("topic_id", topicId);
+    qc.invalidateQueries({ queryKey: ["bookmarked-topics", userId] });
   };
 
-  const clearAll = () => { setSelectedTopics(new Set()); setSelectedTypes(new Set()); };
-
-
-  const requireAuth = (action: string) => {
-    if (userId) return true;
-    setGatePrompt(action);
-    return false;
+  const removeSaved = async (savedId: string) => {
+    await supabase.from("saved_items").delete().eq("id", savedId);
+    qc.invalidateQueries({ queryKey: ["bookmarked-content", userId] });
   };
+
+  const openContent = (c: ContentPreview) => {
+    if (!c.id) return;
+    navigate({ to: routeForType((c.type ?? "essay") as ContentType), params: { id: c.id } });
+  };
+
+  const topics = topicsQ.data ?? [];
+  const saved = savedQ.data ?? [];
 
   return (
     <AppShell current="explore">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="ex-root">
-      <div className="ex-shell">
-        <h1 className="ex-h1">Explore</h1>
-        <p className="ex-sub">Browse essays, teachings, podcasts, and devotionals across every topic.</p>
+      <div className="bm-root">
+        <div className="bm-shell">
+          <h1 className="bm-h1">Bookmarks</h1>
+          <p className="bm-sub">Topics you're following and pieces you've saved for later. Nothing to remember — everything's waiting here.</p>
 
-        {!userId && (
-          <div className="ex-signprompt">
-            <p>Browsing as a guest. Sign in to save what moves you, take notes, and read full essays.</p>
-            <Link to="/auth" className="ex-signin">Sign in</Link>
-          </div>
-        )}
+          {ready && !userId ? (
+            <div className="bm-signgate">
+              <h3>Sign in to keep bookmarks</h3>
+              <p>Your saved topics and content stay private to your account and follow you across devices.</p>
+              <Link to="/auth" className="bm-signin">Sign in</Link>
+            </div>
+          ) : (
+            <>
+              <div className="bm-section">
+                <div className="bm-shead">
+                  <h2>Topics you follow {!topicsQ.isLoading && <span className="count">{topics.length}</span>}</h2>
+                </div>
+                {topicsQ.isLoading ? (
+                  <div className="bm-skel" style={{ height: 60 }} />
+                ) : topics.length === 0 ? (
+                  <div className="bm-empty">
+                    <strong>No topics bookmarked yet</strong>
+                    Open any topic page and tap "Follow topic" to keep it here. Try one from the <Link to="/">homepage</Link>.
+                  </div>
+                ) : (
+                  <div className="bm-topics">
+                    {topics.map((t) => (
+                      <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} className="bm-topic">
+                        <span className="dot" style={{ background: topicColor(t.color_key) }} />
+                        <span className="name">{t.name}</span>
+                        <button
+                          type="button"
+                          className="rm"
+                          aria-label={`Remove ${t.name}`}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTopic(t.id); }}
+                        >×</button>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        <RecommendedRow />
-
-        <div className="ex-flabel">Topics</div>
-        <div className="ex-pills">
-          {topicsQ.data?.map((t) => (
-            <button key={t.id} className={`ex-pill ${selectedTopics.has(t.id) ? "on" : ""}`}
-              onClick={() => toggle(selectedTopics, t.id, setSelectedTopics)}>
-              {t.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="ex-flabel">Format</div>
-        <div className="ex-pills">
-          {TYPE_OPTIONS.map((t) => (
-            <button key={t} className={`ex-pill ex-typepill ${t} ${selectedTypes.has(t) ? "on" : ""}`}
-              onClick={() => toggle(selectedTypes, t, setSelectedTypes)}>
-              {TYPE_META[t].label}
-            </button>
-          ))}
-          {(selectedTopics.size > 0 || selectedTypes.size > 0) && (
-            <button className="ex-clear" onClick={clearAll}>Clear filters</button>
+              <div className="bm-section">
+                <div className="bm-shead">
+                  <h2>Saved to read later {!savedQ.isLoading && <span className="count">{saved.length}</span>}</h2>
+                </div>
+                {savedQ.isLoading ? (
+                  <div className="bm-cards">
+                    {Array.from({ length: 3 }).map((_, i) => <div key={i} className="bm-skel" />)}
+                  </div>
+                ) : saved.length === 0 ? (
+                  <div className="bm-empty">
+                    <strong>Nothing saved for later yet</strong>
+                    Tap the bookmark on any essay, teaching, or podcast and it will land here.
+                  </div>
+                ) : (
+                  <div className="bm-cards">
+                    {saved.map((s) => {
+                      const c = s.content!;
+                      const meta = TYPE_META[(c.type ?? "essay") as ContentType] ?? TYPE_META.essay;
+                      return (
+                        <div key={s.id} className="bm-card" onClick={() => openContent(c)}>
+                          <div className="bm-thumb">
+                            {c.thumbnail_url && <img src={c.thumbnail_url} alt={c.title ?? ""} />}
+                            <span className="bm-rt" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>
+                          </div>
+                          <div className="bm-cbody">
+                            <h3>{c.title}</h3>
+                            <div className="a">{c.author_name ?? "CoCreate"}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="bm-crm"
+                            aria-label="Remove bookmark"
+                            onClick={(e) => { e.stopPropagation(); removeSaved(s.id); }}
+                          >×</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
-
-        {contentQ.isLoading ? (
-          <div className="ex-grid" style={{ marginTop: 24 }}>
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="ex-skel" />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="ex-empty">
-            <h3>Nothing here yet</h3>
-            <p>No content matches this combination of topic and format. Try a different topic — or browse everything.</p>
-            <button onClick={clearAll}>Browse everything</button>
-          </div>
-        ) : (
-          <>
-            <div className="ex-count">{filtered.length} {filtered.length === 1 ? "result" : "results"}</div>
-            <div className="ex-grid">
-              {filtered.map((c) => {
-                const t = c.type ?? "essay";
-                const meta = TYPE_META[t];
-                return (
-                  <div key={c.id ?? ""} className="ex-card"
-                    onClick={() => {
-                      if (!c.id) return;
-                      const route = t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
-                      navigate({ to: route, params: { id: c.id } });
-                    }}>
-
-                    <div className={`ex-thumb ${meta.cls}`}>
-                      <img src={c.thumbnail_url || IMG_FALLBACK(c.id ?? "x")} alt={c.title ?? ""} />
-                      <span className={`ex-tag ${meta.cls}`}>{meta.label}</span>
-                    </div>
-                    <div className="ex-body">
-                      {c.scripture_reference && <div className="ex-scr">{c.scripture_reference}</div>}
-                      <h3 className="ex-title">{c.title}</h3>
-                      {c.excerpt && <p className="ex-desc">{c.excerpt}</p>}
-                      <div className="ex-meta">
-                        <span>{c.author_name ?? "CoCreate"}</span>
-                        <div className="ex-actions">
-                          <button className="ex-act" onClick={(e) => { e.stopPropagation(); requireAuth("save this"); }}>
-                            <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>Save
-                          </button>
-                          <button className="ex-act" onClick={(e) => { e.stopPropagation(); requireAuth("take a note"); }}>
-                            <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Note
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
-
-      {gatePrompt && (
-        <div className="ex-modal" onClick={() => setGatePrompt(null)}>
-          <div className="ex-modalcard" onClick={(e) => e.stopPropagation()}>
-            <h3>Sign in to continue</h3>
-            <p>Create a free account to {gatePrompt}, and keep everything that moves you in one place.</p>
-            <div className="row">
-              <button className="ex-signout" onClick={() => setGatePrompt(null)}>Not now</button>
-              <Link to="/auth" className="ex-signin">Sign in</Link>
-            </div>
-          </div>
-        </div>
-      )}
       </div>
     </AppShell>
   );
