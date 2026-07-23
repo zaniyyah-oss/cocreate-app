@@ -184,6 +184,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           {desktopNav.map((group, gi) => (
             <div key={gi}>
               {gi > 0 && <div className="app-side-divider" />}
+              {gi === 1 && <div className="app-side-label">YOUR REFERENCE</div>}
               {group.map((n) => (
                 <Link
                   key={n.key}
