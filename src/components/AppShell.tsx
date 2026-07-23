@@ -202,11 +202,11 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
             );
             if (n.key === "explore") {
               return (
-                <React.Fragment key={n.key}>
+                <Fragment key={n.key}>
                   <div className="app-side-divider" />
                   <div className="app-side-label">Your reference</div>
                   {item}
-                </React.Fragment>
+                </Fragment>
               );
             }
             return item;
