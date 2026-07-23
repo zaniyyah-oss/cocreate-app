@@ -565,8 +565,8 @@ function MediaNav() {
         <span className="hp-mast-media-dot" />
         <span>Watch</span>
       </Link>
-      <Link to="/listen" className="hp-mast-media-link" aria-label="Listen">
-        <svg viewBox="0 0 24 24"><path d="M3 14v3a2 2 0 0 0 2 2h1l2-3h-3a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h3l-2-3H5a2 2 0 0 0-2 2z"/><path d="M17 14v3a2 2 0 0 1-2 2h-1l-2-3h3a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1h-3l2-3h1a2 2 0 0 1 2 2z"/><path d="M7 10v4M17 10v4"/></svg>
+      <Link to="/listen" className="hp-mast-media-link hp-mast-media-link--listen" aria-label="Listen">
+        <Headphones size={18} />
         <span>Listen</span>
       </Link>
       {searchOpen ? (
