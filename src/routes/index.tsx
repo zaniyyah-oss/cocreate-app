@@ -189,6 +189,16 @@ const CSS = `
 .hp-skel{background:#fff;border-radius:12px;height:160px;border:1px solid var(--hair);position:relative;overflow:hidden;}
 .hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);animation:hp-shim 1.4s infinite;}
 @keyframes hp-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+.hp-footer{margin-top:56px;padding-top:34px;border-top:1px solid var(--hair);}
+.hp-footer-label{font-size:10.5px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);opacity:0.6;margin:0 0 12px;}
+.hp-footer-label + .hp-footer-pills + .hp-footer-label{margin-top:22px;}
+.hp-footer-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.hp-footer-pill{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--hair);color:var(--navy);background:#fff;font-family:inherit;text-decoration:none;display:inline-block;transition:all .12s;}
+.hp-footer-pill:hover{border-color:var(--navy);}
+.hp-footer-pill.teaching:hover{background:#FFAE00;border-color:#FFAE00;color:var(--navy);}
+.hp-footer-pill.essay:hover,.hp-footer-pill.blog:hover{background:#DCE07A;border-color:#DCE07A;color:var(--navy);}
+.hp-footer-pill.podcast:hover{background:#0F4A42;border-color:#0F4A42;color:#FBF8ED;}
 `;
 
 /* ---------------- Scripture Widget ---------------- */
