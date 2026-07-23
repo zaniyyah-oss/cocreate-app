@@ -28,7 +28,7 @@ function buildDesktopNav(labels: Record<string, string>) {
       { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
     ],
     [
-      { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore",     icon: ICON.explore },
+      { key: "explore" as const,     label: "Bookmarks", to: "/explore", icon: ICON.explore },
       { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
     ],
     [
