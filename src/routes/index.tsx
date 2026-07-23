@@ -165,7 +165,7 @@ const CSS = `
 .hp-topics a:hover,.hp-topics a.is-active{color:var(--navy);}
 
 /* Section frames */
-.hp-section{padding:44px 0;}
+.hp-section{padding:60px 0;}
 .hp-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
 .hp-eyebrow .bar{width:4px;height:18px;background:var(--teal);border-radius:2px;}
 .hp-eyebrow h2{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:0;}
