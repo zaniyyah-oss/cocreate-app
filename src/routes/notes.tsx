@@ -389,6 +389,7 @@ function NotesLibrary({ userId }: { userId: string }) {
                 key={d.id}
                 doc={d}
                 userId={userId}
+                colorFor={colorFor}
                 onClose={() => closePanel(d.id)}
               />
             ))
