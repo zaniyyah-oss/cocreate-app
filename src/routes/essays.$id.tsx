@@ -12,7 +12,7 @@ export const Route = createFileRoute("/essays/$id")({
       <div style={{ maxWidth: 640, margin: "80px auto", textAlign: "center" }}>
         <h1 style={{ fontSize: 22, color: "#181A4D", fontWeight: 900 }}>This essay didn't load</h1>
         <p style={{ color: "#8a8678", marginTop: 8 }}>{error.message}</p>
-        <Link to="/explore" style={backLink}>Back to Explore</Link>
+        <Link to="/" style={backLink}>Back to Home</Link>
       </div>
     </div>
   ),
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/essays/$id")({
     <div style={pageWrap}>
       <div style={{ maxWidth: 640, margin: "80px auto", textAlign: "center" }}>
         <h1 style={{ fontSize: 22, color: "#181A4D", fontWeight: 900 }}>Essay not found</h1>
-        <Link to="/explore" style={backLink}>Back to Explore</Link>
+        <Link to="/" style={backLink}>Back to Home</Link>
       </div>
     </div>
   ),
@@ -331,7 +331,7 @@ function EssayPage() {
 
       <nav className="es-nav">
         <Link to="/" className="es-brand"><div className="mark">C</div><div className="word">CoCreate</div></Link>
-        <Link to="/explore" className="es-back">← Back to Explore</Link>
+        <Link to="/" className="es-back">← Back to Home</Link>
         {userId ? null : <Link to="/auth" className="es-signin">Sign in</Link>}
       </nav>
 
