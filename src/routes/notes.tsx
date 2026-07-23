@@ -559,12 +559,15 @@ function DocPanel({
         )}
 
         <div className="nt-panel-tagrow">
-          {tags.map((t) => (
-            <span key={t} className="nt-panel-tag">
-              #{displayTag(t)}
-              {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>}
-            </span>
-          ))}
+          {tags.map((t) => {
+            const c = colorFor(t);
+            return (
+              <span key={t} className="nt-panel-tag" style={c ? { background: c, color: "#181A4D" } : undefined}>
+                #{displayTag(t)}
+                {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag" style={c ? { color: "#181A4D" } : undefined}>×</button>}
+              </span>
+            );
+          })}
           {editing && (
             <input
               className="nt-tag-input"
