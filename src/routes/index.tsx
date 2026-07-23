@@ -69,6 +69,85 @@ const readTimeOf = (c: ContentPreview) => {
   return "";
 };
 
+/* ---------- Filler / demo content ---------- */
+const DEMO_AUTHORS = ["Ada Blackwell", "Jonah Rivers", "Naomi Cole", "Micah Tran", "Ruth Adeyemi", "Silas Park", "Hannah Osei", "Elias Moreno"];
+const DEMO_TITLES: Record<string, string[]> = {
+  latest: [
+    "The quiet work of becoming: notes from a slow season",
+    "What we mean when we say 'called'",
+    "A liturgy for Monday mornings",
+    "On the friendships that stay",
+    "Rebuilding after the plan fell through",
+    "The gospel in ordinary time",
+  ],
+  identity: [
+    "Daughterhood is not a phase",
+    "Sonship without performance",
+    "The name beneath the name",
+    "Becoming, unhurried",
+    "When healing feels like grief",
+  ],
+  marriage: [
+    "Partnership as practice, not performance",
+    "The fight that changed everything",
+    "Intimacy after the hard year",
+    "Engaged, and terrified, and hopeful",
+    "How we learned to say the hard thing",
+  ],
+  parenting: [
+    "The early years are the small years",
+    "Discipling without control",
+    "Teens, tenderly",
+    "Single parenting and the weight of enough",
+    "A prayer for the child who left",
+  ],
+  ministry: [
+    "Calling is not a spotlight",
+    "Serving from a full cup",
+    "Leadership that lays things down",
+    "Notes on burnout",
+    "The pulpit and the kitchen table",
+  ],
+  streaming: [
+    "The Room: episode 12 — Rest as resistance",
+    "Teaching: on the wilderness season",
+    "Clip: 'You were not made to hustle for love'",
+    "Podcast: raising kids who love the church",
+    "Teaching: what marriage teaches us about God",
+  ],
+  spotlight: [
+    "The essay that started it all",
+    "A letter to my younger self in ministry",
+    "How we practice sabbath now",
+    "On leaving well",
+  ],
+};
+const DEMO_EXCERPT = "A short, warm read on how faith actually shows up in the everyday — the kitchen, the calendar, the conversation you keep avoiding.";
+
+function makeDemo(kind: keyof typeof DEMO_TITLES, count: number, offset = 0, type: ContentType = "essay"): ContentPreview[] {
+  const titles = DEMO_TITLES[kind];
+  return Array.from({ length: count }).map((_, i) => {
+    const seed = `${kind}-${i + offset}`;
+    const title = titles[(i + offset) % titles.length];
+    return {
+      id: `demo-${seed}`,
+      title,
+      excerpt: DEMO_EXCERPT,
+      author_name: DEMO_AUTHORS[(i + offset) % DEMO_AUTHORS.length],
+      published_at: new Date(Date.now() - (i + offset + 1) * 36 * 3600 * 1000).toISOString(),
+      thumbnail_url: IMG_FALLBACK(seed, 800, 500),
+      cover_image_url: IMG_FALLBACK(seed, 800, 500),
+      type,
+      topic_id: null,
+      slug: seed,
+      read_time_minutes: 4 + ((i + offset) % 6),
+      body: null,
+    } as unknown as ContentPreview;
+  });
+}
+const padDemo = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+  real.length >= needed ? real : [...real, ...makeDemo(kind, needed - real.length, real.length, type)];
+
 /* ============================================================ */
 /*  CSS                                                          */
 /* ============================================================ */
@@ -295,12 +374,14 @@ function TopicsNav() {
 
 function LatestSection() {
   const q = useLatest(5);
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "latest", 5);
   const lead = items[0];
   const sides = items.slice(1, 5);
 
   return (
-    <div className="wrap hp-section" style={{ paddingBottom: 64 }}>
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 64 }}>
+
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>Latest</h2>
@@ -347,38 +428,31 @@ function LatestSection() {
   );
 }
 
-function TopicSection({ topic, label, id }: { topic: TopicRow | undefined; label: string; id: string }) {
+function TopicSection({ topic, label, id, demoKind }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES }) {
   const q = useByTopic(topic?.id, 3);
-  const items = q.data ?? [];
-  if (!topic) return null;
+  const real = q.data ?? [];
+  const items = padDemo(real, demoKind, 3);
   return (
     <div className="wrap hp-section" id={id}>
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>{label}</h2>
-        <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>
+        {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>}
       </div>
-      {q.isLoading ? (
-        <div className="hp-topic-grid">
-          {[0, 1, 2].map((i) => <div key={i} className="hp-skel" style={{ height: 240 }} />)}
-        </div>
-      ) : items.length === 0 ? (
-        <div className="hp-meta">Nothing published in this topic yet.</div>
-      ) : (
-        <div className="hp-topic-grid">
-          {items.map((c) => (
-            <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
-              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-              <h4>{c.title}</h4>
-              <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-              <div className="hp-meta">{readTimeOf(c)}</div>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
+
 
 /* Featured Collection */
 type CollectionRow = {
@@ -424,19 +498,24 @@ function FeaturedCollectionSection() {
     },
   });
 
-  if (q.isLoading) {
-    return (
-      <div className="hp-collection">
-        <div className="wrap"><div className="hp-skel" style={{ height: 400, background: "rgba(255,255,255,0.05)" }} /></div>
-      </div>
-    );
-  }
-  if (!q.data) return null;
-  const { collection, items } = q.data;
+  const demoCollection: CollectionRow = {
+    id: "demo-collection",
+    slug: "abide-in-the-ordinary",
+    title: "Abide in the Ordinary",
+    description: "Six pieces on finding God in the middle of a regular Tuesday — the commute, the laundry, the quiet after the kids finally sleep.",
+    description_md: null,
+    cover_image_url: IMG_FALLBACK("collection-cover", 1200, 700),
+    banner_url: null,
+    is_featured: true,
+  };
+  const demoItems = makeDemo("latest", 5, 20);
+  const collection = q.data?.collection ?? demoCollection;
+  const items = q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
   const lead = items[0];
   const paired = items[1];
   const rest = items.slice(2, 5);
   const cover = collection.cover_image_url || collection.banner_url;
+
 
   return (
     <div className="hp-collection">
@@ -520,10 +599,11 @@ function StreamingSection() {
       return (data ?? []) as ContentPreview[];
     },
   });
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "streaming", 5, "podcast");
   const feature = items[0];
   const grid = items.slice(1, 5);
-  if (!q.isLoading && items.length === 0) return null;
+
 
   return (
     <div className="hp-navy">
@@ -567,7 +647,8 @@ function StreamingSection() {
 /* Spotlight (navy, rotating) */
 function SpotlightSection() {
   const q = useLatest(6);
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "spotlight", 4);
   const [idx, setIdx] = useState(0);
   const feats = items.slice(0, 4);
   const list = items.slice(0, 4);
@@ -585,7 +666,7 @@ function SpotlightSection() {
     return m;
   }, [topicsQ.data]);
 
-  if (!q.isLoading && items.length === 0) return null;
+
 
   return (
     <div className="hp-navy">
@@ -761,13 +842,14 @@ function HomePage() {
       <div className="hp">
         <TopicsNav />
         <LatestSection />
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" />
+        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
         <FeaturedCollectionSection />
         <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" />
+        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" />
+
         <SiteFooter />
       </div>
     </AppShell>
