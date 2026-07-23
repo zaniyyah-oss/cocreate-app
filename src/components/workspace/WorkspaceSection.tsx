@@ -282,6 +282,7 @@ export function WorkspaceSection({
   });
 
   const items = guest ? guestItems : (itemsQ.data ?? []);
+  const { colors: parentTagColors } = useTagColors(userId, guest);
 
   const openNotes = useMemo(
     () => {
