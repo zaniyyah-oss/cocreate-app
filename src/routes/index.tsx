@@ -932,9 +932,10 @@ function HomePage() {
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
   return (
-    <AppShell current="home" hideSideWhenSignedOut>
+    <AppShell current="home" hideSide>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hp">
+        {signedIn && <HomeIconBar />}
         <HomeMasthead signedIn={signedIn} />
         <LatestSection />
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
