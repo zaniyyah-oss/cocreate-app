@@ -18,6 +18,12 @@ export const Route = createFileRoute("/tour")({
 
 const CSS = `
 .tour{font-family:'Poppins',sans-serif;background:#eee9d9;color:#20201C;min-height:100vh;}
+.tour-topbar{background:#181A4D;padding:18px 24px;}
+@media(min-width:900px){.tour-topbar{padding:22px 40px;}}
+.tour-topbar .wrap{max-width:1200px;margin:0 auto;}
+.tour-back{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:#fff;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:10px 16px;text-decoration:none;transition:all .15s ease;}
+.tour-back:hover{color:#181A4D;background:#DCE07A;border-color:#DCE07A;}
+.tour-back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tour .wrap{max-width:1200px;margin:0 auto;padding:32px 24px 80px;}
 .tour-hero{background:#181A4D;color:#fff;border-radius:18px;padding:36px 28px;margin-bottom:28px;display:flex;flex-direction:column;gap:14px;}
 @media(min-width:900px){.tour-hero{padding:48px 40px;}}
@@ -28,8 +34,6 @@ const CSS = `
 .tour-hero .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
 .tour-btn{display:inline-flex;align-items:center;gap:8px;background:#DCE07A;color:#181A4D;font-weight:800;font-size:13px;padding:11px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
 .tour-btn.secondary{background:transparent;color:#fff;border:1.5px dashed rgba(255,255,255,0.4);}
-.tour-back{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,0.28);border-radius:999px;padding:8px 14px;text-decoration:none;transition:all .15s ease;}
-.tour-back:hover{color:#fff;border-color:#DCE07A;background:rgba(255,255,255,0.06);}
 .tour-section{background:#fff;border-radius:16px;padding:24px;box-shadow:0 12px 40px rgba(24,26,77,0.06);}
 .tour-section h2{font-size:18px;font-weight:800;color:#181A4D;margin:0 0 12px;}
 .tour-section p{font-size:14px;line-height:1.6;color:#4a4538;margin:0 0 16px;}
@@ -79,9 +83,16 @@ function TourPage() {
     <AppShell current="devotionals" hideSideWhenSignedOut>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tour">
-        <div className="wrap">
-          <Link to="/" className="tour-back">← Back home</Link>
+        <div className="tour-topbar">
+          <div className="wrap">
+            <Link to="/" className="tour-back">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back home
+            </Link>
+          </div>
+        </div>
 
+        <div className="wrap">
           <div className="tour-hero">
             <div className="tour-eyebrow">Guided tour</div>
             <h1>The Workspace, in about two minutes.</h1>
@@ -115,17 +126,17 @@ function TourPage() {
           </div>
 
           <div className="tour-section" style={{ marginTop: "24px" }}>
-            <h2>What is the Workspace?</h2>
+            <h2>Notes & Calendar</h2>
             <p>
-              The workspace is the heart of CoCreate — a single page where your daily devotional, prayer,
-              notes, and to-do list live together. Rather than jumping between apps, everything you need
-              for your time with God is in one calm, focused place.
+              Beyond the daily workspace, CoCreate gives you a place to keep longer thoughts and track the
+              rhythm of your week. Your notes live alongside your calendar, so nothing gets lost between
+              devotional time and daily life.
             </p>
             <ul>
-              <li><strong>Read:</strong> a Scripture or devotional reading for the day, with context and next steps.</li>
-              <li><strong>Pray:</strong> a private space to type out prayers, reflections, and anything the reading brought up.</li>
-              <li><strong>To-Do:</strong> capture what you want to carry into the day — actions, reminders, or people to reach out to.</li>
-              <li><strong>Notes & Calendar:</strong> your saved thoughts and upcoming events, all tied to the same day.</li>
+              <li><strong>Notes:</strong> capture ideas, prayers, Scripture highlights, and reflections in a simple, searchable library.</li>
+              <li><strong>Tags:</strong> organize notes by topic, season, or project so you can find them again quickly.</li>
+              <li><strong>Calendar:</strong> see events, prayer meetings, and to-do due dates in one place, tied to the days they matter.</li>
+              <li><strong>Connection:</strong> things you save in the workspace can flow into your notes and calendar, keeping everything in one consistent place.</li>
             </ul>
           </div>
         </div>
