@@ -194,6 +194,55 @@ function toPreview(text: string): string {
   return (text || "").replace(/\s+/g, " ").trim().slice(0, 140);
 }
 
+const TAG_PALETTE: { name: string; value: string }[] = [
+  { name: "Teal", value: "#B7DDD3" },
+  { name: "Sky", value: "#C7D8F5" },
+  { name: "Peach", value: "#FFD3B6" },
+  { name: "Blush", value: "#F4C2CD" },
+  { name: "Yellow", value: "#FDE68A" },
+  { name: "Lime", value: "#DCE07A" },
+  { name: "Lilac", value: "#D6CDF0" },
+  { name: "Mint", value: "#C6EAD8" },
+  { name: "Sand", value: "#E8DEC5" },
+];
+
+function useTagColors(userId: string, guest: boolean) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ["user-tag-colors", userId],
+    enabled: !guest && !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_tag_colors" as any).select("tag,color").eq("user_id", userId);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of (data as any[]) || []) map[r.tag] = r.color;
+      return map;
+    },
+  });
+  const [guestMap, setGuestMap] = useState<Record<string, string>>({});
+  const colors = guest ? guestMap : (query.data ?? {});
+
+  const setColor = async (tag: string, color: string | null) => {
+    if (guest) {
+      setGuestMap((m) => {
+        const n = { ...m };
+        if (color) n[tag] = color; else delete n[tag];
+        return n;
+      });
+      return;
+    }
+    if (!color) {
+      await supabase.from("user_tag_colors" as any).delete().eq("user_id", userId).eq("tag", tag);
+    } else {
+      await supabase.from("user_tag_colors" as any)
+        .upsert({ user_id: userId, tag, color }, { onConflict: "user_id,tag" });
+    }
+    qc.invalidateQueries({ queryKey: ["user-tag-colors", userId] });
+  };
+  return { colors, setColor };
+}
+
+
 export function WorkspaceSection({
   userId,
   ensureEntry,
