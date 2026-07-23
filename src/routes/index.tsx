@@ -402,6 +402,27 @@ function TopicsNav() {
   );
 }
 
+function HomeIconBar() {
+  const items = [
+    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg> },
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> },
+    { to: "/explore", label: "Bookmarks", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg> },
+  ];
+  return (
+    <div className="hp-iconbar">
+      <div className="wrap">
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+            {it.icon}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HomeMasthead({ signedIn }: { signedIn: boolean }) {
   const topicsQ = useTopics();
   const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
