@@ -64,7 +64,7 @@ const coverOf = (c: ContentPreview) => (c as any).cover_image_url || c.thumbnail
 const readTimeOf = (c: ContentPreview) => {
   const rt = (c as any).read_time_minutes as number | null | undefined;
   if (rt && rt > 0) return `${rt} min read`;
-  const words = (c.body ?? "").split(/\s+/).filter(Boolean).length;
+  const words = (((c as any).body as string | undefined) ?? "").split(/\s+/).filter(Boolean).length;
   if (words > 0) return `${Math.max(1, Math.round(words / 220))} min read`;
   return "";
 };
@@ -370,7 +370,7 @@ function TopicSection({ topic, label, id }: { topic: TopicRow | undefined; label
             <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
               <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
               <h4>{c.title}</h4>
-              <p>{openingLines(c.body ?? c.excerpt)}</p>
+              <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
               <div className="hp-meta">{readTimeOf(c)}</div>
             </Link>
           ))}
@@ -469,7 +469,7 @@ function FeaturedCollectionSection() {
                 <div className="art" style={{ backgroundImage: `url(${coverOf(lead) || (cover ?? "")})` }} />
                 <div className="body">
                   <h4>{lead.title}</h4>
-                  {(lead.excerpt || lead.body) && <p>{openingLines(lead.excerpt ?? lead.body, 140)}</p>}
+                  {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
                 </div>
               </Link>
             )}
