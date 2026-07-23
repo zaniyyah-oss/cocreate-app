@@ -397,6 +397,7 @@ function DocPanel({
   const [savedFlash, setSavedFlash] = useState(false);
   const [hasPending, setHasPending] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Record<string, unknown> | null>(null);
