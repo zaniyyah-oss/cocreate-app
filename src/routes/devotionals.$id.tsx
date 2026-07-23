@@ -370,6 +370,7 @@ function EntryPage() {
   const search = Route.useSearch();
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
+  const [workspaceMode, setWorkspaceMode] = useState<"entry" | "day">("entry");
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
   // Lock body scroll when a section is focused
