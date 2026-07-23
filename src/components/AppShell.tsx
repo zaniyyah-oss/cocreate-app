@@ -119,13 +119,13 @@ const SHELL_CSS = `
   .app-shell.collapsed .app-side-foot .app-signout,
   .app-shell.collapsed .app-side-foot .app-signin{display:none;}
 
-  /* Workspace-only Focus mode tile in the sidebar */
-  .app-side-focus-btn{display:none;}
-  .app-shell.is-workspace .app-side-focus-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#181A4D;color:#DCE07A;border:none;padding:10px 12px;border-radius:10px;margin:0 4px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.02em;transition:background .15s;}
-  .app-shell.is-workspace .app-side-focus-btn:hover{background:#0F4A42;}
-  .app-shell.is-workspace .app-side-focus-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-  .app-shell.collapsed.is-workspace .app-side-focus-btn{padding:10px 0;margin:0 0 14px;}
-  .app-shell.collapsed.is-workspace .app-side-focus-btn .lbl{display:none;}
+  /* Focus mode tile in the sidebar (always present to avoid layout jank) */
+  .app-side-focus-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:#0F4A42;border:none;padding:10px 12px;border-radius:10px;margin:0 4px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.02em;transition:background .15s;}
+  .app-side-focus-btn:hover{background:#FBF8ED;}
+  .app-side-focus-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+  .app-shell.collapsed .app-side-focus-btn{padding:10px 0;margin:0 0 14px;}
+  .app-shell.collapsed .app-side-focus-btn .lbl{display:none;}
+
 
   /* Focus mode: hide sidebar, show slim top bar with hamburger on desktop */
   .app-shell.is-focus .app-side{display:none;}
@@ -223,18 +223,17 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               </button>
             </div>
           </div>
-          {isWorkspace && (
-            <button
-              type="button"
-              className="app-side-focus-btn"
-              onClick={() => setFocusMode(true)}
-              title="Enter focus mode"
-              aria-label="Enter focus mode"
-            >
-              <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-              <span className="lbl">Focus mode</span>
-            </button>
-          )}
+          <button
+            type="button"
+            className="app-side-focus-btn"
+            onClick={() => setFocusMode(true)}
+            title="Enter focus mode"
+            aria-label="Enter focus mode"
+          >
+            <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <span className="lbl">Focus mode</span>
+          </button>
+
           {desktopNav.map((n) => {
             const item = (
               <Link
