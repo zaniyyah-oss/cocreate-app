@@ -2256,7 +2256,7 @@ function startOfWeekSunday(d: Date): Date {
   return x;
 }
 
-function WeekListView({ templateId, userId }: { templateId: string; userId: string | null }) {
+export function WeekListView({ templateId, userId }: { templateId: string; userId: string | null }) {
   const navigate = useNavigate();
   const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
   const [anchor, setAnchor] = useState<Date>(() => startOfWeekSunday(todayD));
