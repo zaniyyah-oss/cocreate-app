@@ -118,7 +118,25 @@ const SHELL_CSS = `
   .app-shell.collapsed .app-side-foot .app-side-foot-actions{flex-direction:column;}
   .app-shell.collapsed .app-side-foot .app-signout,
   .app-shell.collapsed .app-side-foot .app-signin{display:none;}
+
+  /* Workspace-only Focus mode tile in the sidebar */
+  .app-side-focus-btn{display:none;}
+  .app-shell.is-workspace .app-side-focus-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#181A4D;color:#DCE07A;border:none;padding:10px 12px;border-radius:10px;margin:0 4px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.02em;transition:background .15s;}
+  .app-shell.is-workspace .app-side-focus-btn:hover{background:#0F4A42;}
+  .app-shell.is-workspace .app-side-focus-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+  .app-shell.collapsed.is-workspace .app-side-focus-btn{padding:10px 0;margin:0 0 14px;}
+  .app-shell.collapsed.is-workspace .app-side-focus-btn .lbl{display:none;}
+
+  /* Focus mode: hide sidebar, show slim top bar with hamburger on desktop */
+  .app-shell.is-focus .app-side{display:none;}
+  .app-shell.is-focus .app-layout{grid-template-columns:1fr;}
+  .app-shell.is-focus .app-topbar{display:flex;padding:12px 24px;}
 }
+.app-topbar-menu{background:transparent;border:none;padding:6px;cursor:pointer;color:#181A4D;display:none;align-items:center;justify-content:center;border-radius:8px;margin-right:4px;}
+.app-topbar-menu:hover{background:#FBF8ED;}
+.app-topbar-menu svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.app-shell.is-focus .app-topbar-menu{display:inline-flex;}
+.app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 `;
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
