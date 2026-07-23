@@ -405,10 +405,12 @@ function NotesLibrary({ userId }: { userId: string }) {
 function DocPanel({
   doc,
   userId,
+  colorFor,
   onClose,
 }: {
   doc: Doc;
   userId: string;
+  colorFor: (t: string) => string | undefined;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
