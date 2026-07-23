@@ -338,7 +338,7 @@ const CSS = `
 .hp-mast-search-form input:focus{border-color:#181A4D;}
 .hp-mast-search-form button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#181A4D;color:#fff;border:none;border-radius:8px;cursor:pointer;}
 .hp-mast-search-form button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-@media(max-width:420px){.hp-mast-media-link span{display:none;}.hp-mast-media-dot{margin:0;}.hp-mast-search-form input{width:120px;}}
+@media(max-width:820px){.hp-mast-media-link span{display:none;}.hp-mast-media-link{padding:6px 8px;}.hp-mast-media-dot{margin:0;}.hp-mast-search-form input{width:120px;}}
 
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
 .hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
