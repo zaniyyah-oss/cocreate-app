@@ -1,0 +1,1 @@
+ALTER TABLE public.user_events ADD COLUMN IF NOT EXISTS item_type text NOT NULL DEFAULT 'event' CHECK (item_type IN ('event','focus'));
