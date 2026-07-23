@@ -189,16 +189,28 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               </button>
             </div>
           </div>
-          {desktopNav.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              className={`app-side-item${isActive(n) ? " active" : ""}`}
-              title={collapsed ? n.label : undefined}
-            >
-              {n.icon}<span className="lbl">{n.label}</span>
-            </Link>
-          ))}
+          {desktopNav.map((n) => {
+            const item = (
+              <Link
+                key={n.key}
+                to={n.to}
+                className={`app-side-item${isActive(n) ? " active" : ""}`}
+                title={collapsed ? n.label : undefined}
+              >
+                {n.icon}<span className="lbl">{n.label}</span>
+              </Link>
+            );
+            if (n.key === "explore") {
+              return (
+                <React.Fragment key={n.key}>
+                  <div className="app-side-divider" />
+                  <div className="app-side-label">Your reference</div>
+                  {item}
+                </React.Fragment>
+              );
+            }
+            return item;
+          })}
           <div className="app-side-foot">
             {userId ? (
               <>
