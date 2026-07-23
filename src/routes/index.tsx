@@ -428,38 +428,31 @@ function LatestSection() {
   );
 }
 
-function TopicSection({ topic, label, id }: { topic: TopicRow | undefined; label: string; id: string }) {
+function TopicSection({ topic, label, id, demoKind }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES }) {
   const q = useByTopic(topic?.id, 3);
-  const items = q.data ?? [];
-  if (!topic) return null;
+  const real = q.data ?? [];
+  const items = padDemo(real, demoKind, 3);
   return (
     <div className="wrap hp-section" id={id}>
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>{label}</h2>
-        <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>
+        {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>}
       </div>
-      {q.isLoading ? (
-        <div className="hp-topic-grid">
-          {[0, 1, 2].map((i) => <div key={i} className="hp-skel" style={{ height: 240 }} />)}
-        </div>
-      ) : items.length === 0 ? (
-        <div className="hp-meta">Nothing published in this topic yet.</div>
-      ) : (
-        <div className="hp-topic-grid">
-          {items.map((c) => (
-            <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
-              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-              <h4>{c.title}</h4>
-              <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-              <div className="hp-meta">{readTimeOf(c)}</div>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
+
 
 /* Featured Collection */
 type CollectionRow = {
