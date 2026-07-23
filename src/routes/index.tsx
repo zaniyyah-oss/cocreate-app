@@ -338,13 +338,14 @@ const CSS = `
 .hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
 .hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
 .hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.hp-iconbar-avatar{background:#FBF8ED;color:var(--navy) !important;}
-.hp-iconbar-avatar:hover{background:#fff;color:var(--navy) !important;}
-.hp-iconbar-bell{background:rgba(255,255,255,0.08);border-radius:50% !important;}
-.hp-iconbar-bell :global(.nb-btn){color:#fff;width:40px;height:40px;}
-.hp-iconbar-bell .nb-btn{color:#fff !important;width:40px;height:40px;}
-.hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.14);}
+.hp-iconbar-avatar{color:#fff !important;}
+.hp-iconbar-avatar:hover{background:rgba(255,255,255,0.08);color:#fff !important;}
+.hp-iconbar-bell{display:inline-flex;align-items:center;justify-content:center;}
+.hp-iconbar-bell .nb-btn{color:#fff !important;width:40px;height:40px;background:transparent !important;border-radius:10px;}
+.hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.08) !important;}
+.hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
+
 
 `;
 

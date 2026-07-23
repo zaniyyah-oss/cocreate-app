@@ -323,38 +323,41 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
 
         {/* Main column */}
         <div className="app-main-wrap">
-          <header className="app-topbar">
-            <div className="app-topbar-brand-wrap">
-              {focusActive && (
-                <button
-                  type="button"
-                  className="app-topbar-menu"
-                  onClick={() => setFocusMode(false)}
-                  aria-label="Exit focus mode"
-                  title="Exit focus mode"
-                >
-                  <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-              )}
-              <Link to="/" className="app-brand">
-                <div className="mark">C</div><div className="word">CoCreate</div>
-              </Link>
-            </div>
-            <div className="app-topbar-actions">
-              {userId ? (
-                <>
-                  <Link to="/profile" className="app-topbar-profile" aria-label="Profile">
-                    {ICON.profile}
-                  </Link>
-                  <NotificationBell />
-                  <button className="app-signout" onClick={signOut}>Sign out</button>
-                </>
-              ) : (
-                <Link to="/auth" className="app-signin">Sign in</Link>
-              )}
-            </div>
-          </header>
+          {!hideSide && (
+            <header className="app-topbar">
+              <div className="app-topbar-brand-wrap">
+                {focusActive && (
+                  <button
+                    type="button"
+                    className="app-topbar-menu"
+                    onClick={() => setFocusMode(false)}
+                    aria-label="Exit focus mode"
+                    title="Exit focus mode"
+                  >
+                    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  </button>
+                )}
+                <Link to="/" className="app-brand">
+                  <div className="mark">C</div><div className="word">CoCreate</div>
+                </Link>
+              </div>
+              <div className="app-topbar-actions">
+                {userId ? (
+                  <>
+                    <Link to="/profile" className="app-topbar-profile" aria-label="Profile">
+                      {ICON.profile}
+                    </Link>
+                    <NotificationBell />
+                    <button className="app-signout" onClick={signOut}>Sign out</button>
+                  </>
+                ) : (
+                  <Link to="/auth" className="app-signin">Sign in</Link>
+                )}
+              </div>
+            </header>
+          )}
           <main className="app-main">{children}</main>
+
         </div>
       </div>
 
