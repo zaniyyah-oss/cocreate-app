@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TourRouteImport } from './routes/tour'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -42,6 +43,11 @@ import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
 import { Route as AdminCollectionsIdRouteImport } from './routes/admin.collections.$id'
 
+const TourRoute = TourRouteImport.update({
+  id: '/tour',
+  path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/tour': typeof TourRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/tour': typeof TourRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
+  '/tour': typeof TourRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/tour'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/tour'
     | '/admin/content'
     | '/admin/invites'
     | '/admin/new'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/saved'
+    | '/tour'
     | '/admin/collections'
     | '/admin/content'
     | '/admin/invites'
@@ -419,6 +431,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
+  TourRoute: typeof TourRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
@@ -428,6 +441,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tour': {
+      id: '/tour'
+      path: '/tour'
+      fullPath: '/tour'
+      preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved': {
       id: '/saved'
       path: '/saved'
@@ -724,6 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
+  TourRoute: TourRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
   PodcastsIdRoute: PodcastsIdRoute,
