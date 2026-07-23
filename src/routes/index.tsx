@@ -309,12 +309,13 @@ const CSS = `
 .hp-mast-tour{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed rgba(24,26,77,0.35);color:var(--navy);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:999px;background:transparent;font-family:'Poppins';cursor:pointer;text-decoration:none;}
 .hp-mast-tour:hover{border-color:var(--navy);background:#FBF8ED;}
 .hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
-.hp-mast-subscribe{background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
-.hp-mast-subscribe:hover{background:var(--navy-2);}
+.hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
+.hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
 /* Compact masthead for signed-in (rail already provides logo/CTAs) */
 .hp-masthead.is-inline .hp-mast-brand{display:none;}
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
 `;
 
 /* ============================================================ */
