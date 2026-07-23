@@ -647,7 +647,8 @@ function StreamingSection() {
 /* Spotlight (navy, rotating) */
 function SpotlightSection() {
   const q = useLatest(6);
-  const items = q.data ?? [];
+  const real = q.data ?? [];
+  const items = padDemo(real, "spotlight", 4);
   const [idx, setIdx] = useState(0);
   const feats = items.slice(0, 4);
   const list = items.slice(0, 4);
@@ -665,7 +666,7 @@ function SpotlightSection() {
     return m;
   }, [topicsQ.data]);
 
-  if (!q.isLoading && items.length === 0) return null;
+
 
   return (
     <div className="hp-navy">
