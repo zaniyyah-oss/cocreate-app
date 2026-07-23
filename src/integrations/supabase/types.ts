@@ -192,6 +192,7 @@ export type Database = {
           featured_clip_content_id: string | null
           id: string
           intro_video_content_id: string | null
+          is_featured: boolean
           published_at: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
@@ -213,6 +214,7 @@ export type Database = {
           featured_clip_content_id?: string | null
           id?: string
           intro_video_content_id?: string | null
+          is_featured?: boolean
           published_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
@@ -234,6 +236,7 @@ export type Database = {
           featured_clip_content_id?: string | null
           id?: string
           intro_video_content_id?: string | null
+          is_featured?: boolean
           published_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
@@ -286,16 +289,20 @@ export type Database = {
         Row: {
           author_name: string | null
           body: string | null
+          cover_image_url: string | null
           created_at: string
           duration_seconds: number | null
           excerpt: string | null
           external_url: string | null
           id: string
+          is_featured: boolean
           is_seed: boolean
           media_url: string | null
           published_at: string | null
+          read_time_minutes: number | null
           scheduled_at: string | null
           scripture_reference: string | null
+          slug: string | null
           status: Database["public"]["Enums"]["content_status"]
           thumbnail_url: string | null
           title: string
@@ -307,16 +314,20 @@ export type Database = {
         Insert: {
           author_name?: string | null
           body?: string | null
+          cover_image_url?: string | null
           created_at?: string
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
           id?: string
+          is_featured?: boolean
           is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
+          read_time_minutes?: number | null
           scheduled_at?: string | null
           scripture_reference?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
           title: string
@@ -328,16 +339,20 @@ export type Database = {
         Update: {
           author_name?: string | null
           body?: string | null
+          cover_image_url?: string | null
           created_at?: string
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
           id?: string
+          is_featured?: boolean
           is_seed?: boolean
           media_url?: string | null
           published_at?: string | null
+          read_time_minutes?: number | null
           scheduled_at?: string | null
           scripture_reference?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
           title?: string
@@ -1320,23 +1335,29 @@ export type Database = {
         Row: {
           color_key: string
           created_at: string
+          display_name: string | null
           id: string
           name: string
           slug: string
+          sort_order: number
         }
         Insert: {
           color_key: string
           created_at?: string
+          display_name?: string | null
           id?: string
           name: string
           slug: string
+          sort_order?: number
         }
         Update: {
           color_key?: string
           created_at?: string
+          display_name?: string | null
           id?: string
           name?: string
           slug?: string
+          sort_order?: number
         }
         Relationships: []
       }
