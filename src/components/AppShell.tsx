@@ -140,10 +140,12 @@ const SHELL_CSS = `
 `;
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
+const FOCUS_KEY = "cocreate:workspace-focus";
 
 export function AppShell({ current, children }: { current?: NavKey; children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [focusMode, setFocusMode] = useState<boolean>(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navLabelsQ = usePageContent("site_nav");
   const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
@@ -157,6 +159,7 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
   useEffect(() => {
     if (typeof window !== "undefined") {
       setCollapsed(window.localStorage.getItem(STORAGE_KEY) === "1");
+      setFocusMode(window.localStorage.getItem(FOCUS_KEY) === "1");
     }
   }, []);
 
@@ -176,6 +179,12 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     }
   }, [collapsed]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(FOCUS_KEY, focusMode ? "1" : "0");
+    }
+  }, [focusMode]);
+
   const signOut = async () => { await supabase.auth.signOut(); };
 
   const isActive = (item: { key: NavKey; to: string; matchPaths?: string[] }) => {
@@ -187,9 +196,10 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
 
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
   const isNotes = pathname === "/notes";
+  const focusActive = isWorkspace && focusMode;
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
       <div className="app-layout">
         {/* Desktop sidebar */}
@@ -213,6 +223,18 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               </button>
             </div>
           </div>
+          {isWorkspace && (
+            <button
+              type="button"
+              className="app-side-focus-btn"
+              onClick={() => setFocusMode(true)}
+              title="Enter focus mode"
+              aria-label="Enter focus mode"
+            >
+              <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+              <span className="lbl">Focus mode</span>
+            </button>
+          )}
           {desktopNav.map((n) => {
             const item = (
               <Link
@@ -260,9 +282,22 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
         {/* Main column */}
         <div className="app-main-wrap">
           <header className="app-topbar">
-            <Link to="/" className="app-brand">
-              <div className="mark">C</div><div className="word">CoCreate</div>
-            </Link>
+            <div className="app-topbar-brand-wrap">
+              {focusActive && (
+                <button
+                  type="button"
+                  className="app-topbar-menu"
+                  onClick={() => setFocusMode(false)}
+                  aria-label="Exit focus mode"
+                  title="Exit focus mode"
+                >
+                  <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+              )}
+              <Link to="/" className="app-brand">
+                <div className="mark">C</div><div className="word">CoCreate</div>
+              </Link>
+            </div>
             <div className="app-topbar-actions">
               {userId ? (
                 <>
@@ -285,3 +320,4 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
     </div>
   );
 }
+
