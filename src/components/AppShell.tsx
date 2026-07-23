@@ -22,18 +22,11 @@ const ICON = {
 
 function buildDesktopNav(labels: Record<string, string>) {
   return [
-    [
-      { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
-      { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
-      { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
-    ],
-    [
-      { key: "explore" as const,     label: "Bookmarks", to: "/explore", icon: ICON.explore },
-      { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
-    ],
-    [
-      { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile",     icon: ICON.profile },
-    ],
+    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
+    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+    { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
+    { key: "explore" as const,    label: "Bookmarks", to: "/explore", icon: ICON.explore },
+    { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
   ];
 }
 
@@ -79,10 +72,14 @@ const SHELL_CSS = `
   .app-layout{grid-template-columns:var(--side-w,236px) 1fr;transition:grid-template-columns .2s ease;}
   .app-side{display:flex;flex-direction:column;background:#fff;border-right:1px solid rgba(20,20,20,0.08);padding:20px 12px;position:sticky;top:0;height:100vh;overflow:hidden;}
   .app-side-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;margin-bottom:22px;gap:6px;}
+  .app-side-head-actions{display:flex;align-items:center;gap:6px;}
   .app-side-logo{display:flex;align-items:center;gap:10px;text-decoration:none;min-width:0;}
   .app-side-logo .mark{width:30px;height:30px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;flex-shrink:0;}
   .app-side-logo .word{font-weight:900;font-size:19px;color:#181A4D;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;}
   .app-side-toggle{background:transparent;border:none;padding:6px;border-radius:8px;cursor:pointer;color:#8a8678;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .app-side-profile{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#FBF8ED;color:#181A4D;text-decoration:none;border:1px solid rgba(20,20,20,0.08);flex-shrink:0;}
+  .app-side-profile.active{background:#DCE07A;border-color:transparent;}
+  .app-side-profile svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .app-side-toggle:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .app-side-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:#8a8678;cursor:pointer;margin-bottom:2px;text-decoration:none;transition:background .15s, color .15s;white-space:nowrap;overflow:hidden;}
@@ -168,34 +165,38 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
             </Link>
-            <button
-              className="app-side-toggle"
-              onClick={() => setCollapsed((c) => !c)}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              ) : (
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              )}
-            </button>
-          </div>
-          {desktopNav.map((group, gi) => (
-            <div key={gi}>
-              {gi > 0 && <div className="app-side-divider" />}
-              {gi === 1 && <div className="app-side-label">YOUR REFERENCE</div>}
-              {group.map((n) => (
-                <Link
-                  key={n.key}
-                  to={n.to}
-                  className={`app-side-item${isActive(n) ? " active" : ""}`}
-                  title={collapsed ? n.label : undefined}
-                >
-                  {n.icon}<span className="lbl">{n.label}</span>
-                </Link>
-              ))}
+            <div className="app-side-head-actions">
+              <button
+                className="app-side-toggle"
+                onClick={() => setCollapsed((c) => !c)}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? (
+                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+                )}
+              </button>
+              <Link
+                to="/profile"
+                className={`app-side-profile${pathname.startsWith("/profile") ? " active" : ""}`}
+                aria-label="Profile"
+                title="Profile"
+              >
+                {ICON.profile}
+              </Link>
             </div>
+          </div>
+          {desktopNav.map((n) => (
+            <Link
+              key={n.key}
+              to={n.to}
+              className={`app-side-item${isActive(n) ? " active" : ""}`}
+              title={collapsed ? n.label : undefined}
+            >
+              {n.icon}<span className="lbl">{n.label}</span>
+            </Link>
           ))}
           <div className="app-side-foot">
             {userId ? (
