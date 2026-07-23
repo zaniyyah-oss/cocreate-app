@@ -206,11 +206,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
     };
   }, [pathname]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
-    }
-  }, [collapsed]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
