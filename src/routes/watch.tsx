@@ -64,7 +64,7 @@ function WatchPage() {
   const items = q.data ?? [];
 
   return (
-    <AppShell current="watch">
+    <AppShell current="home">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="watch-root">
         <div className="watch-shell">
