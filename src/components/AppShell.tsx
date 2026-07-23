@@ -22,11 +22,18 @@ const ICON = {
 
 function buildDesktopNav(labels: Record<string, string>) {
   return [
-    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
-    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore",     icon: ICON.explore },
-    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
-    { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
-    { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
+    [
+      { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
+      { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+      { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
+    ],
+    [
+      { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore",     icon: ICON.explore },
+      { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
+    ],
+    [
+      { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile",     icon: ICON.profile },
+    ],
   ];
 }
 
@@ -82,6 +89,7 @@ const SHELL_CSS = `
   .app-side-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
   .app-side-item:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-item.active{background:#DCE07A;color:#181A4D;}
+  .app-side-divider{height:1px;background:rgba(24,26,77,0.08);margin:10px 10px;}
   .app-side-foot{margin-top:auto;padding:12px 8px 4px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .app-topbar{display:none;}
   .app-bottomnav{display:none;}
@@ -171,15 +179,20 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
               )}
             </button>
           </div>
-          {desktopNav.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              className={`app-side-item${isActive(n) ? " active" : ""}`}
-              title={collapsed ? n.label : undefined}
-            >
-              {n.icon}<span className="lbl">{n.label}</span>
-            </Link>
+          {desktopNav.map((group, gi) => (
+            <div key={gi}>
+              {gi > 0 && <div className="app-side-divider" />}
+              {group.map((n) => (
+                <Link
+                  key={n.key}
+                  to={n.to}
+                  className={`app-side-item${isActive(n) ? " active" : ""}`}
+                  title={collapsed ? n.label : undefined}
+                >
+                  {n.icon}<span className="lbl">{n.label}</span>
+                </Link>
+              ))}
+            </div>
           ))}
           <div className="app-side-foot">
             {userId ? (
