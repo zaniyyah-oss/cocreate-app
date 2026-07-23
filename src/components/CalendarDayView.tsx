@@ -138,9 +138,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Prop
 
   const clickHour = (hour: number) => {
     if (!userId) return;
-    // Ask user which type they want to create at this time.
-    const kind = window.confirm("Create an Event? (Cancel = Focus item)") ? "event" : "focus";
-    openAdd(kind);
+    openAdd("event");
     void hour;
   };
 
