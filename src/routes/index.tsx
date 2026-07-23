@@ -316,6 +316,14 @@ const CSS = `
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
+
+/* Signed-in home: horizontal navy icon bar (replaces the left rail) */
+.hp-iconbar{background:var(--navy);padding:14px 0;}
+.hp-iconbar .wrap{display:flex;align-items:center;gap:10px;}
+.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:rgba(255,255,255,0.72);transition:background .15s,color .15s;}
+.hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
+.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 `;
 
 /* ============================================================ */
