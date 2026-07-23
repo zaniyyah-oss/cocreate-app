@@ -637,23 +637,32 @@ function LatestSection() {
             >
               <div className="art" style={{ backgroundImage: `url(${coverOf(lead)})` }} />
               <h3>{lead.title}</h3>
-              {lead.excerpt && <p>{lead.excerpt}</p>}
+              {(() => {
+                const text = openingLines(((lead as any).body as string | undefined) ?? lead.excerpt, 320);
+                return text ? <p>{text}</p> : null;
+              })()}
+              <span className="readmore">Read more →</span>
               <div className="hp-meta">
                 {(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}
               </div>
             </Link>
           )}
           <div className="hp-side">
-            {sides.map((s) => (
-              <Link key={s.id ?? ""} to={routeForType(s.type) as any} params={{ id: s.id! } as any} className="hp-side-item">
-                <div className="thumb" style={{ backgroundImage: `url(${coverOf(s)})` }} />
-                <div>
-                  <h4>{s.title}</h4>
-                  <div className="hp-meta">{relTime(s.published_at)}</div>
-                </div>
-              </Link>
-            ))}
+            {sides.map((s) => {
+              const preview = openingLines(((s as any).body as string | undefined) ?? s.excerpt, 120);
+              return (
+                <Link key={s.id ?? ""} to={routeForType(s.type) as any} params={{ id: s.id! } as any} className="hp-side-item">
+                  <div className="thumb" style={{ backgroundImage: `url(${coverOf(s)})` }} />
+                  <div className="body">
+                    <h4>{s.title}</h4>
+                    {preview && <p>{preview}</p>}
+                    <div className="hp-meta">{relTime(s.published_at)}</div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
+
         </div>
       )}
     </div>
