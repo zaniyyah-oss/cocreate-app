@@ -409,7 +409,46 @@ export function WorkspaceSection({
         </div>
       </div>
 
+      {!isHistory && (
+        <div className="ws-recent">
+          <div className="ws-recent-head">
+            <div className="ws-recent-title"><span className="dot" /> Pinned &amp; recent today</div>
+            <div className="ws-recent-sub">Tap to review · won't open in edit mode</div>
+          </div>
+          <div className="ws-recent-scroll">
+            {recentItems.length === 0 ? (
+              <div className="ws-rc-empty">Nothing pinned or closed yet today.</div>
+            ) : recentItems.map((n) => {
+              const isNewToday = isToday(n.created_at);
+              const label = n.status === "closed"
+                ? `Closed · ${new Date(n.closed_at ?? n.updated_at).toLocaleDateString()}`
+                : isNewToday
+                  ? "Created today"
+                  : `Edited ${new Date(n.updated_at).toLocaleDateString()}`;
+              return (
+                <div key={n.id} className={`ws-rc ${n.pinned ? "pinned" : ""}`} onClick={() => setPreviewId(n.id)} role="button" tabIndex={0}>
+                  <div className="ws-rc-top">
+                    {n.tags[0] && <span className="ws-rc-tag">#{n.tags[0]}</span>}
+                    {isNewToday && !n.pinned && <span className="ws-rc-flag">✦ new today</span>}
+                    <button
+                      className={`ws-rc-pin ${n.pinned ? "active" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); togglePin.mutate(n); }}
+                      aria-label={n.pinned ? "Unpin" : "Pin"}
+                      title={n.pinned ? "Unpin" : "Pin"}
+                    >{n.pinned ? "★" : "☆"}</button>
+                  </div>
+                  <div className="ws-rc-title">{n.title?.trim() || toPreview(n.body_text) || "Untitled"}</div>
+                  <div className="ws-rc-snippet">{toPreview(n.body_text) || "—"}</div>
+                  <div className="ws-rc-status">{label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {openNotes.length > 0 && (
+
         <div className="ws-notetabs" role="tablist">
           {openNotes.map((n) => (
             <button
