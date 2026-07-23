@@ -55,7 +55,7 @@ const CSS = `
 }
 @media (max-width:719px){
   .ws-toolbar{position:static;top:auto;bottom:auto;background:#fff;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);padding:6px 8px;margin:0 -22px 14px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
-  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:-64px -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+  .ws-root.is-full .ws-toolbar{position:sticky;top:0;bottom:auto;margin:0 -20px 14px;padding:10px 20px 8px;padding-bottom:8px;border-top:none;border-bottom:1px solid rgba(24,26,77,0.10);box-shadow:0 2px 8px rgba(24,26,77,0.04);}
   .ws-editor-content{padding-top:12px;}
 }
 @media (min-width:720px) and (max-width:1180px), (hover:none), (pointer:coarse){
