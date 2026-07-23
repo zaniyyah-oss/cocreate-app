@@ -210,12 +210,39 @@ function TopicPage() {
     navigate({ to: meta.route, params: { id: c.id } });
   };
 
+  const followQ = useQuery({
+    queryKey: ["topic-follow", userId, topic?.id],
+    enabled: !!userId && !!topic?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topic_subscriptions")
+        .select("id")
+        .eq("user_id", userId!)
+        .eq("topic_id", topic!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.id ?? null;
+    },
+  });
+  const isFollowing = !!followQ.data;
+  const toggleFollow = async () => {
+    if (!userId) { navigate({ to: "/auth" }); return; }
+    if (!topic) return;
+    if (followQ.data) {
+      await supabase.from("topic_subscriptions").delete().eq("id", followQ.data);
+    } else {
+      await supabase.from("topic_subscriptions").insert({ user_id: userId, topic_id: topic.id });
+    }
+    qc.invalidateQueries({ queryKey: ["topic-follow", userId, topic.id] });
+    qc.invalidateQueries({ queryKey: ["bookmarked-topics", userId] });
+  };
+
   return (
     <AppShell>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tp-root">
       <div style={{ padding: "16px 24px 0", maxWidth: 1200, margin: "0 auto" }}>
-        <Link to="/explore" className="tp-back">← Back to Explore</Link>
+        <Link to="/explore" className="tp-back">← Back to bookmarks</Link>
       </div>
 
 
