@@ -736,7 +736,45 @@ function HomePage() {
         <ShortFormRow />
         <FeaturedGrid />
         <CollectionPreview isAdmin={isAdmin} />
+        <TopicsFooter />
       </div>
     </AppShell>
+  );
+}
+
+function TopicsFooter() {
+  const topicsQ = useQuery({
+    queryKey: ["topics"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("topics").select("*").order("name");
+      if (error) throw error;
+      return data as Database["public"]["Tables"]["topics"]["Row"][];
+    },
+  });
+  const formats: { key: ContentType; label: string }[] = [
+    { key: "teaching", label: "Teaching" },
+    { key: "essay", label: "Essay" },
+    { key: "podcast", label: "Podcast" },
+    { key: "blog", label: "Blog" },
+  ];
+  return (
+    <div className="hp-footer">
+      <div className="hp-footer-label">Browse by topic</div>
+      <div className="hp-footer-pills">
+        {topicsQ.data?.map((t) => (
+          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} className="hp-footer-pill">
+            {t.name}
+          </Link>
+        ))}
+      </div>
+      <div className="hp-footer-label" style={{ marginTop: 22 }}>Format</div>
+      <div className="hp-footer-pills">
+        {formats.map((f) => (
+          <Link key={f.key} to="/explore" className={`hp-footer-pill ${f.key}`}>
+            {f.label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
