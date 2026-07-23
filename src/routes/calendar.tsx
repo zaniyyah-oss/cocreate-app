@@ -64,7 +64,7 @@ function CalendarPage() {
                 className={view === v ? "active" : ""}
                 onClick={() => setView(v)}
               >
-                {v === "today" ? "Today" : v === "week" ? "This week" : "Month"}
+                {v === "today" ? "Daily" : v === "week" ? "Weekly" : "Monthly"}
               </button>
             ))}
           </div>
