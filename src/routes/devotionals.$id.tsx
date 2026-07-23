@@ -1498,6 +1498,7 @@ export function AddEventDialog({
 }) {
   const isEdit = !!event;
   const [date, setDate] = useState(defaultDate);
+  const [itemType, setItemType] = useState<UserEventItemType>(defaultItemType ?? "event");
   const [type, setType] = useState<UserEventType>("prayer_meeting");
   const [title, setTitle] = useState("");
   const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
@@ -1510,33 +1511,40 @@ export function AddEventDialog({
     if (!open) return;
     if (event) {
       setDate(event.event_date);
+      setItemType(event.item_type ?? "event");
       setType(event.event_type);
       setTitle(event.title ?? "");
       setColor(event.color || OTHER_DEFAULT_COLOR);
       setNotes(event.notes ?? "");
     } else {
       setDate(defaultDate);
-      setType("prayer_meeting");
+      setItemType(defaultItemType ?? "event");
+      // Focus items are always custom (no fixed subtype)
+      setType(defaultItemType === "focus" ? "other" : "prayer_meeting");
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
     }
     setErr(null);
-  }, [open, defaultDate, event]);
+  }, [open, defaultDate, event, defaultItemType]);
 
-  const isOther = type === "other";
-  const resolvedColor = isOther ? color : EVENT_TYPE_META[type].color;
+  const isFocus = itemType === "focus";
+  // Focus items force custom (title + color)
+  const effectiveType: UserEventType = isFocus ? "other" : type;
+  const isOther = effectiveType === "other";
+  const resolvedColor = isOther ? color : EVENT_TYPE_META[effectiveType].color;
 
   const save = async () => {
-    if (!userId) { setErr("Please sign in to save events."); return; }
-    if (isOther && !title.trim()) { setErr("Add a name for this event."); return; }
+    if (!userId) { setErr("Please sign in to save."); return; }
+    if (isOther && !title.trim()) { setErr(isFocus ? "Add a name for this focus item." : "Add a name for this event."); return; }
     setSaving(true); setErr(null);
     const payload = {
       event_date: date,
-      event_type: type,
+      event_type: effectiveType,
       title: isOther ? title.trim() : null,
       color: resolvedColor,
       notes: notes.trim() || null,
+      item_type: itemType,
     };
     let error;
     if (isEdit && event) {
@@ -1549,6 +1557,7 @@ export function AddEventDialog({
     onSaved();
     onOpenChange(false);
   };
+
 
   const remove = async () => {
     if (!event) return;
