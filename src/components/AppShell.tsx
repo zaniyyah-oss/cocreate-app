@@ -201,7 +201,17 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
           <div className="app-side-foot">
             {userId ? (
               <>
-                <NotificationBell />
+                <div className="app-side-foot-actions">
+                  <NotificationBell />
+                  <Link
+                    to="/profile"
+                    className={`app-side-profile${pathname.startsWith("/profile") ? " active" : ""}`}
+                    aria-label="Profile"
+                    title="Profile"
+                  >
+                    {ICON.profile}
+                  </Link>
+                </div>
                 <button className="app-signout" onClick={signOut}>Sign out</button>
               </>
             ) : (
