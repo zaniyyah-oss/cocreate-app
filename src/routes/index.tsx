@@ -329,8 +329,8 @@ const CSS = `
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
 .hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
 .hp-tourbar .wrap{display:flex;align-items:center;}
-.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight);font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
-.hp-tourbar-pill:hover{color:#fff;border-color:#fff;}
+.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight) !important;font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
+.hp-tourbar-pill:hover{color:#fff !important;border-color:#fff !important;}
 .hp-tourbar-pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .hp-iconbar{background:var(--navy);padding:14px 0;}
 
