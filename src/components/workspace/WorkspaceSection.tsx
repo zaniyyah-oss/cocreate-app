@@ -619,6 +619,8 @@ function NoteBody({
   onGuestUpdate?: (patch: Partial<WorkspaceItem>) => void;
 }) {
   const qc = useQueryClient();
+  const { colors: tagColors, setColor: setTagColor } = useTagColors(userId, guest);
+  const [openColorFor, setOpenColorFor] = useState<string | null>(null);
   const [title, setTitle] = useState(item.title);
   const [tags, setTags] = useState<string[]>(item.tags);
   const [tagDraft, setTagDraft] = useState("");
