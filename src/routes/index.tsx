@@ -908,13 +908,13 @@ function HomePage() {
       <div className="hp">
         <HomeMasthead signedIn={signedIn} />
         <LatestSection />
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
+        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
         <FeaturedCollectionSection />
         <StreamingSection />
         <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 80 }} />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 80, paddingBottom: 80 }} />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 44 }} />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
