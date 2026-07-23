@@ -842,13 +842,14 @@ function HomePage() {
       <div className="hp">
         <TopicsNav />
         <LatestSection />
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" />
+        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
         <FeaturedCollectionSection />
         <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" />
+        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" />
+
         <SiteFooter />
       </div>
     </AppShell>
