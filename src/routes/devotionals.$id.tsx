@@ -768,31 +768,49 @@ function EntryPage() {
             )}
             {/* View switcher */}
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
+            {/* View switcher: Entry vs Day + Full week link */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 12, flexWrap: "wrap" }}>
               <div className="de-viewtabs">
-                {(["today", "week", "month"] as const).map((v) => (
-                  <button
-                    key={v}
-                    className={search.view === v ? "active" : ""}
-                    onClick={() =>
-                      navigate({
-                        to: "/devotionals/$id",
-                        params: { id },
-                        search: (prev: any) => ({ ...prev, view: v === "today" ? undefined : v }),
-                      })
-                    }
-                  >
-                    {v === "today" ? "Today" : v === "week" ? "This week" : "Month"}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className={workspaceMode === "entry" ? "active" : ""}
+                  onClick={() => setWorkspaceMode("entry")}
+                >
+                  Entry
+                </button>
+                <button
+                  type="button"
+                  className={workspaceMode === "day" ? "active" : ""}
+                  onClick={() => setWorkspaceMode("day")}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                  </svg>
+                  Day
+                </button>
               </div>
+              <Link
+                to="/calendar"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  color: "#0F4A42", fontWeight: 700, fontSize: 12.5,
+                  textDecoration: "none", fontFamily: "'Poppins',sans-serif",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                </svg>
+                Full week
+                <span>→</span>
+              </Link>
             </div>
 
-            {search.view === "month" ? (
-              <MonthCalendarView templateId={id} userId={userId} />
-            ) : search.view === "week" ? (
-              <WeekListView templateId={id} userId={userId} />
+            {workspaceMode === "day" ? (
+              <CalendarDayView userId={userId} initialDate={selectedDate} defaultTemplateId={id} />
             ) : (
               <>
+
 
             <div className="de-headcard">
               <div className="de-headcard-inner">
