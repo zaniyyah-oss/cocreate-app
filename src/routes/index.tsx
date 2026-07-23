@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
@@ -301,18 +302,29 @@ const CSS = `
 .hp-mast-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
 .hp-mast-brand .mark{width:32px;height:32px;background:var(--limelight);color:var(--navy);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;}
 .hp-mast-brand .word{font-weight:900;font-size:20px;color:var(--navy);letter-spacing:-0.02em;}
-.hp-mast-links{display:none;flex:1;align-items:center;gap:22px;overflow-x:auto;min-width:0;}
-@media(min-width:900px){.hp-mast-links{display:flex;}}
-.hp-mast-links a{font-size:13.5px;font-weight:600;color:#514c3d;white-space:nowrap;}
+.hp-mast-links{display:flex;flex:1;align-items:center;gap:14px;min-width:0;flex-wrap:nowrap;overflow:hidden;}
+@media(min-width:900px){.hp-mast-links{gap:22px;}}
+.hp-mast-links a{font-size:13px;font-weight:600;color:#514c3d;white-space:nowrap;}
+@media(min-width:900px){.hp-mast-links a{font-size:13.5px;}}
 .hp-mast-links a:hover{color:var(--navy);}
+.hp-mast-links a.mast-link-hide-sm{display:none;}
+@media(min-width:640px){.hp-mast-links a.mast-link-hide-sm{display:inline;}}
+.hp-mast-links a.mast-link-hide-md{display:none;}
+@media(min-width:900px){.hp-mast-links a.mast-link-hide-md{display:inline;}}
+.hp-mast-more{position:relative;flex-shrink:0;}
+.hp-mast-more-btn{background:transparent;border:none;font-family:'Poppins';font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;padding:6px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;}
+.hp-mast-more-btn:hover{background:#FBF8ED;}
+@media(min-width:1100px){.hp-mast-more{display:none;}}
+.hp-mast-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:8px;min-width:200px;z-index:50;display:flex;flex-direction:column;}
+.hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
+.hp-mast-more-menu a:hover{background:#FBF8ED;}
 .hp-mast-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
 .hp-mast-tour{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed rgba(24,26,77,0.35);color:var(--navy);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:999px;background:transparent;font-family:'Poppins';cursor:pointer;text-decoration:none;}
 .hp-mast-tour:hover{border-color:var(--navy);background:#FBF8ED;}
 .hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
 .hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
 .hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
-/* Compact masthead for signed-in (rail already provides logo/CTAs) */
-.hp-masthead.is-inline .hp-mast-brand{display:none;}
+/* Signed-in masthead: hide the auth/tour CTAs (icon bar handles nav) but ALWAYS keep the brand */
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
@@ -320,10 +332,20 @@ const CSS = `
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
 .hp-iconbar{background:var(--navy);padding:14px 0;}
 .hp-iconbar .wrap{display:flex;align-items:center;gap:10px;}
+.hp-iconbar-nav{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.hp-iconbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0;}
 .hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:rgba(255,255,255,0.72);transition:background .15s,color .15s;}
 .hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
 .hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
 .hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-iconbar-avatar{background:#FBF8ED;color:var(--navy) !important;}
+.hp-iconbar-avatar:hover{background:#fff;color:var(--navy) !important;}
+.hp-iconbar-bell{background:rgba(255,255,255,0.08);border-radius:50% !important;}
+.hp-iconbar-bell :global(.nb-btn){color:#fff;width:40px;height:40px;}
+.hp-iconbar-bell .nb-btn{color:#fff !important;width:40px;height:40px;}
+.hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.14);}
+.hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
+
 `;
 
 /* ============================================================ */
@@ -413,11 +435,19 @@ function HomeIconBar() {
   return (
     <div className="hp-iconbar">
       <div className="wrap">
-        {items.map((it) => (
-          <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
-            {it.icon}
+        <div className="hp-iconbar-nav">
+          {items.map((it) => (
+            <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+              {it.icon}
+            </Link>
+          ))}
+        </div>
+        <div className="hp-iconbar-right">
+          <span className="hp-iconbar-bell"><NotificationBell /></span>
+          <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
           </Link>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -429,6 +459,13 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
   const list = (topicsQ.data ?? [])
     .filter((t) => primary.includes(t.slug))
     .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = () => setMoreOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [moreOpen]);
   return (
     <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
       <div className="wrap">
@@ -437,12 +474,37 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <div className="word">CoCreate</div>
         </Link>
         <nav className="hp-mast-links">
-          {list.map((t) => (
-            <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
+          {list.map((t, i) => (
+            <Link
+              key={t.id}
+              to="/topics/$slug"
+              params={{ slug: t.slug }}
+              className={i >= 4 ? "mast-link-hide-md" : i >= 2 ? "mast-link-hide-sm" : ""}
+            >
               {t.display_name || t.name}
             </Link>
           ))}
         </nav>
+        <div className="hp-mast-more">
+          <button
+            type="button"
+            className="hp-mast-more-btn"
+            onClick={(e) => { e.stopPropagation(); setMoreOpen((v) => !v); }}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
+          >
+            More <span aria-hidden>▾</span>
+          </button>
+          {moreOpen && (
+            <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+              {list.map((t) => (
+                <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
+                  {t.display_name || t.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="hp-mast-actions">
           <Link to="/tour" className="hp-mast-tour" title="Take a guided tour of the Workspace">
             Tour the Workspace
