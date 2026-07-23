@@ -187,14 +187,6 @@ export function AppShell({ current, children }: { current?: NavKey; children: Re
                   <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
                 )}
               </button>
-              <Link
-                to="/profile"
-                className={`app-side-profile${pathname.startsWith("/profile") ? " active" : ""}`}
-                aria-label="Profile"
-                title="Profile"
-              >
-                {ICON.profile}
-              </Link>
             </div>
           </div>
           {desktopNav.map((n) => (
