@@ -208,7 +208,7 @@ const CSS = `
 .hp-col-header p{font-size:13.5px;color:rgba(255,255,255,0.7);margin:0;max-width:480px;}
 .hp-col-actions{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex-shrink:0;}
 @media(min-width:640px){.hp-col-actions{align-items:flex-end;}}
-.hp-add-btn{background:var(--cream);color:var(--burgundy);font-weight:700;font-size:13px;padding:11px 20px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;}
+.hp-add-btn{background:var(--navy);color:#fff;font-weight:700;font-size:13px;padding:11px 20px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;}
 .hp-see-inside{font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;white-space:nowrap;}
 .hp-col-grid{display:grid;grid-template-columns:1fr;gap:18px;}
 @media(min-width:900px){.hp-col-grid{grid-template-columns:1.4fr 1fr;}}
@@ -309,12 +309,13 @@ const CSS = `
 .hp-mast-tour{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed rgba(24,26,77,0.35);color:var(--navy);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:999px;background:transparent;font-family:'Poppins';cursor:pointer;text-decoration:none;}
 .hp-mast-tour:hover{border-color:var(--navy);background:#FBF8ED;}
 .hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
-.hp-mast-subscribe{background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
-.hp-mast-subscribe:hover{background:var(--navy-2);}
+.hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
+.hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
 /* Compact masthead for signed-in (rail already provides logo/CTAs) */
 .hp-masthead.is-inline .hp-mast-brand{display:none;}
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe,
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-tour{display:none;}
 `;
 
 /* ============================================================ */
@@ -438,7 +439,7 @@ function LatestSection() {
   const sides = items.slice(1, 5);
 
   return (
-    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 88 }}>
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 40 }}>
 
       <div className="hp-eyebrow">
         <div className="bar" />
@@ -907,13 +908,13 @@ function HomePage() {
       <div className="hp">
         <HomeMasthead signedIn={signedIn} />
         <LatestSection />
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
+        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
         <FeaturedCollectionSection />
         <StreamingSection />
         <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 80 }} />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 80, paddingBottom: 80 }} />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 44 }} />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>

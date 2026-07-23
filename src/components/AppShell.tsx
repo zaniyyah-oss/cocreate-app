@@ -180,10 +180,7 @@ const FOCUS_KEY = "cocreate:workspace-focus";
 
 export function AppShell({ current, children, hideSideWhenSignedOut }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
-  });
+  const [collapsed] = useState<boolean>(true);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(FOCUS_KEY) === "1";
@@ -209,11 +206,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
     };
   }, [pathname]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
-    }
-  }, [collapsed]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -272,20 +264,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut }: { current
             <Link to="/" className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
             </Link>
-            <div className="app-side-head-actions">
-              <button
-                className="app-side-toggle"
-                onClick={() => setCollapsed((c) => !c)}
-                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {collapsed ? (
-                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-                ) : (
-                  <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-                )}
-              </button>
-            </div>
+            <div className="app-side-head-actions" />
           </div>
           <button
             type="button"
