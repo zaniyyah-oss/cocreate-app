@@ -22,11 +22,18 @@ const ICON = {
 
 function buildDesktopNav(labels: Record<string, string>) {
   return [
-    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
-    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore",     icon: ICON.explore },
-    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
-    { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
-    { key: "library" as const,     label: labels.library_label     || "Library",   to: "/saved",       icon: ICON.library, matchPaths: ["/saved", "/notes"] },
+    [
+      { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
+      { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+      { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
+    ],
+    [
+      { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore",     icon: ICON.explore },
+      { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
+    ],
+    [
+      { key: "profile" as const,     label: labels.profile_label     || "Profile",   to: "/profile",     icon: ICON.profile },
+    ],
   ];
 }
 
