@@ -147,18 +147,25 @@ export function WorkspaceEditor({
     }
   }, [editor, initialJSON, ignoreExternalUpdates]);
 
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editor, editable]);
+
   if (!editor) return null;
 
   return (
     <div className="ws-editor">
-      <Toolbar editor={editor} userId={userId} />
-      <BubbleMenu
-        editor={editor}
-        options={{ placement: "top" }}
-        shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
-      >
-        <MobileBubble editor={editor} />
-      </BubbleMenu>
+      {editable && <Toolbar editor={editor} userId={userId} />}
+      {editable && (
+        <BubbleMenu
+          editor={editor}
+          options={{ placement: "top" }}
+          shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
+        >
+          <MobileBubble editor={editor} />
+        </BubbleMenu>
+      )}
       <EditorContent editor={editor} />
     </div>
   );
