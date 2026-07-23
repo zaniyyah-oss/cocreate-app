@@ -1485,8 +1485,8 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
   });
 }
 
-function AddEventDialog({
-  open, onOpenChange, userId, defaultDate, event, onSaved,
+export function AddEventDialog({
+  open, onOpenChange, userId, defaultDate, event, onSaved, defaultItemType,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -1494,6 +1494,7 @@ function AddEventDialog({
   defaultDate: string;
   event?: UserEvent | null;
   onSaved: () => void;
+  defaultItemType?: UserEventItemType;
 }) {
   const isEdit = !!event;
   const [date, setDate] = useState(defaultDate);
