@@ -845,10 +845,10 @@ function HomePage() {
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" />
         <FeaturedCollectionSection />
         <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" />
+        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
         <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" />
+        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 80 }} />
+        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 80, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
