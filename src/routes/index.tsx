@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
@@ -330,6 +331,7 @@ const CSS = `
 .hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
 .hp-mast-media-link:hover{background:#FBF8ED;}
 .hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-media-link--listen svg{color:#3B82F6;}
 .hp-mast-media-dot{width:10px;height:10px;border-radius:50%;background:#FF340C;display:inline-block;}
 .hp-mast-search-form{display:flex;align-items:center;gap:6px;}
 .hp-mast-search-form input{width:160px;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#181A4D;outline:none;transition:border-color .15s;}
@@ -564,8 +566,8 @@ function MediaNav() {
         <span className="hp-mast-media-dot" />
         <span>Watch</span>
       </Link>
-      <Link to="/listen" className="hp-mast-media-link" aria-label="Listen">
-        <svg viewBox="0 0 24 24"><path d="M3 14v3a2 2 0 0 0 2 2h1l2-3h-3a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h3l-2-3H5a2 2 0 0 0-2 2z"/><path d="M17 14v3a2 2 0 0 1-2 2h-1l-2-3h3a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1h-3l2-3h1a2 2 0 0 1 2 2z"/><path d="M7 10v4M17 10v4"/></svg>
+      <Link to="/listen" className="hp-mast-media-link hp-mast-media-link--listen" aria-label="Listen">
+        <Headphones size={18} />
         <span>Listen</span>
       </Link>
       {searchOpen ? (
