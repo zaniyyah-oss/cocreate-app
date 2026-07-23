@@ -428,12 +428,12 @@ function LatestSection() {
   );
 }
 
-function TopicSection({ topic, label, id, demoKind }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES }) {
+function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES; style?: React.CSSProperties }) {
   const q = useByTopic(topic?.id, 3);
   const real = q.data ?? [];
   const items = padDemo(real, demoKind, 3);
   return (
-    <div className="wrap hp-section" id={id}>
+    <div className="wrap hp-section" id={id} style={style}>
       <div className="hp-eyebrow">
         <div className="bar" />
         <h2>{label}</h2>
