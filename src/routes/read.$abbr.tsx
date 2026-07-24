@@ -327,6 +327,7 @@ function EntryCard({
 
       <div className="rb-note-lbl">Read note</div>
       <textarea
+        ref={noteRef}
         className="rb-note"
         value={note}
         placeholder="Add a note from your reading…"
