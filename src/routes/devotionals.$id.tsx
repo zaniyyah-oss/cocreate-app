@@ -817,7 +817,12 @@ function EntryPage() {
             </div>
 
             {workspaceMode === "day" ? (
-              <CalendarDayView userId={userId} initialDate={selectedDate} defaultTemplateId={id} />
+              <CalendarDayView
+                userId={userId}
+                initialDate={selectedDate}
+                defaultTemplateId={id}
+                onDateChange={(iso) => setSelectedDate(iso)}
+              />
             ) : (
               <>
 

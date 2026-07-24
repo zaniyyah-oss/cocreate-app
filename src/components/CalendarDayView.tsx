@@ -45,9 +45,10 @@ type Props = {
   initialDate?: string;
   defaultTemplateId?: string | null;
   showTopTabs?: boolean;
+  onDateChange?: (iso: string) => void;
 };
 
-export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Props) {
+export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDateChange }: Props) {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Date>(() => {
     if (initialDate) return new Date(initialDate + "T00:00:00");
@@ -57,6 +58,11 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Prop
     if (initialDate) setSelected(new Date(initialDate + "T00:00:00"));
   }, [initialDate]);
   const selectedISO = isoDate(selected);
+
+  const pickDate = (d: Date) => {
+    setSelected(d);
+    onDateChange?.(isoDate(d));
+  };
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
@@ -177,7 +183,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Prop
               const hasDot = monthDots.has(c.iso);
               const cls = ["day", c.inMonth ? "" : "muted", isSel ? "selected" : "", hasDot ? "has-dot" : ""].filter(Boolean).join(" ");
               return (
-                <button key={c.iso} type="button" className={cls} onClick={() => setSelected(c.date)}>
+                <button key={c.iso} type="button" className={cls} onClick={() => pickDate(c.date)}>
                   {c.date.getDate()}
                 </button>
               );
@@ -217,7 +223,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Prop
             const sel = iso === selectedISO;
             const has = (itemsQ.data?.get(iso) ?? []).length > 0;
             return (
-              <button key={iso} type="button" className={"cald-pill" + (sel ? " selected" : "") + (has ? " has-events" : "")} onClick={() => setSelected(d)}>
+              <button key={iso} type="button" className={"cald-pill" + (sel ? " selected" : "") + (has ? " has-events" : "")} onClick={() => pickDate(d)}>
                 <div className="dow">{d.toLocaleDateString(undefined, { weekday: "short" })}</div>
                 <div className="num">{d.getDate()}</div>
                 <div className="dot" />
