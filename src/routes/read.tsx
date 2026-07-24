@@ -28,9 +28,18 @@ type RecentEntry = {
   scripture_reference: string | null;
   scripture_text: string | null;
   book_of_bible: string | null;
+  books_of_bible: string[] | null;
   topic_ids: string[] | null;
 };
 
+function entryBooks(e: {
+  book_of_bible: string | null;
+  books_of_bible: string[] | null;
+}): string[] {
+  const arr = Array.isArray(e.books_of_bible) ? e.books_of_bible : [];
+  if (arr.length > 0) return arr;
+  return e.book_of_bible ? [e.book_of_bible] : [];
+}
 
 function useConfirmedCounts() {
   return useQuery({
@@ -41,16 +50,14 @@ function useConfirmedCounts() {
       if (!uid) return {} as Record<string, number>;
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("book_of_bible")
+        .select("book_of_bible,books_of_bible")
         .eq("user_id", uid)
-        .eq("book_confirmed", true)
-        .not("book_of_bible", "is", null);
+        .eq("book_confirmed", true);
       if (error) throw error;
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
-        const k = (row as any).book_of_bible as string | null;
-        if (!k) continue;
-        counts[k] = (counts[k] ?? 0) + 1;
+        const books = entryBooks(row as any);
+        for (const k of books) counts[k] = (counts[k] ?? 0) + 1;
       }
       return counts;
     },
@@ -67,14 +74,13 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed,topic_ids")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
         .eq("book_confirmed", true)
-        .not("book_of_bible", "is", null)
         .order("entry_date", { ascending: false })
         .limit(60);
       if (error) throw error;
-      return (data ?? []) as RecentEntry[];
+      return ((data ?? []) as RecentEntry[]).filter((e) => entryBooks(e).length > 0);
     },
     staleTime: 30_000,
   });
