@@ -1023,7 +1023,7 @@ function TopicsSection({
           const bc = brandColor(t.color_key) ?? brandColor("amber")!;
           const on = selectedIds.includes(t.id);
           const n = counts.get(t.id) ?? 0;
-          const canDelete = userId && t.created_by === userId;
+          const canDelete = userId && (t.created_by === userId || isAdmin);
           const isDeleting = deletingId === t.id;
           return (
             <div
