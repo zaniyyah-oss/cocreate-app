@@ -103,6 +103,27 @@ export type Database = {
           },
         ]
       }
+      bible_books: {
+        Row: {
+          abbreviation: string
+          full_name: string
+          sort_order: number
+          testament: string
+        }
+        Insert: {
+          abbreviation: string
+          full_name: string
+          sort_order: number
+          testament: string
+        }
+        Update: {
+          abbreviation?: string
+          full_name?: string
+          sort_order?: number
+          testament?: string
+        }
+        Relationships: []
+      }
       collection_items: {
         Row: {
           added_at: string
@@ -466,6 +487,9 @@ export type Database = {
       devotional_entries: {
         Row: {
           apply_text: string | null
+          book_confirmed: boolean
+          book_of_bible: string | null
+          book_source: Database["public"]["Enums"]["book_tag_source"] | null
           created_at: string
           entry_date: string
           entry_subtitle: string | null
@@ -485,6 +509,9 @@ export type Database = {
         }
         Insert: {
           apply_text?: string | null
+          book_confirmed?: boolean
+          book_of_bible?: string | null
+          book_source?: Database["public"]["Enums"]["book_tag_source"] | null
           created_at?: string
           entry_date?: string
           entry_subtitle?: string | null
@@ -504,6 +531,9 @@ export type Database = {
         }
         Update: {
           apply_text?: string | null
+          book_confirmed?: boolean
+          book_of_bible?: string | null
+          book_source?: Database["public"]["Enums"]["book_tag_source"] | null
           created_at?: string
           entry_date?: string
           entry_subtitle?: string | null
@@ -522,6 +552,13 @@ export type Database = {
           where_text?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "devotional_entries_book_of_bible_fkey"
+            columns: ["book_of_bible"]
+            isOneToOne: false
+            referencedRelation: "bible_books"
+            referencedColumns: ["abbreviation"]
+          },
           {
             foreignKeyName: "devotional_entries_template_id_fkey"
             columns: ["template_id"]
@@ -1631,6 +1668,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      book_tag_source: "manual" | "auto"
       content_status: "draft" | "published"
       content_type:
         | "teaching"
@@ -1770,6 +1808,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      book_tag_source: ["manual", "auto"],
       content_status: ["draft", "published"],
       content_type: [
         "teaching",
