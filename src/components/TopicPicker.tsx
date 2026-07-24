@@ -29,7 +29,7 @@ export function useAllTopics() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id,name,slug,display_name,color_key,sort_order")
+        .select("id,name,slug,display_name,color_key,sort_order,created_by")
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
