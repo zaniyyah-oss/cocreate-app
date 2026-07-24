@@ -270,6 +270,7 @@ function ReadLibrary() {
           </>
         )}
       </div>
+      </div>
     </AppShell>
   );
 }
