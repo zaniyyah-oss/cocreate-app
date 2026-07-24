@@ -69,7 +69,7 @@ function useRecentStudies() {
         .eq("book_confirmed", true)
         .not("book_of_bible", "is", null)
         .order("entry_date", { ascending: false })
-        .limit(3);
+        .limit(60);
       if (error) throw error;
       return (data ?? []) as RecentEntry[];
     },
@@ -98,10 +98,11 @@ function ReadLibrary() {
 
   return (
     <AppShell>
+      <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
       <style>{`
         .rd-wrap{
           max-width:1280px;margin:0 auto;padding:28px 32px 96px;
-          font-family:'Poppins',sans-serif;color:#20201C;background:#FBF8ED;min-height:100vh;
+          font-family:'Poppins',sans-serif;color:#20201C;
         }
         .rd-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:36px;}
         .rd-tabs{
@@ -268,6 +269,7 @@ function ReadLibrary() {
             </div>
           </>
         )}
+      </div>
       </div>
     </AppShell>
   );
