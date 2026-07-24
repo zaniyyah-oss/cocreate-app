@@ -1474,6 +1474,8 @@ export type UserEvent = {
   color: string;
   notes: string | null;
   item_type?: UserEventItemType;
+  start_time?: string | null;
+  end_time?: string | null;
 };
 
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
