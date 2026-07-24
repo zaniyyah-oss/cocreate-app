@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { usePageContent } from "@/lib/page-content";
 
-export type NavKey = "home" | "explore" | "devotionals" | "calendar" | "saved" | "notes" | "profile" | "library" | "messages";
+export type NavKey = "home" | "read" | "explore" | "devotionals" | "calendar" | "saved" | "notes" | "profile" | "library" | "messages";
 
 const ICON = {
   home:        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>,
