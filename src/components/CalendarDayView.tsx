@@ -398,10 +398,11 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           const startMin = START_HOUR * 60;
           const endMin = END_HOUR * 60;
           const showCurrentLine = isToday && now && nowMin >= startMin && nowMin <= endMin;
-          const currentTop = ((nowMin - startMin) / 60) * HOUR_HEIGHT;
+          const currentTop = ((nowMin - startMin) / 60) * HOUR_HEIGHT + 6;
           const currentLabel = now
             ? now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
             : "";
+
 
           return (
             <>
