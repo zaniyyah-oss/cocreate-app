@@ -294,7 +294,7 @@ function EntryCard({
     .filter((t): t is Topic => !!t);
 
   return (
-    <div className="rb-card">
+    <div className={`rb-card${autoFocus ? " focus" : ""}`} ref={cardRef}>
       <div className="rb-card-top">
         <div className="rb-pills">
           <span className="rb-pill daily">Read</span>
