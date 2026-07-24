@@ -481,6 +481,7 @@ function EntryPage() {
   const [bookOfBible, setBookOfBible] = useState<string | null>(null);
   const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
   const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
+  const [topicIds, setTopicIds] = useState<string[]>([]);
 
 
   const [savingField, setSavingField] = useState<string | null>(null);
