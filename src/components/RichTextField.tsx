@@ -94,6 +94,55 @@ export function RichTextField({
         contentEditable={!disabled}
         suppressContentEditableWarning
         data-placeholder={placeholder ?? ""}
+        onKeyDown={(e) => {
+          // Cmd/Ctrl formatting shortcuts (browsers already handle B/I/U on
+          // contentEditable, but we handle explicitly so onChange fires with
+          // the new HTML and behavior is consistent across platforms).
+          if (e.metaKey || e.ctrlKey) {
+            const k = e.key.toLowerCase();
+            if (k === "b" || k === "i" || k === "u") {
+              e.preventDefault();
+              exec(k === "b" ? "bold" : k === "i" ? "italic" : "underline");
+              return;
+            }
+          }
+          // Markdown-style list shortcuts on space: "-", "*", or "1." at the
+          // very start of the current line converts it to a list.
+          if (e.key === " ") {
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return;
+            const range = sel.getRangeAt(0);
+            const node = range.startContainer;
+            if (node.nodeType !== Node.TEXT_NODE) return;
+            const editor = ref.current;
+            if (!editor || !editor.contains(node)) return;
+            // Only trigger if we're inside the editor's plain content, not
+            // already inside a list item.
+            let p: Node | null = node;
+            while (p && p !== editor) {
+              const name = (p as HTMLElement).nodeName;
+              if (name === "LI" || name === "UL" || name === "OL") return;
+              p = p.parentNode;
+            }
+            const textBefore = (node.textContent ?? "").slice(0, range.startOffset);
+            const trimmed = textBefore.replace(/\u00a0/g, " ");
+            let cmd: "insertUnorderedList" | "insertOrderedList" | null = null;
+            if (trimmed === "-" || trimmed === "*") cmd = "insertUnorderedList";
+            else if (/^\d+\.$/.test(trimmed)) cmd = "insertOrderedList";
+            if (!cmd) return;
+            e.preventDefault();
+            // Remove the marker characters, then convert the (now empty)
+            // line into a list.
+            const delRange = document.createRange();
+            delRange.setStart(node, 0);
+            delRange.setEnd(node, range.startOffset);
+            delRange.deleteContents();
+            try { document.execCommand(cmd, false); } catch { /* ignore */ }
+            const html = editor.innerHTML;
+            lastValueRef.current = html;
+            onChange(html);
+          }
+        }}
         onInput={(e) => {
           const html = (e.currentTarget as HTMLDivElement).innerHTML;
           lastValueRef.current = html;
