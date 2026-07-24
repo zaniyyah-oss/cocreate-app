@@ -10,6 +10,7 @@ import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
 import { BookTagger } from "@/components/BookTagger";
+import { TopicPicker } from "@/components/TopicPicker";
 
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
