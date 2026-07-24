@@ -545,7 +545,7 @@ function ListView({
               )}
               {g.items.map((e) => {
                 const isOpen = e.id === selectedId;
-                const preview = (e.scripture_text ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
+                const preview = stripHtml(e.scripture_text).slice(0, 120);
                 return (
                   <button
                     key={`${g.key}-${e.id}`}
