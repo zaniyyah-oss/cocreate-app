@@ -338,11 +338,11 @@ function FocusPage() {
                 {userId && (
                   <>
                     <div className="fp-response-label">Your response</div>
-                    <textarea
+                    <RichTextField
                       className="fp-textarea"
                       placeholder="What did you notice? What is God saying?"
                       value={scriptureText}
-                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                     />
                     {statusRow("scripture_text")}
                   </>
