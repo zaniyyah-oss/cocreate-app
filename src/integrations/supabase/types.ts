@@ -1405,11 +1405,13 @@ export type Database = {
         Row: {
           color: string
           created_at: string
+          end_time: string | null
           event_date: string
           event_type: string
           id: string
           item_type: string
           notes: string | null
+          start_time: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -1417,11 +1419,13 @@ export type Database = {
         Insert: {
           color: string
           created_at?: string
+          end_time?: string | null
           event_date: string
           event_type: string
           id?: string
           item_type?: string
           notes?: string | null
+          start_time?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -1429,11 +1433,13 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string
+          end_time?: string | null
           event_date?: string
           event_type?: string
           id?: string
           item_type?: string
           notes?: string | null
+          start_time?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
