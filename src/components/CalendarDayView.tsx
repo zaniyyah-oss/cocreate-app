@@ -29,9 +29,9 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// Continuous hourly grid: 6 AM through 10 PM
-const START_HOUR = 6;
-const END_HOUR = 22;
+// Continuous hourly grid: 12 AM through 11 PM (full 24-hour day)
+const START_HOUR = 0;
+const END_HOUR = 24;
 const HOUR_HEIGHT = 56; // px per hour
 const HOUR_SLOTS: { hour: number; label: string }[] = Array.from(
   { length: END_HOUR - START_HOUR },
