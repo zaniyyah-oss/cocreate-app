@@ -31,22 +31,7 @@ type Entry = {
   topic_ids: string[] | null;
 };
 
-type Topic = { id: string; name: string; display_name: string | null; color_key: string | null };
-
-function useTopics() {
-  return useQuery({
-    queryKey: ["all-topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("id,name,display_name,color_key")
-        .order("name");
-      if (error) throw error;
-      return (data ?? []) as Topic[];
-    },
-    staleTime: 5 * 60_000,
-  });
-}
+type Topic = TopicRow;
 
 function fmtDate(d: string | null) {
   if (!d) return "";
