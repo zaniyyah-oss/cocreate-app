@@ -10,6 +10,7 @@ import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
 import { BookTagger } from "@/components/BookTagger";
+import { TopicPicker } from "@/components/TopicPicker";
 
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
@@ -344,7 +345,8 @@ type SaveField =
   | "entry_subtitle"
   | "book_of_bible"
   | "book_source"
-  | "book_confirmed";
+  | "book_confirmed"
+  | "topic_ids";
 
 
 function NavMenu() {
@@ -479,6 +481,7 @@ function EntryPage() {
   const [bookOfBible, setBookOfBible] = useState<string | null>(null);
   const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
   const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
+  const [topicIds, setTopicIds] = useState<string[]>([]);
 
 
   const [savingField, setSavingField] = useState<string | null>(null);
@@ -540,6 +543,7 @@ function EntryPage() {
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
+    setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
@@ -928,6 +932,16 @@ function EntryPage() {
                         onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
                       />
                       {statusRow("further_reading_text")}
+                    </div>
+                    <div className="de-read-part" style={{ paddingTop: 4 }}>
+                      <TopicPicker
+                        value={topicIds}
+                        disabled={!userId}
+                        onChange={(next) => {
+                          setTopicIds(next);
+                          scheduleSave("topic_ids", next);
+                        }}
+                      />
                     </div>
                   </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
+import { TopicPicker, useAllTopics, type TopicRow } from "@/components/TopicPicker";
 
 export const Route = createFileRoute("/read/$abbr")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -30,22 +31,7 @@ type Entry = {
   topic_ids: string[] | null;
 };
 
-type Topic = { id: string; name: string; display_name: string | null; color_key: string | null };
-
-function useTopics() {
-  return useQuery({
-    queryKey: ["all-topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("id,name,display_name,color_key")
-        .order("name");
-      if (error) throw error;
-      return (data ?? []) as Topic[];
-    },
-    staleTime: 5 * 60_000,
-  });
-}
+type Topic = TopicRow;
 
 function fmtDate(d: string | null) {
   if (!d) return "";
@@ -60,7 +46,8 @@ function BookDetail() {
   const { entry: focusEntryId } = Route.useSearch();
   const qc = useQueryClient();
   const booksQ = useBibleBooks();
-  const topicsQ = useTopics();
+  const topicsQ = useAllTopics();
+  const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const book = (booksQ.data ?? []).find((b) => b.abbreviation === abbr);
   const topicsById = useMemo(() => {
     const m = new Map<string, Topic>();
@@ -88,6 +75,22 @@ function BookDetail() {
 
   const entries = entriesQ.data ?? [];
   const fullName = book?.full_name ?? abbr;
+
+  const visibleEntries = useMemo(() => {
+    if (filterTopicIds.length === 0) return entries;
+    return entries.filter((e) => {
+      const ids = e.topic_ids ?? [];
+      return filterTopicIds.every((tid) => ids.includes(tid));
+    });
+  }, [entries, filterTopicIds]);
+
+  // Only show topics that at least one entry in this book uses.
+  const availableTopics = useMemo(() => {
+    const used = new Set<string>();
+    entries.forEach((e) => (e.topic_ids ?? []).forEach((id) => used.add(id)));
+    return (topicsQ.data ?? []).filter((t) => used.has(t.id));
+  }, [entries, topicsQ.data]);
+
 
   return (
     <AppShell>
@@ -167,6 +170,13 @@ function BookDetail() {
             background:transparent;border:none;color:inherit;font-size:14px;cursor:pointer;
             padding:0 0 0 4px;line-height:1;
           }
+          .rb-filter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 24px;}
+          .rb-filter-lbl{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a8879;}
+          .rb-filter-chips{display:flex;flex-wrap:wrap;gap:6px;}
+          .rb-fchip{font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;}
+          .rb-fchip:hover{border-color:#FFAE00;color:#20201C;}
+          .rb-fchip.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
+          .rb-fchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
         `}</style>
 
         <div className="rb-wrap">
@@ -182,18 +192,49 @@ function BookDetail() {
               : `${entries.length} ${entries.length === 1 ? "study" : "studies"}`}
           </div>
 
+          {availableTopics.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Filter by topic</span>
+              <div className="rb-filter-chips">
+                {availableTopics.map((t) => {
+                  const on = filterTopicIds.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`rb-fchip ${on ? "on" : ""}`}
+                      onClick={() =>
+                        setFilterTopicIds((cur) =>
+                          cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                        )
+                      }
+                    >
+                      {t.display_name ?? t.name}
+                    </button>
+                  );
+                })}
+                {filterTopicIds.length > 0 && (
+                  <button type="button" className="rb-fchip clear" onClick={() => setFilterTopicIds([])}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {entries.length === 0 ? (
             <div className="rb-empty">
               No studies yet in {fullName} — entries you tag will show up here.
             </div>
+          ) : visibleEntries.length === 0 ? (
+            <div className="rb-empty">No studies match the selected topics.</div>
           ) : (
             <div className="rb-list">
-              {entries.map((e) => (
+              {visibleEntries.map((e) => (
                 <EntryCard
                   key={e.id}
                   entry={e}
                   topicsById={topicsById}
-                  allTopics={topicsQ.data ?? []}
                   autoFocus={focusEntryId === e.id}
                   onChanged={() => qc.invalidateQueries({ queryKey: ["read-book-entries", abbr] })}
                 />
@@ -209,23 +250,18 @@ function BookDetail() {
 function EntryCard({
   entry,
   topicsById,
-  allTopics,
   onChanged,
   autoFocus = false,
 }: {
   entry: Entry;
   topicsById: Map<string, Topic>;
-  allTopics: Topic[];
   onChanged: () => void;
   autoFocus?: boolean;
 }) {
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
   const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const saveTimer = useRef<number | null>(null);
-  const pickerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -237,15 +273,6 @@ function EntryCard({
     }, 100);
     return () => window.clearTimeout(t);
   }, [autoFocus]);
-
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!pickerRef.current?.contains(e.target as Node)) setPickerOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [pickerOpen]);
 
   const saveNote = async (val: string) => {
     setStatus("saving");
@@ -268,37 +295,24 @@ function EntryCard({
     setStatus("saving");
     const { error } = await supabase
       .from("devotional_entries")
-      .update({ topic_ids: next })
+      .update({ topic_ids: next } as any)
       .eq("id", entry.id);
     setStatus(error ? "error" : "saved");
     if (!error) window.setTimeout(() => setStatus(""), 1500);
     onChanged();
   };
 
-  const toggleTopic = (id: string) => {
-    const next = topicIds.includes(id) ? topicIds.filter((t) => t !== id) : [...topicIds, id];
-    saveTopics(next);
-  };
-
-  const filteredTopics = allTopics.filter((t) => {
-    if (!query.trim()) return true;
-    const q = query.toLowerCase();
-    return (
-      (t.display_name ?? t.name).toLowerCase().includes(q) ||
-      t.name.toLowerCase().includes(q)
-    );
-  });
-
-  const activeTopics = topicIds
+  const previewTopics = topicIds
     .map((id) => topicsById.get(id))
-    .filter((t): t is Topic => !!t);
+    .filter((t): t is Topic => !!t)
+    .slice(0, 2);
 
   return (
     <div className={`rb-card${autoFocus ? " focus" : ""}`} ref={cardRef}>
       <div className="rb-card-top">
         <div className="rb-pills">
           <span className="rb-pill daily">Read</span>
-          {activeTopics.slice(0, 2).map((t) => (
+          {previewTopics.map((t) => (
             <span key={t.id} className="rb-pill topic">
               {t.display_name ?? t.name}
             </span>
@@ -341,68 +355,7 @@ function EntryCard({
         }}
       />
 
-      <div className="rb-topics" ref={pickerRef}>
-        {activeTopics.map((t) => (
-          <span key={t.id} className="rb-pill topic" style={{ display: "inline-flex", alignItems: "center" }}>
-            {t.display_name ?? t.name}
-            <button
-              type="button"
-              aria-label={`Remove ${t.display_name ?? t.name}`}
-              className="rb-chip-x"
-              onClick={() => toggleTopic(t.id)}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <div className="rb-topic-picker">
-          <button
-            type="button"
-            className="rb-topic-add"
-            onClick={() => setPickerOpen((o) => !o)}
-          >
-            + Add topic
-          </button>
-          {pickerOpen && (
-            <div className="rb-topic-menu">
-              <input
-                autoFocus
-                placeholder="Search topics…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                style={{
-                  width: "100%",
-                  border: "1px solid #ECE4CE",
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 13,
-                  marginBottom: 6,
-                  fontFamily: "inherit",
-                }}
-              />
-              {filteredTopics.length === 0 && (
-                <div style={{ padding: "8px 10px", color: "#8a8879", fontSize: 12 }}>
-                  No topics found.
-                </div>
-              )}
-              {filteredTopics.map((t) => {
-                const on = topicIds.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`rb-topic-opt ${on ? "on" : ""}`}
-                    onClick={() => toggleTopic(t.id)}
-                  >
-                    <span>{t.display_name ?? t.name}</span>
-                    {on && <span style={{ color: "#0F4A42" }}>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+      <TopicPicker value={topicIds} onChange={saveTopics} />
 
       <div className="rb-note-status">
         {status === "saving" && "Saving…"}

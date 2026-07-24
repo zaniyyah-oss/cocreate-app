@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
+import { useAllTopics } from "@/components/TopicPicker";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
@@ -26,6 +27,7 @@ type RecentEntry = {
   scripture_reference: string | null;
   scripture_text: string | null;
   book_of_bible: string | null;
+  topic_ids: string[] | null;
 };
 
 
@@ -64,7 +66,7 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
         .eq("book_confirmed", true)
         .not("book_of_bible", "is", null)
@@ -81,11 +83,42 @@ function ReadLibrary() {
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
+  const topicsQ = useAllTopics();
   const [tab, setTab] = useState<"OT" | "NT">("OT");
+  const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
 
   const books = booksQ.data ?? [];
   const counts = countsQ.data ?? {};
   const recent = recentQ.data ?? [];
+
+  // Books mentioned by entries matching selected topics (AND semantics).
+  const topicBookSet = useMemo(() => {
+    if (filterTopicIds.length === 0) return null;
+    const s = new Set<string>();
+    for (const e of recent) {
+      const ids = e.topic_ids ?? [];
+      if (filterTopicIds.every((t) => ids.includes(t)) && e.book_of_bible) {
+        s.add(e.book_of_bible);
+      }
+    }
+    return s;
+  }, [filterTopicIds, recent]);
+
+  const filteredRecent = useMemo(() => {
+    if (filterTopicIds.length === 0) return recent;
+    return recent.filter((e) => {
+      const ids = e.topic_ids ?? [];
+      return filterTopicIds.every((t) => ids.includes(t));
+    });
+  }, [recent, filterTopicIds]);
+
+  // Only surface topics that have at least one entry.
+  const availableTopics = useMemo(() => {
+    const used = new Set<string>();
+    for (const e of recent) (e.topic_ids ?? []).forEach((id) => used.add(id));
+    return (topicsQ.data ?? []).filter((t) => used.has(t.id));
+  }, [recent, topicsQ.data]);
+
   const studiedCount = useMemo(
     () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
     [counts]
@@ -197,6 +230,13 @@ function ReadLibrary() {
           font-size:14px;line-height:1.55;color:#4a4a44;
           display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
         }
+        .rd-topicfilter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 24px;}
+        .rd-topicfilter .lbl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;}
+        .rd-tchip{font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;}
+        .rd-tchip:hover{border-color:#FFAE00;color:#20201C;}
+        .rd-tchip.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
+        .rd-tchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
+        .rd-chip.dim{opacity:.35;}
       `}</style>
 
       <div className="rd-wrap">
@@ -219,6 +259,34 @@ function ReadLibrary() {
           <span className="lbl">books studied out of 66</span>
         </div>
 
+        {availableTopics.length > 0 && (
+          <div className="rd-topicfilter">
+            <span className="lbl">Filter by topic</span>
+            {availableTopics.map((t) => {
+              const on = filterTopicIds.includes(t.id);
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`rd-tchip ${on ? "on" : ""}`}
+                  onClick={() =>
+                    setFilterTopicIds((cur) =>
+                      cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                    )
+                  }
+                >
+                  {t.display_name ?? t.name}
+                </button>
+              );
+            })}
+            {filterTopicIds.length > 0 && (
+              <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="rd-section-label">
           {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
         </div>
@@ -226,12 +294,13 @@ function ReadLibrary() {
         <div className="rd-grid">
           {filtered.map((b) => {
             const n = counts[b.abbreviation] ?? 0;
+            const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
             return (
               <Link
                 key={b.abbreviation}
                 to="/read/$abbr"
                 params={{ abbr: b.abbreviation }}
-                className={`rd-chip ${n > 0 ? "on" : ""}`}
+                className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
                 title={b.full_name}
               >
                 {b.abbreviation}
@@ -241,11 +310,13 @@ function ReadLibrary() {
           })}
         </div>
 
-        {recent.length > 0 && (
+        {filteredRecent.length > 0 && (
           <>
-            <div className="rd-section-label">Recently studied</div>
+            <div className="rd-section-label">
+              {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+            </div>
             <div className="rd-recent-grid">
-              {recent.map((e) => (
+              {filteredRecent.map((e) => (
                 <Link
                   key={e.id}
                   to="/read/$abbr"
