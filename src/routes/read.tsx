@@ -570,7 +570,7 @@ function ListView({
           <DetailPane
             entry={selected}
             fmtDate={fmtDate}
-            bookFullName={bookFullName.get(selected.book_of_bible ?? "") ?? selected.book_of_bible ?? ""}
+            bookFullName={entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
             onOpen={() => onOpen(selected)}
           />
         )}
