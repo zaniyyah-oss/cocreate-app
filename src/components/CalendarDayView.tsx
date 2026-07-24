@@ -29,16 +29,79 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// Hours to render as slots (matches mock: sparse markers at 6/9/12/3/5/7/9)
-const HOUR_SLOTS: { hour: number; label: string }[] = [
-  { hour: 6, label: "6 AM" },
-  { hour: 9, label: "9 AM" },
-  { hour: 12, label: "12 PM" },
-  { hour: 15, label: "3 PM" },
-  { hour: 17, label: "5 PM" },
-  { hour: 19, label: "7 PM" },
-  { hour: 21, label: "9 PM" },
-];
+// Continuous hourly grid: 6 AM through 10 PM
+const START_HOUR = 6;
+const END_HOUR = 22;
+const HOUR_HEIGHT = 56; // px per hour
+const HOUR_SLOTS: { hour: number; label: string }[] = Array.from(
+  { length: END_HOUR - START_HOUR },
+  (_, i) => {
+    const h = START_HOUR + i;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hh = ((h + 11) % 12) + 1;
+    return { hour: h, label: `${hh} ${ampm}` };
+  }
+);
+
+function toMin(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+type PositionedEvent = UserEvent & { _top: number; _height: number; _col: number; _cols: number };
+
+function layoutTimedEvents(events: UserEvent[]): PositionedEvent[] {
+  const startMin = START_HOUR * 60;
+  const endMin = END_HOUR * 60;
+  const items = events
+    .filter(e => !!e.start_time)
+    .map(e => {
+      const s = toMin(e.start_time!.slice(0, 5));
+      const rawEnd = e.end_time ? toMin(e.end_time.slice(0, 5)) : s + 60;
+      const end = Math.max(rawEnd, s + 20);
+      return { ev: e, s, end };
+    })
+    .filter(x => x.end > startMin && x.s < endMin)
+    .sort((a, b) => a.s - b.s || a.end - b.end);
+
+  const positioned: PositionedEvent[] = [];
+  let cluster: typeof items = [];
+  let clusterEnd = -Infinity;
+
+  const flush = () => {
+    if (!cluster.length) return;
+    const cols: number[] = [];
+    const assigned: { item: typeof cluster[number]; col: number }[] = [];
+    for (const it of cluster) {
+      let col = cols.findIndex(endM => endM <= it.s);
+      if (col === -1) { col = cols.length; cols.push(it.end); }
+      else cols[col] = it.end;
+      assigned.push({ item: it, col });
+    }
+    const totalCols = cols.length;
+    for (const { item, col } of assigned) {
+      const clampedS = Math.max(item.s, startMin);
+      const clampedE = Math.min(item.end, endMin);
+      positioned.push({
+        ...item.ev,
+        _top: ((clampedS - startMin) / 60) * HOUR_HEIGHT,
+        _height: Math.max(28, ((clampedE - clampedS) / 60) * HOUR_HEIGHT),
+        _col: col,
+        _cols: totalCols,
+      });
+    }
+    cluster = [];
+    clusterEnd = -Infinity;
+  };
+
+  for (const it of items) {
+    if (it.s >= clusterEnd) flush();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it.end);
+  }
+  flush();
+  return positioned;
+}
 
 type Props = {
   userId: string | null;
