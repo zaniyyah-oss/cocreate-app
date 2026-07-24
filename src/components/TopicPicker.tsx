@@ -9,6 +9,7 @@ export type TopicRow = {
   display_name: string | null;
   color_key: string | null;
   sort_order?: number | null;
+  created_by?: string | null;
 };
 
 // Home-page "primary" topics (surfaced first in the picker).
