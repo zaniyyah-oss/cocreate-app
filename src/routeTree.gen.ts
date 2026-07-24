@@ -13,6 +13,7 @@ import { Route as WatchRouteImport } from './routes/watch'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as ReadRouteImport } from './routes/read'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
@@ -64,6 +65,11 @@ const SearchRoute = SearchRouteImport.update({
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadRoute = ReadRouteImport.update({
+  id: '/read',
+  path: '/read',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -467,6 +479,7 @@ export interface RootRouteChildren {
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  ReadRoute: typeof ReadRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   TourRoute: typeof TourRoute
@@ -506,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/saved'
       fullPath: '/saved'
       preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/read': {
+      id: '/read'
+      path: '/read'
+      fullPath: '/read'
+      preLoaderRoute: typeof ReadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -804,6 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  ReadRoute: ReadRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   TourRoute: TourRoute,
