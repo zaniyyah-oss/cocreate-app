@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
-import { useAllTopics } from "@/components/TopicPicker";
+import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
+import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
