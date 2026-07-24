@@ -83,11 +83,42 @@ function ReadLibrary() {
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
+  const topicsQ = useAllTopics();
   const [tab, setTab] = useState<"OT" | "NT">("OT");
+  const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
 
   const books = booksQ.data ?? [];
   const counts = countsQ.data ?? {};
   const recent = recentQ.data ?? [];
+
+  // Books mentioned by entries matching selected topics (AND semantics).
+  const topicBookSet = useMemo(() => {
+    if (filterTopicIds.length === 0) return null;
+    const s = new Set<string>();
+    for (const e of recent) {
+      const ids = e.topic_ids ?? [];
+      if (filterTopicIds.every((t) => ids.includes(t)) && e.book_of_bible) {
+        s.add(e.book_of_bible);
+      }
+    }
+    return s;
+  }, [filterTopicIds, recent]);
+
+  const filteredRecent = useMemo(() => {
+    if (filterTopicIds.length === 0) return recent;
+    return recent.filter((e) => {
+      const ids = e.topic_ids ?? [];
+      return filterTopicIds.every((t) => ids.includes(t));
+    });
+  }, [recent, filterTopicIds]);
+
+  // Only surface topics that have at least one entry.
+  const availableTopics = useMemo(() => {
+    const used = new Set<string>();
+    for (const e of recent) (e.topic_ids ?? []).forEach((id) => used.add(id));
+    return (topicsQ.data ?? []).filter((t) => used.has(t.id));
+  }, [recent, topicsQ.data]);
+
   const studiedCount = useMemo(
     () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
     [counts]
