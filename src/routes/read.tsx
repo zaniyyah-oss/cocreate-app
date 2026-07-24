@@ -69,7 +69,7 @@ function useRecentStudies() {
         .eq("book_confirmed", true)
         .not("book_of_bible", "is", null)
         .order("entry_date", { ascending: false })
-        .limit(3);
+        .limit(60);
       if (error) throw error;
       return (data ?? []) as RecentEntry[];
     },
