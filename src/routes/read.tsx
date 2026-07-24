@@ -833,7 +833,7 @@ function RecentStudyCard({
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
       <div className="rd-card-meta">
-        {entry.book_of_bible ?? ""}
+        {entryBooks(entry).join(" · ")}
         {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
       </div>
 
