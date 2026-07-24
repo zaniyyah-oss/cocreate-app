@@ -344,7 +344,8 @@ type SaveField =
   | "entry_subtitle"
   | "book_of_bible"
   | "book_source"
-  | "book_confirmed";
+  | "book_confirmed"
+  | "topic_ids";
 
 
 function NavMenu() {
