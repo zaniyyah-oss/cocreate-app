@@ -500,7 +500,7 @@ function ReadLibrary() {
       {openEntry && (
         <FullScreenNote
           entry={openEntry}
-          bookFullName={bookFullName.get(openEntry.book_of_bible ?? "") ?? openEntry.book_of_bible ?? ""}
+          bookFullName={entryBooks(openEntry).map((b) => bookFullName.get(b) ?? b).join(" · ")}
           onClose={() => setOpenEntry(null)}
         />
       )}
