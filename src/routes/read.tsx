@@ -449,6 +449,7 @@ function ReadLibrary() {
               cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
             )
           }
+          onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
         />
 
 
