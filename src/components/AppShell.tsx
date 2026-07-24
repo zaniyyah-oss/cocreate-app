@@ -26,8 +26,7 @@ function buildDesktopNav(labels: Record<string, string>) {
     { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
-    { key: "explore" as const,    label: "Bookmarks", to: "/explore", icon: ICON.explore },
-    { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes",       icon: ICON.notes },
+    { key: "explore" as const,    label: "Saved", to: "/explore", icon: ICON.explore },
   ];
 }
 
@@ -302,6 +301,13 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                     title={collapsed ? "Read" : undefined}
                   >
                     {ICON.book}<span className="lbl">Read</span>
+                  </Link>
+                  <Link
+                    to="/notes"
+                    className={`app-side-item${pathname === "/notes" || pathname.startsWith("/notes/") ? " active" : ""}`}
+                    title={collapsed ? "Notes" : undefined}
+                  >
+                    {ICON.notes}<span className="lbl">Notes</span>
                   </Link>
                   {item}
                 </Fragment>
