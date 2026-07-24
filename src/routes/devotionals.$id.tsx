@@ -340,7 +340,10 @@ type SaveField =
   | "todo_text"
   | "todo_items"
   | "entry_title"
-  | "entry_subtitle";
+  | "entry_subtitle"
+  | "book_of_bible"
+  | "book_source"
+  | "book_confirmed";
 
 
 function NavMenu() {
