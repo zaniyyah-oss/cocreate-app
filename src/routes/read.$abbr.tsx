@@ -185,18 +185,49 @@ function BookDetail() {
               : `${entries.length} ${entries.length === 1 ? "study" : "studies"}`}
           </div>
 
+          {availableTopics.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Filter by topic</span>
+              <div className="rb-filter-chips">
+                {availableTopics.map((t) => {
+                  const on = filterTopicIds.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`rb-fchip ${on ? "on" : ""}`}
+                      onClick={() =>
+                        setFilterTopicIds((cur) =>
+                          cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                        )
+                      }
+                    >
+                      {t.display_name ?? t.name}
+                    </button>
+                  );
+                })}
+                {filterTopicIds.length > 0 && (
+                  <button type="button" className="rb-fchip clear" onClick={() => setFilterTopicIds([])}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {entries.length === 0 ? (
             <div className="rb-empty">
               No studies yet in {fullName} — entries you tag will show up here.
             </div>
+          ) : visibleEntries.length === 0 ? (
+            <div className="rb-empty">No studies match the selected topics.</div>
           ) : (
             <div className="rb-list">
-              {entries.map((e) => (
+              {visibleEntries.map((e) => (
                 <EntryCard
                   key={e.id}
                   entry={e}
                   topicsById={topicsById}
-                  allTopics={topicsQ.data ?? []}
                   autoFocus={focusEntryId === e.id}
                   onChanged={() => qc.invalidateQueries({ queryKey: ["read-book-entries", abbr] })}
                 />
