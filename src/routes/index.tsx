@@ -368,6 +368,9 @@ const CSS = `
 .hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
 
+/* Photo-overlay cards must stay white even though they are <a> tags. */
+.hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
+
 
 `;
 
