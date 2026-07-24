@@ -871,3 +871,148 @@ function RecentStudyCard({
     </div>
   );
 }
+
+function TopicsSection({
+  topics,
+  entries,
+  selectedIds,
+  onToggle,
+}: {
+  topics: TopicRow[];
+  entries: RecentEntry[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  const qc = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [color, setColor] = useState<BrandColorKey>("amber");
+  const [saving, setSaving] = useState(false);
+
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of entries) {
+      for (const id of e.topic_ids ?? []) m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [entries]);
+
+  const sorted = useMemo(
+    () =>
+      [...topics].sort((a, b) => {
+        const ca = counts.get(a.id) ?? 0;
+        const cb = counts.get(b.id) ?? 0;
+        if (ca !== cb) return cb - ca;
+        return (a.display_name ?? a.name).localeCompare(b.display_name ?? b.name);
+      }),
+    [topics, counts]
+  );
+
+  const slugify = (s: string) =>
+    s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+
+  const create = async () => {
+    const n = name.trim();
+    if (!n || saving) return;
+    setSaving(true);
+    try {
+      const existing = topics.find(
+        (t) => (t.display_name ?? t.name).toLowerCase() === n.toLowerCase()
+      );
+      if (existing) {
+        setName("");
+        setCreating(false);
+        return;
+      }
+      const baseSlug = slugify(n) || `topic-${Date.now()}`;
+      let slug = baseSlug;
+      for (let i = 2; topics.some((t) => t.slug === slug); i++) slug = `${baseSlug}-${i}`;
+      const { data, error } = await supabase
+        .from("topics")
+        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500 } as any)
+        .select("id,name,slug,display_name,color_key,sort_order")
+        .single();
+      if (error) throw error;
+      qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => [...(cur ?? []), data as TopicRow]);
+      qc.invalidateQueries({ queryKey: ["all-topics"] });
+      setName("");
+      setCreating(false);
+    } catch (e) {
+      console.error("create topic failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="rd-topics-head">
+        <div className="rd-section-label" style={{ margin: 0 }}>Topics</div>
+        {!creating && (
+          <button className="rd-topic-add" onClick={() => setCreating(true)}>+ New topic</button>
+        )}
+      </div>
+      <div className="rd-topics-row">
+        {sorted.length === 0 && !creating && (
+          <span style={{ fontSize: 13, color: "#8a8879" }}>
+            No topics yet. Create one to tag your studies.
+          </span>
+        )}
+        {sorted.map((t) => {
+          const bc = brandColor(t.color_key) ?? brandColor("amber")!;
+          const on = selectedIds.includes(t.id);
+          const n = counts.get(t.id) ?? 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className={`rd-topic-pill ${on ? "on" : ""}`}
+              style={{ background: bc.hex, color: bc.onHex, borderColor: bc.hex }}
+              onClick={() => onToggle(t.id)}
+            >
+              {t.display_name ?? t.name}
+              {n > 0 && <span className="count">{n}</span>}
+            </button>
+          );
+        })}
+        {creating && (
+          <div className="rd-topic-form">
+            <input
+              autoFocus
+              placeholder="Topic name (e.g. Endurance)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); void create(); }
+                if (e.key === "Escape") { setCreating(false); setName(""); }
+              }}
+            />
+            <div className="row">
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#8a8879", marginRight: 4 }}>
+                Color
+              </span>
+              {BRAND_PALETTE.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className="sw"
+                  aria-pressed={color === c.key}
+                  aria-label={c.label}
+                  title={c.label}
+                  style={{ background: c.hex }}
+                  onClick={() => setColor(c.key)}
+                />
+              ))}
+            </div>
+            <div className="actions">
+              <button className="cancel" onClick={() => { setCreating(false); setName(""); }}>Cancel</button>
+              <button className="save" onClick={() => void create()} disabled={!name.trim() || saving}>
+                {saving ? "Saving…" : "Create topic"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
