@@ -553,7 +553,7 @@ function ListView({
                       <span className="rd-list-date">{fmtDate(e.entry_date)}</span>
                     </div>
                     <div className="rd-list-meta">
-                      {bookFullName.get(e.book_of_bible ?? "") ?? e.book_of_bible ?? ""}
+                      {entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
                     </div>
                     {preview && <div className="rd-list-preview">{preview}</div>}
                   </button>
