@@ -89,7 +89,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes,item_type")
+        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time")
         .eq("user_id", userId!)
         .gte("event_date", weekStartISO)
         .lte("event_date", weekEndISO);
