@@ -475,6 +475,9 @@ function EntryPage() {
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
+  const [bookOfBible, setBookOfBible] = useState<string | null>(null);
+  const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
+  const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
 
 
   const [savingField, setSavingField] = useState<string | null>(null);
