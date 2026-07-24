@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
-import { useAllTopics } from "@/components/TopicPicker";
+import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
+import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
@@ -301,6 +302,25 @@ function ReadLibrary() {
         .rd-tchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
         .rd-chip.dim{opacity:.35;}
 
+        /* Topics section */
+        .rd-topics-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;}
+        .rd-topics-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:44px;}
+        .rd-topic-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid transparent;cursor:pointer;font-family:inherit;transition:transform .08s ease, box-shadow .08s ease;}
+        .rd-topic-pill:hover{transform:translateY(-1px);}
+        .rd-topic-pill.on{box-shadow:0 0 0 2px #FBF8ED, 0 0 0 4px #181A4D;}
+        .rd-topic-pill .count{background:rgba(255,255,255,.35);color:inherit;font-size:10px;padding:2px 7px;border-radius:999px;min-width:18px;text-align:center;}
+        .rd-topic-add{border:1.5px dashed #ECE4CE;background:transparent;color:#8a8879;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;}
+        .rd-topic-add:hover{border-color:#FFAE00;color:#20201C;}
+        .rd-topic-form{background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:520px;}
+        .rd-topic-form input{border:1px solid #ECE4CE;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:14px;}
+        .rd-topic-form .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+        .rd-topic-form .sw{width:26px;height:26px;border-radius:999px;border:1px solid rgba(20,20,20,0.15);cursor:pointer;padding:0;}
+        .rd-topic-form .sw[aria-pressed="true"]{box-shadow:0 0 0 2px #FBF8ED, 0 0 0 4px #181A4D;}
+        .rd-topic-form .actions{display:flex;gap:8px;justify-content:flex-end;}
+        .rd-topic-form button.save{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+        .rd-topic-form button.save:disabled{opacity:.5;cursor:not-allowed;}
+        .rd-topic-form button.cancel{background:transparent;color:#8a8879;border:none;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+
         /* List view (Apple-Notes style) */
         .rd-listframe{display:grid;grid-template-columns:340px 1fr;gap:0;background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;min-height:560px;}
         @media (max-width:820px){.rd-listframe{grid-template-columns:1fr;}}
@@ -402,6 +422,19 @@ function ReadLibrary() {
             );
           })}
         </div>
+
+        <TopicsSection
+          topics={topics}
+          entries={recent}
+          selectedIds={filterTopicIds}
+          onToggle={(id) =>
+            setFilterTopicIds((cur) =>
+              cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+            )
+          }
+        />
+
+
 
         {filteredRecent.length > 0 && (
           <>
@@ -836,5 +869,150 @@ function RecentStudyCard({
         </div>
       )}
     </div>
+  );
+}
+
+function TopicsSection({
+  topics,
+  entries,
+  selectedIds,
+  onToggle,
+}: {
+  topics: TopicRow[];
+  entries: RecentEntry[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  const qc = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [color, setColor] = useState<BrandColorKey>("amber");
+  const [saving, setSaving] = useState(false);
+
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of entries) {
+      for (const id of e.topic_ids ?? []) m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [entries]);
+
+  const sorted = useMemo(
+    () =>
+      [...topics].sort((a, b) => {
+        const ca = counts.get(a.id) ?? 0;
+        const cb = counts.get(b.id) ?? 0;
+        if (ca !== cb) return cb - ca;
+        return (a.display_name ?? a.name).localeCompare(b.display_name ?? b.name);
+      }),
+    [topics, counts]
+  );
+
+  const slugify = (s: string) =>
+    s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+
+  const create = async () => {
+    const n = name.trim();
+    if (!n || saving) return;
+    setSaving(true);
+    try {
+      const existing = topics.find(
+        (t) => (t.display_name ?? t.name).toLowerCase() === n.toLowerCase()
+      );
+      if (existing) {
+        setName("");
+        setCreating(false);
+        return;
+      }
+      const baseSlug = slugify(n) || `topic-${Date.now()}`;
+      let slug = baseSlug;
+      for (let i = 2; topics.some((t) => t.slug === slug); i++) slug = `${baseSlug}-${i}`;
+      const { data, error } = await supabase
+        .from("topics")
+        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500 } as any)
+        .select("id,name,slug,display_name,color_key,sort_order")
+        .single();
+      if (error) throw error;
+      qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => [...(cur ?? []), data as TopicRow]);
+      qc.invalidateQueries({ queryKey: ["all-topics"] });
+      setName("");
+      setCreating(false);
+    } catch (e) {
+      console.error("create topic failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="rd-topics-head">
+        <div className="rd-section-label" style={{ margin: 0 }}>Topics</div>
+        {!creating && (
+          <button className="rd-topic-add" onClick={() => setCreating(true)}>+ New topic</button>
+        )}
+      </div>
+      <div className="rd-topics-row">
+        {sorted.length === 0 && !creating && (
+          <span style={{ fontSize: 13, color: "#8a8879" }}>
+            No topics yet. Create one to tag your studies.
+          </span>
+        )}
+        {sorted.map((t) => {
+          const bc = brandColor(t.color_key) ?? brandColor("amber")!;
+          const on = selectedIds.includes(t.id);
+          const n = counts.get(t.id) ?? 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className={`rd-topic-pill ${on ? "on" : ""}`}
+              style={{ background: bc.hex, color: bc.onHex, borderColor: bc.hex }}
+              onClick={() => onToggle(t.id)}
+            >
+              {t.display_name ?? t.name}
+              {n > 0 && <span className="count">{n}</span>}
+            </button>
+          );
+        })}
+        {creating && (
+          <div className="rd-topic-form">
+            <input
+              autoFocus
+              placeholder="Topic name (e.g. Endurance)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); void create(); }
+                if (e.key === "Escape") { setCreating(false); setName(""); }
+              }}
+            />
+            <div className="row">
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#8a8879", marginRight: 4 }}>
+                Color
+              </span>
+              {BRAND_PALETTE.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className="sw"
+                  aria-pressed={color === c.key}
+                  aria-label={c.label}
+                  title={c.label}
+                  style={{ background: c.hex }}
+                  onClick={() => setColor(c.key)}
+                />
+              ))}
+            </div>
+            <div className="actions">
+              <button className="cancel" onClick={() => { setCreating(false); setName(""); }}>Cancel</button>
+              <button className="save" onClick={() => void create()} disabled={!name.trim() || saving}>
+                {saving ? "Saving…" : "Create topic"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
