@@ -21,12 +21,13 @@ export const Route = createFileRoute("/read")({
 
 type RecentEntry = {
   id: string;
-  date_of_entry: string | null;
-  title: string | null;
+  entry_date: string | null;
+  entry_title: string | null;
   scripture_reference: string | null;
   scripture_text: string | null;
   book_of_bible: string | null;
 };
+
 
 function useConfirmedCounts() {
   return useQuery({
