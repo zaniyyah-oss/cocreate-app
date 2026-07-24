@@ -909,10 +909,18 @@ function TopicsSection({
   const [color, setColor] = useState<BrandColorKey>("amber");
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data?.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        const { data: role } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+        if (role) setIsAdmin(true);
+      }
+    });
   }, []);
 
   const counts = useMemo(() => {
