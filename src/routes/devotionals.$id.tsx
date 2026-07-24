@@ -543,6 +543,7 @@ function EntryPage() {
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
+    setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
