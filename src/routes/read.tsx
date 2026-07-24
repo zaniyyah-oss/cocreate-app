@@ -940,10 +940,11 @@ function TopicsSection({
       const baseSlug = slugify(n) || `topic-${Date.now()}`;
       let slug = baseSlug;
       for (let i = 2; topics.some((t) => t.slug === slug); i++) slug = `${baseSlug}-${i}`;
+      const { data: userRes } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("topics")
-        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500 } as any)
-        .select("id,name,slug,display_name,color_key,sort_order")
+        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500, created_by: userRes?.user?.id } as any)
+        .select("id,name,slug,display_name,color_key,sort_order,created_by")
         .single();
       if (error) throw error;
       qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => [...(cur ?? []), data as TopicRow]);
