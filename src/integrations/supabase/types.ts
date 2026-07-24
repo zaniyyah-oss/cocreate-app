@@ -1524,6 +1524,7 @@ export type Database = {
       content_items_public: {
         Row: {
           author_name: string | null
+          body: string | null
           created_at: string | null
           duration_seconds: number | null
           excerpt: string | null
@@ -1539,6 +1540,7 @@ export type Database = {
         }
         Insert: {
           author_name?: string | null
+          body?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           excerpt?: string | null
@@ -1554,6 +1556,7 @@ export type Database = {
         }
         Update: {
           author_name?: string | null
+          body?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           excerpt?: string | null
