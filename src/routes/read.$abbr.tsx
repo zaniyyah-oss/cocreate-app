@@ -57,6 +57,7 @@ function fmtDate(d: string | null) {
 
 function BookDetail() {
   const { abbr } = Route.useParams();
+  const { entry: focusEntryId } = Route.useSearch();
   const qc = useQueryClient();
   const booksQ = useBibleBooks();
   const topicsQ = useTopics();
