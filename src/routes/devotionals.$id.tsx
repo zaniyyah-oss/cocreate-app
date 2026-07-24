@@ -545,6 +545,9 @@ function EntryPage() {
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
+    const arr = Array.isArray((e as any)?.books_of_bible) ? ((e as any).books_of_bible as string[]) : [];
+    const fallback = ((e as any)?.book_confirmed && (e as any)?.book_of_bible) ? [(e as any).book_of_bible as string] : [];
+    setBooksOfBible(arr.length > 0 ? arr : fallback);
     setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
