@@ -265,36 +265,61 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               </div>
             );
           })}
-          {userId && dayItems.length > 0 && (
-            <div className="cald-items-overlay">
-              <div className="cald-items-label">Anytime today</div>
-              {dayItems.map(ev => {
-                const light = LIGHT_BG.has((ev.color || "").toUpperCase());
-                const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
-                const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
-                return (
-                  <button
-                    key={ev.id}
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
-                    className="cald-event"
-                    style={{ background: tint, borderColor: ev.color }}
-                  >
-                    <div className="swatch-bar" style={{ background: ev.color }} />
-                    <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-                      <div className="ev-title">
-                        {label}
-                        {ev.item_type === "focus" && (
-                          <span className="ev-tag">focus</span>
-                        )}
-                      </div>
-                      {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+          {userId && dayItems.length > 0 && (() => {
+            const fmtTime = (t: string) => {
+              const [h, m] = t.split(":").map(Number);
+              const ampm = h >= 12 ? "PM" : "AM";
+              const hh = ((h + 11) % 12) + 1;
+              return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
+            };
+            const timed = dayItems.filter(e => e.start_time);
+            const anytime = dayItems.filter(e => !e.start_time);
+            const renderEvent = (ev: UserEvent) => {
+              const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+              const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
+              const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+              const timeLabel = ev.start_time
+                ? (ev.end_time ? `${fmtTime(ev.start_time.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}` : fmtTime(ev.start_time.slice(0,5)))
+                : null;
+              return (
+                <button
+                  key={ev.id}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                  className="cald-event"
+                  style={{ background: tint, borderColor: ev.color }}
+                >
+                  <div className="swatch-bar" style={{ background: ev.color }} />
+                  <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+                    <div className="ev-title">
+                      {label}
+                      {ev.item_type === "focus" && (
+                        <span className="ev-tag">focus</span>
+                      )}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                    {timeLabel && <div className="ev-time">{timeLabel}</div>}
+                    {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+                  </div>
+                </button>
+              );
+            };
+            return (
+              <div className="cald-items-overlay">
+                {timed.length > 0 && (
+                  <>
+                    <div className="cald-items-label">Scheduled</div>
+                    {timed.map(renderEvent)}
+                  </>
+                )}
+                {anytime.length > 0 && (
+                  <>
+                    <div className="cald-items-label" style={{ marginTop: timed.length ? 8 : 0 }}>Anytime today</div>
+                    {anytime.map(renderEvent)}
+                  </>
+                )}
+              </div>
+            );
+          })()}
           {userId && !itemsQ.isLoading && dayItems.length === 0 && (
             <div className="cald-empty">
               <strong>Nothing scheduled.</strong>
