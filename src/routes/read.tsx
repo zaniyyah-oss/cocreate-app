@@ -845,7 +845,7 @@ function RecentStudyCard({
 
       {!expanded ? (
         entry.scripture_text ? (
-          <div className="rd-card-snip">{entry.scripture_text}</div>
+          <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
         ) : (
           <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
             Click to add a note…
