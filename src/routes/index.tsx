@@ -367,6 +367,7 @@ const CSS = `
 .hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.08) !important;}
 .hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
+.hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
 
 /* Photo-overlay cards must stay white even though they are <a> tags. */
 .hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
