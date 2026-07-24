@@ -741,46 +741,50 @@ function EntryPage() {
           <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
-            {search.view === "today" && selectedDate !== todayISO() && (
-              <div
-                style={{
-                  background: "#FFAE00",
-                  color: "#181A4D",
-                  fontFamily: "'Poppins',sans-serif",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  marginBottom: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <span>
-                  ⏳ You're viewing a past day — {formatDate(selectedDate)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDate(todayISO())}
+            {search.view === "today" && selectedDate !== todayISO() && (() => {
+              const isFutureDate = selectedDate > todayISO();
+              return (
+                <div
                   style={{
-                    background: "#181A4D",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 999,
-                    padding: "6px 14px",
+                    background: "#FFAE00",
+                    color: "#181A4D",
                     fontFamily: "'Poppins',sans-serif",
                     fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer",
+                    fontSize: 13,
+                    padding: "12px 18px",
+                    borderRadius: 10,
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
                   }}
                 >
-                  Jump to today
-                </button>
-              </div>
-            )}
+                  <span>
+                    {isFutureDate ? "📅 You're planning ahead — " : "⏳ You're viewing a past day — "}
+                    {formatDate(selectedDate)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(todayISO())}
+                    style={{
+                      background: "#181A4D",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 999,
+                      padding: "6px 14px",
+                      fontFamily: "'Poppins',sans-serif",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Jump to today
+                  </button>
+                </div>
+              );
+            })()}
             {/* View switcher */}
             {/* View switcher: Entry vs Day + Full week link */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 12, flexWrap: "wrap" }}>
