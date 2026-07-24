@@ -1541,7 +1541,7 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes,item_type")
+        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time")
         .eq("user_id", userId!)
         .gte("event_date", startISO)
         .lte("event_date", endISO)
