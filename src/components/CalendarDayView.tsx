@@ -393,6 +393,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             );
           };
 
+          const isToday = selectedISO === isoDate(new Date());
+          const nowMin = now ? now.getHours() * 60 + now.getMinutes() : 0;
+          const startMin = START_HOUR * 60;
+          const endMin = END_HOUR * 60;
+          const showCurrentLine = isToday && now && nowMin >= startMin && nowMin <= endMin;
+          const currentTop = ((nowMin - startMin) / 60) * HOUR_HEIGHT;
+          const currentLabel = now
+            ? now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+            : "";
+
           return (
             <>
               <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
@@ -410,7 +420,13 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="cald-blocks" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
                   {positioned.map(renderBlock)}
                 </div>
+                {showCurrentLine && (
+                  <div className="cald-current-line" style={{ top: currentTop }}>
+                    <span className="cald-current-label">{currentLabel}</span>
+                  </div>
+                )}
               </div>
+
 
               {untimed.length > 0 && (
                 <div className="cald-untimed">
