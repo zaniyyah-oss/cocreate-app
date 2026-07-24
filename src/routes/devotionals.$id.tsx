@@ -898,20 +898,35 @@ function EntryPage() {
                       {focusBtn("read")}
                     </div>
                     <BookTagger
-                      value={bookOfBible}
-                      source={bookSource}
-                      confirmed={bookConfirmed}
+                      values={booksOfBible}
+                      suggestion={
+                        booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
+                          ? bookOfBible
+                          : null
+                      }
                       disabled={!userId}
-                      onSetManual={(abbr) => {
-                        setBookOfBible(abbr);
+                      onToggle={(abbr: string) => {
+                        const next = booksOfBible.includes(abbr)
+                          ? booksOfBible.filter((b) => b !== abbr)
+                          : [...booksOfBible, abbr];
+                        setBooksOfBible(next);
+                        const primary = next[0] ?? null;
+                        setBookOfBible(primary);
                         setBookSource("manual");
-                        setBookConfirmed(true);
-                        scheduleSave("book_of_bible", abbr);
+                        setBookConfirmed(next.length > 0);
+                        scheduleSave("books_of_bible", next);
+                        scheduleSave("book_of_bible", primary);
                         scheduleSave("book_source", "manual");
-                        scheduleSave("book_confirmed", true);
+                        scheduleSave("book_confirmed", next.length > 0);
                       }}
-                      onConfirm={() => {
+                      onConfirmSuggestion={() => {
+                        if (!bookOfBible) return;
+                        const next = booksOfBible.includes(bookOfBible)
+                          ? booksOfBible
+                          : [...booksOfBible, bookOfBible];
+                        setBooksOfBible(next);
                         setBookConfirmed(true);
+                        scheduleSave("books_of_bible", next);
                         scheduleSave("book_confirmed", true);
                       }}
                     />
