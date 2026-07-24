@@ -66,7 +66,7 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
         .eq("book_confirmed", true)
         .not("book_of_bible", "is", null)
