@@ -170,6 +170,13 @@ function BookDetail() {
             background:transparent;border:none;color:inherit;font-size:14px;cursor:pointer;
             padding:0 0 0 4px;line-height:1;
           }
+          .rb-filter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 24px;}
+          .rb-filter-lbl{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a8879;}
+          .rb-filter-chips{display:flex;flex-wrap:wrap;gap:6px;}
+          .rb-fchip{font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;}
+          .rb-fchip:hover{border-color:#FFAE00;color:#20201C;}
+          .rb-fchip.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
+          .rb-fchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
         `}</style>
 
         <div className="rb-wrap">
