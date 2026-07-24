@@ -639,7 +639,7 @@ function LatestSection() {
               <div className="art" style={{ backgroundImage: `url(${coverOf(lead)})` }} />
               <h3>{lead.title}</h3>
               {(() => {
-                const text = openingLines((lead as any).body as string | undefined, 320);
+                const text = openingLines((lead as any).body as string | undefined, 160);
                 return text ? <p>{text}</p> : null;
               })()}
               <span className="readmore">Read more →</span>
