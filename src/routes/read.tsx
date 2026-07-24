@@ -86,10 +86,24 @@ function ReadLibrary() {
   const topicsQ = useAllTopics();
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
+  const [view, setView] = useState<"tiles" | "list">("tiles");
+  const [listSort, setListSort] = useState<"recent" | "book" | "topic">("recent");
+  const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
 
   const books = booksQ.data ?? [];
   const counts = countsQ.data ?? {};
   const recent = recentQ.data ?? [];
+  const topics = topicsQ.data ?? [];
+  const topicById = useMemo(() => {
+    const m = new Map<string, { id: string; name: string; display_name: string | null }>();
+    for (const t of topics) m.set(t.id, t as any);
+    return m;
+  }, [topics]);
+  const bookFullName = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const b of books) m.set(b.abbreviation, b.full_name);
+    return m;
+  }, [books]);
 
   // Books mentioned by entries matching selected topics (AND semantics).
   const topicBookSet = useMemo(() => {
@@ -116,8 +130,8 @@ function ReadLibrary() {
   const availableTopics = useMemo(() => {
     const used = new Set<string>();
     for (const e of recent) (e.topic_ids ?? []).forEach((id) => used.add(id));
-    return (topicsQ.data ?? []).filter((t) => used.has(t.id));
-  }, [recent, topicsQ.data]);
+    return topics.filter((t) => used.has(t.id));
+  }, [recent, topics]);
 
   const studiedCount = useMemo(
     () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
@@ -128,6 +142,47 @@ function ReadLibrary() {
 
   const fmtDate = (d: string | null) =>
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+
+  // Group entries for the list view
+  const grouped = useMemo(() => {
+    if (listSort === "recent") {
+      return [{ key: "all", label: "Most recent", items: filteredRecent }];
+    }
+    if (listSort === "book") {
+      const map = new Map<string, RecentEntry[]>();
+      for (const e of filteredRecent) {
+        const k = e.book_of_bible ?? "—";
+        if (!map.has(k)) map.set(k, []);
+        map.get(k)!.push(e);
+      }
+      return Array.from(map.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([key, items]) => ({ key, label: bookFullName.get(key) ?? key, items }));
+    }
+    // topic
+    const map = new Map<string, RecentEntry[]>();
+    for (const e of filteredRecent) {
+      const ids = e.topic_ids ?? [];
+      if (ids.length === 0) {
+        if (!map.has("__none")) map.set("__none", []);
+        map.get("__none")!.push(e);
+      } else {
+        for (const id of ids) {
+          if (!map.has(id)) map.set(id, []);
+          map.get(id)!.push(e);
+        }
+      }
+    }
+    return Array.from(map.entries())
+      .map(([key, items]) => {
+        const label =
+          key === "__none"
+            ? "Untagged"
+            : topicById.get(key)?.display_name ?? topicById.get(key)?.name ?? "Topic";
+        return { key, label, items };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [filteredRecent, listSort, bookFullName, topicById]);
 
   return (
     <AppShell>
@@ -203,6 +258,13 @@ function ReadLibrary() {
           border:2px solid #FBF8ED;
         }
 
+        .rd-recent-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+        .rd-viewtoggle{display:inline-flex;background:#fff;border:1.5px solid #ECE4CE;border-radius:999px;padding:4px;}
+        .rd-viewtoggle button{border:none;background:transparent;padding:7px 16px;border-radius:999px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:#6b6a60;letter-spacing:.06em;text-transform:uppercase;}
+        .rd-viewtoggle button.active{background:#181A4D;color:#fff;}
+        .rd-listsort{display:inline-flex;gap:6px;align-items:center;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;}
+        .rd-listsort select{appearance:none;-webkit-appearance:none;border:1.5px solid #ECE4CE;background:#fff;border-radius:999px;padding:6px 28px 6px 12px;font-family:inherit;font-size:12px;font-weight:700;color:#181A4D;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23181A4D' d='M6 8L0 0h12z'/></svg>");background-repeat:no-repeat;background-position:right 10px center;background-size:9px 6px;letter-spacing:normal;text-transform:none;}
+
         .rd-recent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
         @media (max-width:900px){.rd-recent-grid{grid-template-columns:1fr;}}
         .rd-card{
@@ -217,10 +279,11 @@ function ReadLibrary() {
           padding:6px 14px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;
         }
         .rd-focus{
-          display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ECE4CE;
-          color:#4a4a44;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;
+          display:inline-flex;align-items:center;gap:6px;background:#181A4D;border:1.5px solid #181A4D;
+          color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;cursor:pointer;
+          font-family:inherit;letter-spacing:.04em;
         }
-        .rd-focus svg{width:12px;height:12px;}
+        .rd-focus:hover{background:#0F4A42;border-color:#0F4A42;}
         .rd-card-title{
           font-family:'Archivo Black','Poppins',sans-serif;font-size:22px;font-weight:900;
           line-height:1.15;margin:4px 0 0;color:#20201C;
@@ -237,6 +300,36 @@ function ReadLibrary() {
         .rd-tchip.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
         .rd-tchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
         .rd-chip.dim{opacity:.35;}
+
+        /* List view (Apple-Notes style) */
+        .rd-listframe{display:grid;grid-template-columns:340px 1fr;gap:0;background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;min-height:560px;}
+        @media (max-width:820px){.rd-listframe{grid-template-columns:1fr;}}
+        .rd-list-col{border-right:1px solid rgba(24,26,77,.07);display:flex;flex-direction:column;background:#fff;}
+        @media (max-width:820px){.rd-list-col{border-right:none;border-bottom:1px solid rgba(24,26,77,.07);max-height:340px;}}
+        .rd-list-scroll{overflow-y:auto;flex:1;}
+        .rd-list-group{padding:14px 18px 6px;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;border-bottom:1px solid rgba(24,26,77,.05);background:#FBF8ED;}
+        .rd-list-row{padding:14px 18px;border-bottom:1px solid rgba(24,26,77,.05);cursor:pointer;background:#fff;text-align:left;width:100%;border:none;border-left:3px solid transparent;font-family:inherit;}
+        .rd-list-row:hover{background:#FBF8ED;}
+        .rd-list-row.open{background:rgba(220,224,122,.28);border-left-color:#CAC307;padding-left:15px;}
+        .rd-list-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px;}
+        .rd-list-title{font-weight:700;font-size:13px;color:#20201C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .rd-list-date{font-size:10px;color:#9a968a;font-weight:600;flex-shrink:0;}
+        .rd-list-meta{font-size:11px;color:#8a8879;line-height:1.4;}
+        .rd-list-preview{font-size:11px;color:#8a8678;line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .rd-detail{padding:22px 26px;overflow-y:auto;display:flex;flex-direction:column;}
+        .rd-detail-empty{display:flex;align-items:center;justify-content:center;color:#8a8879;font-size:13px;padding:40px;text-align:center;}
+
+        /* Full-screen overlay */
+        .rd-full{position:fixed;inset:0;background:#FBF8ED;z-index:100;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;}
+        .rd-full-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #ECE4CE;background:#fff;}
+        .rd-full-back{display:inline-flex;align-items:center;gap:8px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:700;color:#181A4D;cursor:pointer;padding:6px 8px;border-radius:8px;}
+        .rd-full-back:hover{background:rgba(24,26,77,.06);}
+        .rd-full-meta{font-size:12px;color:#8a8879;font-weight:600;}
+        .rd-full-body{flex:1;overflow-y:auto;padding:32px max(24px,5vw) 80px;max-width:920px;width:100%;margin:0 auto;box-sizing:border-box;}
+        .rd-full-title{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:42px;line-height:1.1;color:#20201C;margin:0 0 8px;}
+        .rd-full-sub{font-size:13px;color:#8a8879;font-weight:600;margin-bottom:24px;}
+        .rd-full-textarea{width:100%;min-height:60vh;resize:vertical;border:1px solid #ECE4CE;background:#fff;border-radius:12px;padding:20px;font-family:inherit;font-size:16px;line-height:1.6;color:#20201C;box-sizing:border-box;}
+        .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
       `}</style>
 
       <div className="rd-wrap">
@@ -312,41 +405,340 @@ function ReadLibrary() {
 
         {filteredRecent.length > 0 && (
           <>
-            <div className="rd-section-label">
-              {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+            <div className="rd-recent-header">
+              <div className="rd-section-label" style={{ margin: 0 }}>
+                {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                {view === "list" && (
+                  <label className="rd-listsort">
+                    Sort
+                    <select value={listSort} onChange={(e) => setListSort(e.target.value as any)}>
+                      <option value="recent">Most recent</option>
+                      <option value="book">By book</option>
+                      <option value="topic">By topic</option>
+                    </select>
+                  </label>
+                )}
+                <div className="rd-viewtoggle" role="tablist">
+                  <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
+                  <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
+                </div>
+              </div>
             </div>
-            <div className="rd-recent-grid">
-              {filteredRecent.map((e) => (
-                <RecentStudyCard key={e.id} entry={e} fmtDate={fmtDate} />
-              ))}
-            </div>
+
+            {view === "tiles" ? (
+              <div className="rd-recent-grid">
+                {filteredRecent.map((e) => (
+                  <RecentStudyCard
+                    key={e.id}
+                    entry={e}
+                    fmtDate={fmtDate}
+                    onOpen={() => setOpenEntry(e)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <ListView
+                groups={grouped}
+                fmtDate={fmtDate}
+                bookFullName={bookFullName}
+                onOpen={(e) => setOpenEntry(e)}
+              />
+            )}
           </>
         )}
       </div>
       </div>
+
+      {openEntry && (
+        <FullScreenNote
+          entry={openEntry}
+          bookFullName={bookFullName.get(openEntry.book_of_bible ?? "") ?? openEntry.book_of_bible ?? ""}
+          onClose={() => setOpenEntry(null)}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function ListView({
+  groups,
+  fmtDate,
+  bookFullName,
+  onOpen,
+}: {
+  groups: { key: string; label: string; items: RecentEntry[] }[];
+  fmtDate: (d: string | null) => string;
+  bookFullName: Map<string, string>;
+  onOpen: (e: RecentEntry) => void;
+}) {
+  const flatFirst = groups.flatMap((g) => g.items)[0] ?? null;
+  const [selectedId, setSelectedId] = useState<string | null>(flatFirst?.id ?? null);
+  useEffect(() => {
+    if (!selectedId && flatFirst) setSelectedId(flatFirst.id);
+  }, [flatFirst, selectedId]);
+
+  const selected =
+    groups.flatMap((g) => g.items).find((e) => e.id === selectedId) ?? null;
+
+  return (
+    <div className="rd-listframe">
+      <aside className="rd-list-col">
+        <div className="rd-list-scroll">
+          {groups.map((g) => (
+            <div key={g.key}>
+              {(groups.length > 1 || g.key !== "all") && (
+                <div className="rd-list-group">{g.label} · {g.items.length}</div>
+              )}
+              {g.items.map((e) => {
+                const isOpen = e.id === selectedId;
+                const preview = (e.scripture_text ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
+                return (
+                  <button
+                    key={`${g.key}-${e.id}`}
+                    className={`rd-list-row ${isOpen ? "open" : ""}`}
+                    onClick={() => setSelectedId(e.id)}
+                  >
+                    <div className="rd-list-top">
+                      <span className="rd-list-title">
+                        {e.entry_title || e.scripture_reference || "Untitled study"}
+                      </span>
+                      <span className="rd-list-date">{fmtDate(e.entry_date)}</span>
+                    </div>
+                    <div className="rd-list-meta">
+                      {bookFullName.get(e.book_of_bible ?? "") ?? e.book_of_bible ?? ""}
+                    </div>
+                    {preview && <div className="rd-list-preview">{preview}</div>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </aside>
+      <section className="rd-detail">
+        {!selected ? (
+          <div className="rd-detail-empty">Select a study on the left to read it.</div>
+        ) : (
+          <DetailPane
+            entry={selected}
+            fmtDate={fmtDate}
+            bookFullName={bookFullName.get(selected.book_of_bible ?? "") ?? selected.book_of_bible ?? ""}
+            onOpen={() => onOpen(selected)}
+          />
+        )}
+      </section>
+    </div>
+  );
+}
+
+function DetailPane({
+  entry,
+  fmtDate,
+  bookFullName,
+  onOpen,
+}: {
+  entry: RecentEntry;
+  fmtDate: (d: string | null) => string;
+  bookFullName: string;
+  onOpen: () => void;
+}) {
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => {
+    setNote(entry.scripture_text ?? "");
+    setStatus("");
+  }, [entry.id, entry.scripture_text]);
+
+  const save = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const schedule = (val: string) => {
+    setNote(val);
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => save(val), 700);
+  };
+
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 6 }}>
+            {bookFullName}
+          </div>
+          <h2 style={{ fontFamily: "'Archivo Black','Poppins',sans-serif", fontSize: 26, margin: 0, lineHeight: 1.1, color: "#20201C" }}>
+            {entry.entry_title || entry.scripture_reference || "Untitled study"}
+          </h2>
+          <div style={{ fontSize: 12, color: "#8a8879", fontWeight: 600, marginTop: 4 }}>
+            {fmtDate(entry.entry_date)}
+          </div>
+        </div>
+        <button className="rd-focus" onClick={onOpen}>Open</button>
+      </div>
+      <textarea
+        value={note}
+        placeholder="Add a note from your reading…"
+        onChange={(e) => schedule(e.target.value)}
+        onBlur={() => {
+          if (timer.current) {
+            window.clearTimeout(timer.current);
+            timer.current = null;
+          }
+          if ((entry.scripture_text ?? "") !== note) save(note);
+        }}
+        style={{
+          width: "100%",
+          flex: 1,
+          minHeight: 320,
+          resize: "vertical",
+          border: "1px solid #ECE4CE",
+          background: "#FBF8ED",
+          borderRadius: 10,
+          padding: "14px 16px",
+          fontFamily: "inherit",
+          fontSize: 14,
+          lineHeight: 1.6,
+          color: "#20201C",
+          marginTop: 12,
+          boxSizing: "border-box",
+        }}
+      />
+      <div style={{ fontSize: 11, color: "#8a8879", marginTop: 8, minHeight: 14 }}>
+        {status === "saving" && "Saving…"}
+        {status === "saved" && "Saved"}
+        {status === "error" && "Couldn't save"}
+      </div>
+    </>
+  );
+}
+
+function FullScreenNote({
+  entry,
+  bookFullName,
+  onClose,
+}: {
+  entry: RecentEntry;
+  bookFullName: string;
+  onClose: () => void;
+}) {
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const timer = useRef<number | null>(null);
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => taRef.current?.focus(), 60);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  const save = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const schedule = (val: string) => {
+    setNote(val);
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => save(val), 700);
+  };
+
+  const fmt = (d: string | null) =>
+    d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "";
+
+  return (
+    <div className="rd-full" role="dialog" aria-modal="true">
+      <div className="rd-full-bar">
+        <button
+          className="rd-full-back"
+          onClick={() => {
+            if (timer.current) {
+              window.clearTimeout(timer.current);
+              timer.current = null;
+            }
+            if ((entry.scripture_text ?? "") !== note) save(note);
+            onClose();
+          }}
+          aria-label="Back to Read"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+        <span className="rd-full-meta">
+          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : status === "error" ? "Couldn't save" : ""}
+        </span>
+      </div>
+      <div className="rd-full-body">
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 10 }}>
+          {bookFullName}
+        </div>
+        <h1 className="rd-full-title">
+          {entry.entry_title || entry.scripture_reference || "Untitled study"}
+        </h1>
+        <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
+        <textarea
+          ref={taRef}
+          className="rd-full-textarea"
+          value={note}
+          placeholder="Continue your study…"
+          onChange={(e) => schedule(e.target.value)}
+          onBlur={() => {
+            if (timer.current) {
+              window.clearTimeout(timer.current);
+              timer.current = null;
+            }
+            if ((entry.scripture_text ?? "") !== note) save(note);
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
 function RecentStudyCard({
   entry,
   fmtDate,
+  onOpen,
 }: {
   entry: RecentEntry;
   fmtDate: (d: string | null) => string;
+  onOpen: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
   const saveTimer = useRef<number | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    if (open) {
+    if (expanded) {
       const t = window.setTimeout(() => taRef.current?.focus(), 60);
       return () => window.clearTimeout(t);
     }
-  }, [open]);
+  }, [expanded]);
 
   const saveNote = async (val: string) => {
     setStatus("saving");
@@ -369,29 +761,27 @@ function RecentStudyCard({
       className="rd-card"
       role="button"
       tabIndex={0}
-      onClick={() => setOpen((o) => !o)}
+      onClick={() => setExpanded((o) => !o)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setOpen((o) => !o);
+          setExpanded((o) => !o);
         }
       }}
       style={{ cursor: "pointer" }}
     >
       <div className="rd-card-top" onClick={(e) => e.stopPropagation()}>
         <span className="rd-pill">Read</span>
-        <Link
-          to="/devotionals/$id"
-          params={{ id: "default" }}
-          search={{ date: entry.entry_date ?? undefined } as any}
+        <button
+          type="button"
           className="rd-focus"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
-          </svg>
-          Focus
-        </Link>
+          Open
+        </button>
       </div>
       <h3 className="rd-card-title">
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
@@ -401,7 +791,7 @@ function RecentStudyCard({
         {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
       </div>
 
-      {!open ? (
+      {!expanded ? (
         entry.scripture_text ? (
           <div className="rd-card-snip">{entry.scripture_text}</div>
         ) : (
