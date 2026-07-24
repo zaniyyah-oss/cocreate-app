@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   value: string;
@@ -23,6 +23,7 @@ export function RichTextField({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const lastValueRef = useRef<string>("");
+  const [focused, setFocused] = useState(false);
 
   // Sync incoming value into the DOM only when it differs from what the
   // editor currently shows (prevents caret jumps while typing).
@@ -80,13 +81,13 @@ export function RichTextField({
 
   return (
     <div className={`rtf-wrap ${className ?? ""}`} style={style}>
-      <div className="rtf-toolbar" onMouseDown={(e) => e.preventDefault()}>
-        <button type="button" className="rtf-btn" title="Bold" onClick={() => exec("bold")}><b>B</b></button>
-        <button type="button" className="rtf-btn" title="Italic" onClick={() => exec("italic")}><i>I</i></button>
-        <button type="button" className="rtf-btn" title="Underline" onClick={() => exec("underline")}><span style={{ textDecoration: "underline" }}>U</span></button>
+      <div className={`rtf-toolbar ${focused ? "is-visible" : ""}`} aria-hidden={!focused} onMouseDown={(e) => e.preventDefault()}>
+        <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Bold" onClick={() => exec("bold")}><b>B</b></button>
+        <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Italic" onClick={() => exec("italic")}><i>I</i></button>
+        <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Underline" onClick={() => exec("underline")}><span style={{ textDecoration: "underline" }}>U</span></button>
         <span className="rtf-sep" />
-        <button type="button" className="rtf-btn" title="Bulleted list" onClick={() => exec("insertUnorderedList")}>•&nbsp;List</button>
-        <button type="button" className="rtf-btn" title="Numbered list" onClick={() => exec("insertOrderedList")}>1.&nbsp;List</button>
+        <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Bulleted list" onClick={() => exec("insertUnorderedList")}>•&nbsp;List</button>
+        <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Numbered list" onClick={() => exec("insertOrderedList")}>1.&nbsp;List</button>
       </div>
       <div
         ref={ref}
@@ -148,11 +149,21 @@ export function RichTextField({
           lastValueRef.current = html;
           onChange(html);
         }}
-        onBlur={onBlur}
+        onFocus={() => setFocused(true)}
+        onBlur={(e) => {
+          // Keep toolbar visible if focus moved to a toolbar button.
+          const next = e.relatedTarget as Node | null;
+          const wrap = (e.currentTarget as HTMLElement).parentElement;
+          if (!next || !wrap || !wrap.contains(next)) {
+            setFocused(false);
+          }
+          onBlur?.();
+        }}
       />
       <style dangerouslySetInnerHTML={{ __html: `
-        .rtf-wrap{display:flex;flex-direction:column;gap:6px;}
-        .rtf-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+        .rtf-wrap{display:flex;flex-direction:column;gap:0;}
+        .rtf-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;max-height:0;opacity:0;overflow:hidden;pointer-events:none;transition:max-height .18s ease, opacity .18s ease, margin-bottom .18s ease;margin-bottom:0;}
+        .rtf-toolbar.is-visible{max-height:60px;opacity:1;pointer-events:auto;margin-bottom:6px;}
         .rtf-btn{font-family:inherit;font-size:12px;line-height:1;padding:5px 9px;border-radius:6px;border:1px solid rgba(24,26,77,0.15);background:#fff;color:#181A4D;cursor:pointer;transition:background .12s ease;}
         .rtf-btn:hover{background:#FBF8ED;}
         .rtf-sep{width:1px;height:16px;background:rgba(24,26,77,0.15);margin:0 4px;}
@@ -163,6 +174,7 @@ export function RichTextField({
         .rtf-editor ol{list-style:decimal;padding-left:22px;margin:4px 0;}
         .rtf-editor p{margin:0 0 4px;}
       ` }} />
+
     </div>
   );
 }
