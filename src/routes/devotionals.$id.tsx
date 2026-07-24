@@ -741,46 +741,50 @@ function EntryPage() {
           <div className="de-shell-inner" style={{ textAlign: "center", padding: 40 }}>Template not found.</div>
         ) : (
           <>
-            {search.view === "today" && selectedDate !== todayISO() && (
-              <div
-                style={{
-                  background: "#FFAE00",
-                  color: "#181A4D",
-                  fontFamily: "'Poppins',sans-serif",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  marginBottom: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <span>
-                  ⏳ You're viewing a past day — {formatDate(selectedDate)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDate(todayISO())}
+            {search.view === "today" && selectedDate !== todayISO() && (() => {
+              const isFutureDate = selectedDate > todayISO();
+              return (
+                <div
                   style={{
-                    background: "#181A4D",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 999,
-                    padding: "6px 14px",
+                    background: "#FFAE00",
+                    color: "#181A4D",
                     fontFamily: "'Poppins',sans-serif",
                     fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer",
+                    fontSize: 13,
+                    padding: "12px 18px",
+                    borderRadius: 10,
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
                   }}
                 >
-                  Jump to today
-                </button>
-              </div>
-            )}
+                  <span>
+                    {isFutureDate ? "📅 You're planning ahead — " : "⏳ You're viewing a past day — "}
+                    {formatDate(selectedDate)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(todayISO())}
+                    style={{
+                      background: "#181A4D",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 999,
+                      padding: "6px 14px",
+                      fontFamily: "'Poppins',sans-serif",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Jump to today
+                  </button>
+                </div>
+              );
+            })()}
             {/* View switcher */}
             {/* View switcher: Entry vs Day + Full week link */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 12, flexWrap: "wrap" }}>
@@ -1470,6 +1474,8 @@ export type UserEvent = {
   color: string;
   notes: string | null;
   item_type?: UserEventItemType;
+  start_time?: string | null;
+  end_time?: string | null;
 };
 
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
@@ -1535,7 +1541,7 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes,item_type")
+        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time")
         .eq("user_id", userId!)
         .gte("event_date", startISO)
         .lte("event_date", endISO)
@@ -1570,6 +1576,8 @@ export function AddEventDialog({
   const [title, setTitle] = useState("");
   const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
   const [notes, setNotes] = useState("");
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -1583,6 +1591,8 @@ export function AddEventDialog({
       setTitle(event.title ?? "");
       setColor(event.color || OTHER_DEFAULT_COLOR);
       setNotes(event.notes ?? "");
+      setStartTime((event.start_time ?? "").slice(0, 5));
+      setEndTime((event.end_time ?? "").slice(0, 5));
     } else {
       setDate(defaultDate);
       setItemType(defaultItemType ?? "event");
@@ -1591,6 +1601,8 @@ export function AddEventDialog({
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
+      setStartTime("");
+      setEndTime("");
     }
     setErr(null);
   }, [open, defaultDate, event, defaultItemType]);
@@ -1604,6 +1616,7 @@ export function AddEventDialog({
   const save = async () => {
     if (!userId) { setErr("Please sign in to save."); return; }
     if (isOther && !title.trim()) { setErr(isFocus ? "Add a name for this focus item." : "Add a name for this event."); return; }
+    if (startTime && endTime && endTime <= startTime) { setErr("End time must be after start time."); return; }
     setSaving(true); setErr(null);
     const payload = {
       event_date: date,
@@ -1612,6 +1625,8 @@ export function AddEventDialog({
       color: resolvedColor,
       notes: notes.trim() || null,
       item_type: itemType,
+      start_time: startTime || null,
+      end_time: endTime || null,
     };
     let error;
     if (isEdit && event) {
@@ -1668,6 +1683,19 @@ export function AddEventDialog({
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
               style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
           </label>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+              Start time <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+              End time <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+            </label>
+          </div>
 
           {!isFocus && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

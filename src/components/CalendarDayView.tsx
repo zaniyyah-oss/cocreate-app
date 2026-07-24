@@ -89,7 +89,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes,item_type")
+        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time")
         .eq("user_id", userId!)
         .gte("event_date", weekStartISO)
         .lte("event_date", weekEndISO);
@@ -99,6 +99,9 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         const arr = map.get(row.event_date) ?? [];
         arr.push(row);
         map.set(row.event_date, arr);
+      }
+      for (const arr of map.values()) {
+        arr.sort((a, b) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
       }
       return map;
     },
@@ -262,36 +265,61 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               </div>
             );
           })}
-          {userId && dayItems.length > 0 && (
-            <div className="cald-items-overlay">
-              <div className="cald-items-label">Anytime today</div>
-              {dayItems.map(ev => {
-                const light = LIGHT_BG.has((ev.color || "").toUpperCase());
-                const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
-                const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
-                return (
-                  <button
-                    key={ev.id}
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
-                    className="cald-event"
-                    style={{ background: tint, borderColor: ev.color }}
-                  >
-                    <div className="swatch-bar" style={{ background: ev.color }} />
-                    <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-                      <div className="ev-title">
-                        {label}
-                        {ev.item_type === "focus" && (
-                          <span className="ev-tag">focus</span>
-                        )}
-                      </div>
-                      {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+          {userId && dayItems.length > 0 && (() => {
+            const fmtTime = (t: string) => {
+              const [h, m] = t.split(":").map(Number);
+              const ampm = h >= 12 ? "PM" : "AM";
+              const hh = ((h + 11) % 12) + 1;
+              return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
+            };
+            const timed = dayItems.filter(e => e.start_time);
+            const anytime = dayItems.filter(e => !e.start_time);
+            const renderEvent = (ev: UserEvent) => {
+              const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+              const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
+              const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+              const timeLabel = ev.start_time
+                ? (ev.end_time ? `${fmtTime(ev.start_time.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}` : fmtTime(ev.start_time.slice(0,5)))
+                : null;
+              return (
+                <button
+                  key={ev.id}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                  className="cald-event"
+                  style={{ background: tint, borderColor: ev.color }}
+                >
+                  <div className="swatch-bar" style={{ background: ev.color }} />
+                  <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+                    <div className="ev-title">
+                      {label}
+                      {ev.item_type === "focus" && (
+                        <span className="ev-tag">focus</span>
+                      )}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                    {timeLabel && <div className="ev-time">{timeLabel}</div>}
+                    {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+                  </div>
+                </button>
+              );
+            };
+            return (
+              <div className="cald-items-overlay">
+                {timed.length > 0 && (
+                  <>
+                    <div className="cald-items-label">Scheduled</div>
+                    {timed.map(renderEvent)}
+                  </>
+                )}
+                {anytime.length > 0 && (
+                  <>
+                    <div className="cald-items-label" style={{ marginTop: timed.length ? 8 : 0 }}>Anytime today</div>
+                    {anytime.map(renderEvent)}
+                  </>
+                )}
+              </div>
+            );
+          })()}
           {userId && !itemsQ.isLoading && dayItems.length === 0 && (
             <div className="cald-empty">
               <strong>Nothing scheduled.</strong>
@@ -364,6 +392,7 @@ const CSS = `
 .cald-event .swatch-bar{width:4px;border-radius:3px;flex-shrink:0;}
 .cald-event .ev-title{font-size:14px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:8px;}
 .cald-event .ev-tag{font-size:9.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:2px 7px;border-radius:999px;}
+.cald-event .ev-time{font-size:11.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:2px;}
 .cald-event .ev-notes{font-size:12px;color:#20201C;opacity:0.65;margin-top:2px;overflow-wrap:anywhere;}
 .cald-empty{padding:22px 8px;text-align:center;color:#8a8678;font-size:13px;}
 .cald-empty strong{display:block;color:#181A4D;font-size:14px;font-weight:800;margin-bottom:4px;}
