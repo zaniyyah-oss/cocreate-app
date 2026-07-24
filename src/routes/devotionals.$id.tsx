@@ -246,6 +246,13 @@ const CSS = `
   .de-block.is-full .de-textarea{min-height:55vh;}
   .de-block.is-full.read .de-textarea{min-height:38vh;}
 }
+/* When a RichTextField is used as a de-textarea, avoid the doubled
+   bottom border (the wrap and the inner editor both draw one). */
+.de-textarea.rtf-wrap{border-bottom:0;}
+/* In focus mode, let the rich-text editor fill the whole panel. */
+.de-block.is-full .rtf-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
+.de-block.is-full .rtf-editor{flex:1;min-height:0 !important;height:auto !important;resize:none;}
+
 .de-block.is-full.read .de-read-head,
 .de-block.is-full.read .de-read-part{padding-left:0;padding-right:0;}
 .de-block.is-full .de-cols{grid-template-columns:1fr;}
