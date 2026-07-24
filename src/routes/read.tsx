@@ -317,26 +317,7 @@ function ReadLibrary() {
             </div>
             <div className="rd-recent-grid">
               {filteredRecent.map((e) => (
-                <Link
-                  key={e.id}
-                  to="/read/$abbr"
-                  params={{ abbr: e.book_of_bible ?? "" }}
-                  search={{ entry: e.id } as any}
-                  className="rd-card"
-                >
-                  <div className="rd-card-top">
-                    <span className="rd-pill">Read</span>
-                    <span className="rd-focus">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                      Open note
-                    </span>
-                  </div>
-                  <h3 className="rd-card-title">{e.entry_title || e.scripture_reference || "Untitled study"}</h3>
-                  <div className="rd-card-meta">
-                    {e.book_of_bible ?? ""}{e.entry_date ? ` · ${fmtDate(e.entry_date)}` : ""}
-                  </div>
-                  {e.scripture_text && <div className="rd-card-snip">{e.scripture_text}</div>}
-                </Link>
+                <RecentStudyCard key={e.id} entry={e} fmtDate={fmtDate} />
               ))}
             </div>
           </>
