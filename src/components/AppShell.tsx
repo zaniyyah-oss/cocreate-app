@@ -17,6 +17,7 @@ const ICON = {
   library:     <svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 15-4-1z"/></svg>,
   messages:    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
   profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
+  book:        <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14"/></svg>,
 
 };
 
@@ -97,6 +98,8 @@ const SHELL_CSS = `
   .app-side-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
   .app-side-item:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-item.active{background:#DCE07A;color:#181A4D;}
+  .app-side-item.is-disabled{cursor:default;opacity:.55;}
+  .app-side-item.is-disabled:hover{background:transparent;color:#8a8678;}
   .app-side-divider{height:1px;background:rgba(24,26,77,0.08);margin:10px 10px;}
   .app-side-label{font-size:10px;font-weight:800;color:#8a8678;text-transform:uppercase;letter-spacing:0.08em;margin:8px 14px 6px;}
   .app-shell.collapsed .app-side-label{display:none;}
@@ -293,6 +296,13 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                 <Fragment key={n.key}>
                   <div className="app-side-divider" />
                   <div className="app-side-label">Your reference</div>
+                  <span
+                    className="app-side-item is-disabled"
+                    aria-disabled="true"
+                    title={collapsed ? "Book" : undefined}
+                  >
+                    {ICON.book}<span className="lbl">Book</span>
+                  </span>
                   {item}
                 </Fragment>
               );

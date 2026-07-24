@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -367,6 +367,7 @@ const CSS = `
 .hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.08) !important;}
 .hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
+.hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
 
 /* Photo-overlay cards must stay white even though they are <a> tags. */
 .hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
@@ -455,7 +456,7 @@ function HomeIconBar() {
     { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg> },
     { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
     { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> },
-    { to: "/explore", label: "Bookmarks", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg> },
+    { to: "/explore", label: "Bookmarks", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>, prepend: <span key="book" className="hp-iconbar-disabled" aria-disabled="true" title="Book"><svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14"/></svg></span> },
     { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg> },
   ];
   return (
@@ -463,9 +464,12 @@ function HomeIconBar() {
       <div className="wrap">
         <div className="hp-iconbar-nav">
           {items.map((it) => (
-            <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
-              {it.icon}
-            </Link>
+            <Fragment key={it.to}>
+              {(it as any).prepend}
+              <Link to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+                {it.icon}
+              </Link>
+            </Fragment>
           ))}
           <span className="hp-iconbar-bell"><NotificationBell /></span>
           <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
