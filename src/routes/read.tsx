@@ -64,11 +64,11 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,date_of_entry,title,scripture_reference,scripture_text,book_of_bible,book_confirmed")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed")
         .eq("user_id", uid)
         .eq("book_confirmed", true)
         .not("book_of_bible", "is", null)
-        .order("date_of_entry", { ascending: false })
+        .order("entry_date", { ascending: false })
         .limit(3);
       if (error) throw error;
       return (data ?? []) as RecentEntry[];
@@ -258,9 +258,9 @@ function ReadLibrary() {
                       Focus
                     </span>
                   </div>
-                  <h3 className="rd-card-title">{e.title || e.scripture_reference || "Untitled study"}</h3>
+                  <h3 className="rd-card-title">{e.entry_title || e.scripture_reference || "Untitled study"}</h3>
                   <div className="rd-card-meta">
-                    {e.book_of_bible ?? ""}{e.date_of_entry ? ` · ${fmtDate(e.date_of_entry)}` : ""}
+                    {e.book_of_bible ?? ""}{e.entry_date ? ` · ${fmtDate(e.entry_date)}` : ""}
                   </div>
                   {e.scripture_text && <div className="rd-card-snip">{e.scripture_text}</div>}
                 </Link>
