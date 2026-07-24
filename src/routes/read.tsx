@@ -259,6 +259,34 @@ function ReadLibrary() {
           <span className="lbl">books studied out of 66</span>
         </div>
 
+        {availableTopics.length > 0 && (
+          <div className="rd-topicfilter">
+            <span className="lbl">Filter by topic</span>
+            {availableTopics.map((t) => {
+              const on = filterTopicIds.includes(t.id);
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`rd-tchip ${on ? "on" : ""}`}
+                  onClick={() =>
+                    setFilterTopicIds((cur) =>
+                      cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                    )
+                  }
+                >
+                  {t.display_name ?? t.name}
+                </button>
+              );
+            })}
+            {filterTopicIds.length > 0 && (
+              <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="rd-section-label">
           {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
         </div>
@@ -266,12 +294,13 @@ function ReadLibrary() {
         <div className="rd-grid">
           {filtered.map((b) => {
             const n = counts[b.abbreviation] ?? 0;
+            const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
             return (
               <Link
                 key={b.abbreviation}
                 to="/read/$abbr"
                 params={{ abbr: b.abbreviation }}
-                className={`rd-chip ${n > 0 ? "on" : ""}`}
+                className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
                 title={b.full_name}
               >
                 {b.abbreviation}
@@ -281,11 +310,13 @@ function ReadLibrary() {
           })}
         </div>
 
-        {recent.length > 0 && (
+        {filteredRecent.length > 0 && (
           <>
-            <div className="rd-section-label">Recently studied</div>
+            <div className="rd-section-label">
+              {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+            </div>
             <div className="rd-recent-grid">
-              {recent.map((e) => (
+              {filteredRecent.map((e) => (
                 <Link
                   key={e.id}
                   to="/read/$abbr"
