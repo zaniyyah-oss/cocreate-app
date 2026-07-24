@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
+import { stripHtml } from "@/components/RichTextField";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
@@ -544,7 +545,7 @@ function ListView({
               )}
               {g.items.map((e) => {
                 const isOpen = e.id === selectedId;
-                const preview = (e.scripture_text ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
+                const preview = stripHtml(e.scripture_text).slice(0, 120);
                 return (
                   <button
                     key={`${g.key}-${e.id}`}
@@ -844,7 +845,7 @@ function RecentStudyCard({
 
       {!expanded ? (
         entry.scripture_text ? (
-          <div className="rd-card-snip">{entry.scripture_text}</div>
+          <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
         ) : (
           <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
             Click to add a note…

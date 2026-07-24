@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
+import { RichTextField } from "@/components/RichTextField";
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
@@ -337,11 +338,11 @@ function FocusPage() {
                 {userId && (
                   <>
                     <div className="fp-response-label">Your response</div>
-                    <textarea
+                    <RichTextField
                       className="fp-textarea"
                       placeholder="What did you notice? What is God saying?"
                       value={scriptureText}
-                      onChange={(e) => { setScriptureText(e.target.value); scheduleSave("scripture_text", e.target.value); }}
+                      onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                     />
                     {statusRow("scripture_text")}
                   </>
@@ -363,11 +364,11 @@ function FocusPage() {
                 {userId && (
                   <>
                     <div className="fp-response-label">Your response</div>
-                    <textarea
+                    <RichTextField
                       className="fp-textarea"
                       placeholder="Speak plainly to God…"
                       value={prayText}
-                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
+                      onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
                     />
                     {statusRow("pray_text")}
                   </>
@@ -389,11 +390,11 @@ function FocusPage() {
                 {userId && (
                   <>
                     <div className="fp-response-label">Your response</div>
-                    <textarea
+                    <RichTextField
                       className="fp-textarea"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
-                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
+                      onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
                     />
                     {statusRow("todo_text")}
                   </>
