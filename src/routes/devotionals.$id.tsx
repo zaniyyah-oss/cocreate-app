@@ -536,6 +536,9 @@ function EntryPage() {
     setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(items);
+    setBookOfBible((e as any)?.book_of_bible ?? null);
+    setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
+    setBookConfirmed(Boolean((e as any)?.book_confirmed));
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
