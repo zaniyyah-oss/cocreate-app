@@ -996,12 +996,12 @@ function EntryPage() {
                       {focusBtn("todo")}
                     </div>
                     
-                    <ResizableTextarea
+                    <RichTextField
                       storageKey="todo"
                       className="de-textarea short"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
-                      onChange={(e) => { setTodoText(e.target.value); scheduleSave("todo_text", e.target.value); }}
+                      onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
                     />
                     {statusRow("todo_text")}
 
