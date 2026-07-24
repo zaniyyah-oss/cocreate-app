@@ -230,6 +230,13 @@ function ReadLibrary() {
           font-size:14px;line-height:1.55;color:#4a4a44;
           display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
         }
+        .rd-topicfilter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 24px;}
+        .rd-topicfilter .lbl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;}
+        .rd-tchip{font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;}
+        .rd-tchip:hover{border-color:#FFAE00;color:#20201C;}
+        .rd-tchip.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
+        .rd-tchip.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
+        .rd-chip.dim{opacity:.35;}
       `}</style>
 
       <div className="rd-wrap">
