@@ -979,12 +979,12 @@ function EntryPage() {
                       {focusBtn("pray")}
                     </div>
                     
-                    <ResizableTextarea
+                    <RichTextField
                       storageKey="pray"
                       className="de-textarea de-pray-textarea"
                       placeholder="Speak plainly to God…"
                       value={prayText}
-                      onChange={(e) => { setPrayText(e.target.value); scheduleSave("pray_text", e.target.value); }}
+                      onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
                     />
                     {statusRow("pray_text")}
                   </div>
