@@ -503,6 +503,7 @@ export type Database = {
           template_id: string | null
           todo_items: Json
           todo_text: string | null
+          topic_ids: string[]
           updated_at: string
           user_id: string
           where_text: string | null
@@ -525,6 +526,7 @@ export type Database = {
           template_id?: string | null
           todo_items?: Json
           todo_text?: string | null
+          topic_ids?: string[]
           updated_at?: string
           user_id: string
           where_text?: string | null
@@ -547,6 +549,7 @@ export type Database = {
           template_id?: string | null
           todo_items?: Json
           todo_text?: string | null
+          topic_ids?: string[]
           updated_at?: string
           user_id?: string
           where_text?: string | null
