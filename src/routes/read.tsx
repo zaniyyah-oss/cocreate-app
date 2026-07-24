@@ -423,6 +423,19 @@ function ReadLibrary() {
           })}
         </div>
 
+        <TopicsSection
+          topics={topics}
+          entries={recent}
+          selectedIds={filterTopicIds}
+          onToggle={(id) =>
+            setFilterTopicIds((cur) =>
+              cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+            )
+          }
+        />
+
+
+
         {filteredRecent.length > 0 && (
           <>
             <div className="rd-recent-header">
