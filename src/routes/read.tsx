@@ -9,15 +9,24 @@ export const Route = createFileRoute("/read")({
   head: () => ({
     meta: [
       { title: "Read — Your Bible library on CoCreate" },
-      { name: "description", content: "Browse every book of the Bible you've studied. See what you've tagged, what's next, and drill into your entries by book." },
+      { name: "description", content: "Every study you've saved, grouped by book of the Bible." },
       { property: "og:title", content: "Read — Your Bible library on CoCreate" },
-      { property: "og:description", content: "Browse every book of the Bible you've studied. See what you've tagged, what's next, and drill into your entries by book." },
+      { property: "og:description", content: "Every study you've saved, grouped by book of the Bible." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ReadLibrary,
 });
+
+type RecentEntry = {
+  id: string;
+  date_of_entry: string | null;
+  title: string | null;
+  scripture_reference: string | null;
+  scripture_text: string | null;
+  book_of_bible: string | null;
+};
 
 function useConfirmedCounts() {
   return useQuery({
@@ -45,75 +54,174 @@ function useConfirmedCounts() {
   });
 }
 
+function useRecentStudies() {
+  return useQuery({
+    queryKey: ["read-recent-studies"],
+    queryFn: async () => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      if (!uid) return [] as RecentEntry[];
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .select("id,date_of_entry,title,scripture_reference,scripture_text,book_of_bible,book_confirmed")
+        .eq("user_id", uid)
+        .eq("book_confirmed", true)
+        .not("book_of_bible", "is", null)
+        .order("date_of_entry", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return (data ?? []) as RecentEntry[];
+    },
+    staleTime: 30_000,
+  });
+}
+
 function ReadLibrary() {
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
+  const recentQ = useRecentStudies();
   const [tab, setTab] = useState<"OT" | "NT">("OT");
 
   const books = booksQ.data ?? [];
   const counts = countsQ.data ?? {};
+  const recent = recentQ.data ?? [];
   const studiedCount = useMemo(
     () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
     [counts]
   );
   const filtered = books.filter((b) => b.testament === tab);
+  const totalForTab = filtered.length;
+
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
   return (
     <AppShell>
       <style>{`
-        .read-wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px;font-family:'Poppins',sans-serif;color:#20201C;}
-        .read-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#FFAE00;}
-        .read-h1{font-family:'Fraunces',serif;font-size:34px;line-height:1.15;margin:6px 0 6px;font-weight:600;}
-        .read-sub{font-size:14px;color:#6b6a60;max-width:560px;}
-        .read-stat{
-          margin:24px 0 20px;background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;
-          padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+        .rd-wrap{
+          max-width:1280px;margin:0 auto;padding:28px 32px 96px;
+          font-family:'Poppins',sans-serif;color:#20201C;background:#FBF8ED;min-height:100vh;
         }
-        .read-stat .num{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:#0F4A42;}
-        .read-stat .lbl{font-size:12.5px;color:#6b6a60;}
-        .read-tabs{
-          display:inline-flex;background:#F5EFD9;border-radius:999px;padding:4px;margin-bottom:18px;
+        .rd-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:36px;}
+        .rd-tabs{
+          display:inline-flex;background:#fff;border-radius:999px;padding:5px;
+          border:1.5px solid #ECE4CE;
         }
-        .read-tabs button{
-          border:none;background:transparent;padding:7px 18px;border-radius:999px;
-          font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:#6b6a60;
+        .rd-tabs button{
+          border:none;background:transparent;padding:11px 26px;border-radius:999px;
+          font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#6b6a60;
+          transition:all .15s ease;
         }
-        .read-tabs button.active{background:#181A4D;color:#fff;}
-        .read-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
-        .read-chip{
-          position:relative;display:flex;flex-direction:column;justify-content:space-between;
-          padding:12px 12px 10px;border-radius:12px;border:1.5px solid #ECE4CE;background:#fff;
-          text-decoration:none;color:#20201C;min-height:66px;
+        .rd-tabs button.active{background:#181A4D;color:#fff;}
+        .rd-allstudies{
+          display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
+          font-size:14px;font-weight:700;text-decoration:none;
         }
-        .read-chip:hover{border-color:#FFAE00;background:#fffdf5;}
-        .read-chip.on{background:rgba(255,174,0,.12);border-color:#FFAE00;}
-        .read-chip.off{opacity:.55;}
-        .read-chip .abbr{font-family:'Fraunces',serif;font-size:16px;font-weight:600;line-height:1;}
-        .read-chip .name{font-size:10.5px;color:#6b6a60;margin-top:4px;}
-        .read-chip .badge{
-          position:absolute;top:8px;right:8px;background:#FFAE00;color:#20201C;
-          font-size:10px;font-weight:700;border-radius:999px;min-width:18px;height:18px;
+        .rd-allstudies:hover{color:#0a332d;}
+
+        .rd-eyebrow{
+          font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#0F4A42;
+          margin-bottom:14px;
+        }
+        .rd-h1{
+          font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;
+          font-size:64px;line-height:1;letter-spacing:-.02em;margin:0 0 20px;color:#20201C;
+        }
+        .rd-sub{font-size:16px;line-height:1.5;color:#4a4a44;max-width:640px;margin:0 0 28px;}
+
+        .rd-stat{
+          display:inline-flex;align-items:center;gap:18px;background:#fff;
+          border:1.5px solid #ECE4CE;border-radius:14px;padding:16px 22px;margin-bottom:44px;
+        }
+        .rd-stat .num{
+          font-family:'Archivo Black','Poppins',sans-serif;font-size:42px;line-height:1;
+          color:#0F4A42;font-weight:900;
+        }
+        .rd-stat .lbl{font-size:14px;line-height:1.3;color:#4a4a44;max-width:120px;}
+
+        .rd-section-label{
+          font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8a8879;
+          margin:0 0 14px;
+        }
+
+        .rd-grid{
+          display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:10px;margin-bottom:56px;
+        }
+        @media (max-width:1024px){.rd-grid{grid-template-columns:repeat(8,minmax(0,1fr));}}
+        @media (max-width:640px){.rd-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+
+        .rd-chip{
+          position:relative;display:flex;align-items:center;justify-content:center;
+          padding:16px 8px;border-radius:12px;border:1.5px solid #ECE4CE;background:#fff;
+          text-decoration:none;color:#8a8879;font-size:14px;font-weight:700;
+          transition:all .15s ease;min-height:52px;
+        }
+        .rd-chip:hover{border-color:#FFAE00;color:#20201C;}
+        .rd-chip.on{
+          background:#FFF4D6;border-color:#FFAE00;color:#20201C;
+        }
+        .rd-chip.on:hover{background:#FFEBB8;}
+        .rd-badge{
+          position:absolute;top:-6px;right:-6px;background:#DCE07A;color:#181A4D;
+          font-size:10px;font-weight:800;border-radius:999px;min-width:20px;height:20px;
           display:inline-flex;align-items:center;justify-content:center;padding:0 5px;
+          border:2px solid #FBF8ED;
+        }
+
+        .rd-recent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
+        @media (max-width:900px){.rd-recent-grid{grid-template-columns:1fr;}}
+        .rd-card{
+          background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;padding:20px 22px;
+          text-decoration:none;color:#20201C;display:flex;flex-direction:column;gap:12px;
+          transition:border-color .15s ease;
+        }
+        .rd-card:hover{border-color:#FFAE00;}
+        .rd-card-top{display:flex;align-items:center;justify-content:space-between;}
+        .rd-pill{
+          background:#FFAE00;color:#20201C;font-size:11px;font-weight:800;
+          padding:6px 14px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;
+        }
+        .rd-focus{
+          display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ECE4CE;
+          color:#4a4a44;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;
+        }
+        .rd-focus svg{width:12px;height:12px;}
+        .rd-card-title{
+          font-family:'Archivo Black','Poppins',sans-serif;font-size:22px;font-weight:900;
+          line-height:1.15;margin:4px 0 0;color:#20201C;
+        }
+        .rd-card-meta{font-size:13px;color:#8a8879;font-weight:600;}
+        .rd-card-snip{
+          font-size:14px;line-height:1.55;color:#4a4a44;
+          display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
         }
       `}</style>
-      <div className="read-wrap">
-        <div className="read-eyebrow">Read</div>
-        <h1 className="read-h1">Your Bible library</h1>
-        <p className="read-sub">Every book you've studied lives here. Tap a book to revisit your entries.</p>
 
-        <div className="read-stat">
-          <div>
-            <span className="num">{studiedCount}</span>
-            <span className="lbl"> books studied out of 66</span>
+      <div className="rd-wrap">
+        <div className="rd-topbar">
+          <div className="rd-tabs" role="tablist">
+            <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
+            <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
           </div>
+          <Link to="/notes" className="rd-allstudies">→ All studies</Link>
         </div>
 
-        <div className="read-tabs" role="tablist">
-          <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
-          <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
+        <div className="rd-eyebrow">Workspace · Read</div>
+        <h1 className="rd-h1">Read</h1>
+        <p className="rd-sub">
+          Every study you've saved, grouped by book of the Bible. Click a book to see everything you've written on it.
+        </p>
+
+        <div className="rd-stat">
+          <span className="num">{studiedCount}</span>
+          <span className="lbl">books studied out of 66</span>
         </div>
 
-        <div className="read-grid">
+        <div className="rd-section-label">
+          {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
+        </div>
+
+        <div className="rd-grid">
           {filtered.map((b) => {
             const n = counts[b.abbreviation] ?? 0;
             return (
@@ -121,17 +229,44 @@ function ReadLibrary() {
                 key={b.abbreviation}
                 to="/read/$abbr"
                 params={{ abbr: b.abbreviation }}
-                className={`read-chip ${n > 0 ? "on" : "off"}`}
+                className={`rd-chip ${n > 0 ? "on" : ""}`}
+                title={b.full_name}
               >
-                <div>
-                  <div className="abbr">{b.abbreviation}</div>
-                  <div className="name">{b.full_name}</div>
-                </div>
-                {n > 0 && <span className="badge">{n}</span>}
+                {b.abbreviation}
+                {n > 0 && <span className="rd-badge">{n}</span>}
               </Link>
             );
           })}
         </div>
+
+        {recent.length > 0 && (
+          <>
+            <div className="rd-section-label">Recently studied</div>
+            <div className="rd-recent-grid">
+              {recent.map((e) => (
+                <Link
+                  key={e.id}
+                  to="/read/$abbr"
+                  params={{ abbr: e.book_of_bible ?? "" }}
+                  className="rd-card"
+                >
+                  <div className="rd-card-top">
+                    <span className="rd-pill">Read</span>
+                    <span className="rd-focus">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                      Focus
+                    </span>
+                  </div>
+                  <h3 className="rd-card-title">{e.title || e.scripture_reference || "Untitled study"}</h3>
+                  <div className="rd-card-meta">
+                    {e.book_of_bible ?? ""}{e.date_of_entry ? ` · ${fmtDate(e.date_of_entry)}` : ""}
+                  </div>
+                  {e.scripture_text && <div className="rd-card-snip">{e.scripture_text}</div>}
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </AppShell>
   );
