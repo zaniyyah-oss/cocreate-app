@@ -250,23 +250,18 @@ function BookDetail() {
 function EntryCard({
   entry,
   topicsById,
-  allTopics,
   onChanged,
   autoFocus = false,
 }: {
   entry: Entry;
   topicsById: Map<string, Topic>;
-  allTopics: Topic[];
   onChanged: () => void;
   autoFocus?: boolean;
 }) {
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
   const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const saveTimer = useRef<number | null>(null);
-  const pickerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -278,15 +273,6 @@ function EntryCard({
     }, 100);
     return () => window.clearTimeout(t);
   }, [autoFocus]);
-
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!pickerRef.current?.contains(e.target as Node)) setPickerOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [pickerOpen]);
 
   const saveNote = async (val: string) => {
     setStatus("saving");
@@ -309,37 +295,24 @@ function EntryCard({
     setStatus("saving");
     const { error } = await supabase
       .from("devotional_entries")
-      .update({ topic_ids: next })
+      .update({ topic_ids: next } as any)
       .eq("id", entry.id);
     setStatus(error ? "error" : "saved");
     if (!error) window.setTimeout(() => setStatus(""), 1500);
     onChanged();
   };
 
-  const toggleTopic = (id: string) => {
-    const next = topicIds.includes(id) ? topicIds.filter((t) => t !== id) : [...topicIds, id];
-    saveTopics(next);
-  };
-
-  const filteredTopics = allTopics.filter((t) => {
-    if (!query.trim()) return true;
-    const q = query.toLowerCase();
-    return (
-      (t.display_name ?? t.name).toLowerCase().includes(q) ||
-      t.name.toLowerCase().includes(q)
-    );
-  });
-
-  const activeTopics = topicIds
+  const previewTopics = topicIds
     .map((id) => topicsById.get(id))
-    .filter((t): t is Topic => !!t);
+    .filter((t): t is Topic => !!t)
+    .slice(0, 2);
 
   return (
     <div className={`rb-card${autoFocus ? " focus" : ""}`} ref={cardRef}>
       <div className="rb-card-top">
         <div className="rb-pills">
           <span className="rb-pill daily">Read</span>
-          {activeTopics.slice(0, 2).map((t) => (
+          {previewTopics.map((t) => (
             <span key={t.id} className="rb-pill topic">
               {t.display_name ?? t.name}
             </span>
@@ -382,68 +355,7 @@ function EntryCard({
         }}
       />
 
-      <div className="rb-topics" ref={pickerRef}>
-        {activeTopics.map((t) => (
-          <span key={t.id} className="rb-pill topic" style={{ display: "inline-flex", alignItems: "center" }}>
-            {t.display_name ?? t.name}
-            <button
-              type="button"
-              aria-label={`Remove ${t.display_name ?? t.name}`}
-              className="rb-chip-x"
-              onClick={() => toggleTopic(t.id)}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <div className="rb-topic-picker">
-          <button
-            type="button"
-            className="rb-topic-add"
-            onClick={() => setPickerOpen((o) => !o)}
-          >
-            + Add topic
-          </button>
-          {pickerOpen && (
-            <div className="rb-topic-menu">
-              <input
-                autoFocus
-                placeholder="Search topics…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                style={{
-                  width: "100%",
-                  border: "1px solid #ECE4CE",
-                  borderRadius: 8,
-                  padding: "6px 8px",
-                  fontSize: 13,
-                  marginBottom: 6,
-                  fontFamily: "inherit",
-                }}
-              />
-              {filteredTopics.length === 0 && (
-                <div style={{ padding: "8px 10px", color: "#8a8879", fontSize: 12 }}>
-                  No topics found.
-                </div>
-              )}
-              {filteredTopics.map((t) => {
-                const on = topicIds.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`rb-topic-opt ${on ? "on" : ""}`}
-                    onClick={() => toggleTopic(t.id)}
-                  >
-                    <span>{t.display_name ?? t.name}</span>
-                    {on && <span style={{ color: "#0F4A42" }}>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+      <TopicPicker value={topicIds} onChange={saveTopics} />
 
       <div className="rb-note-status">
         {status === "saving" && "Saving…"}
