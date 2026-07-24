@@ -463,9 +463,12 @@ function HomeIconBar() {
       <div className="wrap">
         <div className="hp-iconbar-nav">
           {items.map((it) => (
-            <Link key={it.to} to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
-              {it.icon}
-            </Link>
+            <Fragment key={it.to}>
+              {(it as any).prepend}
+              <Link to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+                {it.icon}
+              </Link>
+            </Fragment>
           ))}
           <span className="hp-iconbar-bell"><NotificationBell /></span>
           <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
