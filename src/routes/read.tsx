@@ -318,10 +318,14 @@ function ReadLibrary() {
         /* Topics section */
         .rd-topics-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;}
         .rd-topics-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:44px;}
-        .rd-topic-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid transparent;cursor:pointer;font-family:inherit;transition:transform .08s ease, box-shadow .08s ease;}
+        .rd-topic-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 4px 4px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid transparent;cursor:default;font-family:inherit;transition:transform .08s ease, box-shadow .08s ease;}
         .rd-topic-pill:hover{transform:translateY(-1px);}
         .rd-topic-pill.on{box-shadow:0 0 0 2px #FBF8ED, 0 0 0 4px #181A4D;}
+        .rd-topic-pill.deleting{opacity:.5;pointer-events:none;}
+        .rd-topic-pill-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;outline:none;}
         .rd-topic-pill .count{background:rgba(255,255,255,.35);color:inherit;font-size:10px;padding:2px 7px;border-radius:999px;min-width:18px;text-align:center;}
+        .rd-topic-delete{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;border:none;background:transparent;color:inherit;font-size:16px;line-height:1;cursor:pointer;padding:0;opacity:.55;transition:opacity .12s, background .12s;}
+        .rd-topic-delete:hover{opacity:1;background:rgba(0,0,0,0.12);}
         .rd-topic-add{border:1.5px dashed #ECE4CE;background:transparent;color:#8a8879;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;}
         .rd-topic-add:hover{border-color:#FFAE00;color:#20201C;}
         .rd-topic-form{background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:520px;}
