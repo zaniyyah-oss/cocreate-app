@@ -98,6 +98,8 @@ const SHELL_CSS = `
   .app-side-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
   .app-side-item:hover{background:#FBF8ED;color:#181A4D;}
   .app-side-item.active{background:#DCE07A;color:#181A4D;}
+  .app-side-item.is-disabled{cursor:default;opacity:.55;}
+  .app-side-item.is-disabled:hover{background:transparent;color:#8a8678;}
   .app-side-divider{height:1px;background:rgba(24,26,77,0.08);margin:10px 10px;}
   .app-side-label{font-size:10px;font-weight:800;color:#8a8678;text-transform:uppercase;letter-spacing:0.08em;margin:8px 14px 6px;}
   .app-shell.collapsed .app-side-label{display:none;}
