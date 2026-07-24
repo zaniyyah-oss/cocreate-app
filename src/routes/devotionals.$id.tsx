@@ -9,6 +9,7 @@ import { ResizableTextarea } from "@/components/ResizableTextarea";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
+import { BookTagger } from "@/components/BookTagger";
 
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
