@@ -346,6 +346,7 @@ type SaveField =
   | "book_of_bible"
   | "book_source"
   | "book_confirmed"
+  | "books_of_bible"
   | "topic_ids";
 
 
