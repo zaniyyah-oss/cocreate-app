@@ -118,8 +118,8 @@ function ReadLibrary() {
     const s = new Set<string>();
     for (const e of recent) {
       const ids = e.topic_ids ?? [];
-      if (filterTopicIds.every((t) => ids.includes(t)) && e.book_of_bible) {
-        s.add(e.book_of_bible);
+      if (filterTopicIds.every((t) => ids.includes(t))) {
+        for (const b of entryBooks(e)) s.add(b);
       }
     }
     return s;
@@ -158,9 +158,16 @@ function ReadLibrary() {
     if (listSort === "book") {
       const map = new Map<string, RecentEntry[]>();
       for (const e of filteredRecent) {
-        const k = e.book_of_bible ?? "—";
-        if (!map.has(k)) map.set(k, []);
-        map.get(k)!.push(e);
+        const books = entryBooks(e);
+        if (books.length === 0) {
+          if (!map.has("—")) map.set("—", []);
+          map.get("—")!.push(e);
+        } else {
+          for (const k of books) {
+            if (!map.has(k)) map.set(k, []);
+            map.get(k)!.push(e);
+          }
+        }
       }
       return Array.from(map.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
