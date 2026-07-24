@@ -1576,6 +1576,8 @@ export function AddEventDialog({
   const [title, setTitle] = useState("");
   const [color, setColor] = useState<string>(OTHER_DEFAULT_COLOR);
   const [notes, setNotes] = useState("");
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
