@@ -170,7 +170,10 @@ function BookDetail() {
         `}</style>
 
         <div className="rb-wrap">
-          <Link to="/read" className="rb-back">‹ Read</Link>
+          <div className="rb-nav">
+            <Link to="/read" className="rb-back">‹ All books</Link>
+            <Link to="/notes" className="rb-back">All studies</Link>
+          </div>
           <div className="rb-tag">{abbr}</div>
           <h1 className="rb-h1">{fullName}</h1>
           <div className="rb-count">
