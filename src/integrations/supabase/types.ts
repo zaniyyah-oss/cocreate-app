@@ -1620,6 +1620,7 @@ export type Database = {
     }
     Functions: {
       compute_user_recommendations: { Args: never; Returns: undefined }
+      detect_bible_book: { Args: { _txt: string }; Returns: string }
       get_facilitator_group_preview: {
         Args: { _code: string }
         Returns: {
