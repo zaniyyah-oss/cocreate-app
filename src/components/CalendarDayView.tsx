@@ -29,16 +29,79 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// Hours to render as slots (matches mock: sparse markers at 6/9/12/3/5/7/9)
-const HOUR_SLOTS: { hour: number; label: string }[] = [
-  { hour: 6, label: "6 AM" },
-  { hour: 9, label: "9 AM" },
-  { hour: 12, label: "12 PM" },
-  { hour: 15, label: "3 PM" },
-  { hour: 17, label: "5 PM" },
-  { hour: 19, label: "7 PM" },
-  { hour: 21, label: "9 PM" },
-];
+// Continuous hourly grid: 6 AM through 10 PM
+const START_HOUR = 6;
+const END_HOUR = 22;
+const HOUR_HEIGHT = 56; // px per hour
+const HOUR_SLOTS: { hour: number; label: string }[] = Array.from(
+  { length: END_HOUR - START_HOUR },
+  (_, i) => {
+    const h = START_HOUR + i;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hh = ((h + 11) % 12) + 1;
+    return { hour: h, label: `${hh} ${ampm}` };
+  }
+);
+
+function toMin(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+type PositionedEvent = UserEvent & { _top: number; _height: number; _col: number; _cols: number };
+
+function layoutTimedEvents(events: UserEvent[]): PositionedEvent[] {
+  const startMin = START_HOUR * 60;
+  const endMin = END_HOUR * 60;
+  const items = events
+    .filter(e => !!e.start_time)
+    .map(e => {
+      const s = toMin(e.start_time!.slice(0, 5));
+      const rawEnd = e.end_time ? toMin(e.end_time.slice(0, 5)) : s + 60;
+      const end = Math.max(rawEnd, s + 20);
+      return { ev: e, s, end };
+    })
+    .filter(x => x.end > startMin && x.s < endMin)
+    .sort((a, b) => a.s - b.s || a.end - b.end);
+
+  const positioned: PositionedEvent[] = [];
+  let cluster: typeof items = [];
+  let clusterEnd = -Infinity;
+
+  const flush = () => {
+    if (!cluster.length) return;
+    const cols: number[] = [];
+    const assigned: { item: typeof cluster[number]; col: number }[] = [];
+    for (const it of cluster) {
+      let col = cols.findIndex(endM => endM <= it.s);
+      if (col === -1) { col = cols.length; cols.push(it.end); }
+      else cols[col] = it.end;
+      assigned.push({ item: it, col });
+    }
+    const totalCols = cols.length;
+    for (const { item, col } of assigned) {
+      const clampedS = Math.max(item.s, startMin);
+      const clampedE = Math.min(item.end, endMin);
+      positioned.push({
+        ...item.ev,
+        _top: ((clampedS - startMin) / 60) * HOUR_HEIGHT,
+        _height: Math.max(28, ((clampedE - clampedS) / 60) * HOUR_HEIGHT),
+        _col: col,
+        _cols: totalCols,
+      });
+    }
+    cluster = [];
+    clusterEnd = -Infinity;
+  };
+
+  for (const it of items) {
+    if (it.s >= clusterEnd) flush();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it.end);
+  }
+  flush();
+  return positioned;
+}
 
 type Props = {
   userId: string | null;
@@ -251,82 +314,117 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           </Link>
         )}
 
-        <div className="cald-timeline">
-          {!userId && (
-            <div className="cald-empty">Sign in to see and add events on this day.</div>
-          )}
-          {userId && HOUR_SLOTS.map(slot => {
-            // For sparse hour rows: an item appears in the earliest slot >= its slot index.
-            // Since we don't have times yet, group all items into a synthetic "any time" row after 9 AM.
+        {userId && (() => {
+          const fmtTime = (t: string) => {
+            const [h, m] = t.split(":").map(Number);
+            const ampm = h >= 12 ? "PM" : "AM";
+            const hh = ((h + 11) % 12) + 1;
+            return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
+          };
+          const positioned = layoutTimedEvents(dayItems);
+          const untimed = dayItems.filter(e => !e.start_time);
+
+          const renderBlock = (ev: PositionedEvent) => {
+            const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+            const tint = light ? hexToRgba(ev.color, 0.35) : hexToRgba(ev.color, 0.2);
+            const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+            const timeLabel = ev.end_time
+              ? `${fmtTime(ev.start_time!.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}`
+              : fmtTime(ev.start_time!.slice(0,5));
+            const widthPct = 100 / ev._cols;
+            const leftPct = ev._col * widthPct;
             return (
-              <div key={slot.hour} className="cald-hour" onClick={() => clickHour(slot.hour)}>
-                <div className="cald-hour-label">{slot.label}</div>
-                <div className="cald-hour-track" />
-              </div>
-            );
-          })}
-          {userId && dayItems.length > 0 && (() => {
-            const fmtTime = (t: string) => {
-              const [h, m] = t.split(":").map(Number);
-              const ampm = h >= 12 ? "PM" : "AM";
-              const hh = ((h + 11) % 12) + 1;
-              return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
-            };
-            const timed = dayItems.filter(e => e.start_time);
-            const anytime = dayItems.filter(e => !e.start_time);
-            const renderEvent = (ev: UserEvent) => {
-              const light = LIGHT_BG.has((ev.color || "").toUpperCase());
-              const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
-              const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
-              const timeLabel = ev.start_time
-                ? (ev.end_time ? `${fmtTime(ev.start_time.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}` : fmtTime(ev.start_time.slice(0,5)))
-                : null;
-              return (
-                <button
-                  key={ev.id}
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
-                  className="cald-event"
-                  style={{ background: tint, borderColor: ev.color }}
-                >
-                  <div className="swatch-bar" style={{ background: ev.color }} />
-                  <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-                    <div className="ev-title">
-                      {label}
-                      {ev.item_type === "focus" && (
-                        <span className="ev-tag">focus</span>
-                      )}
-                    </div>
-                    {timeLabel && <div className="ev-time">{timeLabel}</div>}
-                    {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+              <button
+                key={ev.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                className="cald-block"
+                style={{
+                  top: ev._top,
+                  height: ev._height,
+                  left: `calc(${leftPct}% + 2px)`,
+                  width: `calc(${widthPct}% - 4px)`,
+                  background: tint,
+                  borderColor: ev.color,
+                }}
+              >
+                <div className="swatch-bar" style={{ background: ev.color }} />
+                <div className="cald-block-body">
+                  <div className="ev-title">
+                    {label}
+                    {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
-                </button>
-              );
-            };
-            return (
-              <div className="cald-items-overlay">
-                {timed.length > 0 && (
-                  <>
-                    <div className="cald-items-label">Scheduled</div>
-                    {timed.map(renderEvent)}
-                  </>
-                )}
-                {anytime.length > 0 && (
-                  <>
-                    <div className="cald-items-label" style={{ marginTop: timed.length ? 8 : 0 }}>Anytime today</div>
-                    {anytime.map(renderEvent)}
-                  </>
-                )}
-              </div>
+                  <div className="ev-time">{timeLabel}</div>
+                  {ev.notes && ev._height >= 60 && <div className="ev-notes">{ev.notes}</div>}
+                </div>
+              </button>
             );
-          })()}
-          {userId && !itemsQ.isLoading && dayItems.length === 0 && (
-            <div className="cald-empty">
-              <strong>Nothing scheduled.</strong>
-              <div>Tap a time slot or the Add button to add an event or focus item.</div>
-            </div>
-          )}
-        </div>
+          };
+
+          const renderUntimed = (ev: UserEvent) => {
+            const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+            const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
+            const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+            return (
+              <button
+                key={ev.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                className="cald-event"
+                style={{ background: tint, borderColor: ev.color }}
+              >
+                <div className="swatch-bar" style={{ background: ev.color }} />
+                <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+                  <div className="ev-title">
+                    {label}
+                    {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
+                  </div>
+                  {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+                </div>
+              </button>
+            );
+          };
+
+          return (
+            <>
+              <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
+                {HOUR_SLOTS.map(slot => (
+                  <div
+                    key={slot.hour}
+                    className="cald-hour"
+                    style={{ height: HOUR_HEIGHT }}
+                    onClick={() => clickHour(slot.hour)}
+                  >
+                    <div className="cald-hour-label">{slot.label}</div>
+                    <div className="cald-hour-track" />
+                  </div>
+                ))}
+                <div className="cald-blocks" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
+                  {positioned.map(renderBlock)}
+                </div>
+              </div>
+
+              {untimed.length > 0 && (
+                <div className="cald-untimed">
+                  <div className="cald-items-label">Anytime today</div>
+                  {untimed.map(renderUntimed)}
+                </div>
+              )}
+
+              {!itemsQ.isLoading && dayItems.length === 0 && (
+                <div className="cald-empty">
+                  <strong>Nothing scheduled.</strong>
+                  <div>Tap a time slot or the Add button to add an event or focus item.</div>
+                </div>
+              )}
+            </>
+          );
+        })()}
+        {!userId && (
+          <div className="cald-timeline" style={{ padding: 22 }}>
+            <div className="cald-empty">Sign in to see and add events on this day.</div>
+          </div>
+        )}
       </section>
 
       <AddEventDialog
@@ -380,13 +478,22 @@ const CSS = `
 .cald-devbanner .title{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:17px;color:#20201C;}
 .cald-devbanner .chevron{color:#181A4D;opacity:0.35;font-size:16px;}
 
-.cald-timeline{background:#fff;border-radius:18px;padding:6px 0;position:relative;}
-.cald-hour{display:flex;min-height:60px;border-top:1px solid rgba(24,26,77,0.06);cursor:pointer;}
+.cald-timeline{background:#fff;border-radius:18px;padding:6px 0;position:relative;overflow:hidden;}
+.cald-hour{display:flex;border-top:1px solid rgba(24,26,77,0.06);cursor:pointer;box-sizing:border-box;}
 .cald-hour:first-child{border-top:none;}
 .cald-hour:hover{background:rgba(24,26,77,0.03);}
-.cald-hour-label{width:70px;flex-shrink:0;font-size:11.5px;font-weight:600;color:#181A4D;opacity:0.35;padding:8px 0 0 20px;}
-.cald-hour-track{flex:1;padding:6px 16px 6px 6px;}
-.cald-items-overlay{padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;border-top:1px solid rgba(24,26,77,0.06);margin-top:4px;}
+.cald-hour-label{width:70px;flex-shrink:0;font-size:11.5px;font-weight:600;color:#181A4D;opacity:0.35;padding:4px 0 0 20px;}
+.cald-hour-track{flex:1;}
+.cald-blocks{position:absolute;top:6px;left:70px;right:8px;pointer-events:none;}
+.cald-block{position:absolute;pointer-events:auto;display:flex;gap:8px;border-radius:10px;border:1.5px solid transparent;padding:6px 10px;background:transparent;font-family:inherit;cursor:pointer;text-align:left;overflow:hidden;box-sizing:border-box;}
+.cald-block .swatch-bar{width:3px;border-radius:2px;flex-shrink:0;}
+.cald-block-body{min-width:0;flex:1;overflow:hidden;}
+.cald-block .ev-title{font-size:12.5px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cald-block .ev-tag{font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:1px 6px;border-radius:999px;}
+.cald-block .ev-time{font-size:10.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cald-block .ev-notes{font-size:11px;color:#20201C;opacity:0.65;margin-top:2px;overflow:hidden;}
+.cald-untimed{background:#fff;border-radius:16px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
 .cald-event{width:100%;display:flex;align-items:stretch;gap:12px;border-radius:12px;border:1.5px solid transparent;padding:10px 14px;background:transparent;font-family:inherit;cursor:pointer;}
 .cald-event .swatch-bar{width:4px;border-radius:3px;flex-shrink:0;}
