@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
+import { TopicPicker, useAllTopics, type TopicRow } from "@/components/TopicPicker";
 
 export const Route = createFileRoute("/read/$abbr")({
   validateSearch: (search: Record<string, unknown>) => ({
