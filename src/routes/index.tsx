@@ -320,6 +320,8 @@ const CSS = `
 .hp-mast-more{position:relative;flex-shrink:0;}
 .hp-mast-more-btn{background:transparent;border:none;font-family:'Poppins';font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;padding:6px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;}
 .hp-mast-more-btn:hover{background:#FBF8ED;}
+.hp-mast-more-mobile{display:none;}
+@media(max-width:767px){.hp-mast-links{display:none;}.hp-mast-more-desktop{display:none;}.hp-mast-more-mobile{display:inline;}}
 @media(min-width:1100px){.hp-mast-more{display:none;}}
 .hp-mast-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:8px;min-width:200px;z-index:50;display:flex;flex-direction:column;}
 .hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
@@ -537,11 +539,13 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             aria-haspopup="menu"
             aria-expanded={moreOpen}
           >
-            More <span aria-hidden>▾</span>
+            <span className="hp-mast-more-desktop">More</span>
+            <span className="hp-mast-more-mobile">Topics</span>
+            <span aria-hidden>▾</span>
           </button>
           {moreOpen && (
             <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-              {list.map((t) => (
+              {(topicsQ.data ?? []).map((t) => (
                 <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
                   {t.display_name || t.name}
                 </Link>
