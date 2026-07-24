@@ -327,3 +327,124 @@ function ReadLibrary() {
     </AppShell>
   );
 }
+
+function RecentStudyCard({
+  entry,
+  fmtDate,
+}: {
+  entry: RecentEntry;
+  fmtDate: (d: string | null) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const saveTimer = useRef<number | null>(null);
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      const t = window.setTimeout(() => taRef.current?.focus(), 60);
+      return () => window.clearTimeout(t);
+    }
+  }, [open]);
+
+  const saveNote = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const scheduleSave = (val: string) => {
+    setNote(val);
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
+  };
+
+  return (
+    <div
+      className="rd-card"
+      role="button"
+      tabIndex={0}
+      onClick={() => setOpen((o) => !o)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen((o) => !o);
+        }
+      }}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="rd-card-top" onClick={(e) => e.stopPropagation()}>
+        <span className="rd-pill">Read</span>
+        <Link
+          to="/devotionals/$id"
+          params={{ id: "default" }}
+          search={{ date: entry.entry_date ?? undefined } as any}
+          className="rd-focus"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
+          </svg>
+          Focus
+        </Link>
+      </div>
+      <h3 className="rd-card-title">
+        {entry.entry_title || entry.scripture_reference || "Untitled study"}
+      </h3>
+      <div className="rd-card-meta">
+        {entry.book_of_bible ?? ""}
+        {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
+      </div>
+
+      {!open ? (
+        entry.scripture_text ? (
+          <div className="rd-card-snip">{entry.scripture_text}</div>
+        ) : (
+          <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
+            Click to add a note…
+          </div>
+        )
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          <textarea
+            ref={taRef}
+            value={note}
+            placeholder="Add a note from your reading…"
+            onChange={(e) => scheduleSave(e.target.value)}
+            onBlur={() => {
+              if (saveTimer.current) {
+                window.clearTimeout(saveTimer.current);
+                saveTimer.current = null;
+              }
+              if ((entry.scripture_text ?? "") !== note) saveNote(note);
+            }}
+            style={{
+              width: "100%",
+              minHeight: 180,
+              resize: "vertical",
+              border: "1px solid #ECE4CE",
+              background: "#FBF8ED",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontFamily: "inherit",
+              fontSize: 14,
+              lineHeight: 1.55,
+              color: "#20201C",
+            }}
+          />
+          <div style={{ fontSize: 11, color: "#8a8879", marginTop: 6, minHeight: 14 }}>
+            {status === "saving" && "Saving…"}
+            {status === "saved" && "Saved"}
+            {status === "error" && "Couldn't save"}
+            {!status && "Click card again to collapse"}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
