@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 
 export const Route = createFileRoute("/read/$abbr")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    entry: typeof search.entry === "string" ? search.entry : undefined,
+  }),
   head: ({ params }) => ({
     meta: [
       { title: `${params.abbr} — Your entries on CoCreate` },
@@ -54,6 +57,7 @@ function fmtDate(d: string | null) {
 
 function BookDetail() {
   const { abbr } = Route.useParams();
+  const { entry: focusEntryId } = Route.useSearch();
   const qc = useQueryClient();
   const booksQ = useBibleBooks();
   const topicsQ = useTopics();
@@ -90,8 +94,10 @@ function BookDetail() {
       <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
         <style>{`
           .rb-wrap{max-width:1280px;margin:0 auto;padding:28px 32px 96px;font-family:'Poppins',sans-serif;color:#20201C;}
-          .rb-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#0F4A42;font-weight:800;text-decoration:none;}
-          .rb-back:hover{color:#0a332d;}
+          .rb-nav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+          .rb-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#0F4A42;font-weight:800;text-decoration:none;background:#fff;border:1.5px solid #ECE4CE;border-radius:999px;padding:8px 14px;}
+          .rb-back:hover{border-color:#FFAE00;color:#0a332d;}
+          .rb-card.focus{border-color:#FFAE00;box-shadow:0 0 0 3px rgba(255,174,0,.18);}
           .rb-tag{
             display:inline-flex;align-items:center;margin:28px 0 14px;
             background:#FFAE00;color:#20201C;font-size:12px;font-weight:800;
@@ -164,7 +170,10 @@ function BookDetail() {
         `}</style>
 
         <div className="rb-wrap">
-          <Link to="/read" className="rb-back">‹ Read</Link>
+          <div className="rb-nav">
+            <Link to="/read" className="rb-back">‹ All books</Link>
+            <Link to="/notes" className="rb-back">All studies</Link>
+          </div>
           <div className="rb-tag">{abbr}</div>
           <h1 className="rb-h1">{fullName}</h1>
           <div className="rb-count">
@@ -185,6 +194,7 @@ function BookDetail() {
                   entry={e}
                   topicsById={topicsById}
                   allTopics={topicsQ.data ?? []}
+                  autoFocus={focusEntryId === e.id}
                   onChanged={() => qc.invalidateQueries({ queryKey: ["read-book-entries", abbr] })}
                 />
               ))}
@@ -201,11 +211,13 @@ function EntryCard({
   topicsById,
   allTopics,
   onChanged,
+  autoFocus = false,
 }: {
   entry: Entry;
   topicsById: Map<string, Topic>;
   allTopics: Topic[];
   onChanged: () => void;
+  autoFocus?: boolean;
 }) {
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
@@ -214,6 +226,17 @@ function EntryCard({
   const [query, setQuery] = useState("");
   const saveTimer = useRef<number | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const noteRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const t = window.setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      noteRef.current?.focus();
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [autoFocus]);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -271,7 +294,7 @@ function EntryCard({
     .filter((t): t is Topic => !!t);
 
   return (
-    <div className="rb-card">
+    <div className={`rb-card${autoFocus ? " focus" : ""}`} ref={cardRef}>
       <div className="rb-card-top">
         <div className="rb-pills">
           <span className="rb-pill daily">Read</span>
@@ -304,6 +327,7 @@ function EntryCard({
 
       <div className="rb-note-lbl">Read note</div>
       <textarea
+        ref={noteRef}
         className="rb-note"
         value={note}
         placeholder="Add a note from your reading…"
