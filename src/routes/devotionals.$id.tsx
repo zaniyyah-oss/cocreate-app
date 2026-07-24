@@ -1684,6 +1684,19 @@ export function AddEventDialog({
               style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
           </label>
 
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+              Start time <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: 600, color: "#181A4D" }}>
+              End time <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14 }} />
+            </label>
+          </div>
+
           {!isFocus && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
