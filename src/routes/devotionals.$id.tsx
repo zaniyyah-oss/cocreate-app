@@ -933,6 +933,16 @@ function EntryPage() {
                       />
                       {statusRow("further_reading_text")}
                     </div>
+                    <div className="de-read-part" style={{ paddingTop: 4 }}>
+                      <TopicPicker
+                        value={topicIds}
+                        disabled={!userId}
+                        onChange={(next) => {
+                          setTopicIds(next);
+                          scheduleSave("topic_ids", next);
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Pray */}
