@@ -194,6 +194,7 @@ function BookDetail() {
                   entry={e}
                   topicsById={topicsById}
                   allTopics={topicsQ.data ?? []}
+                  autoFocus={focusEntryId === e.id}
                   onChanged={() => qc.invalidateQueries({ queryKey: ["read-book-entries", abbr] })}
                 />
               ))}
