@@ -46,7 +46,8 @@ function BookDetail() {
   const { entry: focusEntryId } = Route.useSearch();
   const qc = useQueryClient();
   const booksQ = useBibleBooks();
-  const topicsQ = useTopics();
+  const topicsQ = useAllTopics();
+  const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const book = (booksQ.data ?? []).find((b) => b.abbreviation === abbr);
   const topicsById = useMemo(() => {
     const m = new Map<string, Topic>();
