@@ -211,11 +211,13 @@ function EntryCard({
   topicsById,
   allTopics,
   onChanged,
+  autoFocus = false,
 }: {
   entry: Entry;
   topicsById: Map<string, Topic>;
   allTopics: Topic[];
   onChanged: () => void;
+  autoFocus?: boolean;
 }) {
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
@@ -224,6 +226,17 @@ function EntryCard({
   const [query, setQuery] = useState("");
   const saveTimer = useRef<number | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const noteRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const t = window.setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      noteRef.current?.focus();
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [autoFocus]);
 
   useEffect(() => {
     if (!pickerOpen) return;
