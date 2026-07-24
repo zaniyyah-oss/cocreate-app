@@ -318,10 +318,14 @@ function ReadLibrary() {
         /* Topics section */
         .rd-topics-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;}
         .rd-topics-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:44px;}
-        .rd-topic-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid transparent;cursor:pointer;font-family:inherit;transition:transform .08s ease, box-shadow .08s ease;}
+        .rd-topic-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 4px 4px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid transparent;cursor:default;font-family:inherit;transition:transform .08s ease, box-shadow .08s ease;}
         .rd-topic-pill:hover{transform:translateY(-1px);}
         .rd-topic-pill.on{box-shadow:0 0 0 2px #FBF8ED, 0 0 0 4px #181A4D;}
+        .rd-topic-pill.deleting{opacity:.5;pointer-events:none;}
+        .rd-topic-pill-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;outline:none;}
         .rd-topic-pill .count{background:rgba(255,255,255,.35);color:inherit;font-size:10px;padding:2px 7px;border-radius:999px;min-width:18px;text-align:center;}
+        .rd-topic-delete{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;border:none;background:transparent;color:inherit;font-size:16px;line-height:1;cursor:pointer;padding:0;opacity:.55;transition:opacity .12s, background .12s;}
+        .rd-topic-delete:hover{opacity:1;background:rgba(0,0,0,0.12);}
         .rd-topic-add{border:1.5px dashed #ECE4CE;background:transparent;color:#8a8879;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;}
         .rd-topic-add:hover{border-color:#FFAE00;color:#20201C;}
         .rd-topic-form{background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:520px;}
@@ -445,6 +449,7 @@ function ReadLibrary() {
               cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
             )
           }
+          onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
         />
 
 
@@ -890,17 +895,33 @@ function TopicsSection({
   entries,
   selectedIds,
   onToggle,
+  onDelete,
 }: {
   topics: TopicRow[];
   entries: RecentEntry[];
   selectedIds: string[];
   onToggle: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
   const qc = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState<BrandColorKey>("amber");
   const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data?.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        const { data: role } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+        if (role) setIsAdmin(true);
+      }
+    });
+  }, []);
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
@@ -940,10 +961,11 @@ function TopicsSection({
       const baseSlug = slugify(n) || `topic-${Date.now()}`;
       let slug = baseSlug;
       for (let i = 2; topics.some((t) => t.slug === slug); i++) slug = `${baseSlug}-${i}`;
+      const { data: userRes } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("topics")
-        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500 } as any)
-        .select("id,name,slug,display_name,color_key,sort_order")
+        .insert({ name: n, slug, display_name: n, color_key: color, sort_order: 500, created_by: userRes?.user?.id } as any)
+        .select("id,name,slug,display_name,color_key,sort_order,created_by")
         .single();
       if (error) throw error;
       qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => [...(cur ?? []), data as TopicRow]);
@@ -954,6 +976,32 @@ function TopicsSection({
       console.error("create topic failed", e);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteTopic = async (id: string) => {
+    const t = topics.find((x) => x.id === id);
+    if (!t || deletingId) return;
+    const label = t.display_name ?? t.name;
+    const count = counts.get(id) ?? 0;
+    const confirmMsg = count > 0
+      ? `Delete “${label}”? It will be removed from ${count} study${count === 1 ? "" : "ies"}.`
+      : `Delete “${label}”?`;
+    if (!window.confirm(confirmMsg)) return;
+    setDeletingId(id);
+    try {
+      const { error } = await supabase.from("topics").delete().eq("id", id);
+      if (error) throw error;
+      qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => (cur ?? []).filter((x) => x.id !== id));
+      qc.invalidateQueries({ queryKey: ["all-topics"] });
+      qc.invalidateQueries({ queryKey: ["read-recent-studies"] });
+      qc.invalidateQueries({ queryKey: ["hp-topics"] });
+      onDelete?.(id);
+    } catch (e) {
+      console.error("delete topic failed", e);
+      alert("Could not delete topic.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -975,17 +1023,37 @@ function TopicsSection({
           const bc = brandColor(t.color_key) ?? brandColor("amber")!;
           const on = selectedIds.includes(t.id);
           const n = counts.get(t.id) ?? 0;
+          const canDelete = userId && (t.created_by === userId || isAdmin);
+          const isDeleting = deletingId === t.id;
           return (
-            <button
+            <div
               key={t.id}
-              type="button"
-              className={`rd-topic-pill ${on ? "on" : ""}`}
+              className={`rd-topic-pill ${on ? "on" : ""} ${isDeleting ? "deleting" : ""}`}
               style={{ background: bc.hex, color: bc.onHex, borderColor: bc.hex }}
-              onClick={() => onToggle(t.id)}
             >
-              {t.display_name ?? t.name}
-              {n > 0 && <span className="count">{n}</span>}
-            </button>
+              <span
+                className="rd-topic-pill-toggle"
+                role="button"
+                tabIndex={0}
+                onClick={() => onToggle(t.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(t.id); } }}
+              >
+                {t.display_name ?? t.name}
+                {n > 0 && <span className="count">{n}</span>}
+              </span>
+              {canDelete && (
+                <button
+                  type="button"
+                  className="rd-topic-delete"
+                  aria-label={`Delete ${t.display_name ?? t.name}`}
+                  title={`Delete ${t.display_name ?? t.name}`}
+                  disabled={isDeleting}
+                  onClick={(e) => { e.stopPropagation(); void deleteTopic(t.id); }}
+                >
+                  {isDeleting ? "…" : "×"}
+                </button>
+              )}
+            </div>
           );
         })}
         {creating && (

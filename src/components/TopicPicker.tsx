@@ -9,6 +9,7 @@ export type TopicRow = {
   display_name: string | null;
   color_key: string | null;
   sort_order?: number | null;
+  created_by?: string | null;
 };
 
 // Home-page "primary" topics (surfaced first in the picker).
@@ -28,7 +29,7 @@ export function useAllTopics() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id,name,slug,display_name,color_key,sort_order")
+        .select("id,name,slug,display_name,color_key,sort_order,created_by")
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
@@ -137,6 +138,7 @@ export function TopicPicker({
       // Ensure slug uniqueness by appending a suffix if needed.
       let slug = baseSlug;
       for (let i = 2; sorted.some((t) => t.slug === slug); i++) slug = `${baseSlug}-${i}`;
+      const { data: userRes } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("topics")
         .insert({
@@ -145,8 +147,9 @@ export function TopicPicker({
           display_name: name,
           color_key: "amber",
           sort_order: 500,
+          created_by: userRes?.user?.id,
         } as any)
-        .select("id,name,slug,display_name,color_key,sort_order")
+        .select("id,name,slug,display_name,color_key,sort_order,created_by")
         .single();
       if (error) throw error;
       qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => [...(cur ?? []), data as TopicRow]);
