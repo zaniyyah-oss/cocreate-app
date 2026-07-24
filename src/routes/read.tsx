@@ -28,9 +28,18 @@ type RecentEntry = {
   scripture_reference: string | null;
   scripture_text: string | null;
   book_of_bible: string | null;
+  books_of_bible: string[] | null;
   topic_ids: string[] | null;
 };
 
+function entryBooks(e: {
+  book_of_bible: string | null;
+  books_of_bible: string[] | null;
+}): string[] {
+  const arr = Array.isArray(e.books_of_bible) ? e.books_of_bible : [];
+  if (arr.length > 0) return arr;
+  return e.book_of_bible ? [e.book_of_bible] : [];
+}
 
 function useConfirmedCounts() {
   return useQuery({
@@ -41,16 +50,14 @@ function useConfirmedCounts() {
       if (!uid) return {} as Record<string, number>;
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("book_of_bible")
+        .select("book_of_bible,books_of_bible")
         .eq("user_id", uid)
-        .eq("book_confirmed", true)
-        .not("book_of_bible", "is", null);
+        .eq("book_confirmed", true);
       if (error) throw error;
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
-        const k = (row as any).book_of_bible as string | null;
-        if (!k) continue;
-        counts[k] = (counts[k] ?? 0) + 1;
+        const books = entryBooks(row as any);
+        for (const k of books) counts[k] = (counts[k] ?? 0) + 1;
       }
       return counts;
     },
@@ -67,14 +74,13 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,book_confirmed,topic_ids")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
         .eq("book_confirmed", true)
-        .not("book_of_bible", "is", null)
         .order("entry_date", { ascending: false })
         .limit(60);
       if (error) throw error;
-      return (data ?? []) as RecentEntry[];
+      return ((data ?? []) as RecentEntry[]).filter((e) => entryBooks(e).length > 0);
     },
     staleTime: 30_000,
   });
@@ -112,8 +118,8 @@ function ReadLibrary() {
     const s = new Set<string>();
     for (const e of recent) {
       const ids = e.topic_ids ?? [];
-      if (filterTopicIds.every((t) => ids.includes(t)) && e.book_of_bible) {
-        s.add(e.book_of_bible);
+      if (filterTopicIds.every((t) => ids.includes(t))) {
+        for (const b of entryBooks(e)) s.add(b);
       }
     }
     return s;
@@ -152,9 +158,16 @@ function ReadLibrary() {
     if (listSort === "book") {
       const map = new Map<string, RecentEntry[]>();
       for (const e of filteredRecent) {
-        const k = e.book_of_bible ?? "—";
-        if (!map.has(k)) map.set(k, []);
-        map.get(k)!.push(e);
+        const books = entryBooks(e);
+        if (books.length === 0) {
+          if (!map.has("—")) map.set("—", []);
+          map.get("—")!.push(e);
+        } else {
+          for (const k of books) {
+            if (!map.has(k)) map.set(k, []);
+            map.get(k)!.push(e);
+          }
+        }
       }
       return Array.from(map.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
@@ -487,7 +500,7 @@ function ReadLibrary() {
       {openEntry && (
         <FullScreenNote
           entry={openEntry}
-          bookFullName={bookFullName.get(openEntry.book_of_bible ?? "") ?? openEntry.book_of_bible ?? ""}
+          bookFullName={entryBooks(openEntry).map((b) => bookFullName.get(b) ?? b).join(" · ")}
           onClose={() => setOpenEntry(null)}
         />
       )}
@@ -540,7 +553,7 @@ function ListView({
                       <span className="rd-list-date">{fmtDate(e.entry_date)}</span>
                     </div>
                     <div className="rd-list-meta">
-                      {bookFullName.get(e.book_of_bible ?? "") ?? e.book_of_bible ?? ""}
+                      {entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
                     </div>
                     {preview && <div className="rd-list-preview">{preview}</div>}
                   </button>
@@ -557,7 +570,7 @@ function ListView({
           <DetailPane
             entry={selected}
             fmtDate={fmtDate}
-            bookFullName={bookFullName.get(selected.book_of_bible ?? "") ?? selected.book_of_bible ?? ""}
+            bookFullName={entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
             onOpen={() => onOpen(selected)}
           />
         )}
@@ -820,7 +833,7 @@ function RecentStudyCard({
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
       <div className="rd-card-meta">
-        {entry.book_of_bible ?? ""}
+        {entryBooks(entry).join(" · ")}
         {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
       </div>
 

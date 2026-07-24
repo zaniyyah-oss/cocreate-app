@@ -346,6 +346,7 @@ type SaveField =
   | "book_of_bible"
   | "book_source"
   | "book_confirmed"
+  | "books_of_bible"
   | "topic_ids";
 
 
@@ -481,6 +482,7 @@ function EntryPage() {
   const [bookOfBible, setBookOfBible] = useState<string | null>(null);
   const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
   const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
+  const [booksOfBible, setBooksOfBible] = useState<string[]>([]);
   const [topicIds, setTopicIds] = useState<string[]>([]);
 
 
@@ -543,6 +545,9 @@ function EntryPage() {
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
+    const arr = Array.isArray((e as any)?.books_of_bible) ? ((e as any).books_of_bible as string[]) : [];
+    const fallback = ((e as any)?.book_confirmed && (e as any)?.book_of_bible) ? [(e as any).book_of_bible as string] : [];
+    setBooksOfBible(arr.length > 0 ? arr : fallback);
     setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -893,20 +898,35 @@ function EntryPage() {
                       {focusBtn("read")}
                     </div>
                     <BookTagger
-                      value={bookOfBible}
-                      source={bookSource}
-                      confirmed={bookConfirmed}
+                      values={booksOfBible}
+                      suggestion={
+                        booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
+                          ? bookOfBible
+                          : null
+                      }
                       disabled={!userId}
-                      onSetManual={(abbr) => {
-                        setBookOfBible(abbr);
+                      onToggle={(abbr: string) => {
+                        const next = booksOfBible.includes(abbr)
+                          ? booksOfBible.filter((b) => b !== abbr)
+                          : [...booksOfBible, abbr];
+                        setBooksOfBible(next);
+                        const primary = next[0] ?? null;
+                        setBookOfBible(primary);
                         setBookSource("manual");
-                        setBookConfirmed(true);
-                        scheduleSave("book_of_bible", abbr);
+                        setBookConfirmed(next.length > 0);
+                        scheduleSave("books_of_bible", next);
+                        scheduleSave("book_of_bible", primary);
                         scheduleSave("book_source", "manual");
-                        scheduleSave("book_confirmed", true);
+                        scheduleSave("book_confirmed", next.length > 0);
                       }}
-                      onConfirm={() => {
+                      onConfirmSuggestion={() => {
+                        if (!bookOfBible) return;
+                        const next = booksOfBible.includes(bookOfBible)
+                          ? booksOfBible
+                          : [...booksOfBible, bookOfBible];
+                        setBooksOfBible(next);
                         setBookConfirmed(true);
+                        scheduleSave("books_of_bible", next);
                         scheduleSave("book_confirmed", true);
                       }}
                     />
