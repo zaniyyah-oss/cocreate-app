@@ -23,7 +23,7 @@ function buildMobileNav(labels: Record<string, string>) {
     { key: "read" as const,        label: labels.read_label        || "Read",      to: "/read" },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals" },
     { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes" },
-    { key: "explore" as const,     label: labels.explore_label     || "Bookmarks", to: "/explore" },
+    { key: "saved" as const,       label: labels.saved_label       || "Saved",     to: "/explore" },
   ];
 }
 
