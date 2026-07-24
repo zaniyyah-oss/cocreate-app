@@ -302,6 +302,13 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                   >
                     {ICON.book}<span className="lbl">Read</span>
                   </Link>
+                  <Link
+                    to="/notes"
+                    className={`app-side-item${pathname === "/notes" || pathname.startsWith("/notes/") ? " active" : ""}`}
+                    title={collapsed ? "Notes" : undefined}
+                  >
+                    {ICON.notes}<span className="lbl">Notes</span>
+                  </Link>
                   {item}
                 </Fragment>
               );
