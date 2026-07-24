@@ -100,6 +100,9 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         arr.push(row);
         map.set(row.event_date, arr);
       }
+      for (const arr of map.values()) {
+        arr.sort((a, b) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
+      }
       return map;
     },
   });
