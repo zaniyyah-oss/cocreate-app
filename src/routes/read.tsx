@@ -27,6 +27,7 @@ type RecentEntry = {
   scripture_reference: string | null;
   scripture_text: string | null;
   book_of_bible: string | null;
+  topic_ids: string[] | null;
 };
 
 
