@@ -879,7 +879,26 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
+                    <BookTagger
+                      value={bookOfBible}
+                      source={bookSource}
+                      confirmed={bookConfirmed}
+                      disabled={!userId}
+                      onSetManual={(abbr) => {
+                        setBookOfBible(abbr);
+                        setBookSource("manual");
+                        setBookConfirmed(true);
+                        scheduleSave("book_of_bible", abbr);
+                        scheduleSave("book_source", "manual");
+                        scheduleSave("book_confirmed", true);
+                      }}
+                      onConfirm={() => {
+                        setBookConfirmed(true);
+                        scheduleSave("book_confirmed", true);
+                      }}
+                    />
                     <div className="de-read-part">
+                      {/* preserve original wrapper start */}
                       <input
                         className="de-scr-ref"
                         placeholder="What scripture are you reading today?"
