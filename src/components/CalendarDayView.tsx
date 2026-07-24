@@ -45,9 +45,10 @@ type Props = {
   initialDate?: string;
   defaultTemplateId?: string | null;
   showTopTabs?: boolean;
+  onDateChange?: (iso: string) => void;
 };
 
-export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Props) {
+export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDateChange }: Props) {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Date>(() => {
     if (initialDate) return new Date(initialDate + "T00:00:00");
@@ -57,6 +58,11 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId }: Prop
     if (initialDate) setSelected(new Date(initialDate + "T00:00:00"));
   }, [initialDate]);
   const selectedISO = isoDate(selected);
+
+  const pickDate = (d: Date) => {
+    setSelected(d);
+    onDateChange?.(isoDate(d));
+  };
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
