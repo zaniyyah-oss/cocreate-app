@@ -122,10 +122,18 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   }, [initialDate]);
   const selectedISO = isoDate(selected);
 
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
   const pickDate = (d: Date) => {
     setSelected(d);
     onDateChange?.(isoDate(d));
   };
+
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
