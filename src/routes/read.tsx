@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
+import { stripHtml } from "@/components/RichTextField";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
