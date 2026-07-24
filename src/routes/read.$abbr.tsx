@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 
 export const Route = createFileRoute("/read/$abbr")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    entry: typeof search.entry === "string" ? search.entry : undefined,
+  }),
   head: ({ params }) => ({
     meta: [
       { title: `${params.abbr} — Your entries on CoCreate` },
