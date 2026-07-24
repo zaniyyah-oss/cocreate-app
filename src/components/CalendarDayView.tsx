@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,10 +122,18 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   }, [initialDate]);
   const selectedISO = isoDate(selected);
 
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
   const pickDate = (d: Date) => {
     setSelected(d);
     onDateChange?.(isoDate(d));
   };
+
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
@@ -385,6 +393,17 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             );
           };
 
+          const isToday = selectedISO === isoDate(new Date());
+          const nowMin = now ? now.getHours() * 60 + now.getMinutes() : 0;
+          const startMin = START_HOUR * 60;
+          const endMin = END_HOUR * 60;
+          const showCurrentLine = isToday && now && nowMin >= startMin && nowMin <= endMin;
+          const currentTop = ((nowMin - startMin) / 60) * HOUR_HEIGHT + 6;
+          const currentLabel = now
+            ? now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+            : "";
+
+
           return (
             <>
               <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
@@ -402,7 +421,13 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="cald-blocks" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
                   {positioned.map(renderBlock)}
                 </div>
+                {showCurrentLine && (
+                  <div className="cald-current-line" style={{ top: currentTop }}>
+                    <span className="cald-current-label">{currentLabel}</span>
+                  </div>
+                )}
               </div>
+
 
               {untimed.length > 0 && (
                 <div className="cald-untimed">
@@ -492,6 +517,9 @@ const CSS = `
 .cald-block .ev-tag{font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:1px 6px;border-radius:999px;}
 .cald-block .ev-time{font-size:10.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cald-block .ev-notes{font-size:11px;color:#20201C;opacity:0.65;margin-top:2px;overflow:hidden;}
+.cald-current-line{position:absolute;left:70px;right:8px;height:0;border-top:1.5px solid #E94560;pointer-events:none;z-index:10;}
+.cald-current-line::before{content:'';position:absolute;left:-6px;top:-3.5px;width:7px;height:7px;border-radius:50%;background:#E94560;}
+.cald-current-label{position:absolute;left:-54px;top:-10px;font-size:9.5px;font-weight:700;color:#E94560;background:#fff;padding:1px 5px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);max-width:48px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 .cald-untimed{background:#fff;border-radius:16px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
