@@ -490,6 +490,7 @@ export type Database = {
           book_confirmed: boolean
           book_of_bible: string | null
           book_source: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible: string[]
           created_at: string
           entry_date: string
           entry_subtitle: string | null
@@ -513,6 +514,7 @@ export type Database = {
           book_confirmed?: boolean
           book_of_bible?: string | null
           book_source?: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible?: string[]
           created_at?: string
           entry_date?: string
           entry_subtitle?: string | null
@@ -536,6 +538,7 @@ export type Database = {
           book_confirmed?: boolean
           book_of_bible?: string | null
           book_source?: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible?: string[]
           created_at?: string
           entry_date?: string
           entry_subtitle?: string | null
