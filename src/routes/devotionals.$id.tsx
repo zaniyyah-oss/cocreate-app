@@ -1591,6 +1591,8 @@ export function AddEventDialog({
       setTitle(event.title ?? "");
       setColor(event.color || OTHER_DEFAULT_COLOR);
       setNotes(event.notes ?? "");
+      setStartTime((event.start_time ?? "").slice(0, 5));
+      setEndTime((event.end_time ?? "").slice(0, 5));
     } else {
       setDate(defaultDate);
       setItemType(defaultItemType ?? "event");
@@ -1599,6 +1601,8 @@ export function AddEventDialog({
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
+      setStartTime("");
+      setEndTime("");
     }
     setErr(null);
   }, [open, defaultDate, event, defaultItemType]);
@@ -1612,6 +1616,7 @@ export function AddEventDialog({
   const save = async () => {
     if (!userId) { setErr("Please sign in to save."); return; }
     if (isOther && !title.trim()) { setErr(isFocus ? "Add a name for this focus item." : "Add a name for this event."); return; }
+    if (startTime && endTime && endTime <= startTime) { setErr("End time must be after start time."); return; }
     setSaving(true); setErr(null);
     const payload = {
       event_date: date,
@@ -1620,6 +1625,8 @@ export function AddEventDialog({
       color: resolvedColor,
       notes: notes.trim() || null,
       item_type: itemType,
+      start_time: startTime || null,
+      end_time: endTime || null,
     };
     let error;
     if (isEdit && event) {
