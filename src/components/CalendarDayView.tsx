@@ -314,82 +314,117 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           </Link>
         )}
 
-        <div className="cald-timeline">
-          {!userId && (
-            <div className="cald-empty">Sign in to see and add events on this day.</div>
-          )}
-          {userId && HOUR_SLOTS.map(slot => {
-            // For sparse hour rows: an item appears in the earliest slot >= its slot index.
-            // Since we don't have times yet, group all items into a synthetic "any time" row after 9 AM.
+        {userId && (() => {
+          const fmtTime = (t: string) => {
+            const [h, m] = t.split(":").map(Number);
+            const ampm = h >= 12 ? "PM" : "AM";
+            const hh = ((h + 11) % 12) + 1;
+            return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
+          };
+          const positioned = layoutTimedEvents(dayItems);
+          const untimed = dayItems.filter(e => !e.start_time);
+
+          const renderBlock = (ev: PositionedEvent) => {
+            const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+            const tint = light ? hexToRgba(ev.color, 0.35) : hexToRgba(ev.color, 0.2);
+            const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+            const timeLabel = ev.end_time
+              ? `${fmtTime(ev.start_time!.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}`
+              : fmtTime(ev.start_time!.slice(0,5));
+            const widthPct = 100 / ev._cols;
+            const leftPct = ev._col * widthPct;
             return (
-              <div key={slot.hour} className="cald-hour" onClick={() => clickHour(slot.hour)}>
-                <div className="cald-hour-label">{slot.label}</div>
-                <div className="cald-hour-track" />
-              </div>
-            );
-          })}
-          {userId && dayItems.length > 0 && (() => {
-            const fmtTime = (t: string) => {
-              const [h, m] = t.split(":").map(Number);
-              const ampm = h >= 12 ? "PM" : "AM";
-              const hh = ((h + 11) % 12) + 1;
-              return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
-            };
-            const timed = dayItems.filter(e => e.start_time);
-            const anytime = dayItems.filter(e => !e.start_time);
-            const renderEvent = (ev: UserEvent) => {
-              const light = LIGHT_BG.has((ev.color || "").toUpperCase());
-              const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
-              const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
-              const timeLabel = ev.start_time
-                ? (ev.end_time ? `${fmtTime(ev.start_time.slice(0,5))} – ${fmtTime(ev.end_time.slice(0,5))}` : fmtTime(ev.start_time.slice(0,5)))
-                : null;
-              return (
-                <button
-                  key={ev.id}
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
-                  className="cald-event"
-                  style={{ background: tint, borderColor: ev.color }}
-                >
-                  <div className="swatch-bar" style={{ background: ev.color }} />
-                  <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-                    <div className="ev-title">
-                      {label}
-                      {ev.item_type === "focus" && (
-                        <span className="ev-tag">focus</span>
-                      )}
-                    </div>
-                    {timeLabel && <div className="ev-time">{timeLabel}</div>}
-                    {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+              <button
+                key={ev.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                className="cald-block"
+                style={{
+                  top: ev._top,
+                  height: ev._height,
+                  left: `calc(${leftPct}% + 2px)`,
+                  width: `calc(${widthPct}% - 4px)`,
+                  background: tint,
+                  borderColor: ev.color,
+                }}
+              >
+                <div className="swatch-bar" style={{ background: ev.color }} />
+                <div className="cald-block-body">
+                  <div className="ev-title">
+                    {label}
+                    {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
-                </button>
-              );
-            };
-            return (
-              <div className="cald-items-overlay">
-                {timed.length > 0 && (
-                  <>
-                    <div className="cald-items-label">Scheduled</div>
-                    {timed.map(renderEvent)}
-                  </>
-                )}
-                {anytime.length > 0 && (
-                  <>
-                    <div className="cald-items-label" style={{ marginTop: timed.length ? 8 : 0 }}>Anytime today</div>
-                    {anytime.map(renderEvent)}
-                  </>
-                )}
-              </div>
+                  <div className="ev-time">{timeLabel}</div>
+                  {ev.notes && ev._height >= 60 && <div className="ev-notes">{ev.notes}</div>}
+                </div>
+              </button>
             );
-          })()}
-          {userId && !itemsQ.isLoading && dayItems.length === 0 && (
-            <div className="cald-empty">
-              <strong>Nothing scheduled.</strong>
-              <div>Tap a time slot or the Add button to add an event or focus item.</div>
-            </div>
-          )}
-        </div>
+          };
+
+          const renderUntimed = (ev: UserEvent) => {
+            const light = LIGHT_BG.has((ev.color || "").toUpperCase());
+            const tint = light ? hexToRgba(ev.color, 0.28) : hexToRgba(ev.color, 0.16);
+            const label = ev.event_type === "other" ? (ev.title?.trim() || (ev.item_type === "focus" ? "Focus" : "Event")) : EVENT_LABEL[ev.event_type];
+            return (
+              <button
+                key={ev.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                className="cald-event"
+                style={{ background: tint, borderColor: ev.color }}
+              >
+                <div className="swatch-bar" style={{ background: ev.color }} />
+                <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+                  <div className="ev-title">
+                    {label}
+                    {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
+                  </div>
+                  {ev.notes && <div className="ev-notes">{ev.notes}</div>}
+                </div>
+              </button>
+            );
+          };
+
+          return (
+            <>
+              <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
+                {HOUR_SLOTS.map(slot => (
+                  <div
+                    key={slot.hour}
+                    className="cald-hour"
+                    style={{ height: HOUR_HEIGHT }}
+                    onClick={() => clickHour(slot.hour)}
+                  >
+                    <div className="cald-hour-label">{slot.label}</div>
+                    <div className="cald-hour-track" />
+                  </div>
+                ))}
+                <div className="cald-blocks" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
+                  {positioned.map(renderBlock)}
+                </div>
+              </div>
+
+              {untimed.length > 0 && (
+                <div className="cald-untimed">
+                  <div className="cald-items-label">Anytime today</div>
+                  {untimed.map(renderUntimed)}
+                </div>
+              )}
+
+              {!itemsQ.isLoading && dayItems.length === 0 && (
+                <div className="cald-empty">
+                  <strong>Nothing scheduled.</strong>
+                  <div>Tap a time slot or the Add button to add an event or focus item.</div>
+                </div>
+              )}
+            </>
+          );
+        })()}
+        {!userId && (
+          <div className="cald-timeline" style={{ padding: 22 }}>
+            <div className="cald-empty">Sign in to see and add events on this day.</div>
+          </div>
+        )}
       </section>
 
       <AddEventDialog
