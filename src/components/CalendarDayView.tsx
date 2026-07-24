@@ -392,6 +392,7 @@ const CSS = `
 .cald-event .swatch-bar{width:4px;border-radius:3px;flex-shrink:0;}
 .cald-event .ev-title{font-size:14px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:8px;}
 .cald-event .ev-tag{font-size:9.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:2px 7px;border-radius:999px;}
+.cald-event .ev-time{font-size:11.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:2px;}
 .cald-event .ev-notes{font-size:12px;color:#20201C;opacity:0.65;margin-top:2px;overflow-wrap:anywhere;}
 .cald-empty{padding:22px 8px;text-align:center;color:#8a8678;font-size:13px;}
 .cald-empty strong{display:block;color:#181A4D;font-size:14px;font-weight:800;margin-bottom:4px;}
