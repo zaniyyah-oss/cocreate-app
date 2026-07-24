@@ -9,6 +9,7 @@ import { ResizableTextarea } from "@/components/ResizableTextarea";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
+import { BookTagger } from "@/components/BookTagger";
 
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
@@ -340,7 +341,10 @@ type SaveField =
   | "todo_text"
   | "todo_items"
   | "entry_title"
-  | "entry_subtitle";
+  | "entry_subtitle"
+  | "book_of_bible"
+  | "book_source"
+  | "book_confirmed";
 
 
 function NavMenu() {
@@ -472,6 +476,9 @@ function EntryPage() {
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
+  const [bookOfBible, setBookOfBible] = useState<string | null>(null);
+  const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
+  const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
 
 
   const [savingField, setSavingField] = useState<string | null>(null);
@@ -530,6 +537,9 @@ function EntryPage() {
     setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(items);
+    setBookOfBible((e as any)?.book_of_bible ?? null);
+    setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
+    setBookConfirmed(Boolean((e as any)?.book_confirmed));
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
@@ -869,7 +879,26 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
+                    <BookTagger
+                      value={bookOfBible}
+                      source={bookSource}
+                      confirmed={bookConfirmed}
+                      disabled={!userId}
+                      onSetManual={(abbr) => {
+                        setBookOfBible(abbr);
+                        setBookSource("manual");
+                        setBookConfirmed(true);
+                        scheduleSave("book_of_bible", abbr);
+                        scheduleSave("book_source", "manual");
+                        scheduleSave("book_confirmed", true);
+                      }}
+                      onConfirm={() => {
+                        setBookConfirmed(true);
+                        scheduleSave("book_confirmed", true);
+                      }}
+                    />
                     <div className="de-read-part">
+                      {/* preserve original wrapper start */}
                       <input
                         className="de-scr-ref"
                         placeholder="What scripture are you reading today?"

@@ -1,0 +1,208 @@
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { Database } from "@/integrations/supabase/types";
+
+export type BibleBook = Database["public"]["Tables"]["bible_books"]["Row"];
+export type BookSource = "manual" | "auto" | null;
+
+export function useBibleBooks() {
+  return useQuery({
+    queryKey: ["bible-books"],
+    staleTime: 24 * 60 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bible_books")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as BibleBook[];
+    },
+  });
+}
+
+type Props = {
+  value: string | null;
+  source: BookSource;
+  confirmed: boolean;
+  disabled?: boolean;
+  onSetManual: (abbr: string) => void;
+  onConfirm: () => void;
+};
+
+export function BookTagger({ value, source, confirmed, disabled, onSetManual, onConfirm }: Props) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const booksQ = useBibleBooks();
+  const books = booksQ.data ?? [];
+
+  const fullName = useMemo(
+    () => (value ? books.find((b) => b.abbreviation === value)?.full_name ?? value : null),
+    [books, value]
+  );
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return books;
+    return books.filter(
+      (b) => b.abbreviation.toLowerCase().includes(term) || b.full_name.toLowerCase().includes(term)
+    );
+  }, [books, q]);
+  const ot = filtered.filter((b) => b.testament === "OT");
+  const nt = filtered.filter((b) => b.testament === "NT");
+
+  const state: "empty" | "suggested" | "confirmed" =
+    !value ? "empty" : (source === "auto" && !confirmed) ? "suggested" : "confirmed";
+
+  const chevron = (
+    <svg className="bt-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+
+  const trigger = (
+    <button
+      type="button"
+      className={`bt-select bt-${state}`}
+      disabled={disabled}
+      onClick={() => setOpen((v) => !v)}
+    >
+      <span className="bt-label">
+        {state === "empty" ? "+ Add book of the Bible" : fullName}
+      </span>
+      {chevron}
+    </button>
+  );
+
+  return (
+    <div className={`book-tagger bt-${state}`}>
+      <style>{`
+        .book-tagger{margin-bottom:12px;font-family:'Poppins',sans-serif;}
+        .bt-select{
+          width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+          background:#fff;border:1.5px dashed #cfc9b4;border-radius:10px;
+          padding:9px 12px;cursor:pointer;font-family:inherit;color:#a39d87;
+          font-size:12.5px;font-weight:600;text-align:left;
+        }
+        .bt-select:disabled{cursor:not-allowed;opacity:.7;}
+        .bt-chev{width:13px;height:13px;flex-shrink:0;color:#a39d87;}
+        .bt-suggested .bt-select{border:1.5px solid #FFAE00;background:rgba(255,174,0,.10);}
+        .bt-suggested .bt-select .bt-label{color:#20201C;font-weight:700;}
+        .bt-suggested .bt-chev{color:#8a7a4a;}
+        .bt-confirmed .bt-select{border:1.5px solid #ECE4CE;background:#fff;}
+        .bt-confirmed .bt-select .bt-label{color:#20201C;font-weight:700;}
+        .bt-confirmed .bt-chev{color:#8a8879;}
+        .bt-suggest-row{
+          display:flex;align-items:center;justify-content:space-between;gap:8px;
+          margin-top:7px;font-size:10.5px;color:#8a7a4a;flex-wrap:wrap;
+        }
+        .bt-suggest-row .txt{display:inline-flex;align-items:center;gap:5px;}
+        .bt-suggest-row svg{width:11px;height:11px;}
+        .bt-actions{display:flex;gap:6px;}
+        .bt-actions button{
+          border:none;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:700;
+          cursor:pointer;font-family:'Poppins',sans-serif;
+        }
+        .bt-confirm{background:#0F4A42;color:#fff;}
+        .bt-change{background:#fff;border:1.5px solid #E4DCC4;color:#6b6a60;}
+        .bt-confirmed-row{
+          display:flex;align-items:center;gap:5px;margin-top:7px;
+          font-size:10.5px;color:#0F4A42;font-weight:600;
+        }
+        .bt-confirmed-row svg{width:11px;height:11px;}
+        .bt-pop{width:280px;padding:10px;font-family:'Poppins',sans-serif;}
+        .bt-pop input{
+          width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #ECE4CE;
+          font-family:inherit;font-size:12.5px;margin-bottom:10px;outline:none;
+        }
+        .bt-pop input:focus{border-color:#0F4A42;}
+        .bt-pop .bt-group{margin-bottom:8px;}
+        .bt-pop .bt-group h4{
+          font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+          color:#8a8879;margin:8px 4px 4px;
+        }
+        .bt-pop .bt-list{max-height:200px;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+        .bt-pop .bt-list button{
+          border:1px solid #ECE4CE;background:#fff;border-radius:7px;padding:6px 4px;
+          font-family:inherit;font-size:11.5px;font-weight:600;color:#20201C;cursor:pointer;
+        }
+        .bt-pop .bt-list button:hover{background:#F5EFD9;border-color:#FFAE00;}
+        .bt-pop .bt-list button[aria-current="true"]{background:rgba(255,174,0,.18);border-color:#FFAE00;}
+        .bt-pop .bt-empty{padding:12px;text-align:center;font-size:12px;color:#8a8879;}
+      `}</style>
+
+      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(""); }}>
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+        <PopoverContent align="start" className="bt-pop">
+          <input
+            autoFocus
+            placeholder="Search books…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {filtered.length === 0 ? (
+            <div className="bt-empty">No matching book</div>
+          ) : (
+            <>
+              {ot.length > 0 && (
+                <div className="bt-group">
+                  <h4>Old Testament</h4>
+                  <div className="bt-list">
+                    {ot.map((b) => (
+                      <button
+                        key={b.abbreviation}
+                        aria-current={value === b.abbreviation}
+                        onClick={() => { onSetManual(b.abbreviation); setOpen(false); setQ(""); }}
+                        title={b.full_name}
+                      >
+                        {b.abbreviation}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {nt.length > 0 && (
+                <div className="bt-group">
+                  <h4>New Testament</h4>
+                  <div className="bt-list">
+                    {nt.map((b) => (
+                      <button
+                        key={b.abbreviation}
+                        aria-current={value === b.abbreviation}
+                        onClick={() => { onSetManual(b.abbreviation); setOpen(false); setQ(""); }}
+                        title={b.full_name}
+                      >
+                        {b.abbreviation}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </PopoverContent>
+      </Popover>
+
+      {state === "suggested" && (
+        <div className="bt-suggest-row">
+          <span className="txt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/></svg>
+            Detected from your entry
+          </span>
+          <span className="bt-actions">
+            <button type="button" className="bt-confirm" onClick={onConfirm}>Confirm</button>
+            <button type="button" className="bt-change" onClick={() => setOpen(true)}>Change</button>
+          </span>
+        </div>
+      )}
+
+      {state === "confirmed" && (
+        <div className="bt-confirmed-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+          Tagged to {fullName}
+        </div>
+      )}
+    </div>
+  );
+}

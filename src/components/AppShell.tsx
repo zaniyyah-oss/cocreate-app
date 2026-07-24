@@ -296,13 +296,13 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                 <Fragment key={n.key}>
                   <div className="app-side-divider" />
                   <div className="app-side-label">Your reference</div>
-                  <span
-                    className="app-side-item is-disabled"
-                    aria-disabled="true"
-                    title={collapsed ? "Book" : undefined}
+                  <Link
+                    to="/read"
+                    className={`app-side-item${pathname === "/read" || pathname.startsWith("/read/") ? " active" : ""}`}
+                    title={collapsed ? "Read" : undefined}
                   >
-                    {ICON.book}<span className="lbl">Book</span>
-                  </span>
+                    {ICON.book}<span className="lbl">Read</span>
+                  </Link>
                   {item}
                 </Fragment>
               );

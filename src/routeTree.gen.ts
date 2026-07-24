@@ -13,6 +13,7 @@ import { Route as WatchRouteImport } from './routes/watch'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as ReadRouteImport } from './routes/read'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
@@ -30,6 +31,7 @@ import { Route as DevotionalsIndexRouteImport } from './routes/devotionals.index
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
+import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
@@ -64,6 +66,11 @@ const SearchRoute = SearchRouteImport.update({
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadRoute = ReadRouteImport.update({
+  id: '/read',
+  path: '/read',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -150,6 +157,11 @@ const TeachingsIdRoute = TeachingsIdRouteImport.update({
   id: '/teachings/$id',
   path: '/teachings/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ReadAbbrRoute = ReadAbbrRouteImport.update({
+  id: '/$abbr',
+  path: '/$abbr',
+  getParentRoute: () => ReadRoute,
 } as any)
 const PodcastsIdRoute = PodcastsIdRouteImport.update({
   id: '/podcasts/$id',
@@ -241,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -254,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -277,6 +291,7 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -289,6 +304,7 @@ export interface FileRoutesByTo {
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -315,6 +331,7 @@ export interface FileRoutesById {
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/tour': typeof TourRoute
@@ -328,6 +345,7 @@ export interface FileRoutesById {
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -355,6 +373,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -368,6 +387,7 @@ export interface FileRouteTypes {
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
+    | '/read/$abbr'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
@@ -391,6 +411,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -403,6 +424,7 @@ export interface FileRouteTypes {
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
+    | '/read/$abbr'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin'
@@ -428,6 +450,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/notifications'
     | '/profile'
+    | '/read'
     | '/saved'
     | '/search'
     | '/tour'
@@ -441,6 +464,7 @@ export interface FileRouteTypes {
     | '/devotionals/$id'
     | '/essays/$id'
     | '/podcasts/$id'
+    | '/read/$abbr'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
@@ -467,6 +491,7 @@ export interface RootRouteChildren {
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  ReadRoute: typeof ReadRouteWithChildren
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   TourRoute: typeof TourRoute
@@ -506,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/saved'
       fullPath: '/saved'
       preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/read': {
+      id: '/read'
+      path: '/read'
+      fullPath: '/read'
+      preLoaderRoute: typeof ReadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -626,6 +658,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teachings/$id'
       preLoaderRoute: typeof TeachingsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/read/$abbr': {
+      id: '/read/$abbr'
+      path: '/$abbr'
+      fullPath: '/read/$abbr'
+      preLoaderRoute: typeof ReadAbbrRouteImport
+      parentRoute: typeof ReadRoute
     }
     '/podcasts/$id': {
       id: '/podcasts/$id'
@@ -790,6 +829,16 @@ const DevotionalsRouteWithChildren = DevotionalsRoute._addFileChildren(
   DevotionalsRouteChildren,
 )
 
+interface ReadRouteChildren {
+  ReadAbbrRoute: typeof ReadAbbrRoute
+}
+
+const ReadRouteChildren: ReadRouteChildren = {
+  ReadAbbrRoute: ReadAbbrRoute,
+}
+
+const ReadRouteWithChildren = ReadRoute._addFileChildren(ReadRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -804,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  ReadRoute: ReadRouteWithChildren,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   TourRoute: TourRoute,
