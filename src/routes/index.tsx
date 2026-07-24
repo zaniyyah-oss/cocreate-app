@@ -537,11 +537,13 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             aria-haspopup="menu"
             aria-expanded={moreOpen}
           >
-            More <span aria-hidden>▾</span>
+            <span className="hp-mast-more-desktop">More</span>
+            <span className="hp-mast-more-mobile">Topics</span>
+            <span aria-hidden>▾</span>
           </button>
           {moreOpen && (
             <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-              {list.map((t) => (
+              {(topicsQ.data ?? []).map((t) => (
                 <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
                   {t.display_name || t.name}
                 </Link>
