@@ -63,13 +63,17 @@ function BookDetail() {
       if (!uid) return [] as Entry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,topic_ids")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,topic_ids,book_of_bible,books_of_bible,book_confirmed")
         .eq("user_id", uid)
-        .eq("book_of_bible", abbr)
         .eq("book_confirmed", true)
+        .or(`books_of_bible.cs.{"${abbr}"},book_of_bible.eq.${abbr}`)
         .order("entry_date", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Entry[];
+      return ((data ?? []) as any[]).filter((e) => {
+        const arr = Array.isArray(e.books_of_bible) ? e.books_of_bible : [];
+        if (arr.length > 0) return arr.includes(abbr);
+        return e.book_of_bible === abbr;
+      }) as Entry[];
     },
   });
 
