@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
@@ -17,92 +18,373 @@ export const Route = createFileRoute("/read/$abbr")({
   component: BookDetail,
 });
 
+type Entry = {
+  id: string;
+  entry_date: string | null;
+  entry_title: string | null;
+  scripture_reference: string | null;
+  scripture_text: string | null;
+  topic_ids: string[] | null;
+};
+
+type Topic = { id: string; name: string; display_name: string | null; color_key: string | null };
+
+function useTopics() {
+  return useQuery({
+    queryKey: ["all-topics"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topics")
+        .select("id,name,display_name,color_key")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as Topic[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return "";
+  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function BookDetail() {
   const { abbr } = Route.useParams();
+  const qc = useQueryClient();
   const booksQ = useBibleBooks();
+  const topicsQ = useTopics();
   const book = (booksQ.data ?? []).find((b) => b.abbreviation === abbr);
+  const topicsById = useMemo(() => {
+    const m = new Map<string, Topic>();
+    for (const t of topicsQ.data ?? []) m.set(t.id, t);
+    return m;
+  }, [topicsQ.data]);
 
   const entriesQ = useQuery({
     queryKey: ["read-book-entries", abbr],
     queryFn: async () => {
       const { data: userRes } = await supabase.auth.getUser();
       const uid = userRes?.user?.id;
-      if (!uid) return [] as Array<{ id: string; date_of_entry: string | null; scripture_reference: string | null; scripture_text: string | null }>;
+      if (!uid) return [] as Entry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,date_of_entry,scripture_reference,scripture_text,book_confirmed")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,topic_ids")
         .eq("user_id", uid)
         .eq("book_of_bible", abbr)
         .eq("book_confirmed", true)
-        .order("date_of_entry", { ascending: false });
+        .order("entry_date", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as any;
+      return (data ?? []) as Entry[];
     },
   });
 
   const entries = entriesQ.data ?? [];
+  const fullName = book?.full_name ?? abbr;
 
   return (
     <AppShell>
-      <style>{`
-        .rb-wrap{max-width:820px;margin:0 auto;padding:28px 20px 80px;font-family:'Poppins',sans-serif;color:#20201C;}
-        .rb-back{font-size:12.5px;color:#6b6a60;text-decoration:none;font-weight:600;}
-        .rb-back:hover{color:#0F4A42;}
-        .rb-tag{
-          display:inline-flex;align-items:center;gap:6px;margin:14px 0 6px;
-          background:rgba(255,174,0,.15);color:#20201C;font-size:10.5px;font-weight:700;
-          padding:4px 10px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;
-        }
-        .rb-h1{font-family:'Fraunces',serif;font-size:34px;font-weight:600;margin:4px 0;}
-        .rb-count{font-size:13px;color:#6b6a60;margin-bottom:22px;}
-        .rb-empty{
-          background:#fff;border:1.5px dashed #ECE4CE;border-radius:14px;padding:32px 20px;
-          text-align:center;color:#6b6a60;font-size:13.5px;
-        }
-        .rb-list{display:grid;gap:10px;}
-        .rb-card{
-          background:#fff;border:1.5px solid #ECE4CE;border-radius:12px;padding:14px 16px;
-          text-decoration:none;color:#20201C;display:block;
-        }
-        .rb-card:hover{border-color:#FFAE00;}
-        .rb-date{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a8879;}
-        .rb-ref{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:2px 0 4px;}
-        .rb-snip{font-size:13px;color:#4a4a44;line-height:1.5;
-          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-        }
-      `}</style>
-      <div className="rb-wrap">
-        <Link to="/read" className="rb-back">← Back to Read</Link>
-        <div className="rb-tag">Book of the Bible</div>
-        <h1 className="rb-h1">{book?.full_name ?? abbr}</h1>
-        <div className="rb-count">
-          {entries.length === 0 ? "No entries yet" : `${entries.length} ${entries.length === 1 ? "study" : "studies"}`}
-        </div>
+      <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
+        <style>{`
+          .rb-wrap{max-width:1280px;margin:0 auto;padding:28px 32px 96px;font-family:'Poppins',sans-serif;color:#20201C;}
+          .rb-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#0F4A42;font-weight:800;text-decoration:none;}
+          .rb-back:hover{color:#0a332d;}
+          .rb-tag{
+            display:inline-flex;align-items:center;margin:28px 0 14px;
+            background:#FFAE00;color:#20201C;font-size:12px;font-weight:800;
+            padding:8px 16px;border-radius:12px;letter-spacing:.08em;text-transform:uppercase;
+          }
+          .rb-h1{font-family:'Archivo Black','Poppins',sans-serif;font-size:56px;line-height:1;letter-spacing:-.02em;margin:6px 0 12px;color:#20201C;}
+          .rb-count{font-size:15px;color:#6b6a60;margin-bottom:32px;}
+          .rb-empty{
+            background:#fff;border:1.5px dashed #ECE4CE;border-radius:16px;padding:44px 24px;
+            text-align:center;color:#6b6a60;font-size:15px;max-width:640px;
+          }
+          .rb-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+          @media (max-width:1024px){.rb-list{grid-template-columns:repeat(2,minmax(0,1fr));}}
+          @media (max-width:700px){.rb-list{grid-template-columns:1fr;}}
+          .rb-card{
+            background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;padding:20px 22px;
+            display:flex;flex-direction:column;gap:10px;
+          }
+          .rb-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+          .rb-pills{display:flex;flex-wrap:wrap;gap:6px;}
+          .rb-pill{
+            font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;
+            letter-spacing:.06em;text-transform:uppercase;
+          }
+          .rb-pill.daily{background:#DCE07A;color:#20201C;}
+          .rb-pill.topic{background:#0F4A42;color:#fff;}
+          .rb-focus{
+            display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ECE4CE;
+            color:#4a4a44;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;
+            text-decoration:none;
+          }
+          .rb-focus:hover{border-color:#FFAE00;color:#20201C;}
+          .rb-focus svg{width:12px;height:12px;}
+          .rb-title{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;line-height:1.2;margin:4px 0 0;color:#20201C;}
+          .rb-meta{font-size:13px;color:#8a8879;font-weight:600;}
+          .rb-note{
+            width:100%;min-height:96px;resize:vertical;border:1px solid transparent;background:#FBF8ED;
+            border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;line-height:1.55;color:#20201C;
+            transition:border-color .15s ease;
+          }
+          .rb-note:hover{border-color:#ECE4CE;}
+          .rb-note:focus{outline:none;border-color:#FFAE00;background:#fff;}
+          .rb-note-lbl{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a8879;margin-top:2px;}
+          .rb-note-status{font-size:11px;color:#8a8879;height:14px;}
+          .rb-topics{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+          .rb-topic-add{
+            font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;
+            border:1.5px dashed #ECE4CE;background:transparent;color:#8a8879;cursor:pointer;
+          }
+          .rb-topic-add:hover{border-color:#FFAE00;color:#20201C;}
+          .rb-topic-picker{
+            position:relative;
+          }
+          .rb-topic-menu{
+            position:absolute;top:calc(100% + 6px);left:0;z-index:20;background:#fff;
+            border:1.5px solid #ECE4CE;border-radius:12px;padding:8px;min-width:220px;max-height:280px;overflow:auto;
+            box-shadow:0 8px 24px rgba(0,0,0,.08);
+          }
+          .rb-topic-opt{
+            display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+            padding:8px 10px;border-radius:8px;border:none;background:transparent;cursor:pointer;
+            font-family:inherit;font-size:13px;color:#20201C;text-align:left;
+          }
+          .rb-topic-opt:hover{background:#FBF8ED;}
+          .rb-topic-opt.on{background:#FFF4D6;font-weight:700;}
+          .rb-chip-x{
+            background:transparent;border:none;color:inherit;font-size:14px;cursor:pointer;
+            padding:0 0 0 4px;line-height:1;
+          }
+        `}</style>
 
-        {entries.length === 0 ? (
-          <div className="rb-empty">
-            You haven't tagged any confirmed entries to {book?.full_name ?? abbr} yet.
+        <div className="rb-wrap">
+          <Link to="/read" className="rb-back">‹ Read</Link>
+          <div className="rb-tag">{abbr}</div>
+          <h1 className="rb-h1">{fullName}</h1>
+          <div className="rb-count">
+            {entries.length === 0
+              ? "0 studies"
+              : `${entries.length} ${entries.length === 1 ? "study" : "studies"}`}
           </div>
-        ) : (
-          <div className="rb-list">
-            {entries.map((e: any) => (
-              <Link
-                key={e.id}
-                to="/devotionals/$id"
-                params={{ id: "default" }}
-                search={{ date: e.date_of_entry ?? undefined } as any}
-                className="rb-card"
-              >
-                <div className="rb-date">
-                  {e.date_of_entry ? new Date(e.date_of_entry + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : ""}
-                </div>
-                {e.scripture_reference && <div className="rb-ref">{e.scripture_reference}</div>}
-                {e.scripture_text && <div className="rb-snip">{e.scripture_text}</div>}
-              </Link>
-            ))}
-          </div>
-        )}
+
+          {entries.length === 0 ? (
+            <div className="rb-empty">
+              No studies yet in {fullName} — entries you tag will show up here.
+            </div>
+          ) : (
+            <div className="rb-list">
+              {entries.map((e) => (
+                <EntryCard
+                  key={e.id}
+                  entry={e}
+                  topicsById={topicsById}
+                  allTopics={topicsQ.data ?? []}
+                  onChanged={() => qc.invalidateQueries({ queryKey: ["read-book-entries", abbr] })}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </AppShell>
+  );
+}
+
+function EntryCard({
+  entry,
+  topicsById,
+  allTopics,
+  onChanged,
+}: {
+  entry: Entry;
+  topicsById: Map<string, Topic>;
+  allTopics: Topic[];
+  onChanged: () => void;
+}) {
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const saveTimer = useRef<number | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!pickerRef.current?.contains(e.target as Node)) setPickerOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [pickerOpen]);
+
+  const saveNote = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const scheduleSaveNote = (val: string) => {
+    setNote(val);
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
+  };
+
+  const saveTopics = async (next: string[]) => {
+    setTopicIds(next);
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ topic_ids: next })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+    onChanged();
+  };
+
+  const toggleTopic = (id: string) => {
+    const next = topicIds.includes(id) ? topicIds.filter((t) => t !== id) : [...topicIds, id];
+    saveTopics(next);
+  };
+
+  const filteredTopics = allTopics.filter((t) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      (t.display_name ?? t.name).toLowerCase().includes(q) ||
+      t.name.toLowerCase().includes(q)
+    );
+  });
+
+  const activeTopics = topicIds
+    .map((id) => topicsById.get(id))
+    .filter((t): t is Topic => !!t);
+
+  return (
+    <div className="rb-card">
+      <div className="rb-card-top">
+        <div className="rb-pills">
+          <span className="rb-pill daily">Read</span>
+          {activeTopics.slice(0, 2).map((t) => (
+            <span key={t.id} className="rb-pill topic">
+              {t.display_name ?? t.name}
+            </span>
+          ))}
+        </div>
+        <Link
+          to="/devotionals/$id"
+          params={{ id: "default" }}
+          search={{ date: entry.entry_date ?? undefined } as any}
+          className="rb-focus"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
+          </svg>
+          Focus
+        </Link>
+      </div>
+
+      <h3 className="rb-title">
+        {entry.entry_title || entry.scripture_reference || "Untitled study"}
+      </h3>
+      <div className="rb-meta">
+        {fmtDate(entry.entry_date)}
+        {entry.scripture_reference ? ` · ${entry.scripture_reference}` : ""}
+      </div>
+
+      <div className="rb-note-lbl">Read note</div>
+      <textarea
+        className="rb-note"
+        value={note}
+        placeholder="Add a note from your reading…"
+        onChange={(e) => scheduleSaveNote(e.target.value)}
+        onBlur={() => {
+          if (saveTimer.current) {
+            window.clearTimeout(saveTimer.current);
+            saveTimer.current = null;
+          }
+          if ((entry.scripture_text ?? "") !== note) saveNote(note);
+        }}
+      />
+
+      <div className="rb-topics" ref={pickerRef}>
+        {activeTopics.map((t) => (
+          <span key={t.id} className="rb-pill topic" style={{ display: "inline-flex", alignItems: "center" }}>
+            {t.display_name ?? t.name}
+            <button
+              type="button"
+              aria-label={`Remove ${t.display_name ?? t.name}`}
+              className="rb-chip-x"
+              onClick={() => toggleTopic(t.id)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <div className="rb-topic-picker">
+          <button
+            type="button"
+            className="rb-topic-add"
+            onClick={() => setPickerOpen((o) => !o)}
+          >
+            + Add topic
+          </button>
+          {pickerOpen && (
+            <div className="rb-topic-menu">
+              <input
+                autoFocus
+                placeholder="Search topics…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{
+                  width: "100%",
+                  border: "1px solid #ECE4CE",
+                  borderRadius: 8,
+                  padding: "6px 8px",
+                  fontSize: 13,
+                  marginBottom: 6,
+                  fontFamily: "inherit",
+                }}
+              />
+              {filteredTopics.length === 0 && (
+                <div style={{ padding: "8px 10px", color: "#8a8879", fontSize: 12 }}>
+                  No topics found.
+                </div>
+              )}
+              {filteredTopics.map((t) => {
+                const on = topicIds.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`rb-topic-opt ${on ? "on" : ""}`}
+                    onClick={() => toggleTopic(t.id)}
+                  >
+                    <span>{t.display_name ?? t.name}</span>
+                    {on && <span style={{ color: "#0F4A42" }}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rb-note-status">
+        {status === "saving" && "Saving…"}
+        {status === "saved" && "Saved"}
+        {status === "error" && "Couldn't save"}
+      </div>
+    </div>
   );
 }
