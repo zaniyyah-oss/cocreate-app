@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -317,26 +317,7 @@ function ReadLibrary() {
             </div>
             <div className="rd-recent-grid">
               {filteredRecent.map((e) => (
-                <Link
-                  key={e.id}
-                  to="/read/$abbr"
-                  params={{ abbr: e.book_of_bible ?? "" }}
-                  search={{ entry: e.id } as any}
-                  className="rd-card"
-                >
-                  <div className="rd-card-top">
-                    <span className="rd-pill">Read</span>
-                    <span className="rd-focus">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                      Open note
-                    </span>
-                  </div>
-                  <h3 className="rd-card-title">{e.entry_title || e.scripture_reference || "Untitled study"}</h3>
-                  <div className="rd-card-meta">
-                    {e.book_of_bible ?? ""}{e.entry_date ? ` · ${fmtDate(e.entry_date)}` : ""}
-                  </div>
-                  {e.scripture_text && <div className="rd-card-snip">{e.scripture_text}</div>}
-                </Link>
+                <RecentStudyCard key={e.id} entry={e} fmtDate={fmtDate} />
               ))}
             </div>
           </>
@@ -344,5 +325,126 @@ function ReadLibrary() {
       </div>
       </div>
     </AppShell>
+  );
+}
+
+function RecentStudyCard({
+  entry,
+  fmtDate,
+}: {
+  entry: RecentEntry;
+  fmtDate: (d: string | null) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const saveTimer = useRef<number | null>(null);
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      const t = window.setTimeout(() => taRef.current?.focus(), 60);
+      return () => window.clearTimeout(t);
+    }
+  }, [open]);
+
+  const saveNote = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const scheduleSave = (val: string) => {
+    setNote(val);
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
+  };
+
+  return (
+    <div
+      className="rd-card"
+      role="button"
+      tabIndex={0}
+      onClick={() => setOpen((o) => !o)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen((o) => !o);
+        }
+      }}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="rd-card-top" onClick={(e) => e.stopPropagation()}>
+        <span className="rd-pill">Read</span>
+        <Link
+          to="/devotionals/$id"
+          params={{ id: "default" }}
+          search={{ date: entry.entry_date ?? undefined } as any}
+          className="rd-focus"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
+          </svg>
+          Focus
+        </Link>
+      </div>
+      <h3 className="rd-card-title">
+        {entry.entry_title || entry.scripture_reference || "Untitled study"}
+      </h3>
+      <div className="rd-card-meta">
+        {entry.book_of_bible ?? ""}
+        {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
+      </div>
+
+      {!open ? (
+        entry.scripture_text ? (
+          <div className="rd-card-snip">{entry.scripture_text}</div>
+        ) : (
+          <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
+            Click to add a note…
+          </div>
+        )
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          <textarea
+            ref={taRef}
+            value={note}
+            placeholder="Add a note from your reading…"
+            onChange={(e) => scheduleSave(e.target.value)}
+            onBlur={() => {
+              if (saveTimer.current) {
+                window.clearTimeout(saveTimer.current);
+                saveTimer.current = null;
+              }
+              if ((entry.scripture_text ?? "") !== note) saveNote(note);
+            }}
+            style={{
+              width: "100%",
+              minHeight: 180,
+              resize: "vertical",
+              border: "1px solid #ECE4CE",
+              background: "#FBF8ED",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontFamily: "inherit",
+              fontSize: 14,
+              lineHeight: 1.55,
+              color: "#20201C",
+            }}
+          />
+          <div style={{ fontSize: 11, color: "#8a8879", marginTop: 6, minHeight: 14 }}>
+            {status === "saving" && "Saving…"}
+            {status === "saved" && "Saved"}
+            {status === "error" && "Couldn't save"}
+            {!status && "Click card again to collapse"}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
