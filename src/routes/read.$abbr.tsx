@@ -76,6 +76,22 @@ function BookDetail() {
   const entries = entriesQ.data ?? [];
   const fullName = book?.full_name ?? abbr;
 
+  const visibleEntries = useMemo(() => {
+    if (filterTopicIds.length === 0) return entries;
+    return entries.filter((e) => {
+      const ids = e.topic_ids ?? [];
+      return filterTopicIds.every((tid) => ids.includes(tid));
+    });
+  }, [entries, filterTopicIds]);
+
+  // Only show topics that at least one entry in this book uses.
+  const availableTopics = useMemo(() => {
+    const used = new Set<string>();
+    entries.forEach((e) => (e.topic_ids ?? []).forEach((id) => used.add(id)));
+    return (topicsQ.data ?? []).filter((t) => used.has(t.id));
+  }, [entries, topicsQ.data]);
+
+
   return (
     <AppShell>
       <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
