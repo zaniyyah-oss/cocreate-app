@@ -23,24 +23,24 @@ export function useBibleBooks() {
 }
 
 type Props = {
-  value: string | null;
-  source: BookSource;
-  confirmed: boolean;
+  values: string[];
+  suggestion?: string | null;
   disabled?: boolean;
-  onSetManual: (abbr: string) => void;
-  onConfirm: () => void;
+  onToggle: (abbr: string) => void;
+  onConfirmSuggestion?: () => void;
 };
 
-export function BookTagger({ value, source, confirmed, disabled, onSetManual, onConfirm }: Props) {
+export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const booksQ = useBibleBooks();
   const books = booksQ.data ?? [];
 
-  const fullName = useMemo(
-    () => (value ? books.find((b) => b.abbreviation === value)?.full_name ?? value : null),
-    [books, value]
-  );
+  const byAbbr = useMemo(() => {
+    const m = new Map<string, BibleBook>();
+    for (const b of books) m.set(b.abbreviation, b);
+    return m;
+  }, [books]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -52,8 +52,13 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
   const ot = filtered.filter((b) => b.testament === "OT");
   const nt = filtered.filter((b) => b.testament === "NT");
 
-  const state: "empty" | "suggested" | "confirmed" =
-    !value ? "empty" : (source === "auto" && !confirmed) ? "suggested" : "confirmed";
+  const hasValues = values.length > 0;
+  const showSuggestion = !hasValues && !!suggestion;
+  const state: "empty" | "suggested" | "confirmed" = showSuggestion
+    ? "suggested"
+    : hasValues
+    ? "confirmed"
+    : "empty";
 
   const chevron = (
     <svg className="bt-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,7 +74,11 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
       onClick={() => setOpen((v) => !v)}
     >
       <span className="bt-label">
-        {state === "empty" ? "+ Add book of the Bible" : fullName}
+        {state === "empty"
+          ? "+ Add book of the Bible"
+          : state === "suggested"
+          ? byAbbr.get(suggestion!)?.full_name ?? suggestion
+          : `${values.length} book${values.length === 1 ? "" : "s"} selected — add or change`}
       </span>
       {chevron}
     </button>
@@ -93,6 +102,16 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
         .bt-confirmed .bt-select{border:1.5px solid #ECE4CE;background:#fff;}
         .bt-confirmed .bt-select .bt-label{color:#20201C;font-weight:700;}
         .bt-confirmed .bt-chev{color:#8a8879;}
+        .bt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+        .bt-chip{
+          display:inline-flex;align-items:center;gap:6px;background:#0F4A42;color:#fff;
+          font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;
+        }
+        .bt-chip button{
+          background:transparent;border:none;color:#fff;opacity:.85;cursor:pointer;
+          padding:0;line-height:1;font-size:14px;
+        }
+        .bt-chip button:hover{opacity:1;}
         .bt-suggest-row{
           display:flex;align-items:center;justify-content:space-between;gap:8px;
           margin-top:7px;font-size:10.5px;color:#8a7a4a;flex-wrap:wrap;
@@ -106,30 +125,39 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
         }
         .bt-confirm{background:#0F4A42;color:#fff;}
         .bt-change{background:#fff;border:1.5px solid #E4DCC4;color:#6b6a60;}
-        .bt-confirmed-row{
-          display:flex;align-items:center;gap:5px;margin-top:7px;
-          font-size:10.5px;color:#0F4A42;font-weight:600;
+        .bt-pop{
+          width:300px;padding:10px;font-family:'Poppins',sans-serif;
+          background:#fff !important;border:1.5px solid #ECE4CE;border-radius:12px;
+          box-shadow:0 12px 32px rgba(20,20,20,.12);opacity:1;
         }
-        .bt-confirmed-row svg{width:11px;height:11px;}
-        .bt-pop{width:280px;padding:10px;font-family:'Poppins',sans-serif;}
         .bt-pop input{
           width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #ECE4CE;
-          font-family:inherit;font-size:12.5px;margin-bottom:10px;outline:none;
+          font-family:inherit;font-size:12.5px;margin-bottom:10px;outline:none;background:#fff;
         }
         .bt-pop input:focus{border-color:#0F4A42;}
+        .bt-pop .bt-hint{font-size:10.5px;color:#8a8879;padding:0 4px 8px;}
         .bt-pop .bt-group{margin-bottom:8px;}
         .bt-pop .bt-group h4{
           font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
           color:#8a8879;margin:8px 4px 4px;
         }
-        .bt-pop .bt-list{max-height:200px;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+        .bt-pop .bt-list{max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
         .bt-pop .bt-list button{
           border:1px solid #ECE4CE;background:#fff;border-radius:7px;padding:6px 4px;
           font-family:inherit;font-size:11.5px;font-weight:600;color:#20201C;cursor:pointer;
+          display:inline-flex;align-items:center;justify-content:center;gap:4px;
         }
         .bt-pop .bt-list button:hover{background:#F5EFD9;border-color:#FFAE00;}
-        .bt-pop .bt-list button[aria-current="true"]{background:rgba(255,174,0,.18);border-color:#FFAE00;}
+        .bt-pop .bt-list button[aria-pressed="true"]{background:#0F4A42;border-color:#0F4A42;color:#fff;}
+        .bt-pop .bt-list button[aria-pressed="true"]:hover{background:#0a332d;}
         .bt-pop .bt-empty{padding:12px;text-align:center;font-size:12px;color:#8a8879;}
+        .bt-pop .bt-done{margin-top:8px;width:100%;background:#181A4D;color:#fff;border:none;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+        .bt-pop .bt-done:hover{background:#0F4A42;}
+        .bt-confirmed-row{
+          display:flex;align-items:center;gap:5px;margin-top:7px;
+          font-size:10.5px;color:#0F4A42;font-weight:600;
+        }
+        .bt-confirmed-row svg{width:11px;height:11px;}
       `}</style>
 
       <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(""); }}>
@@ -141,6 +169,7 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+          <div className="bt-hint">Select one or more books — this note will show up under each.</div>
           {filtered.length === 0 ? (
             <div className="bt-empty">No matching book</div>
           ) : (
@@ -149,16 +178,19 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
                 <div className="bt-group">
                   <h4>Old Testament</h4>
                   <div className="bt-list">
-                    {ot.map((b) => (
-                      <button
-                        key={b.abbreviation}
-                        aria-current={value === b.abbreviation}
-                        onClick={() => { onSetManual(b.abbreviation); setOpen(false); setQ(""); }}
-                        title={b.full_name}
-                      >
-                        {b.abbreviation}
-                      </button>
-                    ))}
+                    {ot.map((b) => {
+                      const on = values.includes(b.abbreviation);
+                      return (
+                        <button
+                          key={b.abbreviation}
+                          aria-pressed={on}
+                          onClick={() => onToggle(b.abbreviation)}
+                          title={b.full_name}
+                        >
+                          {on && "✓"} {b.abbreviation}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -166,23 +198,46 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
                 <div className="bt-group">
                   <h4>New Testament</h4>
                   <div className="bt-list">
-                    {nt.map((b) => (
-                      <button
-                        key={b.abbreviation}
-                        aria-current={value === b.abbreviation}
-                        onClick={() => { onSetManual(b.abbreviation); setOpen(false); setQ(""); }}
-                        title={b.full_name}
-                      >
-                        {b.abbreviation}
-                      </button>
-                    ))}
+                    {nt.map((b) => {
+                      const on = values.includes(b.abbreviation);
+                      return (
+                        <button
+                          key={b.abbreviation}
+                          aria-pressed={on}
+                          onClick={() => onToggle(b.abbreviation)}
+                          title={b.full_name}
+                        >
+                          {on && "✓"} {b.abbreviation}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </>
           )}
+          <button type="button" className="bt-done" onClick={() => { setOpen(false); setQ(""); }}>
+            Done
+          </button>
         </PopoverContent>
       </Popover>
+
+      {hasValues && (
+        <div className="bt-chips">
+          {values.map((abbr) => (
+            <span key={abbr} className="bt-chip">
+              {byAbbr.get(abbr)?.full_name ?? abbr}
+              <button
+                type="button"
+                aria-label={`Remove ${abbr}`}
+                onClick={() => onToggle(abbr)}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {state === "suggested" && (
         <div className="bt-suggest-row">
@@ -191,16 +246,11 @@ export function BookTagger({ value, source, confirmed, disabled, onSetManual, on
             Detected from your entry
           </span>
           <span className="bt-actions">
-            <button type="button" className="bt-confirm" onClick={onConfirm}>Confirm</button>
+            {onConfirmSuggestion && (
+              <button type="button" className="bt-confirm" onClick={onConfirmSuggestion}>Confirm</button>
+            )}
             <button type="button" className="bt-change" onClick={() => setOpen(true)}>Change</button>
           </span>
-        </div>
-      )}
-
-      {state === "confirmed" && (
-        <div className="bt-confirmed-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-          Tagged to {fullName}
         </div>
       )}
     </div>
