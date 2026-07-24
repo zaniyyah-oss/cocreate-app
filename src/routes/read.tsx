@@ -890,17 +890,25 @@ function TopicsSection({
   entries,
   selectedIds,
   onToggle,
+  onDelete,
 }: {
   topics: TopicRow[];
   entries: RecentEntry[];
   selectedIds: string[];
   onToggle: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
   const qc = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState<BrandColorKey>("amber");
   const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id ?? null));
+  }, []);
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
@@ -958,6 +966,32 @@ function TopicsSection({
     }
   };
 
+  const deleteTopic = async (id: string) => {
+    const t = topics.find((x) => x.id === id);
+    if (!t || deletingId) return;
+    const label = t.display_name ?? t.name;
+    const count = counts.get(id) ?? 0;
+    const confirmMsg = count > 0
+      ? `Delete “${label}”? It will be removed from ${count} study${count === 1 ? "" : "ies"}.`
+      : `Delete “${label}”?`;
+    if (!window.confirm(confirmMsg)) return;
+    setDeletingId(id);
+    try {
+      const { error } = await supabase.from("topics").delete().eq("id", id);
+      if (error) throw error;
+      qc.setQueryData<TopicRow[]>(["all-topics"], (cur) => (cur ?? []).filter((x) => x.id !== id));
+      qc.invalidateQueries({ queryKey: ["all-topics"] });
+      qc.invalidateQueries({ queryKey: ["read-recent-studies"] });
+      qc.invalidateQueries({ queryKey: ["hp-topics"] });
+      onDelete?.(id);
+    } catch (e) {
+      console.error("delete topic failed", e);
+      alert("Could not delete topic.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <>
       <div className="rd-topics-head">
@@ -976,17 +1010,37 @@ function TopicsSection({
           const bc = brandColor(t.color_key) ?? brandColor("amber")!;
           const on = selectedIds.includes(t.id);
           const n = counts.get(t.id) ?? 0;
+          const canDelete = userId && t.created_by === userId;
+          const isDeleting = deletingId === t.id;
           return (
-            <button
+            <div
               key={t.id}
-              type="button"
-              className={`rd-topic-pill ${on ? "on" : ""}`}
+              className={`rd-topic-pill ${on ? "on" : ""} ${isDeleting ? "deleting" : ""}`}
               style={{ background: bc.hex, color: bc.onHex, borderColor: bc.hex }}
-              onClick={() => onToggle(t.id)}
             >
-              {t.display_name ?? t.name}
-              {n > 0 && <span className="count">{n}</span>}
-            </button>
+              <span
+                className="rd-topic-pill-toggle"
+                role="button"
+                tabIndex={0}
+                onClick={() => onToggle(t.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(t.id); } }}
+              >
+                {t.display_name ?? t.name}
+                {n > 0 && <span className="count">{n}</span>}
+              </span>
+              {canDelete && (
+                <button
+                  type="button"
+                  className="rd-topic-delete"
+                  aria-label={`Delete ${t.display_name ?? t.name}`}
+                  title={`Delete ${t.display_name ?? t.name}`}
+                  disabled={isDeleting}
+                  onClick={(e) => { e.stopPropagation(); void deleteTopic(t.id); }}
+                >
+                  {isDeleting ? "…" : "×"}
+                </button>
+              )}
+            </div>
           );
         })}
         {creating && (
