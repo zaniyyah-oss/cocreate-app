@@ -85,7 +85,7 @@ function BookDetail() {
           </div>
         ) : (
           <div className="rb-list">
-            {entries.map((e) => (
+            {entries.map((e: any) => (
               <Link
                 key={e.id}
                 to="/devotionals/$id"
