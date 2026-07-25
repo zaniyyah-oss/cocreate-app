@@ -118,9 +118,11 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <BootBrandLoader />
         {children}
         <Scripts />
       </body>
+
     </html>
   );
 }
