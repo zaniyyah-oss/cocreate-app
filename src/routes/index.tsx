@@ -7,7 +7,6 @@ import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
-import BrandLoadingScreen from "@/components/BrandLoadingScreen";
 import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
 
 
@@ -1090,7 +1089,9 @@ function HomePage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (gated) return <BrandLoadingScreen leaving={leaving} />;
+  // The branded loader is rendered globally (survives the navigation); Home
+  // simply renders nothing while the hand-off to the Workspace happens.
+  if (gated || leaving) return null;
 
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
