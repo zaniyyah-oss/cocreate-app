@@ -7,7 +7,6 @@ import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
-import BrandLoadingScreen from "@/components/BrandLoadingScreen";
 import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
 
 
