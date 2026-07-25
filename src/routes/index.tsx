@@ -1090,7 +1090,9 @@ function HomePage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (gated) return <BrandLoadingScreen leaving={leaving} />;
+  // The branded loader is rendered globally (survives the navigation); Home
+  // simply renders nothing while the hand-off to the Workspace happens.
+  if (gated || leaving) return null;
 
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
