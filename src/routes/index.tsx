@@ -7,6 +7,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import BrandLoadingScreen from "@/components/BrandLoadingScreen";
+import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
+
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -1078,9 +1081,8 @@ function SiteFooter() {
 /* ============================================================ */
 function HomePage() {
   const topicsQ = useTopics();
-  const navigate = useNavigate({ from: "/" });
-  const isMobile = useIsMobile();
   const [signedIn, setSignedIn] = useState(false);
+  const { gated, leaving } = useWorkspaceLandingGate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session?.user.id));
@@ -1088,15 +1090,10 @@ function HomePage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Mobile first-open: redirect to workspace (kept from previous behavior).
-  useEffect(() => {
-    if (typeof window === "undefined" || isMobile !== true) return;
-    if (window.sessionStorage.getItem("cocreate:home_redirect_done")) return;
-    window.sessionStorage.setItem("cocreate:home_redirect_done", "1");
-    navigate({ to: "/devotionals", replace: true });
-  }, [isMobile, navigate]);
+  if (gated) return <BrandLoadingScreen leaving={leaving} />;
 
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
+
 
   return (
     <AppShell current="home" hideSide>
