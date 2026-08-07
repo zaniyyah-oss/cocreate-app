@@ -61,5 +61,5 @@ function DevotionalsIndex() {
     );
   }
 
-  return <Navigate to="/devotionals/$id" params={{ id: defaultQ.data }} replace />;
+  return <Navigate to="/devotionals/$id" params={{ id: defaultQ.data }} search={{} as any} replace />;
 }

@@ -290,7 +290,7 @@ function TopicPage() {
           ) : (
             <div className="tp-devgrid">
               {templates.map((t) => (
-                <div key={t.id} className="tp-dev" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id } })}>
+                <div key={t.id} className="tp-dev" onClick={() => navigate({ to: "/devotionals/$id", params: { id: t.id }, search: {} as any })}>
                   <div className="tp-dev-accent" style={{ background: color }} />
                   <div className="tp-dev-body">
                     <h3>{t.title}</h3>

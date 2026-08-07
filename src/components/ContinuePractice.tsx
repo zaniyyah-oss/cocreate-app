@@ -144,7 +144,7 @@ export function ContinuePractice() {
         {primary && (
           <div
             className="cp-hero"
-            onClick={() => navigate({ to: "/devotionals/$id", params: { id: primary.id } })}
+            onClick={() => navigate({ to: "/devotionals/$id", params: { id: primary.id }, search: {} as any })}
           >
             <div className="cp-hero-top" />
             <div className="cp-hero-body">
@@ -160,7 +160,7 @@ export function ContinuePractice() {
                 className="cp-hero-btn"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate({ to: "/devotionals/$id", params: { id: primary.id } });
+                  navigate({ to: "/devotionals/$id", params: { id: primary.id }, search: {} as any });
                 }}
               >
                 I'm ready
@@ -178,7 +178,7 @@ export function ContinuePractice() {
             </div>
             <button
               className="cp-sec-btn"
-              onClick={() => navigate({ to: "/devotionals/$id", params: { id: s.id } })}
+              onClick={() => navigate({ to: "/devotionals/$id", params: { id: s.id }, search: {} as any })}
             >
               Open
             </button>

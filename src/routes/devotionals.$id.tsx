@@ -885,12 +885,13 @@ function EntryPage() {
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
                 </div>
-                <ResizableTextarea
+                <RichTextField
                   storageKey="where"
                   className="de-textarea"
+                  allowImages
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
-                  onChange={(e) => { setWhereText(e.target.value); scheduleSave("where_text", e.target.value); }}
+                  onChange={(html) => { setWhereText(html); scheduleSave("where_text", html); }}
                 />
                 {statusRow("where_text")}
               </div>

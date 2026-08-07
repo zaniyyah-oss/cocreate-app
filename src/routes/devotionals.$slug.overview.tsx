@@ -247,7 +247,7 @@ function OverviewPage() {
       user_id: userId,
       devotional_template_id: t.id,
     } as any, { onConflict: "user_id,devotional_template_id" } as any);
-    navigate({ to: "/devotionals/$id", params: { id: t.id } });
+    navigate({ to: "/devotionals/$id", params: { id: t.id }, search: {} as any });
   };
 
   if (q.isLoading) {
@@ -291,7 +291,7 @@ function OverviewPage() {
             <p>{t.widget_subheading || "Bring this devotional into your daily workspace and start Day 1 whenever you're ready."}</p>
           </div>
           {added ? (
-            <Link to="/devotionals/$id" params={{ id: t.id }} className="dov-widget-cta added">Open in workspace →</Link>
+            <Link to="/devotionals/$id" params={{ id: t.id }} search={{} as any} className="dov-widget-cta added">Open in workspace →</Link>
           ) : (
             <button type="button" className="dov-widget-cta" onClick={addToWorkspace}>
               {t.widget_cta_label || "Start this devotional"}

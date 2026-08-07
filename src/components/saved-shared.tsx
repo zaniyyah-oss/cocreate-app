@@ -406,7 +406,7 @@ export function openContent(navigate: ReturnType<typeof useNavigate>, c: Preview
 }
 
 export function openTemplate(navigate: ReturnType<typeof useNavigate>, t: Template) {
-  navigate({ to: "/devotionals/$id", params: { id: t.id } });
+  navigate({ to: "/devotionals/$id", params: { id: t.id }, search: {} as any });
 }
 
 // ─── Abide entry history ────────────────────────────────────────────

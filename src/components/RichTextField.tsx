@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { refreshWorkspaceImages, uploadWorkspaceImage } from "@/lib/workspace-images";
 
 type Props = {
   value: string;
@@ -9,6 +10,8 @@ type Props = {
   storageKey?: string;
   disabled?: boolean;
   style?: React.CSSProperties;
+  /** Show a "Photo" button that uploads and inlines an image. */
+  allowImages?: boolean;
 };
 
 /**
@@ -19,11 +22,14 @@ type Props = {
  * same way ResizableTextarea persists it.
  */
 export function RichTextField({
-  value, onChange, onBlur, placeholder, className, storageKey, disabled, style,
+  value, onChange, onBlur, placeholder, className, storageKey, disabled, style, allowImages,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const lastValueRef = useRef<string>("");
   const [focused, setFocused] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
 
   // Sync incoming value into the DOM only when it differs from what the
   // editor currently shows (prevents caret jumps while typing).
@@ -33,8 +39,9 @@ export function RichTextField({
     if (value !== el.innerHTML && value !== lastValueRef.current) {
       el.innerHTML = value ?? "";
       lastValueRef.current = value ?? "";
+      if (allowImages) void refreshWorkspaceImages(el);
     }
-  }, [value]);
+  }, [value, allowImages]);
 
   // Restore + persist height (same convention as ResizableTextarea).
   useEffect(() => {
@@ -79,6 +86,28 @@ export function RichTextField({
     onChange(html);
   };
 
+  const insertImage = async (file: File) => {
+    const el = ref.current;
+    if (!el) return;
+    setImgError(null);
+    setUploading(true);
+    try {
+      const { path, url } = await uploadWorkspaceImage(file);
+      const html = `<p><img src="${url}" data-ws-path="${path}" alt="" /></p><p><br/></p>`;
+      el.focus();
+      let inserted = false;
+      try { inserted = document.execCommand("insertHTML", false, html); } catch { inserted = false; }
+      if (!inserted) el.insertAdjacentHTML("beforeend", html);
+      const next = el.innerHTML;
+      lastValueRef.current = next;
+      onChange(next);
+    } catch (err) {
+      setImgError(err instanceof Error ? err.message : "Couldn't add that photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className={`rtf-wrap ${className ?? ""}`} style={style}>
       <div className={`rtf-toolbar ${focused ? "is-visible" : ""}`} aria-hidden={!focused} onMouseDown={(e) => e.preventDefault()}>
@@ -88,6 +117,33 @@ export function RichTextField({
         <span className="rtf-sep" />
         <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Bulleted list" onClick={() => exec("insertUnorderedList")}>•&nbsp;List</button>
         <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Numbered list" onClick={() => exec("insertOrderedList")}>1.&nbsp;List</button>
+        {allowImages && (
+          <>
+            <span className="rtf-sep" />
+            <button
+              type="button"
+              tabIndex={focused ? 0 : -1}
+              className="rtf-btn"
+              title="Add photo"
+              disabled={uploading || disabled}
+              onClick={() => fileRef.current?.click()}
+            >
+              {uploading ? "Uploading…" : "🖼 Photo"}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void insertImage(f);
+              }}
+            />
+            {imgError && <span className="rtf-err">{imgError}</span>}
+          </>
+        )}
       </div>
       <div
         ref={ref}
@@ -173,6 +229,8 @@ export function RichTextField({
         .rtf-editor ul{list-style:disc;padding-left:22px;margin:4px 0;}
         .rtf-editor ol{list-style:decimal;padding-left:22px;margin:4px 0;}
         .rtf-editor p{margin:0 0 4px;}
+        .rtf-editor img{max-width:100%;height:auto;border-radius:10px;margin:6px 0;display:block;}
+        .rtf-err{font-size:11px;color:#b3261e;}
       ` }} />
 
     </div>
