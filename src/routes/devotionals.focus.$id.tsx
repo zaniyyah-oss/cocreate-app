@@ -284,7 +284,7 @@ function FocusPage() {
                   type="button"
                   className="fp-chip"
                   onClick={() => {
-                    if (defaultQ.data) navigate({ to: "/devotionals/$id", params: { id: defaultQ.data } });
+                    if (defaultQ.data) navigate({ to: "/devotionals/$id", params: { id: defaultQ.data }, search: {} as any });
                     else navigate({ to: "/devotionals" });
                   }}
                 >
@@ -403,7 +403,7 @@ function FocusPage() {
             </div>
 
             {defaultQ.data && (
-              <Link to="/devotionals/$id" params={{ id: defaultQ.data }} className="fp-cta">
+              <Link to="/devotionals/$id" params={{ id: defaultQ.data }} search={{} as any} className="fp-cta">
                 ← Back to today's entry
               </Link>
             )}
