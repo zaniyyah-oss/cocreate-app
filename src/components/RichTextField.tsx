@@ -22,11 +22,14 @@ type Props = {
  * same way ResizableTextarea persists it.
  */
 export function RichTextField({
-  value, onChange, onBlur, placeholder, className, storageKey, disabled, style,
+  value, onChange, onBlur, placeholder, className, storageKey, disabled, style, allowImages,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const lastValueRef = useRef<string>("");
   const [focused, setFocused] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
 
   // Sync incoming value into the DOM only when it differs from what the
   // editor currently shows (prevents caret jumps while typing).
@@ -36,8 +39,9 @@ export function RichTextField({
     if (value !== el.innerHTML && value !== lastValueRef.current) {
       el.innerHTML = value ?? "";
       lastValueRef.current = value ?? "";
+      if (allowImages) void refreshWorkspaceImages(el);
     }
-  }, [value]);
+  }, [value, allowImages]);
 
   // Restore + persist height (same convention as ResizableTextarea).
   useEffect(() => {
