@@ -86,6 +86,28 @@ export function RichTextField({
     onChange(html);
   };
 
+  const insertImage = async (file: File) => {
+    const el = ref.current;
+    if (!el) return;
+    setImgError(null);
+    setUploading(true);
+    try {
+      const { path, url } = await uploadWorkspaceImage(file);
+      const html = `<p><img src="${url}" data-ws-path="${path}" alt="" /></p><p><br/></p>`;
+      el.focus();
+      let inserted = false;
+      try { inserted = document.execCommand("insertHTML", false, html); } catch { inserted = false; }
+      if (!inserted) el.insertAdjacentHTML("beforeend", html);
+      const next = el.innerHTML;
+      lastValueRef.current = next;
+      onChange(next);
+    } catch (err) {
+      setImgError(err instanceof Error ? err.message : "Couldn't add that photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className={`rtf-wrap ${className ?? ""}`} style={style}>
       <div className={`rtf-toolbar ${focused ? "is-visible" : ""}`} aria-hidden={!focused} onMouseDown={(e) => e.preventDefault()}>
@@ -95,6 +117,33 @@ export function RichTextField({
         <span className="rtf-sep" />
         <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Bulleted list" onClick={() => exec("insertUnorderedList")}>•&nbsp;List</button>
         <button type="button" tabIndex={focused ? 0 : -1} className="rtf-btn" title="Numbered list" onClick={() => exec("insertOrderedList")}>1.&nbsp;List</button>
+        {allowImages && (
+          <>
+            <span className="rtf-sep" />
+            <button
+              type="button"
+              tabIndex={focused ? 0 : -1}
+              className="rtf-btn"
+              title="Add photo"
+              disabled={uploading || disabled}
+              onClick={() => fileRef.current?.click()}
+            >
+              {uploading ? "Uploading…" : "🖼 Photo"}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void insertImage(f);
+              }}
+            />
+            {imgError && <span className="rtf-err">{imgError}</span>}
+          </>
+        )}
       </div>
       <div
         ref={ref}
