@@ -431,6 +431,7 @@ function ReadLibrary() {
                 key={b.abbreviation}
                 to="/read/$abbr"
                 params={{ abbr: b.abbreviation }}
+                search={{} as any}
                 className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
                 title={b.full_name}
               >
