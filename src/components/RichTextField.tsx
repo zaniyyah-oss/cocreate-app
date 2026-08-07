@@ -229,6 +229,8 @@ export function RichTextField({
         .rtf-editor ul{list-style:disc;padding-left:22px;margin:4px 0;}
         .rtf-editor ol{list-style:decimal;padding-left:22px;margin:4px 0;}
         .rtf-editor p{margin:0 0 4px;}
+        .rtf-editor img{max-width:100%;height:auto;border-radius:10px;margin:6px 0;display:block;}
+        .rtf-err{font-size:11px;color:#b3261e;}
       ` }} />
 
     </div>
