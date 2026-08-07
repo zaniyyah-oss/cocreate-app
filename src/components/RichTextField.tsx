@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { refreshWorkspaceImages, uploadWorkspaceImage } from "@/lib/workspace-images";
 
 type Props = {
   value: string;
@@ -9,6 +10,8 @@ type Props = {
   storageKey?: string;
   disabled?: boolean;
   style?: React.CSSProperties;
+  /** Show a "Photo" button that uploads and inlines an image. */
+  allowImages?: boolean;
 };
 
 /**
