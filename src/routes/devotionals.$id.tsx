@@ -595,21 +595,28 @@ function EntryPage() {
     };
 
     const apply = () => {
-      const anchor = cols.querySelector<HTMLElement>(".de-read-part .rtf-editor");
+      // The To-Do column sets the baseline: its open text + Tasks list is the
+      // tallest content in the row once steps are added. Read and Pray stretch
+      // down to meet it so the extra room shows more of what was written
+      // instead of empty card space.
+      const anchor = cols.querySelector<HTMLElement>("#sec-todo .de-todos");
+      const read = cols.querySelector<HTMLElement>(".de-read-part .rtf-editor");
       const pray = cols.querySelector<HTMLElement>(".de-pray-textarea .rtf-editor");
       const todo = cols.querySelector<HTMLElement>(".de-todo-textarea .rtf-editor");
-      const targets = [pray, todo];
+      const targets = [read, pray];
       const threeCol =
         typeof window !== "undefined" && window.matchMedia("(min-width:900px)").matches;
       if (!threeCol || !anchor || cols.querySelector(".de-block.is-full")) {
-        targets.forEach(clear);
+        [read, pray, todo].forEach(clear);
         return;
       }
+      // To-Do keeps its natural height — never resized by this effect.
+      clear(todo);
       const bottom = anchor.getBoundingClientRect().bottom;
       targets.forEach((el) => {
         if (!el) return;
         const h = Math.round(bottom - el.getBoundingClientRect().top);
-        if (h < 90) {
+        if (h < 120) {
           clear(el);
           return;
         }
@@ -621,6 +628,7 @@ function EntryPage() {
       });
     };
 
+
     let frame = 0;
     const schedule = () => {
       cancelAnimationFrame(frame);
@@ -629,13 +637,21 @@ function EntryPage() {
 
     schedule();
     const read = cols.querySelector("#sec-read");
+    const todoCol = cols.querySelector("#sec-todo");
+    const tasks = cols.querySelector("#sec-todo .de-todos");
     const ro = new ResizeObserver(schedule);
+    // Observe intrinsic-height content only — observing the cards themselves
+    // would feed their stretched row height back in as a resize loop.
+    if (tasks) ro.observe(tasks);
     if (read) ro.observe(read);
-    // Read column also grows as pickers/text hydrate — re-measure on DOM changes.
+    // Re-measure as tasks are added/removed and as pickers/text hydrate.
     const mo = new MutationObserver(schedule);
-    if (read) mo.observe(read, { childList: true, subtree: true, characterData: true });
+    const moOpts = { childList: true, subtree: true, characterData: true } as const;
+    if (todoCol) mo.observe(todoCol, moOpts);
+    if (read) mo.observe(read, moOpts);
     const timers = [120, 500, 1200, 2500].map((ms) => setTimeout(schedule, ms));
     window.addEventListener("resize", schedule);
+
     return () => {
       cancelAnimationFrame(frame);
       timers.forEach(clearTimeout);
