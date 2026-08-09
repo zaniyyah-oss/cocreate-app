@@ -1038,7 +1038,7 @@ function EntryPage() {
 
               {/* 2/3/4 stacked triad — one connected white card */}
               <div className="de-stack">
-                <div className="de-cols">
+                <div className="de-cols" ref={colsRef}>
                   {/* Read */}
                   <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
                     <div className="de-block-header">
@@ -1109,7 +1109,7 @@ function EntryPage() {
                     <div className="de-read-part">
                       <ResizableTextarea
                         storageKey="further"
-                        className="de-textarea short"
+                        className="de-textarea short de-supp"
                         placeholder="What supplemental material will you be reviewing today?"
                         value={furtherReading}
                         onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
@@ -1145,7 +1145,7 @@ function EntryPage() {
                     
                     <RichTextField
                       storageKey="todo"
-                      className="de-textarea short"
+                      className="de-textarea short de-todo-textarea"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
                       onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
