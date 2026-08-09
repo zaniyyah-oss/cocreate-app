@@ -838,6 +838,7 @@ function NoteBody({
           colors={tagColors}
           onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
           onCreate={(t) => addTag(t)}
+          onDeleted={(t) => { setTags((cur) => cur.filter((x) => x !== t)); }}
           draft={tagDraft}
           setDraft={setTagDraft}
         />
