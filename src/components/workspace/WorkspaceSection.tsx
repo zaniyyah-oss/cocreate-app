@@ -895,6 +895,7 @@ function TagMultiSelect({
   colors,
   onToggle,
   onCreate,
+  onDeleted,
   draft,
   setDraft,
 }: {
@@ -904,10 +905,13 @@ function TagMultiSelect({
   colors: Record<string, string>;
   onToggle: (t: string) => void;
   onCreate: (t: string) => void;
+  onDeleted: (t: string) => void;
   draft: string;
   setDraft: (v: string) => void;
 }) {
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
