@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { refreshWorkspaceImages, uploadWorkspaceImage } from "@/lib/workspace-images";
+import { clampSavedHeight, isUserResize } from "@/lib/editor-height";
 
 type Props = {
   value: string;
