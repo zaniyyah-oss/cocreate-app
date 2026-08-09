@@ -575,7 +575,7 @@ function EntryPage() {
   const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
   const entrySaveInFlightRef = useRef(false);
   const currentEntryIdRef = useRef<string | null>(null);
-  const colsRef = useRef<HTMLDivElement>(null);
+  const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     currentEntryIdRef.current = currentEntry?.id ?? null;
@@ -585,7 +585,7 @@ function EntryPage() {
      the Pray and To-Do writing areas end on the same baseline as the bottom
      rule of Read's "supplemental material" field. */
   useEffect(() => {
-    const cols = colsRef.current;
+    const cols = colsEl;
     if (!cols) return;
 
     const clear = (el: HTMLElement | null) => {
@@ -1038,7 +1038,7 @@ function EntryPage() {
 
               {/* 2/3/4 stacked triad — one connected white card */}
               <div className="de-stack">
-                <div className="de-cols" ref={colsRef}>
+                <div className="de-cols" ref={setColsEl}>
                   {/* Read */}
                   <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
                     <div className="de-block-header">
