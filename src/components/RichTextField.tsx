@@ -143,16 +143,16 @@ export function RichTextField({
   };
 
   /** Pull a list item back out of its list, as a plain paragraph. */
-  const unwrapListItem = (li: HTMLElement) => {
+  const unwrapListItem = (li: HTMLElement): HTMLElement | null => {
     const list = li.parentElement;
-    if (!list) return;
+    if (!list) return null;
     const p = document.createElement("p");
     while (li.firstChild) p.appendChild(li.firstChild);
     if (!p.firstChild) p.appendChild(document.createElement("br"));
     const before = Array.from(list.children).slice(0, Array.from(list.children).indexOf(li));
     const after = Array.from(list.children).slice(Array.from(list.children).indexOf(li) + 1);
     const parent = list.parentElement;
-    if (!parent) return;
+    if (!parent) return null;
     parent.insertBefore(p, list.nextSibling);
     li.remove();
     if (after.length > 0) {
@@ -161,6 +161,7 @@ export function RichTextField({
       parent.insertBefore(rest, p.nextSibling);
     }
     if (before.length === 0) list.remove();
+    return p;
   };
 
   const exec = (cmd: string) => {
@@ -179,7 +180,8 @@ export function RichTextField({
         if (li && li !== el) {
           const list = (li as HTMLElement).parentElement;
           if (list && ((list.nodeName === "OL") === ordered)) {
-            unwrapListItem(li as HTMLElement); // toggle off
+            const para = unwrapListItem(li as HTMLElement); // toggle off
+            if (!el.contains(node) && para) { try { setCaret(para, 0); } catch { /* ignore */ } }
           } else if (list) {
             const swapped = document.createElement(ordered ? "ol" : "ul");
             while (list.firstChild) swapped.appendChild(list.firstChild);
@@ -311,8 +313,11 @@ export function RichTextField({
             pre.setEnd(range.startContainer, range.startOffset);
             if (pre.toString().length > 0) return;
             e.preventDefault();
-            unwrapListItem(li as HTMLElement);
-            try { setCaret(node, Math.min(range.startOffset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length)); } catch { /* ignore */ }
+            const para = unwrapListItem(li as HTMLElement);
+            try {
+              if (editor.contains(node)) setCaret(node, Math.min(range.startOffset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length));
+              else if (para) setCaret(para, 0);
+            } catch { /* ignore */ }
 
             const html = editor.innerHTML;
             lastValueRef.current = html;
