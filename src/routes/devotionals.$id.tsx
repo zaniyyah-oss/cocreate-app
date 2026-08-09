@@ -633,10 +633,16 @@ function EntryPage() {
     const read = cols.querySelector("#sec-read");
     const ro = new ResizeObserver(schedule);
     if (read) ro.observe(read);
+    // Read column also grows as pickers/text hydrate — re-measure on DOM changes.
+    const mo = new MutationObserver(schedule);
+    if (read) mo.observe(read, { childList: true, subtree: true, characterData: true });
+    const timers = [120, 500, 1200, 2500].map((ms) => setTimeout(schedule, ms));
     window.addEventListener("resize", schedule);
     return () => {
       cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
       ro.disconnect();
+      mo.disconnect();
       window.removeEventListener("resize", schedule);
     };
   }, [colsEl, focusSection, currentEntry?.id]);
