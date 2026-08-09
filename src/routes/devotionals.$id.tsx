@@ -28,7 +28,22 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
-type TodoItem = { id: string; text: string; done: boolean; due_date?: string | null };
+type TodoStatus = "not_started" | "in_progress" | "done";
+
+type TodoItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  due_date?: string | null;
+  /** Tri-state status. `done` stays in sync for older rows / calendar reads. */
+  status?: TodoStatus;
+  /** Rich-text detail, only surfaced in focus mode. */
+  details?: string | null;
+};
+
+const todoStatusOf = (it: TodoItem): TodoStatus =>
+  it.status ?? (it.done ? "done" : "not_started");
+
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
