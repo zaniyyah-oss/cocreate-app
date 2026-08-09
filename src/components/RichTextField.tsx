@@ -183,8 +183,8 @@ export function RichTextField({
         if (li && li !== el) {
           const list = (li as HTMLElement).parentElement;
           if (list && ((list.nodeName === "OL") === ordered)) {
-            const para = unwrapListItem(li as HTMLElement);
-            console.log("RTF backspace", (node as any).nodeName, editor.contains(node), para?.outerHTML); // toggle off
+            const para = unwrapListItem(li as HTMLElement); // toggle off
+
             if (!el.contains(node) && para) { try { setCaret(para, 0); } catch { /* ignore */ } }
           } else if (list) {
             const swapped = document.createElement(ordered ? "ol" : "ul");
