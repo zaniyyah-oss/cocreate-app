@@ -36,6 +36,9 @@ export function RichTextField({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Never rewrite the DOM while the user is typing in this field — doing so
+    // collapses the caret to the start of the editor.
+    if (typeof document !== "undefined" && document.activeElement === el) return;
     if (value !== el.innerHTML && value !== lastValueRef.current) {
       el.innerHTML = value ?? "";
       lastValueRef.current = value ?? "";
@@ -76,15 +79,151 @@ export function RichTextField({
     return () => { ro.disconnect(); if (t) clearTimeout(t); };
   }, [storageKey]);
 
+  const BLOCKS = new Set(["P", "DIV", "LI", "UL", "OL", "H1", "H2", "H3", "BLOCKQUOTE", "PRE"]);
+
+  /** Nearest block ancestor of `node` inside the editor. */
+  const blockOf = (editor: HTMLElement, node: Node): HTMLElement | null => {
+    let p: Node | null = node;
+    while (p && p !== editor) {
+      if (p.nodeType === Node.ELEMENT_NODE && BLOCKS.has((p as HTMLElement).nodeName)) return p as HTMLElement;
+      p = p.parentNode;
+    }
+    return null;
+  };
+
+  /**
+   * Wrap every stray top-level inline run (text nodes / spans separated by
+   * <br>) into its own <p>. Browsers otherwise apply list commands to the
+   * nearest bare text run — which made the bullet appear on the line above.
+   * Existing nodes are moved, never cloned, so the caret's node survives.
+   */
+  const normalizeBlocks = (editor: HTMLElement) => {
+    const kids = Array.from(editor.childNodes);
+    let run: ChildNode[] = [];
+    const flush = (before: ChildNode | null) => {
+      if (run.length === 0) return;
+      const p = document.createElement("p");
+      editor.insertBefore(p, before);
+      run.forEach((n) => p.appendChild(n));
+      if (!p.firstChild) p.appendChild(document.createElement("br"));
+      run = [];
+    };
+    for (const n of kids) {
+      const isBlock = n.nodeType === Node.ELEMENT_NODE && BLOCKS.has(n.nodeName);
+      if (isBlock) { flush(n); continue; }
+      if (n.nodeName === "BR") { flush(n); editor.removeChild(n); continue; }
+      run.push(n);
+    }
+    flush(null);
+  };
+
+  /** Turn a single block element into a list item, merging with an adjacent
+   *  list of the same type when there is one. */
+  const toList = (editor: HTMLElement, block: HTMLElement, ordered: boolean): HTMLLIElement => {
+    const tag = ordered ? "OL" : "UL";
+    const li = document.createElement("li");
+    while (block.firstChild) li.appendChild(block.firstChild);
+    const prev = block.previousElementSibling;
+    const next = block.nextElementSibling;
+    if (prev && prev.nodeName === tag) {
+      prev.appendChild(li);
+      if (next && next.nodeName === tag) {
+        while (next.firstChild) prev.appendChild(next.firstChild);
+        next.remove();
+      }
+      block.remove();
+      return li;
+    }
+    if (next && next.nodeName === tag) {
+      next.insertBefore(li, next.firstChild);
+      block.remove();
+      return li;
+    }
+    const list = document.createElement(ordered ? "ol" : "ul");
+    list.appendChild(li);
+    editor.replaceChild(list, block);
+    return li;
+  };
+
+  /** Pull a list item back out of its list, as a plain paragraph. */
+  const unwrapListItem = (li: HTMLElement): HTMLElement | null => {
+    const list = li.parentElement;
+    if (!list) return null;
+    const p = document.createElement("p");
+    while (li.firstChild) p.appendChild(li.firstChild);
+    if (!p.firstChild) p.appendChild(document.createElement("br"));
+    const before = Array.from(list.children).slice(0, Array.from(list.children).indexOf(li));
+    const after = Array.from(list.children).slice(Array.from(list.children).indexOf(li) + 1);
+    const parent = list.parentElement;
+    if (!parent) return null;
+    parent.insertBefore(p, list.nextSibling);
+    li.remove();
+    if (after.length > 0) {
+      const rest = document.createElement(list.nodeName.toLowerCase());
+      after.forEach((n) => rest.appendChild(n));
+      parent.insertBefore(rest, p.nextSibling);
+    }
+    if (before.length === 0) list.remove();
+    return p;
+  };
+
   const exec = (cmd: string) => {
     const el = ref.current;
     if (!el) return;
     el.focus();
+    if (cmd === "insertUnorderedList" || cmd === "insertOrderedList") {
+      const ordered = cmd === "insertOrderedList";
+      const sel = window.getSelection();
+      const r = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+      const node = r?.startContainer ?? null;
+      const offset = r?.startOffset ?? 0;
+      if (node && el.contains(node)) {
+        let li: Node | null = node;
+        while (li && li !== el && li.nodeName !== "LI") li = li.parentNode;
+        if (li && li !== el) {
+          const list = (li as HTMLElement).parentElement;
+          if (list && ((list.nodeName === "OL") === ordered)) {
+            const para = unwrapListItem(li as HTMLElement); // toggle off
+
+            if (!el.contains(node) && para) { try { setCaret(para, 0); } catch { /* ignore */ } }
+          } else if (list) {
+            const swapped = document.createElement(ordered ? "ol" : "ul");
+            while (list.firstChild) swapped.appendChild(list.firstChild);
+            list.parentElement?.replaceChild(swapped, list);
+          }
+        } else {
+          normalizeBlocks(el);
+          const block = blockOf(el, node);
+          if (block && block !== el) toList(el, block, ordered);
+        }
+        if (el.contains(node)) {
+          try { setCaret(node, Math.min(offset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length)); } catch { /* ignore */ }
+        }
+
+      }
+      const html0 = el.innerHTML;
+      lastValueRef.current = html0;
+      onChange(html0);
+      return;
+    }
     try { document.execCommand(cmd, false); } catch { /* ignore */ }
     const html = el.innerHTML;
     lastValueRef.current = html;
     onChange(html);
   };
+
+
+
+  const setCaret = (node: Node, offset: number) => {
+    const sel = window.getSelection();
+    if (!sel) return;
+    const r = document.createRange();
+    r.setStart(node, offset);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  };
+
 
   const insertImage = async (file: File) => {
     const el = ref.current;
@@ -163,6 +302,35 @@ export function RichTextField({
               return;
             }
           }
+          // Backspace at the very start of a list item leaves the list
+          // instead of merging into the line above.
+          if (e.key === "Backspace") {
+            const sel = window.getSelection();
+            const editor = ref.current;
+            if (!sel || !editor || sel.rangeCount === 0 || !sel.isCollapsed) return;
+            const range = sel.getRangeAt(0);
+            const node = range.startContainer;
+            if (!editor.contains(node)) return;
+            let li: Node | null = node;
+            while (li && li !== editor && (li as HTMLElement).nodeName !== "LI") li = li.parentNode;
+            if (!li || li === editor) return;
+            // Is the caret at the very beginning of this <li>?
+            const pre = document.createRange();
+            pre.selectNodeContents(li);
+            pre.setEnd(range.startContainer, range.startOffset);
+            if (pre.toString().length > 0) return;
+            e.preventDefault();
+            const para = unwrapListItem(li as HTMLElement);
+            try {
+              if (editor.contains(node)) setCaret(node, Math.min(range.startOffset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length));
+              else if (para) setCaret(para, 0);
+            } catch { /* ignore */ }
+
+            const html = editor.innerHTML;
+            lastValueRef.current = html;
+            onChange(html);
+            return;
+          }
           // Markdown-style list shortcuts on space: "-", "*", or "1." at the
           // very start of the current line converts it to a list.
           if (e.key === " ") {
@@ -188,24 +356,41 @@ export function RichTextField({
             else if (/^\d+\.$/.test(trimmed)) cmd = "insertOrderedList";
             if (!cmd) return;
             e.preventDefault();
-            // Remove the marker characters, then convert the (now empty)
-            // line into a list.
-            const delRange = document.createRange();
-            delRange.setStart(node, 0);
-            delRange.setEnd(node, range.startOffset);
-            delRange.deleteContents();
-            try { document.execCommand(cmd, false); } catch { /* ignore */ }
+            const offset = range.startOffset;
+            // Give every line its own block first, then convert exactly that
+            // block — execCommand alone bullets the nearest bare text run,
+            // which is what put the bullet on the line above.
+            normalizeBlocks(editor);
+            const block = blockOf(editor, node);
+            (node as Text).deleteData(0, offset);
+            if (block && block !== editor) {
+              const li = toList(editor, block, cmd === "insertOrderedList");
+              if (editor.contains(node)) setCaret(node, 0);
+              else if (li) setCaret(li, 0);
+            } else {
+
+              setCaret(node, 0);
+              try { document.execCommand(cmd, false); } catch { /* ignore */ }
+            }
             const html = editor.innerHTML;
             lastValueRef.current = html;
             onChange(html);
+
           }
         }}
+
         onInput={(e) => {
           const html = (e.currentTarget as HTMLDivElement).innerHTML;
           lastValueRef.current = html;
           onChange(html);
         }}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          // Enter should create real paragraphs so list commands stay scoped
+          // to a single line.
+          try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch { /* ignore */ }
+        }}
+
         onBlur={(e) => {
           // Keep toolbar visible if focus moved to a toolbar button.
           const next = e.relatedTarget as Node | null;
