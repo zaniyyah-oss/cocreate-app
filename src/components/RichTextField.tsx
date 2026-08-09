@@ -116,7 +116,7 @@ export function RichTextField({
 
   /** Turn a single block element into a list item, merging with an adjacent
    *  list of the same type when there is one. */
-  const toList = (editor: HTMLElement, block: HTMLElement, ordered: boolean) => {
+  const toList = (editor: HTMLElement, block: HTMLElement, ordered: boolean): HTMLLIElement => {
     const tag = ordered ? "OL" : "UL";
     const li = document.createElement("li");
     while (block.firstChild) li.appendChild(block.firstChild);
@@ -129,16 +129,17 @@ export function RichTextField({
         next.remove();
       }
       block.remove();
-      return;
+      return li;
     }
     if (next && next.nodeName === tag) {
       next.insertBefore(li, next.firstChild);
       block.remove();
-      return;
+      return li;
     }
     const list = document.createElement(ordered ? "ol" : "ul");
     list.appendChild(li);
     editor.replaceChild(list, block);
+    return li;
   };
 
   /** Pull a list item back out of its list, as a plain paragraph. */
