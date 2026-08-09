@@ -192,7 +192,10 @@ export function RichTextField({
           const block = blockOf(el, node);
           if (block && block !== el) toList(el, block, ordered);
         }
-        try { setCaret(node, Math.min(offset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length)); } catch { /* ignore */ }
+        if (el.contains(node)) {
+          try { setCaret(node, Math.min(offset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length)); } catch { /* ignore */ }
+        }
+
       }
       const html0 = el.innerHTML;
       lastValueRef.current = html0;
