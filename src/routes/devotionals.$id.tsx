@@ -622,7 +622,7 @@ function EntryPage() {
       targets.forEach((el) => {
         const h = Math.round(bottom) - Math.round(el.getBoundingClientRect().top);
         if (h < 90) return;
-        if (Math.abs(el.getBoundingClientRect().height - h) < 1.5) return;
+        if (Math.abs(el.getBoundingClientRect().height - h) < 0.6) return;
         el.style.setProperty("height", `${h}px`, "important");
         el.style.setProperty("min-height", `${h}px`, "important");
         el.style.setProperty("max-height", `${h}px`, "important");
