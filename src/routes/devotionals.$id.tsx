@@ -1095,12 +1095,18 @@ function EntryPage() {
                         const focused = focusSection === "todo";
                         const open = focused && openTodoId === it.id;
                         return (
-                        <div key={it.id} className="de-todo">
-                          <input
-                            type="checkbox"
-                            checked={status === "done"}
-                            onChange={(e) => setTodoStatus(idx, e.target.checked ? "done" : "not_started")}
-                          />
+                        <div key={it.id} className="de-todo" data-status={status}>
+                          <select
+                            className="de-todo-select"
+                            data-s={status}
+                            value={status}
+                            aria-label="Task status"
+                            onChange={(e) => setTodoStatus(idx, e.target.value as TodoStatus)}
+                          >
+                            <option value="not_started">Not started</option>
+                            <option value="in_progress">In progress</option>
+                            <option value="done">Complete</option>
+                          </select>
                           <TodoTextArea
                             done={status === "done"}
                             value={it.text}
@@ -1115,26 +1121,8 @@ function EntryPage() {
                           />
                           <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
 
-                          {/* Focus-mode extras: status + details */}
+                          {/* Focus-mode extras: details */}
                           <div className="de-todo-more">
-                            <div className="de-todo-status" role="group" aria-label="Task status">
-                              {([
-                                ["not_started", "Not started"],
-                                ["in_progress", "In progress"],
-                                ["done", "Complete"],
-                              ] as [TodoStatus, string][]).map(([s, label]) => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  data-s={s}
-                                  className={status === s ? "on" : ""}
-                                  aria-pressed={status === s}
-                                  onClick={() => setTodoStatus(idx, s)}
-                                >
-                                  {label}
-                                </button>
-                              ))}
-                            </div>
                             <button
                               type="button"
                               className="de-todo-details-btn"
@@ -1143,6 +1131,7 @@ function EntryPage() {
                               {open ? "▴ Hide details" : (it.details ? "▾ Details" : "＋ Add details")}
                             </button>
                           </div>
+
 
                           {open && (
                             <div className="de-todo-details">
