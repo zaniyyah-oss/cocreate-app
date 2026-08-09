@@ -44,6 +44,33 @@ type TodoItem = {
 const todoStatusOf = (it: TodoItem): TodoStatus =>
   it.status ?? (it.done ? "done" : "not_started");
 
+/** Task title field that grows to a second (and third) row instead of
+ *  truncating, so a long task and its due date are both visible. */
+function TodoTextArea({
+  value, done, onChange,
+}: { value: string; done: boolean; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(fit, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={`de-todo-text${done ? " done" : ""}`}
+      placeholder="A small, specific step"
+      value={value}
+      onInput={fit}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+    />
+  );
+}
+
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
