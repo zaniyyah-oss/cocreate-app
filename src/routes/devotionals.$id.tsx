@@ -637,13 +637,21 @@ function EntryPage() {
 
     schedule();
     const read = cols.querySelector("#sec-read");
+    const todoCol = cols.querySelector("#sec-todo");
+    const tasks = cols.querySelector("#sec-todo .de-todos");
     const ro = new ResizeObserver(schedule);
+    // Observe intrinsic-height content only — observing the cards themselves
+    // would feed their stretched row height back in as a resize loop.
+    if (tasks) ro.observe(tasks);
     if (read) ro.observe(read);
-    // Read column also grows as pickers/text hydrate — re-measure on DOM changes.
+    // Re-measure as tasks are added/removed and as pickers/text hydrate.
     const mo = new MutationObserver(schedule);
-    if (read) mo.observe(read, { childList: true, subtree: true, characterData: true });
+    const moOpts = { childList: true, subtree: true, characterData: true } as const;
+    if (todoCol) mo.observe(todoCol, moOpts);
+    if (read) mo.observe(read, moOpts);
     const timers = [120, 500, 1200, 2500].map((ms) => setTimeout(schedule, ms));
     window.addEventListener("resize", schedule);
+
     return () => {
       cancelAnimationFrame(frame);
       timers.forEach(clearTimeout);
