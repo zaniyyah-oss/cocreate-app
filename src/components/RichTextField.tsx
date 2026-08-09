@@ -351,9 +351,11 @@ export function RichTextField({
             const block = blockOf(editor, node);
             (node as Text).deleteData(0, offset);
             if (block && block !== editor) {
-              toList(editor, block, cmd === "insertOrderedList");
-              setCaret(node, 0);
+              const li = toList(editor, block, cmd === "insertOrderedList");
+              if (editor.contains(node)) setCaret(node, 0);
+              else if (li) setCaret(li, 0);
             } else {
+
               setCaret(node, 0);
               try { document.execCommand(cmd, false); } catch { /* ignore */ }
             }
