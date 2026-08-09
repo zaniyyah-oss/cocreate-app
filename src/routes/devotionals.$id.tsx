@@ -1097,17 +1097,10 @@ function EntryPage() {
                         const open = focused && openTodoId === it.id;
                         return (
                         <div key={it.id} className="de-todo" data-status={status}>
-                          <select
-                            className="de-todo-select"
-                            data-s={status}
+                          <TodoStatusSelect
                             value={status}
-                            aria-label="Task status"
-                            onChange={(e) => setTodoStatus(idx, e.target.value as TodoStatus)}
-                          >
-                            <option value="not_started">Not started</option>
-                            <option value="in_progress">In progress</option>
-                            <option value="done">Complete</option>
-                          </select>
+                            onChange={(v) => setTodoStatus(idx, v)}
+                          />
                           <TodoTextArea
                             done={status === "done"}
                             value={it.text}
