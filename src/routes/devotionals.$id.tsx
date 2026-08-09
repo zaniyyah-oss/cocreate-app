@@ -215,6 +215,7 @@ const CSS = `
 .de-todo-select{grid-column:1;appearance:none;-webkit-appearance:none;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:4px 10px;margin-top:1px;cursor:pointer;background:rgba(24,26,77,0.06);color:#181A4D;outline:none;}
 .de-todo-select[data-s="in_progress"]{background:#FFE9A8;color:#7a5b00;border-color:rgba(122,91,0,0.25);}
 .de-todo-select[data-s="done"]{background:#CDEBD8;color:#0F4A42;border-color:rgba(15,74,66,0.25);}
+${TodoStatusSelectStyles}
 .de-todo-text{grid-column:2;width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;line-height:1.45;color:#20201c;outline:none;padding:2px 0;resize:none;overflow:hidden;min-height:20px;white-space:pre-wrap;word-break:break-word;}
 .de-todo-text.done{color:#8a8678;text-decoration:line-through;}
 .de-todo[data-status="in_progress"] .de-todo-text{color:#7a5b00;}
