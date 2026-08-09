@@ -887,3 +887,124 @@ function sendWorkspaceKeepalive(itemId: string, patch: Record<string, unknown>, 
     return false;
   }
 }
+
+function TagMultiSelect({
+  userId,
+  guest,
+  selected,
+  colors,
+  onToggle,
+  onCreate,
+  draft,
+  setDraft,
+}: {
+  userId: string;
+  guest: boolean;
+  selected: string[];
+  colors: Record<string, string>;
+  onToggle: (t: string) => void;
+  onCreate: (t: string) => void;
+  draft: string;
+  setDraft: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) { setOpen(false); setDraft(""); }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, setDraft]);
+
+  const allQ = useQuery({
+    queryKey: ["workspace-all-tags", userId],
+    enabled: !guest && !!userId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("workspace_items" as any)
+        .select("tags")
+        .eq("user_id", userId)
+        .limit(500);
+      if (error) throw error;
+      const set = new Set<string>();
+      for (const r of (data as any[]) || []) for (const t of (r.tags || [])) set.add(String(t));
+      return Array.from(set).sort();
+    },
+  });
+
+  const options = useMemo(() => {
+    const set = new Set<string>([...(allQ.data ?? []), ...Object.keys(colors), ...selected]);
+    const q = draft.trim().replace(/^#/, "").toLowerCase();
+    const list = Array.from(set).sort();
+    return q ? list.filter((t) => t.includes(q)) : list;
+  }, [allQ.data, colors, selected, draft]);
+
+  const cleanDraft = draft.trim().replace(/^#/, "").toLowerCase();
+  const canCreate = !!cleanDraft && !options.includes(cleanDraft);
+
+  return (
+    <div className="ws-tagms" ref={wrapRef} onClick={(e) => e.stopPropagation()}>
+      <style>{`
+        .ws-tagms{position:relative;display:inline-block;font-family:'Poppins',sans-serif;}
+        .ws-tagms-btn{background:transparent;border:1px dashed rgba(24,26,77,0.25);color:#20201C;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+        .ws-tagms-btn:hover{border-color:#181A4D;border-style:solid;color:#181A4D;}
+        .ws-tagms-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:90;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:12px;padding:8px;min-width:220px;max-height:280px;overflow:auto;box-shadow:0 8px 24px rgba(24,26,77,0.15);}
+        .ws-tagms-menu input{width:100%;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px;outline:none;background:#fff;}
+        .ws-tagms-menu input:focus{border-color:#181A4D;}
+        .ws-tagms-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:7px 9px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;color:#20201C;text-align:left;}
+        .ws-tagms-opt:hover{background:#FBF8ED;}
+        .ws-tagms-opt.on{background:rgba(15,74,66,0.08);font-weight:700;color:#0F4A42;}
+        .ws-tagms-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(24,26,77,0.15);flex-shrink:0;}
+        .ws-tagms-create{display:block;width:100%;padding:7px 9px;border:none;border-radius:8px;background:#F2FBF4;color:#0F4A42;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;text-align:left;}
+        .ws-tagms-empty{padding:8px 9px;font-size:11.5px;color:#8a8879;}
+      `}</style>
+      <button type="button" className="ws-tagms-btn" onClick={() => setOpen((o) => !o)}>
+        + tag <span aria-hidden>▾</span>
+      </button>
+      {open && (
+        <div className="ws-tagms-menu">
+          <input
+            autoFocus
+            placeholder="Search or create a tag…"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && cleanDraft) {
+                e.preventDefault();
+                if (canCreate) onCreate(cleanDraft);
+                else if (!selected.includes(cleanDraft)) onToggle(cleanDraft);
+                setDraft("");
+              }
+            }}
+          />
+          {options.length === 0 && !canCreate && <div className="ws-tagms-empty">No tags yet.</div>}
+          {options.map((t) => {
+            const on = selected.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                className={`ws-tagms-opt ${on ? "on" : ""}`}
+                onClick={() => onToggle(t)}
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span className="ws-tagms-dot" style={colors[t] ? { background: colors[t] } : undefined} />
+                  #{t}
+                </span>
+                {on && <span>✓</span>}
+              </button>
+            );
+          })}
+          {canCreate && (
+            <button type="button" className="ws-tagms-create" onClick={() => { onCreate(cleanDraft); setDraft(""); }}>
+              + Create "{cleanDraft}"
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
