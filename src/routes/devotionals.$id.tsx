@@ -721,7 +721,7 @@ function EntryPage() {
 
   // Todo item helpers
   const addTodoItem = () => {
-    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false }];
+    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus }];
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
@@ -730,11 +730,14 @@ function EntryPage() {
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+  const setTodoStatus = (idx: number, status: TodoStatus) =>
+    updateTodoItem(idx, { status, done: status === "done" });
   const removeTodoItem = (idx: number) => {
     const next = todoItems.filter((_, i) => i !== idx);
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+
 
   // Guest preview mode: unauthenticated visitors see the full workspace and can
   // interact locally (typing, todos, focus mode). Nothing is written to Supabase.
