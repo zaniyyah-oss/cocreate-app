@@ -210,6 +210,7 @@ const CSS = `
 
 /* To-do */
 .de-todos{margin-top:10px;padding:0;background:transparent;}
+.de-todos-head{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#181A4D;margin:0 0 6px;padding-top:14px;border-top:1px solid rgba(24,26,77,0.12);}
 .de-todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:start;column-gap:10px;row-gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
 .de-todo:last-of-type{border-bottom:none;}
 .de-todo-select{grid-column:1;appearance:none;-webkit-appearance:none;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:4px 10px;margin-top:1px;cursor:pointer;background:rgba(24,26,77,0.06);color:#181A4D;outline:none;}
@@ -820,7 +821,8 @@ function EntryPage() {
   // Todo item helpers
   const addTodoItem = () => {
     // Tasks created on a workspace day are assumed due that day.
-    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus, due_date: selectedDate }];
+    // New tasks are added to the top so the list grows top-down under the header.
+    const next = [{ id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus, due_date: selectedDate }, ...todoItems];
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
@@ -1159,6 +1161,7 @@ function EntryPage() {
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
+                      <div className="de-todos-head">Tasks</div>
                       {todoItems.map((it, idx) => {
                         const status = todoStatusOf(it);
                         const focused = focusSection === "todo";
