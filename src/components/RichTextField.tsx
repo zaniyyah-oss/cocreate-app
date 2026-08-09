@@ -36,6 +36,9 @@ export function RichTextField({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Never rewrite the DOM while the user is typing in this field — doing so
+    // collapses the caret to the start of the editor.
+    if (typeof document !== "undefined" && document.activeElement === el) return;
     if (value !== el.innerHTML && value !== lastValueRef.current) {
       el.innerHTML = value ?? "";
       lastValueRef.current = value ?? "";
@@ -318,7 +321,6 @@ export function RichTextField({
             if (pre.toString().length > 0) return;
             e.preventDefault();
             const para = unwrapListItem(li as HTMLElement);
-            console.log("RTF backspace", (node as any).nodeName, editor.contains(node), para?.outerHTML);
             try {
               if (editor.contains(node)) setCaret(node, Math.min(range.startOffset, node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : node.childNodes.length));
               else if (para) setCaret(para, 0);
