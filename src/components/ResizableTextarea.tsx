@@ -1,4 +1,5 @@
 import { useEffect, useRef, type TextareaHTMLAttributes } from "react";
+import { clampSavedHeight, isUserResize } from "@/lib/editor-height";
 
 type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   storageKey: string;
@@ -17,10 +18,10 @@ export function ResizableTextarea({ storageKey, style, ...rest }: Props) {
     const el = ref.current;
     if (!el || typeof window === "undefined") return;
     try {
-      const saved = window.localStorage.getItem(`de-h:${storageKey}`);
-      if (saved) {
-        const n = parseFloat(saved);
-        if (Number.isFinite(n) && n > 20) el.style.height = `${n}px`;
+      const n = clampSavedHeight(window.localStorage.getItem(`de-h:${storageKey}`));
+      if (n !== null) {
+        el.style.height = `${n}px`;
+        window.localStorage.setItem(`de-h:${storageKey}`, String(Math.round(n)));
       }
     } catch { /* ignore */ }
   }, [storageKey]);
@@ -35,6 +36,7 @@ export function ResizableTextarea({ storageKey, style, ...rest }: Props) {
       const h = el.getBoundingClientRect().height;
       if (Math.abs(h - last) < 1) return;
       last = h;
+      if (!isUserResize(el, h)) return;
       if (t) clearTimeout(t);
       t = setTimeout(() => {
         try { window.localStorage.setItem(`de-h:${storageKey}`, String(Math.round(h))); } catch { /* ignore */ }
@@ -43,6 +45,7 @@ export function ResizableTextarea({ storageKey, style, ...rest }: Props) {
     ro.observe(el);
     return () => { ro.disconnect(); if (t) clearTimeout(t); };
   }, [storageKey]);
+
 
   return <textarea ref={ref} style={style} {...rest} />;
 }

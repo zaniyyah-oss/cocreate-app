@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { refreshWorkspaceImages, uploadWorkspaceImage } from "@/lib/workspace-images";
+import { clampSavedHeight, isUserResize } from "@/lib/editor-height";
 
 type Props = {
   value: string;
@@ -52,10 +53,10 @@ export function RichTextField({
     const el = ref.current;
     if (!el || typeof window === "undefined") return;
     try {
-      const saved = window.localStorage.getItem(`de-h:${storageKey}`);
-      if (saved) {
-        const n = parseFloat(saved);
-        if (Number.isFinite(n) && n > 20) el.style.height = `${n}px`;
+      const n = clampSavedHeight(window.localStorage.getItem(`de-h:${storageKey}`));
+      if (n !== null) {
+        el.style.height = `${n}px`;
+        window.localStorage.setItem(`de-h:${storageKey}`, String(Math.round(n)));
       }
     } catch { /* ignore */ }
   }, [storageKey]);
@@ -70,6 +71,9 @@ export function RichTextField({
       const h = el.getBoundingClientRect().height;
       if (Math.abs(h - last) < 1) return;
       last = h;
+      // Never remember a height that came from focus mode or the column
+      // alignment effect — only genuine user drags.
+      if (!isUserResize(el, h)) return;
       if (t) clearTimeout(t);
       t = setTimeout(() => {
         try { window.localStorage.setItem(`de-h:${storageKey}`, String(Math.round(h))); } catch { /* ignore */ }
@@ -78,6 +82,7 @@ export function RichTextField({
     ro.observe(el);
     return () => { ro.disconnect(); if (t) clearTimeout(t); };
   }, [storageKey]);
+
 
   const BLOCKS = new Set(["P", "DIV", "LI", "UL", "OL", "H1", "H2", "H3", "BLOCKQUOTE", "PRE"]);
 
