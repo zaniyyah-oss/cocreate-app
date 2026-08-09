@@ -1060,19 +1060,21 @@ function EntryPage() {
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
-                      {todoItems.map((it, idx) => (
+                      {todoItems.map((it, idx) => {
+                        const status = todoStatusOf(it);
+                        const focused = focusSection === "todo";
+                        const open = focused && openTodoId === it.id;
+                        return (
                         <div key={it.id} className="de-todo">
                           <input
                             type="checkbox"
-                            checked={it.done}
-                            onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
+                            checked={status === "done"}
+                            onChange={(e) => setTodoStatus(idx, e.target.checked ? "done" : "not_started")}
                           />
-                          <input
-                            type="text"
-                            className={it.done ? "done" : ""}
-                            placeholder="A small, specific step"
+                          <TodoTextArea
+                            done={status === "done"}
                             value={it.text}
-                            onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
+                            onChange={(v) => updateTodoItem(idx, { text: v })}
                           />
                           <input
                             type="date"
@@ -1082,10 +1084,52 @@ function EntryPage() {
                             title="Due date (optional)"
                           />
                           <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+
+                          {/* Focus-mode extras: status + details */}
+                          <div className="de-todo-more">
+                            <div className="de-todo-status" role="group" aria-label="Task status">
+                              {([
+                                ["not_started", "Not started"],
+                                ["in_progress", "In progress"],
+                                ["done", "Complete"],
+                              ] as [TodoStatus, string][]).map(([s, label]) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  data-s={s}
+                                  className={status === s ? "on" : ""}
+                                  aria-pressed={status === s}
+                                  onClick={() => setTodoStatus(idx, s)}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              className="de-todo-details-btn"
+                              onClick={() => setOpenTodoId(open ? null : it.id)}
+                            >
+                              {open ? "▴ Hide details" : (it.details ? "▾ Details" : "＋ Add details")}
+                            </button>
+                          </div>
+
+                          {open && (
+                            <div className="de-todo-details">
+                              <RichTextField
+                                className="de-textarea short"
+                                placeholder="Notes, next steps, who's involved…"
+                                value={it.details ?? ""}
+                                onChange={(html) => updateTodoItem(idx, { details: html })}
+                              />
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                       <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
                     </div>
+
                   </div>
                 </div>
 
