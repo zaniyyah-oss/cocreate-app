@@ -620,12 +620,13 @@ function EntryPage() {
         bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
       });
       targets.forEach((el) => {
-        const h = Math.round(bottom) - Math.round(el.getBoundingClientRect().top);
+        const h = bottom - el.getBoundingClientRect().top;
         if (h < 90) return;
         if (Math.abs(el.getBoundingClientRect().height - h) < 0.6) return;
-        el.style.setProperty("height", `${h}px`, "important");
-        el.style.setProperty("min-height", `${h}px`, "important");
-        el.style.setProperty("max-height", `${h}px`, "important");
+        const px = `${h.toFixed(2)}px`;
+        el.style.setProperty("height", px, "important");
+        el.style.setProperty("min-height", px, "important");
+        el.style.setProperty("max-height", px, "important");
         el.style.setProperty("overflow-y", "auto");
       });
     };
