@@ -595,38 +595,42 @@ function EntryPage() {
     };
 
     const apply = () => {
-      // The To-Do column sets the baseline: its open text + Tasks list is the
-      // tallest content in the row once steps are added. Read and Pray stretch
-      // down to meet it so the extra room shows more of what was written
-      // instead of empty card space.
+      // Read and Pray always share one bottom baseline. The baseline is the
+      // lowest of: the To-Do tasks list bottom (so extra room from added tasks
+      // shows more written text instead of white space) and each editor's own
+      // natural bottom.
       const anchor = cols.querySelector<HTMLElement>("#sec-todo .de-todos");
       const read = cols.querySelector<HTMLElement>(".de-read-part .rtf-editor");
       const pray = cols.querySelector<HTMLElement>(".de-pray-textarea .rtf-editor");
       const todo = cols.querySelector<HTMLElement>(".de-todo-textarea .rtf-editor");
-      const targets = [read, pray];
+      const targets = [read, pray].filter(Boolean) as HTMLElement[];
       const threeCol =
         typeof window !== "undefined" && window.matchMedia("(min-width:900px)").matches;
-      if (!threeCol || !anchor || cols.querySelector(".de-block.is-full")) {
+      if (!threeCol || cols.querySelector(".de-block.is-full")) {
         [read, pray, todo].forEach(clear);
         return;
       }
       // To-Do keeps its natural height — never resized by this effect.
       clear(todo);
-      const bottom = anchor.getBoundingClientRect().bottom;
+      // Measure each target at its natural height so the baseline doesn't
+      // ratchet off a height we set on a previous pass.
+      targets.forEach(clear);
+      let bottom = anchor ? anchor.getBoundingClientRect().bottom : 0;
       targets.forEach((el) => {
-        if (!el) return;
-        const h = Math.round(bottom - el.getBoundingClientRect().top);
-        if (h < 120) {
-          clear(el);
-          return;
-        }
-        if (Math.abs(el.getBoundingClientRect().height - h) < 1.5) return;
-        el.style.setProperty("height", `${h}px`, "important");
-        el.style.setProperty("min-height", `${h}px`, "important");
-        el.style.setProperty("max-height", `${h}px`, "important");
+        bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+      });
+      targets.forEach((el) => {
+        const h = bottom - el.getBoundingClientRect().top;
+        if (h < 90) return;
+        if (Math.abs(el.getBoundingClientRect().height - h) < 0.6) return;
+        const px = `${h.toFixed(2)}px`;
+        el.style.setProperty("height", px, "important");
+        el.style.setProperty("min-height", px, "important");
+        el.style.setProperty("max-height", px, "important");
         el.style.setProperty("overflow-y", "auto");
       });
     };
+
 
 
     let frame = 0;
