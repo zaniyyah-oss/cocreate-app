@@ -984,18 +984,29 @@ function TagMultiSelect({
           {options.map((t) => {
             const on = selected.includes(t);
             return (
-              <button
-                key={t}
-                type="button"
-                className={`ws-tagms-opt ${on ? "on" : ""}`}
-                onClick={() => onToggle(t)}
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <span className="ws-tagms-dot" style={colors[t] ? { background: colors[t] } : undefined} />
-                  #{t}
-                </span>
-                {on && <span>✓</span>}
-              </button>
+              <div key={t} className={`ws-tagms-row ${on ? "on" : ""}`}>
+                <button
+                  type="button"
+                  className="ws-tagms-opt"
+                  onClick={() => onToggle(t)}
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span className="ws-tagms-dot" style={colors[t] ? { background: colors[t] } : undefined} />
+                    #{t}
+                  </span>
+                  {on && <span>✓</span>}
+                </button>
+                <button
+                  type="button"
+                  className="ws-tagms-del"
+                  title={`Delete "${t}" from every note`}
+                  aria-label={`Delete tag ${t}`}
+                  disabled={deleting === t}
+                  onClick={() => void deleteTagEverywhere(t)}
+                >
+                  🗑
+                </button>
+              </div>
             );
           })}
           {canCreate && (
