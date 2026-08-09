@@ -1000,9 +1000,16 @@ function TagMultiSelect({
         .ws-tagms-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:90;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:12px;padding:8px;min-width:220px;max-height:280px;overflow:auto;box-shadow:0 8px 24px rgba(24,26,77,0.15);}
         .ws-tagms-menu input{width:100%;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px;outline:none;background:#fff;}
         .ws-tagms-menu input:focus{border-color:#181A4D;}
-        .ws-tagms-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:7px 9px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;color:#20201C;text-align:left;}
-        .ws-tagms-opt:hover{background:#FBF8ED;}
-        .ws-tagms-opt.on{background:rgba(15,74,66,0.08);font-weight:700;color:#0F4A42;}
+        .ws-tagms-row{display:flex;align-items:center;gap:2px;border-radius:8px;}
+        .ws-tagms-row:hover{background:#FBF8ED;}
+        .ws-tagms-row.on{background:rgba(15,74,66,0.08);}
+        .ws-tagms-row.on .ws-tagms-opt{font-weight:700;color:#0F4A42;}
+        .ws-tagms-del{border:none;background:transparent;cursor:pointer;font-size:12px;line-height:1;padding:6px 8px;border-radius:8px;opacity:.45;}
+        .ws-tagms-row:hover .ws-tagms-del{opacity:1;}
+        .ws-tagms-del:hover{background:#FDE2E2;}
+        .ws-tagms-del[disabled]{opacity:.3;cursor:not-allowed;}
+        .ws-tagms-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1;min-width:0;padding:7px 9px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;color:#20201C;text-align:left;}
+        .ws-tagms-opt:hover{background:transparent;}
         .ws-tagms-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(24,26,77,0.15);flex-shrink:0;}
         .ws-tagms-create{display:block;width:100%;padding:7px 9px;border:none;border-radius:8px;background:#F2FBF4;color:#0F4A42;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;text-align:left;}
         .ws-tagms-empty{padding:8px 9px;font-size:11.5px;color:#8a8879;}
