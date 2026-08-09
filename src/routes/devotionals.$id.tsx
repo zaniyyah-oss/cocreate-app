@@ -575,10 +575,77 @@ function EntryPage() {
   const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
   const entrySaveInFlightRef = useRef(false);
   const currentEntryIdRef = useRef<string | null>(null);
+  const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     currentEntryIdRef.current = currentEntry?.id ?? null;
   }, [currentEntry?.id]);
+
+  /* Visual balance (iPad + desktop, 3-column layout only):
+     the Pray and To-Do writing areas end on the same baseline as the bottom
+     rule of Read's "supplemental material" field. */
+  useEffect(() => {
+    const cols = colsEl;
+    if (!cols) return;
+
+    const clear = (el: HTMLElement | null) => {
+      if (!el) return;
+      el.style.removeProperty("height");
+      el.style.removeProperty("min-height");
+      el.style.removeProperty("max-height");
+      el.style.removeProperty("overflow-y");
+    };
+
+    const apply = () => {
+      const anchor = cols.querySelector<HTMLElement>(".de-supp");
+      const pray = cols.querySelector<HTMLElement>(".de-pray-textarea .rtf-editor");
+      const todo = cols.querySelector<HTMLElement>(".de-todo-textarea .rtf-editor");
+      const targets = [pray, todo];
+      const threeCol =
+        typeof window !== "undefined" && window.matchMedia("(min-width:900px)").matches;
+      if (!threeCol || !anchor || cols.querySelector(".de-block.is-full")) {
+        targets.forEach(clear);
+        return;
+      }
+      const bottom = anchor.getBoundingClientRect().bottom;
+      targets.forEach((el) => {
+        if (!el) return;
+        const h = Math.round(bottom - el.getBoundingClientRect().top);
+        if (h < 90) {
+          clear(el);
+          return;
+        }
+        if (Math.abs(el.getBoundingClientRect().height - h) < 1.5) return;
+        el.style.setProperty("height", `${h}px`, "important");
+        el.style.setProperty("min-height", `${h}px`, "important");
+        el.style.setProperty("max-height", `${h}px`, "important");
+        el.style.setProperty("overflow-y", "auto");
+      });
+    };
+
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(apply);
+    };
+
+    schedule();
+    const read = cols.querySelector("#sec-read");
+    const ro = new ResizeObserver(schedule);
+    if (read) ro.observe(read);
+    // Read column also grows as pickers/text hydrate — re-measure on DOM changes.
+    const mo = new MutationObserver(schedule);
+    if (read) mo.observe(read, { childList: true, subtree: true, characterData: true });
+    const timers = [120, 500, 1200, 2500].map((ms) => setTimeout(schedule, ms));
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", schedule);
+    };
+  }, [colsEl, focusSection, currentEntry?.id]);
 
   // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
   // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
@@ -977,7 +1044,7 @@ function EntryPage() {
 
               {/* 2/3/4 stacked triad — one connected white card */}
               <div className="de-stack">
-                <div className="de-cols">
+                <div className="de-cols" ref={setColsEl}>
                   {/* Read */}
                   <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
                     <div className="de-block-header">
@@ -1048,7 +1115,7 @@ function EntryPage() {
                     <div className="de-read-part">
                       <ResizableTextarea
                         storageKey="further"
-                        className="de-textarea short"
+                        className="de-textarea short de-supp"
                         placeholder="What supplemental material will you be reviewing today?"
                         value={furtherReading}
                         onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
@@ -1084,7 +1151,7 @@ function EntryPage() {
                     
                     <RichTextField
                       storageKey="todo"
-                      className="de-textarea short"
+                      className="de-textarea short de-todo-textarea"
                       placeholder="What is God asking you to do today?"
                       value={todoText}
                       onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
