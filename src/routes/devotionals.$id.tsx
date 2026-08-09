@@ -28,7 +28,49 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
 
 type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
-type TodoItem = { id: string; text: string; done: boolean; due_date?: string | null };
+type TodoStatus = "not_started" | "in_progress" | "done";
+
+type TodoItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  due_date?: string | null;
+  /** Tri-state status. `done` stays in sync for older rows / calendar reads. */
+  status?: TodoStatus;
+  /** Rich-text detail, only surfaced in focus mode. */
+  details?: string | null;
+};
+
+const todoStatusOf = (it: TodoItem): TodoStatus =>
+  it.status ?? (it.done ? "done" : "not_started");
+
+/** Task title field that grows to a second (and third) row instead of
+ *  truncating, so a long task and its due date are both visible. */
+function TodoTextArea({
+  value, done, onChange,
+}: { value: string; done: boolean; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(fit, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={`de-todo-text${done ? " done" : ""}`}
+      placeholder="A small, specific step"
+      value={value}
+      onInput={fit}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+    />
+  );
+}
+
 
 export const Route = createFileRoute("/devotionals/$id")({
   component: EntryPage,
@@ -167,17 +209,33 @@ const CSS = `
 
 /* To-do */
 .de-todos{margin-top:10px;padding:0;background:transparent;}
-.de-todo{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
+.de-todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:start;column-gap:10px;row-gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
 .de-todo:last-of-type{border-bottom:none;}
-.de-todo input[type=checkbox]{width:14px;height:14px;accent-color:#0F4A42;cursor:pointer;flex-shrink:0;}
-.de-todo input[type=text]{flex:1;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;color:#20201c;outline:none;padding:2px 0;}
-.de-todo input[type=text].done{color:#8a8678;text-decoration:line-through;}
+.de-todo input[type=checkbox]{width:14px;height:14px;accent-color:#0F4A42;cursor:pointer;flex-shrink:0;margin-top:4px;}
+.de-todo-text{grid-column:2;width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;line-height:1.45;color:#20201c;outline:none;padding:2px 0;resize:none;overflow:hidden;min-height:20px;white-space:pre-wrap;word-break:break-word;}
+.de-todo-text.done{color:#8a8678;text-decoration:line-through;}
 .de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;}
 .de-todo-x:hover{color:#FF340C;}
 .de-todo-date{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:11px;color:#8A96E0;outline:none;padding:2px 4px;cursor:pointer;flex-shrink:0;width:110px;}
 .de-todo-date:hover{color:#181A4D;}
 .de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.25);color:#0F4A42;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.03em;padding:7px 12px;border-radius:6px;cursor:pointer;margin-top:8px;width:100%;transition:background .15s ease;}
 .de-todo-add:hover{background:rgba(15,74,66,0.06);}
+/* Second row inside a task: status + details, focus mode only */
+.de-todo-more{grid-column:2 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:2px 0 2px;}
+.de-todo-status{display:inline-flex;border:1px solid rgba(24,26,77,0.14);border-radius:999px;overflow:hidden;background:#fff;}
+.de-todo-status button{background:none;border:none;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8a8678;padding:4px 10px;cursor:pointer;transition:background .15s ease,color .15s ease;}
+.de-todo-status button + button{border-left:1px solid rgba(24,26,77,0.1);}
+.de-todo-status button.on[data-s="not_started"]{background:rgba(24,26,77,0.08);color:#181A4D;}
+.de-todo-status button.on[data-s="in_progress"]{background:#FFE9A8;color:#7a5b00;}
+.de-todo-status button.on[data-s="done"]{background:#CDEBD8;color:#0F4A42;}
+.de-todo-details-btn{background:none;border:none;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:#8A96E0;cursor:pointer;padding:4px 2px;}
+.de-todo-details-btn:hover{color:#181A4D;}
+.de-todo-details{grid-column:2 / -1;margin:2px 0 6px;}
+.de-todo-details .rtf-editor{min-height:90px;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:10px 12px;background:#FBF8ED;}
+/* Compact (non-focus) view: task name + due date only */
+.de-block:not(.is-full) .de-todo-more,
+.de-block:not(.is-full) .de-todo-details{display:none;}
+
 
 /* Past entries */
 .de-past{margin-top:40px;}
@@ -404,6 +462,8 @@ function EntryPage() {
   const [workspaceMode, setWorkspaceMode] = useState<"entry" | "day">("entry");
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
+  const [openTodoId, setOpenTodoId] = useState<string | null>(null);
+
   // Lock body scroll when a section is focused
   useEffect(() => {
     if (focusSection) {
@@ -690,7 +750,7 @@ function EntryPage() {
 
   // Todo item helpers
   const addTodoItem = () => {
-    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false }];
+    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus }];
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
@@ -699,11 +759,14 @@ function EntryPage() {
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+  const setTodoStatus = (idx: number, status: TodoStatus) =>
+    updateTodoItem(idx, { status, done: status === "done" });
   const removeTodoItem = (idx: number) => {
     const next = todoItems.filter((_, i) => i !== idx);
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+
 
   // Guest preview mode: unauthenticated visitors see the full workspace and can
   // interact locally (typing, todos, focus mode). Nothing is written to Supabase.
@@ -1026,19 +1089,21 @@ function EntryPage() {
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
-                      {todoItems.map((it, idx) => (
+                      {todoItems.map((it, idx) => {
+                        const status = todoStatusOf(it);
+                        const focused = focusSection === "todo";
+                        const open = focused && openTodoId === it.id;
+                        return (
                         <div key={it.id} className="de-todo">
                           <input
                             type="checkbox"
-                            checked={it.done}
-                            onChange={(e) => updateTodoItem(idx, { done: e.target.checked })}
+                            checked={status === "done"}
+                            onChange={(e) => setTodoStatus(idx, e.target.checked ? "done" : "not_started")}
                           />
-                          <input
-                            type="text"
-                            className={it.done ? "done" : ""}
-                            placeholder="A small, specific step"
+                          <TodoTextArea
+                            done={status === "done"}
                             value={it.text}
-                            onChange={(e) => updateTodoItem(idx, { text: e.target.value })}
+                            onChange={(v) => updateTodoItem(idx, { text: v })}
                           />
                           <input
                             type="date"
@@ -1048,10 +1113,52 @@ function EntryPage() {
                             title="Due date (optional)"
                           />
                           <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
+
+                          {/* Focus-mode extras: status + details */}
+                          <div className="de-todo-more">
+                            <div className="de-todo-status" role="group" aria-label="Task status">
+                              {([
+                                ["not_started", "Not started"],
+                                ["in_progress", "In progress"],
+                                ["done", "Complete"],
+                              ] as [TodoStatus, string][]).map(([s, label]) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  data-s={s}
+                                  className={status === s ? "on" : ""}
+                                  aria-pressed={status === s}
+                                  onClick={() => setTodoStatus(idx, s)}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              className="de-todo-details-btn"
+                              onClick={() => setOpenTodoId(open ? null : it.id)}
+                            >
+                              {open ? "▴ Hide details" : (it.details ? "▾ Details" : "＋ Add details")}
+                            </button>
+                          </div>
+
+                          {open && (
+                            <div className="de-todo-details">
+                              <RichTextField
+                                className="de-textarea short"
+                                placeholder="Notes, next steps, who's involved…"
+                                value={it.details ?? ""}
+                                onChange={(html) => updateTodoItem(idx, { details: html })}
+                              />
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                       <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
                     </div>
+
                   </div>
                 </div>
 
