@@ -211,30 +211,30 @@ const CSS = `
 .de-todos{margin-top:10px;padding:0;background:transparent;}
 .de-todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:start;column-gap:10px;row-gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
 .de-todo:last-of-type{border-bottom:none;}
-.de-todo input[type=checkbox]{width:14px;height:14px;accent-color:#0F4A42;cursor:pointer;flex-shrink:0;margin-top:4px;}
+.de-todo-select{grid-column:1;appearance:none;-webkit-appearance:none;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:4px 10px;margin-top:1px;cursor:pointer;background:rgba(24,26,77,0.06);color:#181A4D;outline:none;}
+.de-todo-select[data-s="in_progress"]{background:#FFE9A8;color:#7a5b00;border-color:rgba(122,91,0,0.25);}
+.de-todo-select[data-s="done"]{background:#CDEBD8;color:#0F4A42;border-color:rgba(15,74,66,0.25);}
 .de-todo-text{grid-column:2;width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;line-height:1.45;color:#20201c;outline:none;padding:2px 0;resize:none;overflow:hidden;min-height:20px;white-space:pre-wrap;word-break:break-word;}
 .de-todo-text.done{color:#8a8678;text-decoration:line-through;}
+.de-todo[data-status="in_progress"] .de-todo-text{color:#7a5b00;}
 .de-todo-x{background:none;border:none;color:#8a8678;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;}
 .de-todo-x:hover{color:#FF340C;}
 .de-todo-date{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:11px;color:#8A96E0;outline:none;padding:2px 4px;cursor:pointer;flex-shrink:0;width:110px;}
 .de-todo-date:hover{color:#181A4D;}
 .de-todo-add{background:none;border:1px dashed rgba(15,74,66,0.25);color:#0F4A42;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.03em;padding:7px 12px;border-radius:6px;cursor:pointer;margin-top:8px;width:100%;transition:background .15s ease;}
 .de-todo-add:hover{background:rgba(15,74,66,0.06);}
-/* Second row inside a task: status + details, focus mode only */
+/* Second row inside a task: details, focus mode only */
 .de-todo-more{grid-column:2 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:2px 0 2px;}
-.de-todo-status{display:inline-flex;border:1px solid rgba(24,26,77,0.14);border-radius:999px;overflow:hidden;background:#fff;}
-.de-todo-status button{background:none;border:none;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8a8678;padding:4px 10px;cursor:pointer;transition:background .15s ease,color .15s ease;}
-.de-todo-status button + button{border-left:1px solid rgba(24,26,77,0.1);}
-.de-todo-status button.on[data-s="not_started"]{background:rgba(24,26,77,0.08);color:#181A4D;}
-.de-todo-status button.on[data-s="in_progress"]{background:#FFE9A8;color:#7a5b00;}
-.de-todo-status button.on[data-s="done"]{background:#CDEBD8;color:#0F4A42;}
 .de-todo-details-btn{background:none;border:none;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:#8A96E0;cursor:pointer;padding:4px 2px;}
 .de-todo-details-btn:hover{color:#181A4D;}
 .de-todo-details{grid-column:2 / -1;margin:2px 0 6px;}
 .de-todo-details .rtf-editor{min-height:90px;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:10px 12px;background:#FBF8ED;}
-/* Compact (non-focus) view: task name + due date only */
+/* Compact (non-focus) view: status + task name only; due date is implied by the day */
+.de-block:not(.is-full) .de-todo{grid-template-columns:auto minmax(0,1fr) auto;}
+.de-block:not(.is-full) .de-todo-date,
 .de-block:not(.is-full) .de-todo-more,
 .de-block:not(.is-full) .de-todo-details{display:none;}
+
 
 
 /* Past entries */
