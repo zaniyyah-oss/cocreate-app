@@ -1,24 +1,26 @@
-## Problem
+# Remove the supplemental material section from the Read column
 
-The guest preview only exists inside `/devotionals/$id` (a specific devotional template page). But signed-out visitors never get there:
+## Goal
+Remove the "What supplemental material will you be reviewing today?" free-text box from the Read column of the workspace. Read, Pray, and To-Do writing areas stay exactly as they are — only the supplemental sub-section goes away.
 
-- `/devotionals` shows a hard "Sign in to open Abide" gate and never redirects guests through.
-- The home page (`/index`) has no path into a devotional entry for a guest.
+## Why
+You don't use the supplemental box (you put those notes in the workspace), it's what makes the Read column taller than Pray/To-Do, and its content can't be recalled/edited later. Removing it simplifies the Read column and collapses the three columns to one clean shared baseline.
 
-So testing as a signed-out user, you correctly see nothing new — the guest experience is unreachable.
+## What changes
 
-Once inside `/devotionals/$id`, the preview does work identically on desktop, tablet, and mobile (all the changes are in a shared component and route file; no viewport gating).
+### 1. Remove the supplemental UI (`src/routes/devotionals.$id.tsx`)
+- Delete the second `.de-read-part` block that holds the `ResizableTextarea` (the `.de-supp` field, placeholder "What supplemental material will you reviewing today?") and its save-status row.
+- Remove the now-unused `furtherReading` state, its hydration from the entry (`setFurtherReading(...)`), and `further_reading_text` from the local entry type / saveable-fields union. (No data is lost — see step 3.)
+- The main scripture response area (input + RichTextField) and its status row remain untouched.
 
-## Fix
+### 2. Re-anchor the visual-balance logic
+The alignment `useEffect` currently anchors Pray/To-Do baselines to the bottom of `.de-supp`. With that element gone:
+- Change the anchor selector from `.de-supp` to the bottom of the main scripture `RichTextField` editor (`.de-read-part .rtf-editor`).
+- Result: all three writing areas (Read, Pray, To-Do) end on the same baseline — equal-height columns with no special extra section. This is simpler and more stable than the current two-tier anchor.
 
-1. **`src/routes/devotionals.index.tsx`** — drop the signed-out gate. Let guests fall through the same `<Navigate to="/devotionals/$id" params={{ id: defaultTemplateId }} replace />` that signed-in users get. This drops guests straight into the Abide guest preview.
+### 3. Database: no change
+- Keep the `further_reading_text` column and all existing data in place. Nothing is dropped or migrated. If you ever want the field back, the data and column are still there.
 
-2. **`src/routes/index.tsx`** — make the main home-page devotional CTA route to `/devotionals` (Abide) for guests instead of `/auth`. That's the "Add to my devotionals" / open button around line 516 (`if (!userId) navigate({ to: "/auth" })`). For guests, navigate to `/devotionals` so they land in the preview. (Personal features like Sticky Notes stay gated as they are today — those are truly private.)
-
-3. No changes needed to `devotionals.$id.tsx` — the guest preview added last turn already renders identically at all viewports.
-
-## Verification
-
-After the change: sign out, visit `/` → click into Abide, or visit `/devotionals` directly → land in the Abide entry with the full guest workspace (Read/Pray/To-Do/Workspace notes), local-only typing, soft "sign in to save" banner on first keystroke, and hard modal on Save & file away. Verified on mobile, tablet, and desktop viewports.
-
-No backend / schema changes.
+### 4. Out of scope (confirmed unchanged)
+- Read, Pray, and To-Do writing areas render exactly as they do now.
+- The `/devotionals/focus/$id` topical focus page is untouched (it shows template-curated `scripture_items`, which is a different thing).
