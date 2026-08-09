@@ -831,19 +831,15 @@ function NoteBody({
             </span>
           );
         })}
-        <input
-          className="ws-tag-input"
-          placeholder="+ tag"
-          value={tagDraft}
-          onChange={(e) => setTagDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === ",") {
-              e.preventDefault();
-              addTag(tagDraft);
-              setTagDraft("");
-            }
-          }}
-          onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
+        <TagMultiSelect
+          userId={userId}
+          guest={guest}
+          selected={tags}
+          colors={tagColors}
+          onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
+          onCreate={(t) => addTag(t)}
+          draft={tagDraft}
+          setDraft={setTagDraft}
         />
       </div>
 
