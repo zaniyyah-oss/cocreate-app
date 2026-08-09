@@ -639,7 +639,7 @@ function EntryPage() {
       ro.disconnect();
       window.removeEventListener("resize", schedule);
     };
-  }, [focusSection, currentEntry?.id]);
+  }, [colsEl, focusSection, currentEntry?.id]);
 
   // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
   // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
