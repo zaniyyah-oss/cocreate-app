@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
-import { ResizableTextarea } from "@/components/ResizableTextarea";
+
 import { RichTextField } from "@/components/RichTextField";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,7 +20,6 @@ type Entry = Database["public"]["Tables"]["devotional_entries"]["Row"] & {
   where_text?: string | null;
   scripture_reference?: string | null;
   scripture_text?: string | null;
-  further_reading_text?: string | null;
   todo_text?: string | null;
   todo_items?: TodoItem[] | null;
   entry_title?: string | null;
@@ -418,7 +417,6 @@ type SaveField =
   | "where_text"
   | "scripture_reference"
   | "scripture_text"
-  | "further_reading_text"
   | "pray_text"
   | "todo_text"
   | "todo_items"
@@ -558,7 +556,6 @@ function EntryPage() {
   const [whereText, setWhereText] = useState("");
   const [scriptureRef, setScriptureRef] = useState("");
   const [scriptureText, setScriptureText] = useState("");
-  const [furtherReading, setFurtherReading] = useState("");
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
@@ -598,7 +595,7 @@ function EntryPage() {
     };
 
     const apply = () => {
-      const anchor = cols.querySelector<HTMLElement>(".de-supp");
+      const anchor = cols.querySelector<HTMLElement>(".de-read-part .rtf-editor");
       const pray = cols.querySelector<HTMLElement>(".de-pray-textarea .rtf-editor");
       const todo = cols.querySelector<HTMLElement>(".de-todo-textarea .rtf-editor");
       const targets = [pray, todo];
@@ -687,7 +684,6 @@ function EntryPage() {
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
     setScriptureRef(e?.scripture_reference ?? prefillScrRef);
     setScriptureText(e?.scripture_text ?? prefillScrText);
-    setFurtherReading(e?.further_reading_text ?? "");
     setPrayText(e?.pray_text ?? prefillPray);
     setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
     const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
@@ -1113,16 +1109,6 @@ function EntryPage() {
                         onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                       />
                       {statusRow("scripture_text")}
-                    </div>
-                    <div className="de-read-part">
-                      <ResizableTextarea
-                        storageKey="further"
-                        className="de-textarea short de-supp"
-                        placeholder="What supplemental material will you be reviewing today?"
-                        value={furtherReading}
-                        onChange={(e) => { setFurtherReading(e.target.value); scheduleSave("further_reading_text", e.target.value); }}
-                      />
-                      {statusRow("further_reading_text")}
                     </div>
 
                   </div>
