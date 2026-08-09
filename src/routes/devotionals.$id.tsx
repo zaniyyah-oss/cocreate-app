@@ -1160,6 +1160,7 @@ function EntryPage() {
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
+                      <div className="de-todos-head">Tasks</div>
                       {todoItems.map((it, idx) => {
                         const status = todoStatusOf(it);
                         const focused = focusSection === "todo";
