@@ -950,6 +950,47 @@ function TagMultiSelect({
   const cleanDraft = draft.trim().replace(/^#/, "").toLowerCase();
   const canCreate = !!cleanDraft && !options.includes(cleanDraft);
 
+  // Deletes a tag everywhere: it's removed from every note that carries it,
+  // and from the saved tag colors. The notes themselves are untouched — they
+  // simply become untagged.
+  const deleteTagEverywhere = async (tag: string) => {
+    if (deleting) return;
+    if (typeof window !== "undefined") {
+      const ok = window.confirm(
+        `Delete the tag "#${tag}" from all of your notes? The notes stay — they just become untagged.`
+      );
+      if (!ok) return;
+    }
+    setDeleting(tag);
+    try {
+      if (!guest) {
+        const { data, error } = await supabase
+          .from("workspace_items" as any)
+          .select("id,tags")
+          .eq("user_id", userId)
+          .contains("tags", [tag]);
+        if (error) throw error;
+        for (const row of (data as any[]) || []) {
+          const next = ((row.tags as string[]) || []).filter((x) => x !== tag);
+          const { error: uErr } = await supabase
+            .from("workspace_items" as any)
+            .update({ tags: next })
+            .eq("id", row.id);
+          if (uErr) throw uErr;
+        }
+        await supabase.from("user_tag_colors" as any).delete().eq("user_id", userId).eq("tag", tag);
+        qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+        qc.invalidateQueries({ queryKey: ["workspace-all-tags", userId] });
+        qc.invalidateQueries({ queryKey: ["user-tag-colors", userId] });
+      }
+      onDeleted(tag);
+    } catch (e) {
+      console.error("deleteTagEverywhere failed", e);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   return (
     <div className="ws-tagms" ref={wrapRef} onClick={(e) => e.stopPropagation()}>
       <style>{`
