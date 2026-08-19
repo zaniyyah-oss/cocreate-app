@@ -167,7 +167,10 @@ export function WorkspaceEditor({
     if (editor.isEditable !== editable) editor.setEditable(editable);
   }, [editor, editable]);
 
+  editorRef.current = editor;
+
   if (!editor) return null;
+
 
   return (
     <div className="ws-editor">
