@@ -93,7 +93,18 @@ export function WorkspaceEditor({
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
       attributes: { class: "ws-editor-content" },
-      handlePaste(view, event) {
+      handleKeyDown(_view, event) {
+        // Cmd/Ctrl + Shift + Backspace removes the whole table.
+        if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === "Backspace" || event.key === "Delete")) {
+          if (editorRef.current?.isActive("table")) {
+            event.preventDefault();
+            editorRef.current.chain().focus().deleteTable().run();
+            return true;
+          }
+        }
+        return false;
+      },
+
         const text = event.clipboardData?.getData("text/plain")?.trim();
         if (text && URL_RE.test(text)) {
           event.preventDefault();
