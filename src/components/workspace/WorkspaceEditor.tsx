@@ -73,7 +73,10 @@ export function WorkspaceEditor({
   const onBlurRef = useRef(onBlur);
   onBlurRef.current = onBlur;
 
+  const editorRef = useRef<Editor | null>(null);
+
   const editor = useEditor({
+
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "ws-img" } }),
