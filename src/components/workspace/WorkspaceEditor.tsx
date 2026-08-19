@@ -96,7 +96,7 @@ export function WorkspaceEditor({
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
       attributes: { class: "ws-editor-content" },
-      handleKeyDown(_view, event) {
+      handleKeyDown(view, event) {
         // Cmd/Ctrl + Shift + Backspace removes the whole table.
         if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === "Backspace" || event.key === "Delete")) {
           if (editorRef.current?.isActive("table")) {
@@ -105,8 +105,57 @@ export function WorkspaceEditor({
             return true;
           }
         }
+        // Plain Backspace/Delete when a table (or all of its cells) is selected removes it.
+        if (event.key === "Backspace" || event.key === "Delete") {
+          const { state } = view;
+          const sel = state.selection as unknown as {
+            from: number; to: number; empty: boolean;
+            node?: { type: { name: string } };
+            $anchorCell?: unknown;
+          };
+          // Whole-table node selection
+          if (sel.node?.type?.name === "table") {
+            event.preventDefault();
+            editorRef.current?.chain().focus().deleteTable().run();
+            return true;
+          }
+          // Cell selection covering every cell in the table
+          if (sel.$anchorCell !== undefined) {
+            let tablePos: number | null = null;
+            let tableNode: { nodeSize: number } | null = null;
+            state.doc.nodesBetween(sel.from, sel.to, (node, pos) => {
+              if (node.type.name === "table" && tablePos === null) {
+                tablePos = pos;
+                tableNode = node as unknown as { nodeSize: number };
+              }
+              return true;
+            });
+            if (tablePos === null) {
+              // walk up from the selection to find the enclosing table
+              const $from = state.doc.resolve(sel.from);
+              for (let d = $from.depth; d > 0; d--) {
+                if ($from.node(d).type.name === "table") {
+                  tablePos = $from.before(d);
+                  tableNode = $from.node(d) as unknown as { nodeSize: number };
+                  break;
+                }
+              }
+            }
+            if (tablePos !== null && tableNode) {
+              const start = tablePos as number;
+              const end = start + (tableNode as { nodeSize: number }).nodeSize;
+              // selection touches first and last cell => treat as "all selected"
+              if (sel.from <= start + 3 && sel.to >= end - 3) {
+                event.preventDefault();
+                editorRef.current?.chain().focus().deleteTable().run();
+                return true;
+              }
+            }
+          }
+        }
         return false;
       },
+
       handlePaste(view, event) {
         const text = event.clipboardData?.getData("text/plain")?.trim();
 
