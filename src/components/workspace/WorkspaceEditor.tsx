@@ -73,7 +73,10 @@ export function WorkspaceEditor({
   const onBlurRef = useRef(onBlur);
   onBlurRef.current = onBlur;
 
+  const editorRef = useRef<Editor | null>(null);
+
   const editor = useEditor({
+
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "ws-img" } }),
@@ -93,8 +96,20 @@ export function WorkspaceEditor({
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
       attributes: { class: "ws-editor-content" },
+      handleKeyDown(_view, event) {
+        // Cmd/Ctrl + Shift + Backspace removes the whole table.
+        if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === "Backspace" || event.key === "Delete")) {
+          if (editorRef.current?.isActive("table")) {
+            event.preventDefault();
+            editorRef.current.chain().focus().deleteTable().run();
+            return true;
+          }
+        }
+        return false;
+      },
       handlePaste(view, event) {
         const text = event.clipboardData?.getData("text/plain")?.trim();
+
         if (text && URL_RE.test(text)) {
           event.preventDefault();
           insertLinkCard(view, text);
@@ -152,7 +167,10 @@ export function WorkspaceEditor({
     if (editor.isEditable !== editable) editor.setEditable(editable);
   }, [editor, editable]);
 
+  editorRef.current = editor;
+
   if (!editor) return null;
+
 
   return (
     <div className="ws-editor">
@@ -167,9 +185,66 @@ export function WorkspaceEditor({
         </BubbleMenu>
       )}
       <EditorContent editor={editor} />
+      {editable && <TableDeleteButton editor={editor} />}
     </div>
   );
 }
+
+/** Floating "delete table" affordance shown whenever the caret sits in a table. */
+function TableDeleteButton({ editor }: { editor: Editor }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      if (!editor.isActive("table")) { setPos(null); return; }
+      const wrap = editor.view.dom.closest(".ws-editor") as HTMLElement | null;
+      const node = editor.view.domAtPos(editor.state.selection.from).node as Node;
+      const el = (node.nodeType === 1 ? (node as HTMLElement) : node.parentElement) as HTMLElement | null;
+      const table = el?.closest("table") as HTMLElement | null;
+      if (!wrap || !table) { setPos(null); return; }
+      const w = wrap.getBoundingClientRect();
+      const t = table.getBoundingClientRect();
+      setPos({ top: t.top - w.top - 12, left: t.right - w.left - 22 });
+    };
+    update();
+    editor.on("selectionUpdate", update);
+    editor.on("transaction", update);
+    return () => {
+      editor.off("selectionUpdate", update);
+      editor.off("transaction", update);
+    };
+  }, [editor]);
+
+  if (!pos) return null;
+  return (
+    <button
+      type="button"
+      title="Delete table"
+      aria-label="Delete table"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => editor.chain().focus().deleteTable().run()}
+      style={{
+        position: "absolute",
+        top: pos.top,
+        left: pos.left,
+        width: 22,
+        height: 22,
+        borderRadius: 999,
+        border: "1px solid rgba(24,26,77,0.15)",
+        background: "#fff",
+        color: "#181A4D",
+        fontSize: 13,
+        lineHeight: "20px",
+        cursor: "pointer",
+        boxShadow: "0 1px 4px rgba(24,26,77,0.18)",
+        zIndex: 5,
+      }}
+    >
+      ×
+    </button>
+  );
+}
+
 
 function MobileBubble({ editor }: { editor: Editor }) {
   // preventDefault on pointerdown (covers mouse + touch + pen) is required
