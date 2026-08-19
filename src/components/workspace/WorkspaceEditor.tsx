@@ -167,9 +167,66 @@ export function WorkspaceEditor({
         </BubbleMenu>
       )}
       <EditorContent editor={editor} />
+      {editable && <TableDeleteButton editor={editor} />}
     </div>
   );
 }
+
+/** Floating "delete table" affordance shown whenever the caret sits in a table. */
+function TableDeleteButton({ editor }: { editor: Editor }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      if (!editor.isActive("table")) { setPos(null); return; }
+      const wrap = editor.view.dom.closest(".ws-editor") as HTMLElement | null;
+      const node = editor.view.domAtPos(editor.state.selection.from).node as Node;
+      const el = (node.nodeType === 1 ? (node as HTMLElement) : node.parentElement) as HTMLElement | null;
+      const table = el?.closest("table") as HTMLElement | null;
+      if (!wrap || !table) { setPos(null); return; }
+      const w = wrap.getBoundingClientRect();
+      const t = table.getBoundingClientRect();
+      setPos({ top: t.top - w.top - 12, left: t.right - w.left - 22 });
+    };
+    update();
+    editor.on("selectionUpdate", update);
+    editor.on("transaction", update);
+    return () => {
+      editor.off("selectionUpdate", update);
+      editor.off("transaction", update);
+    };
+  }, [editor]);
+
+  if (!pos) return null;
+  return (
+    <button
+      type="button"
+      title="Delete table"
+      aria-label="Delete table"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => editor.chain().focus().deleteTable().run()}
+      style={{
+        position: "absolute",
+        top: pos.top,
+        left: pos.left,
+        width: 22,
+        height: 22,
+        borderRadius: 999,
+        border: "1px solid rgba(24,26,77,0.15)",
+        background: "#fff",
+        color: "#181A4D",
+        fontSize: 13,
+        lineHeight: "20px",
+        cursor: "pointer",
+        boxShadow: "0 1px 4px rgba(24,26,77,0.18)",
+        zIndex: 5,
+      }}
+    >
+      ×
+    </button>
+  );
+}
+
 
 function MobileBubble({ editor }: { editor: Editor }) {
   // preventDefault on pointerdown (covers mouse + touch + pen) is required
