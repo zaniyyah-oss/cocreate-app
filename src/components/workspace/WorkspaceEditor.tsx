@@ -104,8 +104,9 @@ export function WorkspaceEditor({
         }
         return false;
       },
-
+      handlePaste(view, event) {
         const text = event.clipboardData?.getData("text/plain")?.trim();
+
         if (text && URL_RE.test(text)) {
           event.preventDefault();
           insertLinkCard(view, text);
