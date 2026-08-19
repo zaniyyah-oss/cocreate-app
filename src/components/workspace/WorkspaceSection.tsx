@@ -105,11 +105,13 @@ const CSS = `
 .ws-editor-content .ws-linkcard-domain{font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#181A4D;}
 .ws-editor-content .ws-linkcard-title{font-size:13px;font-weight:700;color:#181A4D;line-height:1.35;}
 .ws-editor-content .ws-linkcard-desc{font-size:12px;color:#8a8678;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.ws-editor-content .ws-table{border-collapse:collapse;margin:10px 0;width:100%;table-layout:fixed;overflow:hidden;}
-.ws-editor-content .ws-table td,.ws-editor-content .ws-table th{border:1px solid rgba(24,26,77,0.18);padding:6px 8px;vertical-align:top;min-width:60px;position:relative;}
-.ws-editor-content .ws-table th{background:#F1EDDD;font-weight:700;color:#181A4D;text-align:left;}
-.ws-editor-content .ws-table .selectedCell{background:rgba(202,195,7,0.22);}
-.ws-editor-content .ws-table p{margin:0;}
+.ws-editor-content table,.ws-editor-content .ws-table{border-collapse:collapse;margin:10px 0;width:100%;table-layout:fixed;overflow:hidden;}
+.ws-editor-content table td,.ws-editor-content table th{border:1px solid rgba(24,26,77,0.28);padding:6px 8px;vertical-align:top;min-width:60px;position:relative;}
+.ws-editor-content table th{background:#F1EDDD;font-weight:700;color:#181A4D;text-align:left;}
+.ws-editor-content table .selectedCell{background:rgba(202,195,7,0.22);}
+.ws-editor-content table p{margin:0;}
+.ws-editor-content hr{border:none;border-top:1px solid rgba(24,26,77,0.25);margin:14px 0;}
+.ws-editor-content hr.ProseMirror-selectednode{border-top-color:#181A4D;}
 .ws-editor-content .ws-callout{display:flex;gap:10px;background:#FFF4D6;border:1px solid rgba(255,174,0,0.35);border-left:4px solid #FFAE00;border-radius:8px;padding:10px 12px;margin:10px 0;}
 .ws-editor-content .ws-callout[data-tone="teal"]{background:#E4F1EE;border-color:rgba(15,74,66,0.25);border-left-color:#0F4A42;}
 .ws-editor-content .ws-callout[data-tone="blush"]{background:#FBE3E9;border-color:rgba(233,144,162,0.35);border-left-color:#E990A2;}
@@ -117,6 +119,7 @@ const CSS = `
 .ws-editor-content .ws-callout-emoji{font-size:18px;line-height:1.4;user-select:none;flex-shrink:0;}
 .ws-editor-content .ws-callout-body{flex:1;min-width:0;}
 .ws-editor-content .ws-callout-body > *:last-child{margin-bottom:0;}
+
 
 .ws-note-actions{display:flex;gap:16px;margin-top:12px;align-items:center;}
 .ws-linkaction{background:none;border:none;font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;cursor:pointer;padding:0;color:#181A4D;}

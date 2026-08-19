@@ -257,6 +257,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         (editor.chain().focus() as any).outdent().run();
       }, false, "Outdent (Shift+Tab)")}
 
+      {btn("— Divider", () => editor.chain().focus().setHorizontalRule().run(), false, "Insert horizontal line")}
+
       {/* Highlight picker */}
       <div style={{ position: "relative" }}>
         {btn(
@@ -274,8 +276,12 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
                 title={c.name}
                 style={{ background: c.value || "transparent", border: c.value ? "1px solid rgba(0,0,0,0.08)" : "1px dashed rgba(0,0,0,0.25)" }}
                 onClick={() => {
-                  if (!c.value) editor.chain().focus().unsetHighlight().run();
-                  else editor.chain().focus().setHighlight({ color: c.value }).run();
+                  // With no text selected, highlight the whole current line/block.
+                  const { empty, $from } = editor.state.selection;
+                  let chain = editor.chain().focus();
+                  if (empty) chain = chain.setTextSelection({ from: $from.start(), to: $from.end() });
+                  if (!c.value) chain.unsetHighlight().run();
+                  else chain.setHighlight({ color: c.value }).run();
                   setHlOpen(false);
                 }}
               >
@@ -318,7 +324,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       {/* Callout with tone picker */}
       <div style={{ position: "relative" }}>
         {btn(
-          "💡 Callout",
+          "Callout",
           () => {
             const active = editor.isActive("callout");
             if (active) { setToneOpen((v) => !v); setHlOpen(false); setColorOpen(false); setTableOpen(false); }

@@ -23,7 +23,7 @@ export const Callout = Node.create({
 
   addAttributes() {
     return {
-      emoji: { default: "💡" },
+      emoji: { default: "" },
       tone: { default: "amber" },
     };
   },
@@ -33,15 +33,19 @@ export const Callout = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
+    const attrs = mergeAttributes(HTMLAttributes, {
+      "data-callout": "",
+      "data-tone": node.attrs.tone ?? "amber",
+      class: "ws-callout",
+    });
+    const emoji = node.attrs.emoji;
+    const body = ["div", { class: "ws-callout-body" }, 0];
+    if (!emoji) return ["div", attrs, body];
     return [
       "div",
-      mergeAttributes(HTMLAttributes, {
-        "data-callout": "",
-        "data-tone": node.attrs.tone ?? "amber",
-        class: "ws-callout",
-      }),
-      ["span", { class: "ws-callout-emoji", contenteditable: "false" }, node.attrs.emoji ?? "💡"],
-      ["div", { class: "ws-callout-body" }, 0],
+      attrs,
+      ["span", { class: "ws-callout-emoji", contenteditable: "false" }, emoji],
+      body,
     ];
   },
 
@@ -50,12 +54,12 @@ export const Callout = Node.create({
       setCallout:
         (attrs = {}) =>
         ({ commands }) =>
-          commands.wrapIn(this.name, { emoji: "💡", tone: "amber", ...attrs }),
+          commands.wrapIn(this.name, { emoji: "", tone: "amber", ...attrs }),
       toggleCallout:
         (attrs = {}) =>
         ({ commands, editor }) => {
           if (editor.isActive(this.name)) return commands.lift(this.name);
-          return commands.wrapIn(this.name, { emoji: "💡", tone: "amber", ...attrs });
+          return commands.wrapIn(this.name, { emoji: "", tone: "amber", ...attrs });
         },
       unsetCallout:
         () =>
