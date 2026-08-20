@@ -206,16 +206,10 @@ function PlanFocusPage() {
           <>
             <div style={box}>
               <div style={labelStyle}>{icon("R")}Read</div>
-              <textarea
-                style={{ ...field, minHeight: 96, marginBottom: 8, fontSize: 14 }}
-                placeholder="Scripture or passage for this day"
-                value={dayRead}
-                onChange={(e) => setDayRead(e.target.value)}
-                onBlur={() => persistDayContent({ read_content: dayRead })}
-              />
+              {dayRead.trim() && <div style={guided}>{dayRead}</div>}
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Also want to jot something down?</p>
               <textarea
-                style={field}
+                style={{ ...field, minHeight: 180 }}
                 placeholder="What did you notice? What is God saying?"
                 value={readText}
                 onChange={(e) => setReadText(e.target.value)}
@@ -225,16 +219,10 @@ function PlanFocusPage() {
 
             <div style={box}>
               <div style={labelStyle}>{icon("P")}Pray</div>
-              <textarea
-                style={{ ...field, minHeight: 96, marginBottom: 8, fontSize: 14 }}
-                placeholder="A prayer prompt for this day"
-                value={dayPray}
-                onChange={(e) => setDayPray(e.target.value)}
-                onBlur={() => persistDayContent({ pray_prompt: dayPray })}
-              />
+              {dayPray.trim() && <div style={guided}>{dayPray}</div>}
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Anything else on your heart?</p>
               <textarea
-                style={field}
+                style={{ ...field, minHeight: 180 }}
                 placeholder="Speak plainly to God..."
                 value={prayText}
                 onChange={(e) => setPrayText(e.target.value)}
@@ -244,28 +232,23 @@ function PlanFocusPage() {
 
             <div style={box}>
               <div style={labelStyle}>{icon("T")}To-do</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", borderRadius: 8, padding: "10px 12px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: "#fff", borderRadius: 8, padding: "10px 12px" }}>
                 <button
                   type="button"
                   aria-label="Toggle task"
                     onClick={() => { const next = !taskDone; setTaskDone(next); persist({ task_done: next }); }}
                   style={{
                     width: 20, height: 20, borderRadius: 6, border: `2px solid ${c.hex}`,
-                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: "pointer",
+                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: "pointer", marginTop: 1,
                   }}
                 />
-                <textarea
-                  rows={1}
-                  style={{
-                    flex: 1, border: "none", outline: "none", resize: "vertical",
-                    fontFamily: "inherit", fontSize: 14, color: "#20201C", background: "transparent",
-                    textDecoration: taskDone ? "line-through" : "none", minHeight: 22,
-                  }}
-                  placeholder="One action to carry into the day"
-                  value={dayTask}
-                  onChange={(e) => setDayTask(e.target.value)}
-                  onBlur={() => persistDayContent({ task_content: dayTask })}
-                />
+                <span style={{
+                  flex: 1, fontFamily: "inherit", fontSize: 14, color: "#20201C",
+                  whiteSpace: "pre-wrap", lineHeight: 1.5,
+                  textDecoration: taskDone ? "line-through" : "none",
+                }}>
+                  {dayTask || "No task for this day"}
+                </span>
               </div>
             </div>
 
