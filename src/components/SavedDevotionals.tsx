@@ -8,35 +8,27 @@ import { listPlans, startPlanAssignment } from "@/lib/plans.functions";
 import type { PlanRow } from "@/lib/plans.schemas";
 
 const CSS = `
-.sd-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;}
+.sd-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px;}
 .sd-title{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;font-weight:900;margin:0;color:#20201C;}
 .sd-note{font-size:13px;color:#8a8879;}
-.sd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:34px;}
-@media (max-width:900px){.sd-grid{grid-template-columns:1fr;gap:12px;margin-bottom:20px;}}
-@media (max-width:640px){
-  .sd-head{margin:0 0 12px;}
-  .sd-title{font-size:17px;}
-  .sd-card{padding:14px 16px;gap:8px;}
-  .sd-name{font-size:16px;}
-  .sd-actions{gap:6px;}
-  .sd-btn{padding:7px 12px;font-size:11px;}
-}
+.sd-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:24px;}
 .sd-card{
-  background:#fff;border:1.5px solid #ECE4CE;border-left-width:10px;border-radius:16px;
-  padding:20px 22px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s ease;
+  background:#fff;border:1.5px solid #ECE4CE;border-left-width:8px;border-radius:12px;
+  padding:10px 14px;display:flex;align-items:center;gap:12px;transition:border-color .15s ease;
 }
 .sd-card:hover{border-top-color:#FFAE00;border-right-color:#FFAE00;border-bottom-color:#FFAE00;}
-.sd-name{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;font-weight:900;line-height:1.15;margin:0;color:#20201C;}
-.sd-meta{font-size:13px;color:#8a8879;font-weight:600;}
-.sd-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.sd-info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
+.sd-name{font-family:'Archivo Black','Poppins',sans-serif;font-size:15px;font-weight:900;line-height:1.2;margin:0;color:#20201C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sd-meta{font-size:11px;color:#8a8879;font-weight:600;}
+.sd-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
 .sd-btn{
-  border:1.5px solid #181A4D;background:#181A4D;color:#fff;font-family:inherit;font-size:12px;
-  font-weight:800;letter-spacing:.04em;padding:8px 15px;border-radius:999px;cursor:pointer;
+  border:1.5px solid #181A4D;background:#181A4D;color:#fff;font-family:inherit;font-size:11px;
+  font-weight:800;letter-spacing:.03em;padding:6px 11px;border-radius:999px;cursor:pointer;white-space:nowrap;
 }
 .sd-btn.ghost{background:#fff;color:#181A4D;}
 .sd-btn:hover{background:#0F4A42;border-color:#0F4A42;color:#fff;}
 .sd-btn:disabled{opacity:.55;cursor:not-allowed;}
-.sd-empty{border:1.5px dashed #ECE4CE;border-radius:16px;padding:22px;color:#8a8879;font-size:14px;margin-bottom:34px;}
+.sd-empty{border:1.5px dashed #ECE4CE;border-radius:14px;padding:18px;color:#8a8879;font-size:14px;margin-bottom:24px;}
 .sd-scrim{position:fixed;inset:0;background:rgba(24,26,77,.42);display:flex;align-items:center;justify-content:center;padding:20px;z-index:80;}
 .sd-modal{background:#FBF8ED;border-radius:18px;padding:24px;width:100%;max-width:400px;font-family:'Poppins',sans-serif;}
 .sd-modal h3{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;margin:0 0 6px;color:#20201C;}
@@ -44,6 +36,11 @@ const CSS = `
 .sd-modal label{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;display:block;margin-bottom:6px;}
 .sd-modal input{width:100%;border:1.5px solid #ECE4CE;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:15px;background:#fff;color:#20201C;}
 .sd-modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+@media (max-width:640px){
+  .sd-card{flex-wrap:wrap;padding:10px 12px;}
+  .sd-name{font-size:14px;white-space:normal;}
+  .sd-actions{width:100%;margin-top:4px;}
+}
 `;
 
 function todayISO() {
