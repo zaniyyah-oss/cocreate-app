@@ -437,14 +437,41 @@ function NotesLibrary({ userId }: { userId: string }) {
       {topTags.length > 0 && (
         <>
           <div className="nt-sectionlabel">Browse by tag</div>
-          <div className="nt-chiprow">
+          <div className="nt-alltags" ref={allTagsRef}>
             <button
               type="button"
-              className={`nt-chip all ${tagFilter === "" ? "active" : ""}`}
-              onClick={() => setTagFilter("")}
+              className={`nt-chip all ${tagFilter === "" ? "active" : ""} ${allTagsOpen ? "open" : ""}`}
+              onClick={() => setAllTagsOpen((v) => !v)}
             >
-              All tags ({docs.length})
+              All tags ({docs.length}) <span className="nt-alltags-caret" aria-hidden>▾</span>
             </button>
+            {allTagsOpen && (
+              <div className="nt-alltags-menu">
+                <button
+                  type="button"
+                  className={`nt-alltags-item ${tagFilter === "" ? "on" : ""}`}
+                  onClick={() => { setTagFilter(""); setAllTagsOpen(false); }}
+                >
+                  <span className="nt-alltags-dot" />
+                  All tags ({docs.length})
+                </button>
+                {tagOptions.map((t) => {
+                  const c = tagColors[t.key];
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      className={`nt-alltags-item ${tagFilter === t.key ? "on" : ""}`}
+                      onClick={() => { setTagFilter(tagFilter === t.key ? "" : t.key); setAllTagsOpen(false); }}
+                    >
+                      <span className="nt-alltags-dot" style={c ? { background: c } : undefined} />
+                      {t.display} ({t.count})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
             {topTags.map((t) => {
               const c = tagColors[t.key];
               return (
