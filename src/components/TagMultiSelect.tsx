@@ -95,6 +95,7 @@ export function TagMultiSelect({
         qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
         qc.invalidateQueries({ queryKey: ["workspace-all-tags", userId] });
         qc.invalidateQueries({ queryKey: ["user-tag-colors", userId] });
+        qc.invalidateQueries({ queryKey: ["notes-docs-all", userId] });
       }
       onDeleted(tag);
     } catch (e) {

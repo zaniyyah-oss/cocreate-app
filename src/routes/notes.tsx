@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { SAVED_CSS, SignGate, useAuth } from "@/components/saved-shared";
 import { supabase } from "@/integrations/supabase/client";
+import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 
 export const Route = createFileRoute("/notes")({
@@ -545,6 +546,7 @@ function NotesLibrary({ userId }: { userId: string }) {
                 doc={openDocObj}
                 userId={userId}
                 colorFor={colorFor}
+                tagColors={tagColors}
                 onClose={closePanel}
               />
             ) : (
@@ -573,11 +575,13 @@ function DocPanel({
   doc,
   userId,
   colorFor,
+  tagColors,
   onClose,
 }: {
   doc: Doc;
   userId: string;
   colorFor: (t: string) => string | undefined;
+  tagColors: Record<string, string>;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
@@ -744,19 +748,16 @@ function DocPanel({
             );
           })}
           {editing && (
-            <input
-              className="nt-tag-input"
-              placeholder="+ tag"
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  addTag(tagDraft);
-                  setTagDraft("");
-                }
-              }}
-              onBlur={() => { if (tagDraft.trim()) { addTag(tagDraft); setTagDraft(""); } }}
+            <TagMultiSelect
+              userId={userId}
+              guest={false}
+              selected={tags}
+              colors={tagColors}
+              onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
+              onCreate={(t) => addTag(t)}
+              onDeleted={(t) => setTags((cur) => cur.filter((x) => x !== t))}
+              draft={tagDraft}
+              setDraft={setTagDraft}
             />
           )}
         </div>
