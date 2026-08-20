@@ -27,6 +27,15 @@ export const updatePlanDaysInput = z.object({
   days: z.array(planDayInput).min(1),
 });
 
+/** Full edit of an existing plan: meta + day content, with length changes allowed. */
+export const updatePlanInput = z.object({
+  plan_id: z.string().uuid(),
+  name: z.string().trim().min(1).max(160),
+  color: z.enum(PLAN_COLORS),
+  length_days: z.number().int().positive().max(365),
+  days: z.array(planDayInput).min(1),
+});
+
 export const startAssignmentInput = z.object({
   plan_id: z.string().uuid(),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

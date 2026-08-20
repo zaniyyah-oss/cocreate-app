@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   createPlanInput,
   updatePlanDaysInput,
+  updatePlanInput,
   startAssignmentInput,
   completeDayInput,
   saveDayResponseInput,
@@ -106,6 +107,76 @@ export const savePlanDays = createServerFn({ method: "POST" })
       .order("day_number", { ascending: true });
     if (error) throw error;
     return (saved ?? []) as PlanDayRow[];
+  });
+
+/**
+ * Edit an existing plan the user owns: rename, recolor, change length and copy.
+ * Shrinking the length drops the trailing days (and any responses/completions
+ * for them) and clamps in-flight assignments so live rendering stays valid.
+ */
+export const updatePlan = createServerFn({ method: "POST" })
+  .inputValidator((d) => updatePlanInput.parse(d))
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }): Promise<{ plan: PlanRow; days: PlanDayRow[] }> => {
+    const db = context.supabase as any;
+
+    const { data: plan, error } = await db
+      .from("plans")
+      .update({ name: data.name, color: data.color, length_days: data.length_days })
+      .eq("id", data.plan_id)
+      .eq("owner_id", context.userId)
+      .select("*")
+      .single();
+    if (error) throw error;
+
+    const rows = data.days
+      .filter((d: { day_number: number }) => d.day_number <= data.length_days)
+      .map((d: any) => ({
+        plan_id: data.plan_id,
+        day_number: d.day_number,
+        read_content: d.read_content ?? null,
+        pray_prompt: d.pray_prompt ?? null,
+        task_content: d.task_content ?? null,
+      }));
+
+    const { error: upErr } = await db
+      .from("plan_days")
+      .upsert(rows, { onConflict: "plan_id,day_number" });
+    if (upErr) throw upErr;
+
+    // Drop days beyond the new length.
+    const { error: delErr } = await db
+      .from("plan_days")
+      .delete()
+      .eq("plan_id", data.plan_id)
+      .gt("day_number", data.length_days);
+    if (delErr) throw delErr;
+
+    // Keep live assignments consistent with the new length.
+    const { data: assignments } = await db
+      .from("plan_assignments")
+      .select("id,current_day")
+      .eq("plan_id", data.plan_id)
+      .eq("user_id", context.userId);
+
+    for (const a of (assignments ?? []) as Array<{ id: string; current_day: number }>) {
+      await db.from("plan_day_responses").delete()
+        .eq("assignment_id", a.id).gt("day_number", data.length_days);
+      await db.from("plan_day_completions").delete()
+        .eq("assignment_id", a.id).gt("day_number", data.length_days);
+      if (a.current_day > data.length_days) {
+        await db.from("plan_assignments")
+          .update({ current_day: data.length_days })
+          .eq("id", a.id);
+      }
+    }
+
+    const { data: days, error: dErr } = await db
+      .from("plan_days").select("*").eq("plan_id", data.plan_id)
+      .order("day_number", { ascending: true });
+    if (dErr) throw dErr;
+
+    return { plan: plan as PlanRow, days: (days ?? []) as PlanDayRow[] };
   });
 
 export const deletePlan = createServerFn({ method: "POST" })

@@ -44,6 +44,7 @@ import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
 import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
+import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
@@ -225,6 +226,11 @@ const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
   path: '/plans/focus/$date',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlansIdEditRoute = PlansIdEditRouteImport.update({
+  id: '/plans/$id/edit',
+  path: '/plans/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
   id: '/focus/$id',
   path: '/focus/$id',
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
 }
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections/'
   fileRoutesByTo: FileRoutesByTo
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections'
   id:
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections/'
   fileRoutesById: FileRoutesById
@@ -526,6 +538,7 @@ export interface RootRouteChildren {
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
+  PlansIdEditRoute: typeof PlansIdEditRoute
   PlansFocusDateRoute: typeof PlansFocusDateRoute
 }
 
@@ -776,6 +789,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlansFocusDateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plans/$id/edit': {
+      id: '/plans/$id/edit'
+      path: '/plans/$id/edit'
+      fullPath: '/plans/$id/edit'
+      preLoaderRoute: typeof PlansIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/devotionals/focus/$id': {
       id: '/devotionals/focus/$id'
       path: '/focus/$id'
@@ -904,6 +924,7 @@ const rootRouteChildren: RootRouteChildren = {
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,
+  PlansIdEditRoute: PlansIdEditRoute,
   PlansFocusDateRoute: PlansFocusDateRoute,
 }
 export const routeTree = rootRouteImport

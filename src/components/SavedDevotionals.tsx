@@ -134,6 +134,13 @@ export function SavedDevotionalsSection({
                   >
                     Assign days
                   </button>
+                  <button
+                    type="button"
+                    className="sd-btn ghost"
+                    onClick={() => navigate({ to: "/plans/$id/edit", params: { id: p.id } })}
+                  >
+                    Edit
+                  </button>
                 </div>
               </article>
             );
