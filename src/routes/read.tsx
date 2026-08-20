@@ -139,12 +139,22 @@ function ReadLibrary() {
     });
   }, [recent, filterTopicIds]);
 
-  // Only surface topics that have at least one entry.
+  // All user topics; those with entries first (with counts), then the rest.
+  const topicCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of recent) for (const id of e.topic_ids ?? []) m.set(id, (m.get(id) ?? 0) + 1);
+    return m;
+  }, [recent]);
+
   const availableTopics = useMemo(() => {
-    const used = new Set<string>();
-    for (const e of recent) (e.topic_ids ?? []).forEach((id) => used.add(id));
-    return topics.filter((t) => used.has(t.id));
-  }, [recent, topics]);
+    return [...topics].sort((a, b) => {
+      const ca = topicCounts.get(a.id) ?? 0;
+      const cb = topicCounts.get(b.id) ?? 0;
+      if (ca !== cb) return cb - ca;
+      return (a.display_name ?? a.name).localeCompare(b.display_name ?? b.name);
+    });
+  }, [topics, topicCounts]);
+
 
   const filtered = books.filter((b) => b.testament === tab);
   const totalForTab = filtered.length;
