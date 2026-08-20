@@ -297,11 +297,33 @@ function ReadLibrary() {
         @media (max-width:640px){
           .rd-topbar{margin-bottom:22px;}
           .rd-tabs button{padding:9px 18px;font-size:13px;}
-          .rd-subnav{margin-bottom:20px;}
-          .rd-tabsub{margin:-2px 0 16px;font-size:13px;line-height:1.4;}
+          .rd-subnav{margin-bottom:14px;}
+          .rd-tabsub{margin:-2px 0 14px;font-size:12px;line-height:1.4;}
+          .rd-h1{font-size:40px;margin-bottom:14px;}
+          .rd-eyebrow{margin-bottom:10px;}
+          .rd-wrap{padding:20px 16px 96px;}
+          /* Study bar: buttons on one line, smaller */
+          .rd-studybar{margin:0 0 16px;gap:8px;}
+          .rd-studybar-left{gap:8px;width:100%;}
+          .rd-newstudy{padding:8px 14px;font-size:12px;}
+          .rd-filtertoggle{padding:8px 14px;font-size:12px;}
+          .rd-allstudies{display:none;}
+          .rd-viewtoggle button{padding:6px 12px;font-size:11px;}
+          /* 2-column tile grid on mobile */
+          .rd-recent-grid{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+          .rd-card{padding:12px 13px;gap:7px;border-radius:12px;}
+          .rd-card-title{font-size:14px;line-height:1.2;}
+          .rd-card-meta{font-size:11px;}
+          .rd-card-snip{font-size:12px;line-height:1.4;-webkit-line-clamp:2;}
+          .rd-card-foot{font-size:10px;padding-top:6px;}
+          .rd-pill{font-size:9px;padding:3px 9px;}
+          .rd-iconbtn{width:24px;height:24px;}
+          .rd-iconbtn svg{width:13px;height:13px;}
+          .rd-section-label{font-size:11px;margin-bottom:8px;}
+          .rd-recent-header{margin-bottom:8px;}
           .rd-build{
             display:flex;align-items:center;justify-content:space-between;gap:12px;
-            padding:12px 14px;margin:0 0 18px;border-radius:14px;
+            padding:12px 14px;margin:0 0 14px;border-radius:14px;
           }
           .rd-build-copy h2{font-size:14px;margin:0;line-height:1.2;}
           .rd-build-copy p{display:none;}
@@ -462,9 +484,6 @@ function ReadLibrary() {
       <div className="rd-wrap">
         <div className="rd-eyebrow">Workspace · Read</div>
         <h1 className="rd-h1">Read</h1>
-        <p className="rd-sub">
-          Every study you've saved, grouped by book of the Bible. Click a book to see everything you've written on it.
-        </p>
 
         <div className="rd-subnav" role="tablist">
           <button role="tab" className={section === "studies" ? "active" : ""} onClick={() => setSection("studies")}>Studies</button>
@@ -474,7 +493,6 @@ function ReadLibrary() {
 
         {section === "studies" && (
           <div className="rd-panel">
-            <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
             <div className="rd-studybar">
               <div className="rd-studybar-left">
