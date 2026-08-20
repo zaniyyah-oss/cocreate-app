@@ -1201,6 +1201,205 @@ export type Database = {
           },
         ]
       }
+      plan_assignments: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_day: number
+          id: string
+          plan_id: string
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          id?: string
+          plan_id: string
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          id?: string
+          plan_id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_assignments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_day_completions: {
+        Row: {
+          assignment_id: string
+          completed_at: string
+          day_number: number
+          id: string
+        }
+        Insert: {
+          assignment_id: string
+          completed_at?: string
+          day_number: number
+          id?: string
+        }
+        Update: {
+          assignment_id?: string
+          completed_at?: string
+          day_number?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_day_completions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "plan_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_day_responses: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          day_number: number
+          id: string
+          pray_reflection: string | null
+          read_reflection: string | null
+          task_done: boolean
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          day_number: number
+          id?: string
+          pray_reflection?: string | null
+          read_reflection?: string | null
+          task_done?: boolean
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          pray_reflection?: string | null
+          read_reflection?: string | null
+          task_done?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_day_responses_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "plan_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          plan_id: string
+          pray_prompt: string | null
+          read_content: string | null
+          task_content: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          plan_id: string
+          pray_prompt?: string | null
+          read_content?: string | null
+          task_content?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          plan_id?: string
+          pray_prompt?: string | null
+          read_content?: string | null
+          task_content?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          length_days: number
+          name: string
+          owner_id: string
+          source: string
+          source_plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          length_days: number
+          name: string
+          owner_id: string
+          source?: string
+          source_plan_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          length_days?: number
+          name?: string
+          owner_id?: string
+          source?: string
+          source_plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plans_source_plan_id_fkey"
+            columns: ["source_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1527,6 +1726,8 @@ export type Database = {
           devotional_entry_id: string | null
           id: string
           pinned: boolean
+          plan_assignment_id: string | null
+          plan_day_number: number | null
           status: string
           tags: string[]
           title: string
@@ -1541,6 +1742,8 @@ export type Database = {
           devotional_entry_id?: string | null
           id?: string
           pinned?: boolean
+          plan_assignment_id?: string | null
+          plan_day_number?: number | null
           status?: string
           tags?: string[]
           title?: string
@@ -1555,6 +1758,8 @@ export type Database = {
           devotional_entry_id?: string | null
           id?: string
           pinned?: boolean
+          plan_assignment_id?: string | null
+          plan_day_number?: number | null
           status?: string
           tags?: string[]
           title?: string
@@ -1567,6 +1772,13 @@ export type Database = {
             columns: ["devotional_entry_id"]
             isOneToOne: false
             referencedRelation: "devotional_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_items_plan_assignment_id_fkey"
+            columns: ["plan_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "plan_assignments"
             referencedColumns: ["id"]
           },
         ]
@@ -1679,6 +1891,14 @@ export type Database = {
       join_facilitator_group_by_code: {
         Args: { _code: string }
         Returns: string
+      }
+      owns_plan: {
+        Args: { _plan_id: string; _user_id: string }
+        Returns: boolean
+      }
+      owns_plan_assignment: {
+        Args: { _assignment_id: string; _user_id: string }
+        Returns: boolean
       }
       publish_scheduled_content: { Args: never; Returns: undefined }
     }
