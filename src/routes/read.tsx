@@ -478,92 +478,95 @@ function ReadLibrary() {
             <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
             <div className="rd-studybar">
-              <button
-                type="button"
-                className="rd-newstudy"
-                onClick={handleNewStudy}
-                disabled={newStudyBusy}
-              >
-                <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
-              </button>
+              <div className="rd-studybar-left">
+                <button
+                  type="button"
+                  className="rd-newstudy"
+                  onClick={handleNewStudy}
+                  disabled={newStudyBusy}
+                >
+                  <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
+                </button>
+                <button
+                  type="button"
+                  className={`rd-filtertoggle ${filterOpen ? "open" : ""} ${filterTopicIds.length > 0 ? "hasfilter" : ""}`}
+                  onClick={() => setFilterOpen((o) => !o)}
+                  aria-expanded={filterOpen}
+                >
+                  Filter by book or topic
+                  {filterTopicIds.length > 0 && <span className="rd-fcount">{filterTopicIds.length}</span>}
+                  <span className="rd-caret">▾</span>
+                </button>
+                <Link to="/notes" className="rd-allstudies">→ All studies</Link>
+              </div>
               <div className="rd-viewtoggle" role="tablist">
                 <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
                 <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
               </div>
             </div>
 
-            <div className="rd-topbar">
-              <div className="rd-tabs" role="tablist">
-                <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
-                <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
-              </div>
-              <Link to="/notes" className="rd-allstudies">→ All studies</Link>
-            </div>
-
-
-            {availableTopics.length > 0 && (
-              <div className="rd-topicfilter">
-                <span className="lbl">Filter by topic</span>
-                {availableTopics.map((t) => {
-                  const on = filterTopicIds.includes(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`rd-tchip ${on ? "on" : ""}`}
-                      onClick={() =>
-                        setFilterTopicIds((cur) =>
-                          cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
-                        )
-                      }
-                    >
-                      {t.display_name ?? t.name}
-                    </button>
-                  );
-                })}
-                {filterTopicIds.length > 0 && (
-                  <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
-                    Clear
-                  </button>
+            {filterOpen && (
+              <div className="rd-filter-drawer">
+                <div className="rd-frow">
+                  <div className="rd-flabel">Testament</div>
+                  <div className="rd-tabs" role="tablist">
+                    <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
+                    <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
+                  </div>
+                </div>
+                <div className="rd-frow">
+                  <div className="rd-flabel">{tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books</div>
+                  <div className="rd-grid">
+                    {filtered.map((b) => {
+                      const n = counts[b.abbreviation] ?? 0;
+                      const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
+                      return (
+                        <Link
+                          key={b.abbreviation}
+                          to="/read/$abbr"
+                          params={{ abbr: b.abbreviation }}
+                          search={{} as any}
+                          className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
+                          title={b.full_name}
+                        >
+                          {b.abbreviation}
+                          {n > 0 && <span className="rd-badge">{n}</span>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+                {availableTopics.length > 0 && (
+                  <div className="rd-frow">
+                    <div className="rd-flabel">Topic</div>
+                    <div className="rd-topicpills">
+                      {availableTopics.map((t) => {
+                        const on = filterTopicIds.includes(t.id);
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            className={`rd-tpill ${on ? "on" : ""}`}
+                            onClick={() =>
+                              setFilterTopicIds((cur) =>
+                                cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                              )
+                            }
+                          >
+                            {t.display_name ?? t.name}
+                          </button>
+                        );
+                      })}
+                      {filterTopicIds.length > 0 && (
+                        <button type="button" className="rd-tpill clear" onClick={() => setFilterTopicIds([])}>
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
-
-            <div className="rd-section-label">
-              {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
-            </div>
-
-            <div className="rd-grid">
-              {filtered.map((b) => {
-                const n = counts[b.abbreviation] ?? 0;
-                const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
-                return (
-                  <Link
-                    key={b.abbreviation}
-                    to="/read/$abbr"
-                    params={{ abbr: b.abbreviation }}
-                    search={{} as any}
-                    className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
-                    title={b.full_name}
-                  >
-                    {b.abbreviation}
-                    {n > 0 && <span className="rd-badge">{n}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-
-            <TopicsSection
-              topics={topics}
-              entries={recent}
-              selectedIds={filterTopicIds}
-              onToggle={(id) =>
-                setFilterTopicIds((cur) =>
-                  cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
-                )
-              }
-              onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
-            />
 
             {filteredRecent.length > 0 && (
               <>
