@@ -7,7 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 
 export const Route = createFileRoute("/notes")({
+  validateSearch: (s: Record<string, unknown>) => ({ doc: typeof s.doc === "string" ? s.doc : undefined }),
   component: NotesPage,
+
   head: () => ({
     meta: [
       { title: "Notes — CoCreate" },
