@@ -23,8 +23,8 @@ export const Route = createFileRoute("/plans/new")({
   component: PlanBuilder,
 });
 
-type DayDraft = { read: string; pray: string; task: string };
-const emptyDay = (): DayDraft => ({ read: "", pray: "", task: "" });
+type DayDraft = { read: string; pray: string; tasks: string[] };
+const emptyDay = (): DayDraft => ({ read: "", pray: "", tasks: [""] });
 
 function PlanBuilder() {
   const search = Route.useSearch();
@@ -42,8 +42,16 @@ function PlanBuilder() {
   const day = days[activeDay] ?? emptyDay();
   const dayNumbers = useMemo(() => Array.from({ length }, (_, i) => i + 1), [length]);
 
-  function patch(field: keyof DayDraft, value: string) {
+  function patch(field: "read" | "pray", value: string) {
     setDays((prev) => ({ ...prev, [activeDay]: { ...(prev[activeDay] ?? emptyDay()), [field]: value } }));
+  }
+
+  function setTasks(updater: (tasks: string[]) => string[]) {
+    setDays((prev) => {
+      const cur = prev[activeDay] ?? emptyDay();
+      const tasks = updater(cur.tasks.length ? cur.tasks : [""]);
+      return { ...prev, [activeDay]: { ...cur, tasks: tasks.length ? tasks : [""] } };
+    });
   }
 
   function chooseLength(n: number) {
@@ -70,7 +78,7 @@ function PlanBuilder() {
               day_number: n,
               read_content: d.read.trim() || null,
               pray_prompt: d.pray.trim() || null,
-              task_content: d.task.trim() || null,
+              task_content: d.tasks.map((t) => t.trim()).filter(Boolean).join("\n") || null,
             };
           }),
         },
@@ -84,10 +92,9 @@ function PlanBuilder() {
     }
   }
 
-  const BOXES: Array<{ key: keyof DayDraft; label: string; icon: string; placeholder: string; rows: number }> = [
+  const BOXES: Array<{ key: "read" | "pray"; label: string; icon: string; placeholder: string; rows: number }> = [
     { key: "read", label: "Read", icon: "R", placeholder: "Scripture or passage for this day", rows: 3 },
     { key: "pray", label: "Pray", icon: "P", placeholder: "A prayer prompt for this day", rows: 3 },
-    { key: "task", label: "To-do", icon: "T", placeholder: "One action to carry into the day", rows: 2 },
   ];
 
   return (
@@ -189,6 +196,44 @@ function PlanBuilder() {
               />
             </div>
           ))}
+
+          <div className="pb-box" style={{ borderColor: c.hex, background: c.tint }}>
+            <div className="pb-boxlabel" style={{ color: c.hex }}>
+              <span className="pb-boxicon" style={{ background: c.hex, color: c.onHex }}>T</span>
+              To-do
+            </div>
+            {(day.tasks.length ? day.tasks : [""]).map((t, i) => (
+              <input
+                key={i}
+                className="pb-input"
+                style={{ marginBottom: 8 }}
+                value={t}
+                placeholder={i === 0 ? "One action to carry into the day" : "Another task"}
+                onChange={(e) => setTasks((tasks) => tasks.map((x, j) => (j === i ? e.target.value : x)))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setTasks((tasks) => [...tasks.slice(0, i + 1), "", ...tasks.slice(i + 1)]);
+                    requestAnimationFrame(() => {
+                      const el = e.currentTarget?.parentElement?.querySelectorAll("input")[i + 1] as HTMLInputElement | undefined;
+                      el?.focus();
+                    });
+                  } else if (e.key === "Backspace" && t === "" && (day.tasks.length > 1)) {
+                    e.preventDefault();
+                    setTasks((tasks) => tasks.filter((_, j) => j !== i));
+                  }
+                }}
+              />
+            ))}
+            <button
+              type="button"
+              className="pb-tab"
+              style={{ marginTop: 2 }}
+              onClick={() => setTasks((tasks) => [...tasks, ""])}
+            >
+              + Add task
+            </button>
+          </div>
 
           <button
             type="button"
