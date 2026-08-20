@@ -548,7 +548,7 @@ function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () 
           </button>
         </div>
         {items.map((it) => (
-          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.active ? " active" : ""}`} onClick={onClose}>
+          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.to === "/" ? " active" : ""}`} onClick={onClose}>
             {it.icon}<span>{it.label}</span>
           </Link>
         ))}
