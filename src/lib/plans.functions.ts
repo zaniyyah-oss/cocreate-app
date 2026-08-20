@@ -8,6 +8,7 @@ import {
   completeDayInput,
   saveDayResponseInput,
   activePlanInput,
+  savePlanDayContentInput,
   planDayNoteInput,
   dayNumberForDate,
   planTag,
@@ -419,4 +420,29 @@ export const listPlanDayNotes = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false });
     if (error) throw error;
     return rows ?? [];
+  });
+
+/** Inline edit of one day's authored content (Read / Pray / To-do). */
+export const savePlanDayContent = createServerFn({ method: "POST" })
+  .inputValidator((d) => savePlanDayContentInput.parse(d))
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }): Promise<PlanDayRow> => {
+    const db = context.supabase as any;
+    const { data: plan, error: pErr } = await db
+      .from("plans").select("id").eq("id", data.plan_id).eq("owner_id", context.userId).maybeSingle();
+    if (pErr) throw pErr;
+    if (!plan) throw new Error("You can only edit devotionals you own.");
+
+    const patch: Record<string, string | null> = {};
+    if (data.read_content !== undefined) patch.read_content = data.read_content;
+    if (data.pray_prompt !== undefined) patch.pray_prompt = data.pray_prompt;
+    if (data.task_content !== undefined) patch.task_content = data.task_content;
+
+    const { data: saved, error } = await db
+      .from("plan_days")
+      .upsert({ plan_id: data.plan_id, day_number: data.day_number, ...patch }, { onConflict: "plan_id,day_number" })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return saved as PlanDayRow;
   });
