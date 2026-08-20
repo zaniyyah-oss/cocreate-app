@@ -220,6 +220,22 @@ function ReadLibrary() {
           transition:all .15s ease;
         }
         .rd-tabs button.active{background:#181A4D;color:#fff;}
+
+        .rd-subnav{
+          display:inline-flex;gap:6px;background:#fff;border:1.5px solid #ECE4CE;
+          border-radius:999px;padding:5px;width:fit-content;margin:0 0 32px;
+        }
+        .rd-subnav button{
+          border:none;background:transparent;padding:11px 22px;border-radius:999px;
+          font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;color:#8a8879;
+          transition:background .15s ease, color .15s ease;
+        }
+        .rd-subnav button.active{background:#181A4D;color:#FBF8ED;}
+        .rd-subnav button:not(.active):hover{color:#20201C;}
+        .rd-panel{animation:rdFade .18s ease;}
+        @keyframes rdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+        .rd-tabsub{font-size:15px;color:#4a4a44;max-width:640px;line-height:1.5;margin:-8px 0 28px;}
+
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
           font-size:14px;font-weight:700;text-decoration:none;
