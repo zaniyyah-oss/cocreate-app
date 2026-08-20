@@ -93,6 +93,7 @@ function ReadLibrary() {
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
   const topicsQ = useAllTopics();
+  const [section, setSection] = useState<"studies" | "devotionals" | "saved">("studies");
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [view, setView] = useState<"tiles" | "list">("tiles");
