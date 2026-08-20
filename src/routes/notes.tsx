@@ -204,10 +204,21 @@ const NOTES_CSS = `
   .nt-rail{padding-bottom:14px;}
   .nt-railcard{flex:0 0 160px;padding:12px 14px;}
   .nt-split{display:block;margin-top:14px;}
-  .nt-listcol{width:100%;padding-right:0;overflow:visible;grid-template-columns:1fr;}
+  .nt-listcol{width:100%;padding-right:0;overflow:visible;}
+  .nt-detailcol{display:none;}
+  /* Detail takes over the screen on mobile */
+  .nt-wrap.detail .nt-mobilebar,
+  .nt-wrap.detail .nt-toolbar,
+  .nt-wrap.detail .nt-sectionlabel,
+  .nt-wrap.detail .nt-chiprow,
+  .nt-wrap.detail .nt-rail,
+  .nt-wrap.detail .nt-railempty,
+  .nt-wrap.detail .nt-listcol{display:none;}
+  .nt-wrap.detail .nt-detailcol{display:block;}
   .nt-detailcard{border:none;border-radius:14px;}
   .nt-panel-header{padding:14px 16px 12px;}
   .nt-panel-body{padding:16px 16px 26px;}
+  .nt-backbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:inherit;font-weight:700;font-size:13px;color:#181A4D;cursor:pointer;padding:6px 0;margin-bottom:6px;}
 }
 
 `;
