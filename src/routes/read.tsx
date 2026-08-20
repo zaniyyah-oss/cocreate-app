@@ -686,19 +686,19 @@ function FullScreenNote({
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
   const timer = useRef<number | null>(null);
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const noteRef = useRef(note);
+  noteRef.current = note;
 
   useEffect(() => {
-    const t = window.setTimeout(() => taRef.current?.focus(), 60);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      window.clearTimeout(t);
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
+
 
   const save = async (val: string) => {
     setStatus("saving");
