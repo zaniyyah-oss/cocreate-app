@@ -426,7 +426,12 @@ function ReadLibrary() {
           </div>
         </div>
 
-        <SavedDevotionalsSection />
+        <SavedDevotionalsSection
+          title="Your devotionals"
+          note="Everything you've built, in one place"
+          emptyText="You haven't built one yet. Use the builder above to start."
+        />
+
 
 
 
