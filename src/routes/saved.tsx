@@ -6,6 +6,8 @@ import {
   QuotesSection, NotesSection, SavedContentSection, DevotionalHistorySection, WorkspaceDocsSection,
   useAuth, useSavedData, openContent, openTemplate,
 } from "@/components/saved-shared";
+import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
+
 
 export const Route = createFileRoute("/saved")({
   component: LibraryPage,
@@ -85,7 +87,9 @@ function LibraryPage() {
 
         {tab === "saved" && (
           <>
+            <SavedDevotionalsSection />
             <QuotesSection
+
               pins={pins.data ?? []}
               contentMap={contentMap}
               onOpen={(c) => openContent(navigate, c)}
