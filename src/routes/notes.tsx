@@ -307,6 +307,17 @@ function NotesLibrary({ userId }: { userId: string }) {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [allTagsOpen, setAllTagsOpen] = useState(false);
+  const allTagsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!allTagsOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!allTagsRef.current?.contains(e.target as Node)) setAllTagsOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [allTagsOpen]);
 
   const topTags = useMemo(
     () => [...tagOptions].sort((a, b) => b.count - a.count).slice(0, 6),
