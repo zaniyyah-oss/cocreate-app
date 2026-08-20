@@ -1031,6 +1031,8 @@ function EntryPage() {
               </div>
             </div>
 
+            <PlanDayBanner userId={userId} dateISO={selectedDate} />
+
             <TodayEventsBanner userId={userId} dateISO={selectedDate} />
 
             <div className="de-shell-inner">
