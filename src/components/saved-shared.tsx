@@ -112,13 +112,32 @@ const TYPE_META: Record<string, { label: string; bg: string; fg: string }> = {
 const routeFor = (type: string | null | undefined) =>
   type === "teaching" ? "/teachings/$id" : type === "podcast" ? "/podcasts/$id" : "/essays/$id";
 
+// Module-level cache of the resolved session so navigating between pages does
+// not re-await getSession() (which gates every data query behind `ready`).
+let cachedUserId: string | null = null;
+let cachedReady = false;
 export function useAuth() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(cachedUserId);
+  const [ready, setReady] = useState(cachedReady);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { setUserId(data.session?.user.id ?? null); setReady(true); });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
-    return () => sub.subscription.unsubscribe();
+    let alive = true;
+    if (!cachedReady) {
+      supabase.auth.getSession().then(({ data }) => {
+        cachedUserId = data.session?.user.id ?? null;
+        cachedReady = true;
+        if (!alive) return;
+        setUserId(cachedUserId);
+        setReady(true);
+      });
+    }
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      cachedUserId = s?.user.id ?? null;
+      cachedReady = true;
+      if (!alive) return;
+      setUserId(cachedUserId);
+      setReady(true);
+    });
+    return () => { alive = false; sub.subscription.unsubscribe(); };
   }, []);
   return { userId, ready };
 }
