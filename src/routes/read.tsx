@@ -500,11 +500,17 @@ function ReadLibrary() {
                     <div className="rd-topicpills">
                       {availableTopics.map((t) => {
                         const on = filterTopicIds.includes(t.id);
+                        const bc = brandColor((t as any).color_key) ?? brandColor("amber")!;
                         return (
                           <button
                             key={t.id}
                             type="button"
                             className={`rd-tpill ${on ? "on" : ""}`}
+                            style={{
+                              background: on ? bc.hex : "#fff",
+                              color: on ? bc.onHex : "#4a4a44",
+                              borderColor: bc.hex,
+                            }}
                             onClick={() =>
                               setFilterTopicIds((cur) =>
                                 cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
@@ -532,18 +538,6 @@ function ReadLibrary() {
                   <div className="rd-section-label" style={{ margin: 0 }}>
                     {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
                   </div>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                    {view === "list" && (
-                      <label className="rd-listsort">
-                        Sort
-                        <select value={listSort} onChange={(e) => setListSort(e.target.value as any)}>
-                          <option value="recent">Most recent</option>
-                          <option value="book">By book</option>
-                          <option value="topic">By topic</option>
-                        </select>
-                      </label>
-                    )}
-                  </div>
                 </div>
 
                 {view === "tiles" ? (
@@ -553,14 +547,16 @@ function ReadLibrary() {
                         key={e.id}
                         entry={e}
                         fmtDate={fmtDate}
+                        reference={refLine(e)}
                         onOpen={() => setOpenEntry(e)}
                       />
                     ))}
                   </div>
                 ) : (
                   <ListView
-                    groups={grouped}
+                    items={filteredRecent}
                     fmtDate={fmtDate}
+                    refLine={refLine}
                     bookFullName={bookFullName}
                     onOpen={(e) => setOpenEntry(e)}
                   />
