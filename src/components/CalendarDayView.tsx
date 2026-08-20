@@ -3,6 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEventDialog, type UserEvent } from "@/routes/devotionals.$id";
+import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import {
+  occursOn,
+  toggleRecurringCompletion,
+  useRecurringCompletions,
+  useRecurringTasks,
+  type RecurringTask,
+} from "@/lib/recurring-tasks";
 
 function isoDate(d: Date): string {
   const y = d.getFullYear();
@@ -138,9 +146,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
+  const [recurAddOpen, setRecurAddOpen] = useState(false);
+  const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
 
   const openAdd = (kind: "event" | "focus") => { setAddItemType(kind); setAddOpen(true); };
   const onSaved = () => qc.invalidateQueries({ queryKey: ["cal-day"] });
+  const onRecurSaved = () => {
+    qc.invalidateQueries({ queryKey: ["recurring-tasks"] });
+    qc.invalidateQueries({ queryKey: ["recurring-task-completions"] });
+  };
+
 
   const weekDays = useMemo(() => {
     const start = new Date(selected);
@@ -178,6 +193,19 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     },
   });
   const dayItems = itemsQ.data?.get(selectedISO) ?? [];
+
+  const recurQ = useRecurringTasks(userId);
+  const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
+  const recurToday = useMemo(
+    () => (recurQ.data ?? []).filter(t => occursOn(t, selected)),
+    [recurQ.data, selectedISO],
+  );
+  const toggleRecur = async (t: RecurringTask, done: boolean) => {
+    if (!userId) return;
+    await toggleRecurringCompletion(userId, t.id, selectedISO, done);
+    qc.invalidateQueries({ queryKey: ["recurring-task-completions"] });
+  };
+
 
   const [cursor, setCursor] = useState(() => ({ y: selected.getFullYear(), m: selected.getMonth() }));
   useEffect(() => { setCursor({ y: selected.getFullYear(), m: selected.getMonth() }); }, [selectedISO]);
@@ -241,6 +269,15 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         >
           + Add focus item
         </button>
+        <button
+          type="button"
+          className="cald-addbtn cald-addbtn-focus"
+          onClick={() => setRecurAddOpen(true)}
+          disabled={!userId}
+        >
+          + Recurring task
+        </button>
+
 
         <div className="cald-mini">
           <div className="cald-mini-head">
@@ -436,12 +473,46 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 </div>
               )}
 
-              {!itemsQ.isLoading && dayItems.length === 0 && (
-                <div className="cald-empty">
-                  <strong>Nothing scheduled.</strong>
-                  <div>Tap a time slot or the Add button to add an event or focus item.</div>
+              {recurToday.length > 0 && (
+                <div className="cald-untimed">
+                  <div className="cald-items-label">Recurring tasks</div>
+                  {recurToday.map(t => {
+                    const done = recurDone.data?.has(`${t.id}|${selectedISO}`) ?? false;
+                    return (
+                      <div key={t.id} className="cald-recur" style={{ borderColor: t.color }}>
+                        <span className="swatch-bar" style={{ background: t.color }} />
+                        <input
+                          type="checkbox"
+                          checked={done}
+                          onChange={(e) => { void toggleRecur(t, e.target.checked); }}
+                          aria-label={`Mark ${t.title} done`}
+                        />
+                        <button type="button" className="cald-recur-body" onClick={() => setRecurEdit(t)}>
+                          <div className="ev-title" style={{ textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1 }}>
+                            {t.title}
+                            <span className="ev-tag">repeats</span>
+                          </div>
+                          {(t.start_time || t.notes) && (
+                            <div className="ev-notes">
+                              {t.start_time ? fmtTime(t.start_time.slice(0, 5)) : ""}
+                              {t.start_time && t.notes ? " · " : ""}
+                              {t.notes ?? ""}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
+              {!itemsQ.isLoading && dayItems.length === 0 && recurToday.length === 0 && (
+                <div className="cald-empty">
+                  <strong>Nothing scheduled.</strong>
+                  <div>Tap a time slot or the Add button to add an event, focus item, or recurring task.</div>
+                </div>
+              )}
+
             </>
           );
         })()}
@@ -468,9 +539,24 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         event={editEvent}
         onSaved={onSaved}
       />
+      <RecurringTaskDialog
+        open={recurAddOpen}
+        onOpenChange={setRecurAddOpen}
+        userId={userId}
+        defaultDate={selectedISO}
+        onSaved={onRecurSaved}
+      />
+      <RecurringTaskDialog
+        open={!!recurEdit}
+        onOpenChange={(v) => { if (!v) setRecurEdit(null); }}
+        userId={userId}
+        task={recurEdit}
+        onSaved={onRecurSaved}
+      />
     </div>
   );
 }
+
 
 const CSS = `
 .cald-layout{display:grid;grid-template-columns:1fr;gap:0;font-family:'Poppins',sans-serif;color:#20201C;}
@@ -523,6 +609,11 @@ const CSS = `
 .cald-untimed{background:#fff;border-radius:16px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
+.cald-recur{display:flex;align-items:center;gap:10px;border:1.5px solid #E4DFCF;border-radius:12px;padding:10px 12px;background:#FBF8ED;}
+.cald-recur .swatch-bar{width:4px;align-self:stretch;border-radius:3px;flex:none;}
+.cald-recur input[type=checkbox]{width:17px;height:17px;flex:none;cursor:pointer;accent-color:#181A4D;}
+.cald-recur-body{flex:1;min-width:0;text-align:left;background:transparent;border:none;padding:0;font-family:inherit;cursor:pointer;}
+
 .cald-event{width:100%;display:flex;align-items:stretch;gap:12px;border-radius:12px;border:1.5px solid transparent;padding:10px 14px;background:transparent;font-family:inherit;cursor:pointer;}
 .cald-event .swatch-bar{width:4px;border-radius:3px;flex-shrink:0;}
 .cald-event .ev-title{font-size:14px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:8px;}

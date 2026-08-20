@@ -1433,6 +1433,92 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_task_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          occurrence_date: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          occurrence_date: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          occurrence_date?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_task_completions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_tasks: {
+        Row: {
+          color: string
+          created_at: string
+          end_date: string | null
+          end_time: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          month_days: number[]
+          notes: string | null
+          start_date: string
+          start_time: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          weekdays: number[]
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          end_time?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean
+          month_days?: number[]
+          notes?: string | null
+          start_date?: string
+          start_time?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          weekdays?: number[]
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          end_time?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          month_days?: number[]
+          notes?: string | null
+          start_date?: string
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          weekdays?: number[]
+        }
+        Relationships: []
+      }
       saved_items: {
         Row: {
           content_item_id: string | null
