@@ -1102,7 +1102,9 @@ function HomePage() {
       <div className="hp">
         {signedIn ? <HomeIconBar /> : <HomeTourBar />}
         <HomeMasthead signedIn={signedIn} />
+        {signedIn && <ContinueStrip />}
         <LatestSection />
+
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
         <FeaturedCollectionSection />
         <StreamingSection />
