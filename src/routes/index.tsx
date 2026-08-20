@@ -461,9 +461,9 @@ function TopicsNav() {
 function HomeIconBar() {
   const items = [
     { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg> },
+    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
     { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
     { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> },
-    { to: "/explore", label: "Bookmarks", icon: <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>, prepend: <Link key="book" to="/read" aria-label="Read" title="Read"><svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14"/></svg></Link> },
     { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg> },
   ];
   return (
