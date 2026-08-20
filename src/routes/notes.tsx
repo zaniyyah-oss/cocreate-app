@@ -300,22 +300,34 @@ function NotesLibrary({ userId }: { userId: string }) {
   }, [docs]);
 
   const [tagFilter, setTagFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const topTags = useMemo(
+    () => [...tagOptions].sort((a, b) => b.count - a.count).slice(0, 6),
+    [tagOptions],
+  );
+  const topKeys = new Set(topTags.map((t) => t.key));
+  const moreTags = tagOptions.filter((t) => !topKeys.has(t.key));
 
   const filteredDocs = useMemo(() => {
-    if (!tagFilter) return docs;
-    return docs.filter((d) => (d.tags ?? []).some((t) => normalizeTag(t) === tagFilter));
-  }, [docs, tagFilter]);
+    const q = search.trim().toLowerCase();
+    return docs.filter((d) => {
+      if (tagFilter && !(d.tags ?? []).some((t) => normalizeTag(t) === tagFilter)) return false;
+      if (q && !(d.title || "").toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [docs, tagFilter, search]);
 
-  // Layout: 1, 2, or 3 open panels.
-  const [layout, setLayout] = useState<1 | 2 | 3>(1);
-  // Ordered list of open doc IDs. First = most recently opened. When we need
-  // to evict, we drop the last (least recently opened).
-  const [openIds, setOpenIds] = useState<string[]>([]);
+  // Pinned notes first, then the most recently edited ones (max 4 fillers).
+  const railDocs = useMemo(() => {
+    const pinned = docs.filter((d) => (d as any).pinned);
+    const pinnedIds = new Set(pinned.map((d) => d.id));
+    const recent = docs.filter((d) => !pinnedIds.has(d.id)).slice(0, 4);
+    return [...pinned, ...recent];
+  }, [docs]);
 
-  // Trim open panels when layout shrinks.
-  useEffect(() => {
-    setOpenIds((cur) => cur.slice(0, layout));
-  }, [layout]);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   // Auto-open the requested doc (deep link) or the newest doc on first load.
   const { doc: docParam } = Route.useSearch();
@@ -325,23 +337,12 @@ function NotesLibrary({ userId }: { userId: string }) {
     if (!docsQ.isSuccess) return;
     if (docs.length === 0) { bootstrappedRef.current = true; return; }
     bootstrappedRef.current = true;
-    const target = docParam && docs.some((d) => d.id === docParam) ? docParam : docs[0].id;
-    setOpenIds([target]);
-
+    if (docParam && docs.some((d) => d.id === docParam)) setOpenId(docParam);
+    else if (typeof window !== "undefined" && window.innerWidth > 900) setOpenId(docs[0].id);
   }, [docsQ.isSuccess, docs]);
 
-  const openDoc = (id: string) => {
-    setOpenIds((cur) => {
-      if (cur[0] === id) return cur;
-      const without = cur.filter((x) => x !== id);
-      const next = [id, ...without].slice(0, layout);
-      return next;
-    });
-  };
-
-  const closePanel = (id: string) => {
-    setOpenIds((cur) => cur.filter((x) => x !== id));
-  };
+  const openDoc = (id: string) => setOpenId(id);
+  const closePanel = () => setOpenId(null);
 
   const createDoc = useMutation({
     mutationFn: async () => {
@@ -367,58 +368,148 @@ function NotesLibrary({ userId }: { userId: string }) {
     },
   });
 
-  const openDocs = openIds
-    .map((id) => docs.find((d) => d.id === id))
-    .filter((d): d is Doc => !!d);
+  const openDocObj = docs.find((d) => d.id === openId) ?? null;
 
   return (
-    <div className="nt-frame">
-      <aside className="nt-list-col">
-        <div className="nt-list-header">
-          <div className="title">Notes</div>
-          <div className="nt-filter">
-            <label htmlFor="nt-tag-filter">Filter by tag</label>
-            <select
-              id="nt-tag-filter"
-              className="nt-select"
-              value={tagFilter}
-              onChange={(e) => setTagFilter(e.target.value)}
-            >
-              <option value="">All tags ({docs.length})</option>
-              {tagOptions.map((t) => (
-                <option key={t.key} value={t.key}>
-                  {t.display} ({t.count})
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className={`nt-wrap ${openId ? "detail" : ""}`}>
+      <div className="nt-mobilebar">
+        <div className="m-title">Notes</div>
+        <div className="m-actions">
+          <button
+            type="button"
+            className="nt-iconbtn"
+            aria-label="Search notes"
+            onClick={() => setSearchOpen((v) => !v)}
+          >
+            <SearchIcon />
+          </button>
+          <button
+            type="button"
+            className="nt-iconbtn primary"
+            aria-label="New note"
+            onClick={() => createDoc.mutate()}
+            disabled={createDoc.isPending}
+          >
+            +
+          </button>
         </div>
-        <div className="nt-doc-list">
+      </div>
+
+      <div className="nt-eyebrow">Workspace · Notes</div>
+      <h1 className="nt-h1">Notes</h1>
+      <p className="nt-desc">
+        Every document you've written across the workspace — browse by tag, search by title, and pick
+        up right where you left off.
+      </p>
+
+      <div className="nt-toolbar">
+        <button className="nt-newbtn" onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
+          <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+          {createDoc.isPending ? "Creating…" : "New note"}
+        </button>
+        <select
+          className="nt-select"
+          aria-label="More tags"
+          value={topKeys.has(tagFilter) ? "" : tagFilter}
+          onChange={(e) => setTagFilter(e.target.value)}
+        >
+          <option value="">More tags{moreTags.length ? ` (${moreTags.length})` : ""}</option>
+          {moreTags.map((t) => (
+            <option key={t.key} value={t.key}>{t.display} ({t.count})</option>
+          ))}
+        </select>
+        <div className={`nt-search ${searchOpen ? "" : "hidden"}`}>
+          <SearchIcon />
+          <input
+            placeholder="Search by title…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {topTags.length > 0 && (
+        <>
+          <div className="nt-sectionlabel">Browse by tag</div>
+          <div className="nt-chiprow">
+            <button
+              type="button"
+              className={`nt-chip all ${tagFilter === "" ? "active" : ""}`}
+              onClick={() => setTagFilter("")}
+            >
+              All tags ({docs.length})
+            </button>
+            {topTags.map((t) => {
+              const c = tagColors[t.key];
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={`nt-chip ${tagFilter === t.key ? "active" : ""}`}
+                  style={c ? { background: c, color: "#181A4D", borderColor: c } : undefined}
+                  onClick={() => setTagFilter(tagFilter === t.key ? "" : t.key)}
+                >
+                  {t.display} ({t.count})
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      <div className="nt-sectionlabel">Pinned &amp; recent</div>
+      {railDocs.length === 0 ? (
+        <div className="nt-railempty">Nothing pinned or written yet.</div>
+      ) : (
+        <div className="nt-rail">
+          {railDocs.map((d) => {
+            const t = (d.tags ?? [])[0];
+            const c = t ? colorFor(t) : undefined;
+            return (
+              <button
+                key={`rail-${d.id}`}
+                type="button"
+                className={`nt-railcard ${(d as any).pinned ? "pinned" : ""}`}
+                onClick={() => openDoc(d.id)}
+              >
+                {t && (
+                  <span className="nt-railtag" style={c ? { background: c, color: "#181A4D" } : undefined}>
+                    {displayTag(t)}
+                  </span>
+                )}
+                <div className="nt-railtitle">{d.title?.trim() || "Untitled"}</div>
+                <div className="nt-raildate">
+                  {(d as any).pinned ? "★ Pinned · " : ""}{formatShort(d.updated_at)}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="nt-split">
+        <div className="nt-listcol">
           {docsQ.isLoading ? (
             <div className="nt-doc-empty">Loading…</div>
           ) : filteredDocs.length === 0 ? (
             <div className="nt-doc-empty">
               {docs.length === 0
-                ? "No workspace documents yet. Create one on the right to begin."
-                : "No documents match this tag."}
+                ? "No notes yet. Tap “New note” to start one."
+                : "No notes match this filter."}
             </div>
           ) : (
             filteredDocs.map((d) => {
-              const isOpen = openIds.includes(d.id);
-              const preview = (d.body_text || "").replace(/\s+/g, " ").trim().slice(0, 120);
+              const isOpen = openId === d.id;
+              const preview = (d.body_text || "").replace(/\s+/g, " ").trim().slice(0, 160);
               return (
                 <button
                   key={d.id}
-                  className={`nt-doc-row ${isOpen ? "open" : ""}`}
+                  className={`nt-card ${isOpen ? "open" : ""}`}
                   onClick={() => openDoc(d.id)}
                 >
-                  <div className="nt-doc-top">
-                    <span className="nt-doc-title">{d.title?.trim() || "Untitled"}</span>
-                    <span className="nt-doc-date">{formatShort(d.updated_at)}</span>
-                  </div>
-                  {d.tags && d.tags.length > 0 && (
+                  <div className="nt-cardtop">
                     <div className="nt-doc-tags">
-                      {d.tags.slice(0, 3).map((t, i) => {
+                      {(d.tags ?? []).slice(0, 2).map((t, i) => {
                         const c = colorFor(t);
                         return (
                           <span
@@ -429,68 +520,45 @@ function NotesLibrary({ userId }: { userId: string }) {
                         );
                       })}
                     </div>
-                  )}
-                  {preview && <div className="nt-doc-preview">{preview}</div>}
+                    <span className="nt-doc-date">{formatShort(d.updated_at)}</span>
+                  </div>
+                  <div className="nt-doc-title">{d.title?.trim() || "Untitled"}</div>
+                  {preview && <p className="nt-doc-preview">{preview}</p>}
                 </button>
               );
             })
           )}
         </div>
-      </aside>
 
-      <section className="nt-panel-region">
-        <div className="nt-layout-toolbar">
-          <span className="label">View</span>
-          <button
-            type="button"
-            className={`nt-layout-btn ${layout === 1 ? "active" : ""}`}
-            onClick={() => setLayout(1)}
-            aria-label="Single panel"
-          >
-            <span className="col wide" />
-          </button>
-          <button
-            type="button"
-            className={`nt-layout-btn ${layout === 2 ? "active" : ""}`}
-            onClick={() => setLayout(2)}
-            aria-label="Two panels"
-          >
-            <span className="col" /><span className="col" />
-          </button>
-          <button
-            type="button"
-            className={`nt-layout-btn ${layout === 3 ? "active" : ""}`}
-            onClick={() => setLayout(3)}
-            aria-label="Three panels"
-          >
-            <span className="col" /><span className="col" /><span className="col" />
-          </button>
-          <button className="nt-new-btn" onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
-            {createDoc.isPending ? "Creating…" : "+ New document"}
-          </button>
-        </div>
-
-        <div className="nt-panels">
-          {openDocs.length === 0 ? (
-            <div className="nt-panel-empty">
-              Choose a document from the list to open it here.
-            </div>
-          ) : (
-            openDocs.map((d) => (
+        <div className="nt-detailcol">
+          <div className="nt-detailcard">
+            {openDocObj ? (
               <DocPanel
-                key={d.id}
-                doc={d}
+                key={openDocObj.id}
+                doc={openDocObj}
                 userId={userId}
                 colorFor={colorFor}
-                onClose={() => closePanel(d.id)}
+                onClose={closePanel}
               />
-            ))
-          )}
+            ) : (
+              <div className="nt-panel-empty">Choose a note from the list to open it here.</div>
+            )}
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.2-3.2" />
+    </svg>
+  );
+}
+
 
 // ─── Panel: title + tags + editor + save ────────────────────────────
 
