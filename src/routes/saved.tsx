@@ -85,7 +85,9 @@ function LibraryPage() {
 
         {tab === "saved" && (
           <>
+            <SavedDevotionalsSection />
             <QuotesSection
+
               pins={pins.data ?? []}
               contentMap={contentMap}
               onOpen={(c) => openContent(navigate, c)}
