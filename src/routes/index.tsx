@@ -530,6 +530,7 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
     .filter((t) => primary.includes(t.slug))
     .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
   const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     if (!moreOpen) return;
     const close = () => setMoreOpen(false);
@@ -543,7 +544,18 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <div className="mark">C</div>
           <div className="word">CoCreate</div>
         </Link>
+        <button
+          type="button"
+          className="hp-mast-burger"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
         <nav className="hp-mast-links">
+
           {list.map((t, i) => (
             <Link
               key={t.id}
