@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ContinueStrip } from "@/components/ContinueStrip";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
 
