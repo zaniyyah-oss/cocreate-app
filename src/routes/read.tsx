@@ -99,7 +99,7 @@ function ReadLibrary() {
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [view, setView] = useState<"tiles" | "list">("tiles");
-  const [listSort, setListSort] = useState<"recent" | "book" | "topic">("recent");
+  
   const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
 
   const books = booksQ.data ?? [];
@@ -151,53 +151,11 @@ function ReadLibrary() {
   const fmtDate = (d: string | null) =>
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
-  // Group entries for the list view
-  const grouped = useMemo(() => {
-    if (listSort === "recent") {
-      return [{ key: "all", label: "Most recent", items: filteredRecent }];
-    }
-    if (listSort === "book") {
-      const map = new Map<string, RecentEntry[]>();
-      for (const e of filteredRecent) {
-        const books = entryBooks(e);
-        if (books.length === 0) {
-          if (!map.has("—")) map.set("—", []);
-          map.get("—")!.push(e);
-        } else {
-          for (const k of books) {
-            if (!map.has(k)) map.set(k, []);
-            map.get(k)!.push(e);
-          }
-        }
-      }
-      return Array.from(map.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([key, items]) => ({ key, label: bookFullName.get(key) ?? key, items }));
-    }
-    // topic
-    const map = new Map<string, RecentEntry[]>();
-    for (const e of filteredRecent) {
-      const ids = e.topic_ids ?? [];
-      if (ids.length === 0) {
-        if (!map.has("__none")) map.set("__none", []);
-        map.get("__none")!.push(e);
-      } else {
-        for (const id of ids) {
-          if (!map.has(id)) map.set(id, []);
-          map.get(id)!.push(e);
-        }
-      }
-    }
-    return Array.from(map.entries())
-      .map(([key, items]) => {
-        const label =
-          key === "__none"
-            ? "Untagged"
-            : topicById.get(key)?.display_name ?? topicById.get(key)?.name ?? "Topic";
-        return { key, label, items };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [filteredRecent, listSort, bookFullName, topicById]);
+  const refLine = (e: RecentEntry) => {
+    const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
+    const ref = (e.scripture_reference ?? "").trim();
+    return [books.join(" · "), ref].filter(Boolean).join(" — ");
+  };
 
   const [newStudyBusy, setNewStudyBusy] = useState(false);
   const handleNewStudy = async () => {
