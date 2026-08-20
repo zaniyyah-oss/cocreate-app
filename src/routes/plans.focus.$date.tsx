@@ -8,6 +8,7 @@ import {
   setPlanDayComplete,
   createPlanDayNote,
   listPlanDayNotes,
+  savePlanDayContent,
 } from "@/lib/plans.functions";
 import { planColor } from "@/lib/plan-palette";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,7 @@ function PlanFocusPage() {
   const completeDay = useServerFn(setPlanDayComplete);
   const addNote = useServerFn(createPlanDayNote);
   const fetchNotes = useServerFn(listPlanDayNotes);
+  const saveDayContent = useServerFn(savePlanDayContent);
 
   const activeQ = useQuery({
     queryKey: ["plan-active", "focus", date],
@@ -54,6 +56,9 @@ function PlanFocusPage() {
   const [readText, setReadText] = useState("");
   const [prayText, setPrayText] = useState("");
   const [taskDone, setTaskDone] = useState(false);
+  const [dayRead, setDayRead] = useState("");
+  const [dayPray, setDayPray] = useState("");
+  const [dayTask, setDayTask] = useState("");
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
 
@@ -62,9 +67,12 @@ function PlanFocusPage() {
     setReadText(active.response?.read_reflection ?? "");
     setPrayText(active.response?.pray_reflection ?? "");
     setTaskDone(!!active.response?.task_done);
+    setDayRead(active.day?.read_content ?? "");
+    setDayPray(active.day?.pray_prompt ?? "");
+    setDayTask(active.day?.task_content ?? "");
   }, [active?.assignment.id, active?.day_number]);
 
-  const locked = active?.day_state === "completed";
+  const completed = active?.day_state === "completed";
   const c = planColor(active?.plan.color);
 
   const notesQ = useQuery({
@@ -89,13 +97,25 @@ function PlanFocusPage() {
   }, [openNoteId]);
 
   async function persist(patch: { read_reflection?: string; pray_reflection?: string; task_done?: boolean }) {
-    if (!active || locked) return;
+    if (!active) return;
     setSaving(true);
     try {
       await saveResponse({
         data: { assignment_id: active.assignment.id, day_number: active.day_number, ...patch },
       });
       qc.invalidateQueries({ queryKey: ["plan-active"] });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function persistDayContent(patch: { read_content?: string; pray_prompt?: string; task_content?: string }) {
+    if (!active) return;
+    setSaving(true);
+    try {
+      await saveDayContent({ data: { plan_id: active.plan.id, day_number: active.day_number, ...patch } });
+      qc.invalidateQueries({ queryKey: ["plan-active"] });
+      qc.invalidateQueries({ queryKey: ["plan", active.plan.id] });
     } finally {
       setSaving(false);
     }
@@ -149,10 +169,6 @@ function PlanFocusPage() {
       display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10.5, fontWeight: 700,
     }}>{letter}</span>
   );
-  const given = {
-    background: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 14, marginBottom: 8,
-    color: "#20201C", whiteSpace: "pre-wrap" as const,
-  };
   const field = {
     width: "100%", border: "1px solid #E4DFCF", borderRadius: 8, padding: "10px 12px",
     fontFamily: "inherit", fontSize: 13.5, background: "#fff", minHeight: 70, resize: "vertical" as const,
@@ -190,13 +206,16 @@ function PlanFocusPage() {
           <>
             <div style={box}>
               <div style={labelStyle}>{icon("R")}Read</div>
-              {active.day?.read_content
-                ? <div style={given}>{active.day.read_content}</div>
-                : <div style={{ ...given, opacity: 0.6 }}>No reading was written for this day.</div>}
+              <textarea
+                style={{ ...field, minHeight: 96, marginBottom: 8, fontSize: 14 }}
+                placeholder="Scripture or passage for this day"
+                value={dayRead}
+                onChange={(e) => setDayRead(e.target.value)}
+                onBlur={() => persistDayContent({ read_content: dayRead })}
+              />
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Also want to jot something down?</p>
               <textarea
                 style={field}
-                disabled={locked}
                 placeholder="What did you notice? What is God saying?"
                 value={readText}
                 onChange={(e) => setReadText(e.target.value)}
@@ -206,13 +225,16 @@ function PlanFocusPage() {
 
             <div style={box}>
               <div style={labelStyle}>{icon("P")}Pray</div>
-              {active.day?.pray_prompt
-                ? <div style={given}>{active.day.pray_prompt}</div>
-                : <div style={{ ...given, opacity: 0.6 }}>No prayer prompt was written for this day.</div>}
+              <textarea
+                style={{ ...field, minHeight: 96, marginBottom: 8, fontSize: 14 }}
+                placeholder="A prayer prompt for this day"
+                value={dayPray}
+                onChange={(e) => setDayPray(e.target.value)}
+                onBlur={() => persistDayContent({ pray_prompt: dayPray })}
+              />
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Anything else on your heart?</p>
               <textarea
                 style={field}
-                disabled={locked}
                 placeholder="Speak plainly to God..."
                 value={prayText}
                 onChange={(e) => setPrayText(e.target.value)}
@@ -226,16 +248,24 @@ function PlanFocusPage() {
                 <button
                   type="button"
                   aria-label="Toggle task"
-                  disabled={locked}
-                  onClick={() => { const next = !taskDone; setTaskDone(next); persist({ task_done: next }); }}
+                    onClick={() => { const next = !taskDone; setTaskDone(next); persist({ task_done: next }); }}
                   style={{
                     width: 20, height: 20, borderRadius: 6, border: `2px solid ${c.hex}`,
-                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: locked ? "default" : "pointer",
+                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: "pointer",
                   }}
                 />
-                <span style={{ fontSize: 14, color: "#20201C", textDecoration: taskDone ? "line-through" : "none" }}>
-                  {active.day?.task_content || "No task was written for this day."}
-                </span>
+                <textarea
+                  rows={1}
+                  style={{
+                    flex: 1, border: "none", outline: "none", resize: "vertical",
+                    fontFamily: "inherit", fontSize: 14, color: "#20201C", background: "transparent",
+                    textDecoration: taskDone ? "line-through" : "none", minHeight: 22,
+                  }}
+                  placeholder="One action to carry into the day"
+                  value={dayTask}
+                  onChange={(e) => setDayTask(e.target.value)}
+                  onBlur={() => persistDayContent({ task_content: dayTask })}
+                />
               </div>
             </div>
 
@@ -289,7 +319,7 @@ function PlanFocusPage() {
               </button>
             </div>
 
-            {locked ? (
+            {completed ? (
               <div style={{
                 display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 10,
                 padding: "12px 14px", fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: c.hex,

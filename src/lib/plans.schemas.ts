@@ -65,6 +65,15 @@ export const planDayNoteInput = z.object({
   title: z.string().trim().max(200).optional(),
 });
 
+/** Inline edit of a single day's authored content (from Devotional Focus). */
+export const savePlanDayContentInput = z.object({
+  plan_id: z.string().uuid(),
+  day_number: z.number().int().positive(),
+  read_content: z.string().nullable().optional(),
+  pray_prompt: z.string().nullable().optional(),
+  task_content: z.string().nullable().optional(),
+});
+
 export type PlanDayInput = z.infer<typeof planDayInput>;
 
 export type PlanRow = {
