@@ -462,9 +462,6 @@ function ReadLibrary() {
       <div className="rd-wrap">
         <div className="rd-eyebrow">Workspace · Read</div>
         <h1 className="rd-h1">Read</h1>
-        <p className="rd-sub">
-          Every study you've saved, grouped by book of the Bible. Click a book to see everything you've written on it.
-        </p>
 
         <div className="rd-subnav" role="tablist">
           <button role="tab" className={section === "studies" ? "active" : ""} onClick={() => setSection("studies")}>Studies</button>
