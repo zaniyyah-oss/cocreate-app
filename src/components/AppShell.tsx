@@ -226,6 +226,8 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
   const focusActive = focusMode;
   const [sideRevealed, setSideRevealed] = useState(false);
   const [showFocusHint, setShowFocusHint] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!focusActive) { setShowFocusHint(false); return; }
@@ -233,6 +235,19 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
     const t = window.setTimeout(() => setShowFocusHint(false), 4800);
     return () => window.clearTimeout(t);
   }, [focusActive]);
+
+  // Close the mobile hamburger menu on route change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
+  // Close the mobile hamburger menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
 
   return (
     <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${(hideSide || (hideSideWhenSignedOut && !userId)) ? " no-side" : ""}`}>
