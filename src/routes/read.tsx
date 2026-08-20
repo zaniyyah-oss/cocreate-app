@@ -89,6 +89,7 @@ function useRecentStudies() {
 }
 
 function ReadLibrary() {
+  const qc = useQueryClient();
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
@@ -143,10 +144,6 @@ function ReadLibrary() {
     return topics.filter((t) => used.has(t.id));
   }, [recent, topics]);
 
-  const studiedCount = useMemo(
-    () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
-    [counts]
-  );
   const filtered = books.filter((b) => b.testament === tab);
   const totalForTab = filtered.length;
 
@@ -201,6 +198,35 @@ function ReadLibrary() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [filteredRecent, listSort, bookFullName, topicById]);
 
+  const [newStudyBusy, setNewStudyBusy] = useState(false);
+  const handleNewStudy = async () => {
+    if (newStudyBusy) return;
+    setNewStudyBusy(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      if (!uid) return;
+      const { data: tpl } = await supabase
+        .from("devotional_templates")
+        .select("id")
+        .eq("is_default", true)
+        .maybeSingle();
+      const templateId = (tpl as any)?.id ?? null;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .insert({ user_id: uid, template_id: templateId, entry_date: today } as any)
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,topic_ids")
+        .single();
+      if (error) throw error;
+      setOpenEntry(data as RecentEntry);
+    } catch {
+      // ignore — user may be offline or not signed in
+    } finally {
+      setNewStudyBusy(false);
+    }
+  };
+
   return (
     <AppShell>
       <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
@@ -235,6 +261,10 @@ function ReadLibrary() {
         .rd-panel{animation:rdFade .18s ease;}
         @keyframes rdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
         .rd-tabsub{font-size:15px;color:#4a4a44;max-width:640px;line-height:1.5;margin:-8px 0 28px;}
+        .rd-studybar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 28px;}
+        .rd-newstudy{display:inline-flex;align-items:center;gap:8px;background:#DCE07A;color:#181A4D;border:none;font-family:inherit;font-size:14px;font-weight:800;padding:11px 20px;border-radius:999px;cursor:pointer;transition:background .15s ease;}
+        .rd-newstudy:hover{background:#CAC307;}
+        .rd-newstudy:disabled{opacity:.6;cursor:default;}
 
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
@@ -428,6 +458,21 @@ function ReadLibrary() {
           <div className="rd-panel">
             <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
+            <div className="rd-studybar">
+              <button
+                type="button"
+                className="rd-newstudy"
+                onClick={handleNewStudy}
+                disabled={newStudyBusy}
+              >
+                <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
+              </button>
+              <div className="rd-viewtoggle" role="tablist">
+                <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
+                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
+              </div>
+            </div>
+
             <div className="rd-topbar">
               <div className="rd-tabs" role="tablist">
                 <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
@@ -436,10 +481,6 @@ function ReadLibrary() {
               <Link to="/notes" className="rd-allstudies">→ All studies</Link>
             </div>
 
-            <div className="rd-stat">
-              <span className="num">{studiedCount}</span>
-              <span className="lbl">books studied out of 66</span>
-            </div>
 
             {availableTopics.length > 0 && (
               <div className="rd-topicfilter">
@@ -522,10 +563,6 @@ function ReadLibrary() {
                         </select>
                       </label>
                     )}
-                    <div className="rd-viewtoggle" role="tablist">
-                      <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
-                      <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
-                    </div>
                   </div>
                 </div>
 
@@ -600,7 +637,7 @@ function ReadLibrary() {
         <FullScreenNote
           entry={openEntry}
           bookFullName={entryBooks(openEntry).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-          onClose={() => setOpenEntry(null)}
+          onClose={() => { setOpenEntry(null); qc.invalidateQueries({ queryKey: ["read-recent-studies"] }); qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] }); }}
         />
       )}
     </AppShell>
