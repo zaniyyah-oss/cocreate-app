@@ -364,7 +364,7 @@ const CSS = `
 .hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;transition:background .15s,color .15s;}
 .hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
 .hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
-.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .hp-iconbar-avatar{color:#fff !important;}
 .hp-iconbar-avatar:hover{background:rgba(255,255,255,0.08);color:#fff !important;}
 .hp-iconbar-bell{display:inline-flex;align-items:center;justify-content:center;}
