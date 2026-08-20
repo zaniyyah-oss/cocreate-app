@@ -344,7 +344,6 @@ function NotesLibrary({ userId }: { userId: string }) {
     if (docs.length === 0) { bootstrappedRef.current = true; return; }
     bootstrappedRef.current = true;
     if (docParam && docs.some((d) => d.id === docParam)) setOpenId(docParam);
-    else if (typeof window !== "undefined" && window.innerWidth > 900) setOpenId(docs[0].id);
   }, [docsQ.isSuccess, docs]);
 
   const openDoc = (id: string) => setOpenId(id);
