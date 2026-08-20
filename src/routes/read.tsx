@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
-import { stripHtml } from "@/components/RichTextField";
+import { RichTextField, stripHtml } from "@/components/RichTextField";
 import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
 import { SavedContentPanel } from "@/components/SavedContentPanel";
 
@@ -406,7 +406,9 @@ function ReadLibrary() {
 
         /* List view (Apple-Notes style) */
         .rd-listframe{display:grid;grid-template-columns:340px 1fr;gap:0;background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;min-height:560px;}
+        .rd-listframe.single{display:block;min-height:0;}
         @media (max-width:820px){.rd-listframe{grid-template-columns:1fr;}}
+
         .rd-list-col{border-right:1px solid rgba(24,26,77,.07);display:flex;flex-direction:column;background:#fff;}
         @media (max-width:820px){.rd-list-col{border-right:none;border-bottom:1px solid rgba(24,26,77,.07);max-height:340px;}}
         .rd-list-scroll{overflow-y:auto;flex:1;}
@@ -429,9 +431,16 @@ function ReadLibrary() {
         .rd-full-back:hover{background:rgba(24,26,77,.06);}
         .rd-full-meta{font-size:12px;color:#8a8879;font-weight:600;}
         .rd-full-body{flex:1;overflow-y:auto;padding:32px max(24px,5vw) 80px;max-width:920px;width:100%;margin:0 auto;box-sizing:border-box;}
+        .rd-full-body{flex:1;overflow-y:auto;padding:32px max(20px,4vw) 96px;max-width:1080px;width:100%;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;}
         .rd-full-title{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:42px;line-height:1.1;color:#20201C;margin:0 0 8px;}
+        @media (max-width:640px){.rd-full-title{font-size:30px;}.rd-full-body{padding:20px 16px 96px;}}
         .rd-full-sub{font-size:13px;color:#8a8879;font-weight:600;margin-bottom:24px;}
-        .rd-full-textarea{width:100%;min-height:60vh;resize:vertical;border:1px solid #ECE4CE;background:#fff;border-radius:12px;padding:20px;font-family:inherit;font-size:16px;line-height:1.6;color:#20201C;box-sizing:border-box;}
+        .rd-full-textarea{width:100%;flex:1;display:flex;flex-direction:column;min-height:0;}
+        .rd-full-textarea .rtf-editor{flex:1;min-height:60vh;overflow-y:auto;border:1px solid #ECE4CE;background:#fff;border-radius:12px;padding:20px;font-family:inherit;font-size:16px;line-height:1.7;color:#20201C;box-sizing:border-box;}
+        .rd-full-textarea .rtf-editor b,.rd-full-textarea .rtf-editor strong{font-weight:800;}
+        .rd-full-textarea .rtf-editor p{margin:0 0 12px;}
+        .rd-full-textarea .rtf-editor ul,.rd-full-textarea .rtf-editor ol{margin:0 0 12px;padding-left:22px;}
+
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
       `}</style>
 
@@ -644,150 +653,35 @@ function ListView({
   bookFullName: Map<string, string>;
   onOpen: (e: RecentEntry) => void;
 }) {
-  const first = items[0] ?? null;
-  const [selectedId, setSelectedId] = useState<string | null>(first?.id ?? null);
-  useEffect(() => {
-    if (!selectedId && first) setSelectedId(first.id);
-  }, [first, selectedId]);
-
-  const selected = items.find((e) => e.id === selectedId) ?? null;
-
   return (
-    <div className="rd-listframe">
-      <aside className="rd-list-col">
-        <div className="rd-list-scroll">
-          {items.map((e) => {
-            const isOpen = e.id === selectedId;
-            const preview = stripHtml(e.scripture_text).slice(0, 120);
-            return (
-              <button
-                key={e.id}
-                className={`rd-list-row ${isOpen ? "open" : ""}`}
-                onClick={() => setSelectedId(e.id)}
-              >
-                <div className="rd-list-top">
-                  <span className="rd-list-title">
-                    {e.entry_title || e.scripture_reference || "Untitled study"}
-                  </span>
-                </div>
-                <div className="rd-list-meta">{refLine(e)}</div>
-                {preview && <div className="rd-list-preview">{preview}</div>}
-                <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
-              </button>
-            );
-          })}
-        </div>
-      </aside>
-      <section className="rd-detail">
-        {!selected ? (
-          <div className="rd-detail-empty">Select a study on the left to read it.</div>
-        ) : (
-          <DetailPane
-            entry={selected}
-            fmtDate={fmtDate}
-            bookFullName={refLine(selected) || entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-            onOpen={() => onOpen(selected)}
-          />
-        )}
-      </section>
+    <div className="rd-listframe single">
+      <div className="rd-list-scroll">
+        {items.map((e) => {
+          const preview = stripHtml(e.scripture_text).slice(0, 200);
+          return (
+            <button
+              key={e.id}
+              className="rd-list-row"
+              onClick={() => onOpen(e)}
+            >
+              <div className="rd-list-top">
+                <span className="rd-list-title">
+                  {e.entry_title || e.scripture_reference || "Untitled study"}
+                </span>
+              </div>
+              <div className="rd-list-meta">
+                {refLine(e) || entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
+              </div>
+              {preview && <div className="rd-list-preview">{preview}</div>}
+              <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-
-function DetailPane({
-  entry,
-  fmtDate,
-  bookFullName,
-  onOpen,
-}: {
-  entry: RecentEntry;
-  fmtDate: (d: string | null) => string;
-  bookFullName: string;
-  onOpen: () => void;
-}) {
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const timer = useRef<number | null>(null);
-
-  useEffect(() => {
-    setNote(entry.scripture_text ?? "");
-    setStatus("");
-  }, [entry.id, entry.scripture_text]);
-
-  const save = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const schedule = (val: string) => {
-    setNote(val);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => save(val), 700);
-  };
-
-  return (
-    <>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 6 }}>
-            {bookFullName}
-          </div>
-          <h2 style={{ fontFamily: "'Archivo Black','Poppins',sans-serif", fontSize: 26, margin: 0, lineHeight: 1.1, color: "#20201C" }}>
-            {entry.entry_title || entry.scripture_reference || "Untitled study"}
-          </h2>
-          <div style={{ fontSize: 12, color: "#8a8879", fontWeight: 600, marginTop: 4 }}>
-            {fmtDate(entry.entry_date)}
-          </div>
-        </div>
-        <button className="rd-iconbtn" onClick={onOpen} aria-label="Open study" title="Open study">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17L17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
-        </button>
-      </div>
-      <textarea
-        value={note}
-        placeholder="Add a note from your reading…"
-        onChange={(e) => schedule(e.target.value)}
-        onBlur={() => {
-          if (timer.current) {
-            window.clearTimeout(timer.current);
-            timer.current = null;
-          }
-          if ((entry.scripture_text ?? "") !== note) save(note);
-        }}
-        style={{
-          width: "100%",
-          flex: 1,
-          minHeight: 320,
-          resize: "vertical",
-          border: "1px solid #ECE4CE",
-          background: "#FBF8ED",
-          borderRadius: 10,
-          padding: "14px 16px",
-          fontFamily: "inherit",
-          fontSize: 14,
-          lineHeight: 1.6,
-          color: "#20201C",
-          marginTop: 12,
-          boxSizing: "border-box",
-        }}
-      />
-      <div style={{ fontSize: 11, color: "#8a8879", marginTop: 8, minHeight: 14 }}>
-        {status === "saving" && "Saving…"}
-        {status === "saved" && "Saved"}
-        {status === "error" && "Couldn't save"}
-      </div>
-    </>
-  );
-}
 
 function FullScreenNote({
   entry,
@@ -801,19 +695,19 @@ function FullScreenNote({
   const [note, setNote] = useState(entry.scripture_text ?? "");
   const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
   const timer = useRef<number | null>(null);
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const noteRef = useRef(note);
+  noteRef.current = note;
 
   useEffect(() => {
-    const t = window.setTimeout(() => taRef.current?.focus(), 60);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      window.clearTimeout(t);
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
+
 
   const save = async (val: string) => {
     setStatus("saving");
@@ -866,20 +760,21 @@ function FullScreenNote({
           {entry.entry_title || entry.scripture_reference || "Untitled study"}
         </h1>
         <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
-        <textarea
-          ref={taRef}
+        <RichTextField
           className="rd-full-textarea"
           value={note}
           placeholder="Continue your study…"
-          onChange={(e) => schedule(e.target.value)}
+          allowImages
+          onChange={(html) => schedule(html)}
           onBlur={() => {
             if (timer.current) {
               window.clearTimeout(timer.current);
               timer.current = null;
             }
-            if ((entry.scripture_text ?? "") !== note) save(note);
+            if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
           }}
         />
+
       </div>
     </div>
   );
@@ -896,120 +791,46 @@ function RecentStudyCard({
   reference: string;
   onOpen: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const saveTimer = useRef<number | null>(null);
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
-
-  useEffect(() => {
-    if (expanded) {
-      const t = window.setTimeout(() => taRef.current?.focus(), 60);
-      return () => window.clearTimeout(t);
-    }
-  }, [expanded]);
-
-  const saveNote = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const scheduleSave = (val: string) => {
-    setNote(val);
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
-  };
-
   return (
     <div
       className="rd-card"
       role="button"
       tabIndex={0}
-      onClick={() => setExpanded((o) => !o)}
+      onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setExpanded((o) => !o);
+          onOpen();
         }
       }}
       style={{ cursor: "pointer" }}
     >
-      <div className="rd-card-top" onClick={(e) => e.stopPropagation()}>
+      <div className="rd-card-top">
         <span className="rd-pill">Read</span>
-        <button
-          type="button"
-          className="rd-iconbtn"
-          aria-label="Open study"
-          title="Open study"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen();
-          }}
-        >
+        <span className="rd-iconbtn" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M7 17L17 7" />
             <path d="M8 7h9v9" />
           </svg>
-        </button>
+        </span>
       </div>
       <h3 className="rd-card-title">
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
       {reference && <div className="rd-card-meta">{reference}</div>}
 
-      {!expanded ? (
-        entry.scripture_text ? (
-          <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
-        ) : (
-          <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
-            Click to add a note…
-          </div>
-        )
+      {entry.scripture_text ? (
+        <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
       ) : (
-        <div onClick={(e) => e.stopPropagation()}>
-          <textarea
-            ref={taRef}
-            value={note}
-            placeholder="Add a note from your reading…"
-            onChange={(e) => scheduleSave(e.target.value)}
-            onBlur={() => {
-              if (saveTimer.current) {
-                window.clearTimeout(saveTimer.current);
-                saveTimer.current = null;
-              }
-              if ((entry.scripture_text ?? "") !== note) saveNote(note);
-            }}
-            style={{
-              width: "100%",
-              minHeight: 180,
-              resize: "vertical",
-              border: "1px solid #ECE4CE",
-              background: "#FBF8ED",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontFamily: "inherit",
-              fontSize: 14,
-              lineHeight: 1.55,
-              color: "#20201C",
-            }}
-          />
-          <div style={{ fontSize: 11, color: "#8a8879", marginTop: 6, minHeight: 14 }}>
-            {status === "saving" && "Saving…"}
-            {status === "saved" && "Saved"}
-            {status === "error" && "Couldn't save"}
-            {!status && "Click card again to collapse"}
-          </div>
+        <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
+          Tap to add a note…
         </div>
       )}
       {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
     </div>
   );
 }
+
 
 function TopicsSection({
   topics,
