@@ -7,6 +7,7 @@ import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
 import { stripHtml } from "@/components/RichTextField";
+import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
 
 export const Route = createFileRoute("/read")({
   head: () => ({
@@ -424,6 +425,14 @@ function ReadLibrary() {
             ))}
           </div>
         </div>
+
+        <SavedDevotionalsSection
+          title="Your devotionals"
+          note="Everything you've built, in one place"
+          emptyText="You haven't built one yet. Use the builder above to start."
+        />
+
+
 
 
         <div className="rd-stat">
