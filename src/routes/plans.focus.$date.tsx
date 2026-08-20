@@ -173,6 +173,12 @@ function PlanFocusPage() {
     width: "100%", border: "1px solid #E4DFCF", borderRadius: 8, padding: "10px 12px",
     fontFamily: "inherit", fontSize: 13.5, background: "#fff", minHeight: 70, resize: "vertical" as const,
   };
+  // Guided devotional copy: read-only, shown in full (no inner scrolling).
+  const guided = {
+    background: "#fff", border: "1px solid #E4DFCF", borderRadius: 8, padding: "12px 14px",
+    fontFamily: "inherit", fontSize: 14.5, lineHeight: 1.6, color: "#20201C",
+    whiteSpace: "pre-wrap" as const, marginBottom: 12,
+  };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#FBF8ED", overflowY: "auto", zIndex: 60 }}>
