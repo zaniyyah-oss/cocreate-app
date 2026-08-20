@@ -636,7 +636,7 @@ function ReadLibrary() {
         <FullScreenNote
           entry={openEntry}
           bookFullName={entryBooks(openEntry).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-          onClose={() => setOpenEntry(null)}
+          onClose={() => { setOpenEntry(null); qc.invalidateQueries({ queryKey: ["read-recent-studies"] }); qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] }); }}
         />
       )}
     </AppShell>
