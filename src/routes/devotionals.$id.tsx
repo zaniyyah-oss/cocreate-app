@@ -384,12 +384,6 @@ ${TodoStatusSelectStyles}
   .de-hist-row > div:nth-child(7){grid-area:open;text-align:left !important;margin-top:2px;}
   .de-hist-row > div:empty{display:none;}
 }
-.app-bottomnav{background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);}
-.app-bottomnav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8678;text-decoration:none;padding:4px 8px;transition:color .15s;min-width:52px;}
-.app-bottomnav a.active{color:#181A4D;}
-.app-bottomnav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.app-bottomnav span{font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
-@media (min-width:1024px){.app-bottomnav{display:none;}}
 `;
 
 
