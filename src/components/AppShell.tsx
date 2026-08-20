@@ -8,25 +8,24 @@ import { usePageContent } from "@/lib/page-content";
 export type NavKey = "home" | "read" | "explore" | "devotionals" | "calendar" | "saved" | "notes" | "profile" | "library" | "messages";
 
 const ICON = {
-  home:        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>,
-  read:        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  home:        <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg>,
+  read:        <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/><path d="M5 8.7h3M5 11.2h3M16 8.7h3M16 11.2h3"/></svg>,
   explore:     <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
-  devotionals: <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M8 7h8M8 11h5"/></svg>,
-  calendar:    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>,
+  devotionals: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>,
+  calendar:    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg>,
   saved:       <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
-  notes:       <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>,
+  notes:       <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg>,
   library:     <svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 15-4-1z"/></svg>,
   messages:    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
   profile:     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>,
   book:        <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14"/></svg>,
-
 };
 
 function buildDesktopNav(labels: Record<string, string>) {
   return [
     { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
-    { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read",        icon: ICON.read },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+    { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read",        icon: ICON.read },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
     { key: "notes" as const,       label: labels.notes_label       || "Notes",      to: "/notes",       icon: ICON.notes },
   ];
@@ -63,10 +62,10 @@ const SHELL_CSS = `
 }
 
 /* Fixed mobile bottom nav — always visible while scrolling */
-.app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
-.app-bottomnav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8678;text-decoration:none;padding:4px 8px;transition:color .15s;min-width:52px;}
-.app-bottomnav a.active{color:#181A4D;}
-.app-bottomnav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
+.app-bottomnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8a8678;text-decoration:none;width:48px;height:44px;border-radius:14px;transition:color .15s, background .15s;}
+.app-bottomnav a.active{color:#181A4D;background:#DCE07A;}
+.app-bottomnav svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .app-bottomnav span{font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
 
 @media (max-width:1023px){
