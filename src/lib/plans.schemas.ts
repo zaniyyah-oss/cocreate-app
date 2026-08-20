@@ -3,6 +3,7 @@ import { z } from "zod";
 export const PLAN_COLORS = [
   "navy", "limelight", "teal", "lime", "amber", "burgundy",
   "blush", "cream", "ink", "fire_red", "hot_pink", "periwinkle",
+  "sage", "clay", "slate",
 ] as const;
 
 export const planDayInput = z.object({
