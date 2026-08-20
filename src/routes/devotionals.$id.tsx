@@ -832,8 +832,8 @@ function EntryPage() {
   // Todo item helpers
   const addTodoItem = () => {
     // Tasks created on a workspace day are assumed due that day.
-    // New tasks are added to the top so the list grows top-down under the header.
-    const next = [{ id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus, due_date: selectedDate }, ...todoItems];
+    // New tasks are appended to the bottom of the existing list.
+    const next = [...todoItems, { id: crypto.randomUUID(), text: "", done: false, status: "not_started" as TodoStatus, due_date: selectedDate }];
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
