@@ -59,7 +59,9 @@ function PlanEditor() {
       map[row.day_number] = {
         read: row.read_content ?? "",
         pray: row.pray_prompt ?? "",
-        task: row.task_content ?? "",
+        tasks: (row.task_content ?? "").split("\n").filter((t) => t.trim().length) .length
+          ? (row.task_content ?? "").split("\n").filter((t) => t.trim().length)
+          : [""],
       };
     }
     setDays(map);
