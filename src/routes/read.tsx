@@ -89,6 +89,7 @@ function useRecentStudies() {
 }
 
 function ReadLibrary() {
+  const qc = useQueryClient();
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
