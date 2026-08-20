@@ -81,8 +81,6 @@ const SHELL_CSS = `
   .app-shell{background:#eee9d9;}
   .app-main{background:#eee9d9;}
 
-  /* Notes page: full-bleed list + panel, nav sits at end of page */
-  .app-shell.is-notes .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
 }
 
 @media (min-width:1024px){
