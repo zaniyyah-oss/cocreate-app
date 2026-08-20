@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -42,11 +42,20 @@ const SHELL_CSS = `
 .app-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
 .app-brand .mark{width:28px;height:28px;background:#DCE07A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#181A4D;font-weight:900;}
 .app-brand .word{font-weight:900;font-size:18px;color:#181A4D;letter-spacing:-0.02em;}
-.app-topbar-actions{display:flex;align-items:center;gap:8px;}
+.app-topbar-actions{display:flex;align-items:center;gap:8px;position:relative;}
 .app-signin{background:#181A4D;color:#fff;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;font-family:'Poppins';}
 .app-signout{background:transparent;border:1.5px solid rgba(20,20,20,0.12);color:#20201c;font-weight:700;font-size:12px;padding:7px 13px;border-radius:16px;font-family:'Poppins';cursor:pointer;}
 .app-topbar-profile{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#FBF8ED;color:#181A4D;text-decoration:none;border:1px solid rgba(20,20,20,0.08);}
 .app-topbar-profile svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Mobile hamburger menu (signed-in users) */
+.app-topbar-hamburger{background:transparent;border:none;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#181A4D;padding:0;}
+.app-topbar-hamburger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.app-topbar-hamburger:hover{background:#FBF8ED;}
+.app-topbar-menu-panel{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid rgba(20,20,20,0.08);border-radius:16px;box-shadow:0 14px 36px rgba(0,0,0,0.14);min-width:200px;padding:6px;z-index:60;overflow:hidden;}
+.app-topbar-menu-item{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:11px;font-size:14px;font-weight:600;color:#20201c;text-decoration:none;background:transparent;border:none;cursor:pointer;font-family:'Poppins',sans-serif;width:100%;text-align:left;box-sizing:border-box;}
+.app-topbar-menu-item svg{width:20px;height:20px;stroke:#181A4D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.app-topbar-menu-item:hover{background:#FBF8ED;}
 
 .app-side{display:none;}
 .app-main-wrap{min-width:0;display:flex;flex-direction:column;}
@@ -226,6 +235,8 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
   const focusActive = focusMode;
   const [sideRevealed, setSideRevealed] = useState(false);
   const [showFocusHint, setShowFocusHint] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!focusActive) { setShowFocusHint(false); return; }
@@ -233,6 +244,19 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
     const t = window.setTimeout(() => setShowFocusHint(false), 4800);
     return () => window.clearTimeout(t);
   }, [focusActive]);
+
+  // Close the mobile hamburger menu on route change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
+  // Close the mobile hamburger menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
 
   return (
     <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${(hideSide || (hideSideWhenSignedOut && !userId)) ? " no-side" : ""}`}>
@@ -330,14 +354,33 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                   <div className="mark">C</div><div className="word">CoCreate</div>
                 </Link>
               </div>
-              <div className="app-topbar-actions">
+              <div className="app-topbar-actions" ref={menuRef}>
                 {userId ? (
                   <>
-                    <Link to="/profile" className="app-topbar-profile" aria-label="Profile">
-                      {ICON.profile}
-                    </Link>
-                    <NotificationBell />
-                    <button className="app-signout" onClick={signOut}>Sign out</button>
+                    <button
+                      type="button"
+                      className="app-topbar-hamburger"
+                      onClick={() => setMenuOpen((o) => !o)}
+                      aria-label="Menu"
+                      aria-expanded={menuOpen}
+                    >
+                      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    {menuOpen && (
+                      <div className="app-topbar-menu-panel" role="menu">
+                        <Link to="/profile" className="app-topbar-menu-item" role="menuitem" onClick={() => setMenuOpen(false)}>
+                          {ICON.profile}<span>Profile</span>
+                        </Link>
+                        <Link to="/notifications" className="app-topbar-menu-item" role="menuitem" onClick={() => setMenuOpen(false)}>
+                          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+                          <span>Notifications</span>
+                        </Link>
+                        <button type="button" className="app-topbar-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); signOut(); }}>
+                          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+                          <span>Sign out</span>
+                        </button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <Link to="/auth" className="app-signin">Sign in</Link>
