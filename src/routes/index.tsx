@@ -373,7 +373,28 @@ const CSS = `
 .hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
 .hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
-@media (max-width:1023px){.hp-iconbar{display:none;}}
+/* Blue icon bar is mobile-only now; desktop uses the hamburger side menu */
+@media (min-width:1024px){.hp-iconbar{display:none;}}
+
+/* Hamburger + slide-in side menu (home page) */
+.hp-mast-burger{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--navy);flex-shrink:0;transition:background .15s;}
+.hp-mast-burger:hover{background:#FBF8ED;}
+.hp-mast-burger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-scrim{position:fixed;inset:0;background:rgba(20,20,20,0.32);z-index:80;}
+.hp-drawer{position:fixed;top:0;left:0;bottom:0;width:250px;background:#fff;border-right:1px solid rgba(20,20,20,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.16);z-index:81;display:flex;flex-direction:column;padding:18px 12px;font-family:'Poppins',sans-serif;}
+.hp-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;margin-bottom:20px;gap:8px;}
+.hp-drawer-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.hp-drawer-logo .mark{width:30px;height:30px;background:var(--limelight);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:900;}
+.hp-drawer-logo .word{font-weight:900;font-size:19px;color:var(--navy);letter-spacing:-0.02em;}
+.hp-drawer-close{background:transparent;border:none;cursor:pointer;color:#8a8678;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;}
+.hp-drawer-close:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:#8a8678;text-decoration:none;margin-bottom:2px;transition:background .15s,color .15s;}
+.hp-drawer-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.hp-drawer-item:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-item.active{background:var(--limelight);color:var(--navy);}
+.hp-drawer-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hp-drawer-signin{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;}
 
 
 /* Photo-overlay cards must stay white even though they are <a> tags. */
@@ -502,13 +523,69 @@ function HomeTourBar() {
 }
 
 
+function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () => void }) {
+  const items = [
+    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
+    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
+  ];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <>
+      <div className="hp-drawer-scrim" onClick={onClose} />
+      <aside className="hp-drawer" aria-label="Primary">
+        <div className="hp-drawer-head">
+          <Link to="/" className="hp-drawer-logo" onClick={onClose}>
+            <div className="mark">C</div><div className="word">CoCreate</div>
+          </Link>
+          <button type="button" className="hp-drawer-close" onClick={onClose} aria-label="Close menu">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.active ? " active" : ""}`} onClick={onClose}>
+            {it.icon}<span>{it.label}</span>
+          </Link>
+        ))}
+        <div className="hp-drawer-foot">
+          {signedIn ? (
+            <>
+              <Link to="/profile" className="hp-drawer-item" onClick={onClose} style={{ marginBottom: 0 }}>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+                <span>Profile</span>
+              </Link>
+              <button
+                type="button"
+                onClick={async () => { await supabase.auth.signOut(); onClose(); }}
+                style={{ background: "transparent", border: "1.5px solid rgba(20,20,20,0.12)", color: "#20201c", fontWeight: 700, fontSize: 12, padding: "7px 13px", borderRadius: 16, fontFamily: "'Poppins',sans-serif", cursor: "pointer" }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="hp-drawer-signin" onClick={onClose}>Sign in</Link>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
 function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+
   const topicsQ = useTopics();
   const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
   const list = (topicsQ.data ?? [])
     .filter((t) => primary.includes(t.slug))
     .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
   const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     if (!moreOpen) return;
     const close = () => setMoreOpen(false);
@@ -522,7 +599,18 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <div className="mark">C</div>
           <div className="word">CoCreate</div>
         </Link>
+        <button
+          type="button"
+          className="hp-mast-burger"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
         <nav className="hp-mast-links">
+
           {list.map((t, i) => (
             <Link
               key={t.id}
