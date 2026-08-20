@@ -99,7 +99,7 @@ function ReadLibrary() {
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [view, setView] = useState<"tiles" | "list">("tiles");
-  const [listSort, setListSort] = useState<"recent" | "book" | "topic">("recent");
+  
   const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
 
   const books = booksQ.data ?? [];
@@ -151,53 +151,11 @@ function ReadLibrary() {
   const fmtDate = (d: string | null) =>
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
-  // Group entries for the list view
-  const grouped = useMemo(() => {
-    if (listSort === "recent") {
-      return [{ key: "all", label: "Most recent", items: filteredRecent }];
-    }
-    if (listSort === "book") {
-      const map = new Map<string, RecentEntry[]>();
-      for (const e of filteredRecent) {
-        const books = entryBooks(e);
-        if (books.length === 0) {
-          if (!map.has("—")) map.set("—", []);
-          map.get("—")!.push(e);
-        } else {
-          for (const k of books) {
-            if (!map.has(k)) map.set(k, []);
-            map.get(k)!.push(e);
-          }
-        }
-      }
-      return Array.from(map.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([key, items]) => ({ key, label: bookFullName.get(key) ?? key, items }));
-    }
-    // topic
-    const map = new Map<string, RecentEntry[]>();
-    for (const e of filteredRecent) {
-      const ids = e.topic_ids ?? [];
-      if (ids.length === 0) {
-        if (!map.has("__none")) map.set("__none", []);
-        map.get("__none")!.push(e);
-      } else {
-        for (const id of ids) {
-          if (!map.has(id)) map.set(id, []);
-          map.get(id)!.push(e);
-        }
-      }
-    }
-    return Array.from(map.entries())
-      .map(([key, items]) => {
-        const label =
-          key === "__none"
-            ? "Untagged"
-            : topicById.get(key)?.display_name ?? topicById.get(key)?.name ?? "Topic";
-        return { key, label, items };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [filteredRecent, listSort, bookFullName, topicById]);
+  const refLine = (e: RecentEntry) => {
+    const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
+    const ref = (e.scripture_reference ?? "").trim();
+    return [books.join(" · "), ref].filter(Boolean).join(" — ");
+  };
 
   const [newStudyBusy, setNewStudyBusy] = useState(false);
   const handleNewStudy = async () => {
@@ -394,6 +352,9 @@ function ReadLibrary() {
           line-height:1.15;margin:4px 0 0;color:#20201C;
         }
         .rd-card-meta{font-size:13px;color:#8a8879;font-weight:600;}
+        .rd-card-foot{margin-top:auto;padding-top:10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a968a;border-top:1px solid rgba(24,26,77,.06);}
+        .rd-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;border:1.5px solid #ECE4CE;background:#fff;color:#181A4D;cursor:pointer;padding:0;transition:background .12s, border-color .12s, color .12s;}
+        .rd-iconbtn:hover{background:#181A4D;border-color:#181A4D;color:#fff;}
         .rd-card-snip{
           font-size:14px;line-height:1.55;color:#4a4a44;
           display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
@@ -441,7 +402,7 @@ function ReadLibrary() {
         .rd-list-row.open{background:rgba(220,224,122,.28);border-left-color:#CAC307;padding-left:15px;}
         .rd-list-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px;}
         .rd-list-title{font-weight:700;font-size:13px;color:#20201C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .rd-list-date{font-size:10px;color:#9a968a;font-weight:600;flex-shrink:0;}
+        .rd-list-date{font-size:10px;color:#9a968a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;}
         .rd-list-meta{font-size:11px;color:#8a8879;line-height:1.4;}
         .rd-list-preview{font-size:11px;color:#8a8678;line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
         .rd-detail{padding:22px 26px;overflow-y:auto;display:flex;flex-direction:column;}
@@ -542,11 +503,17 @@ function ReadLibrary() {
                     <div className="rd-topicpills">
                       {availableTopics.map((t) => {
                         const on = filterTopicIds.includes(t.id);
+                        const bc = brandColor((t as any).color_key) ?? brandColor("amber")!;
                         return (
                           <button
                             key={t.id}
                             type="button"
                             className={`rd-tpill ${on ? "on" : ""}`}
+                            style={{
+                              background: on ? bc.hex : "#fff",
+                              color: on ? bc.onHex : "#4a4a44",
+                              borderColor: bc.hex,
+                            }}
                             onClick={() =>
                               setFilterTopicIds((cur) =>
                                 cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
@@ -574,18 +541,6 @@ function ReadLibrary() {
                   <div className="rd-section-label" style={{ margin: 0 }}>
                     {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
                   </div>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                    {view === "list" && (
-                      <label className="rd-listsort">
-                        Sort
-                        <select value={listSort} onChange={(e) => setListSort(e.target.value as any)}>
-                          <option value="recent">Most recent</option>
-                          <option value="book">By book</option>
-                          <option value="topic">By topic</option>
-                        </select>
-                      </label>
-                    )}
-                  </div>
                 </div>
 
                 {view === "tiles" ? (
@@ -595,14 +550,16 @@ function ReadLibrary() {
                         key={e.id}
                         entry={e}
                         fmtDate={fmtDate}
+                        reference={refLine(e)}
                         onOpen={() => setOpenEntry(e)}
                       />
                     ))}
                   </div>
                 ) : (
                   <ListView
-                    groups={grouped}
+                    items={filteredRecent}
                     fmtDate={fmtDate}
+                    refLine={refLine}
                     bookFullName={bookFullName}
                     onOpen={(e) => setOpenEntry(e)}
                   />
@@ -674,58 +631,50 @@ function ReadLibrary() {
 }
 
 function ListView({
-  groups,
+  items,
   fmtDate,
+  refLine,
   bookFullName,
   onOpen,
 }: {
-  groups: { key: string; label: string; items: RecentEntry[] }[];
+  items: RecentEntry[];
   fmtDate: (d: string | null) => string;
+  refLine: (e: RecentEntry) => string;
   bookFullName: Map<string, string>;
   onOpen: (e: RecentEntry) => void;
 }) {
-  const flatFirst = groups.flatMap((g) => g.items)[0] ?? null;
-  const [selectedId, setSelectedId] = useState<string | null>(flatFirst?.id ?? null);
+  const first = items[0] ?? null;
+  const [selectedId, setSelectedId] = useState<string | null>(first?.id ?? null);
   useEffect(() => {
-    if (!selectedId && flatFirst) setSelectedId(flatFirst.id);
-  }, [flatFirst, selectedId]);
+    if (!selectedId && first) setSelectedId(first.id);
+  }, [first, selectedId]);
 
-  const selected =
-    groups.flatMap((g) => g.items).find((e) => e.id === selectedId) ?? null;
+  const selected = items.find((e) => e.id === selectedId) ?? null;
 
   return (
     <div className="rd-listframe">
       <aside className="rd-list-col">
         <div className="rd-list-scroll">
-          {groups.map((g) => (
-            <div key={g.key}>
-              {(groups.length > 1 || g.key !== "all") && (
-                <div className="rd-list-group">{g.label} · {g.items.length}</div>
-              )}
-              {g.items.map((e) => {
-                const isOpen = e.id === selectedId;
-                const preview = stripHtml(e.scripture_text).slice(0, 120);
-                return (
-                  <button
-                    key={`${g.key}-${e.id}`}
-                    className={`rd-list-row ${isOpen ? "open" : ""}`}
-                    onClick={() => setSelectedId(e.id)}
-                  >
-                    <div className="rd-list-top">
-                      <span className="rd-list-title">
-                        {e.entry_title || e.scripture_reference || "Untitled study"}
-                      </span>
-                      <span className="rd-list-date">{fmtDate(e.entry_date)}</span>
-                    </div>
-                    <div className="rd-list-meta">
-                      {entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-                    </div>
-                    {preview && <div className="rd-list-preview">{preview}</div>}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          {items.map((e) => {
+            const isOpen = e.id === selectedId;
+            const preview = stripHtml(e.scripture_text).slice(0, 120);
+            return (
+              <button
+                key={e.id}
+                className={`rd-list-row ${isOpen ? "open" : ""}`}
+                onClick={() => setSelectedId(e.id)}
+              >
+                <div className="rd-list-top">
+                  <span className="rd-list-title">
+                    {e.entry_title || e.scripture_reference || "Untitled study"}
+                  </span>
+                </div>
+                <div className="rd-list-meta">{refLine(e)}</div>
+                {preview && <div className="rd-list-preview">{preview}</div>}
+                <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
+              </button>
+            );
+          })}
         </div>
       </aside>
       <section className="rd-detail">
@@ -735,7 +684,7 @@ function ListView({
           <DetailPane
             entry={selected}
             fmtDate={fmtDate}
-            bookFullName={entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
+            bookFullName={refLine(selected) || entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
             onOpen={() => onOpen(selected)}
           />
         )}
@@ -743,6 +692,7 @@ function ListView({
     </div>
   );
 }
+
 
 function DetailPane({
   entry,
@@ -794,7 +744,12 @@ function DetailPane({
             {fmtDate(entry.entry_date)}
           </div>
         </div>
-        <button className="rd-focus" onClick={onOpen}>Open</button>
+        <button className="rd-iconbtn" onClick={onOpen} aria-label="Open study" title="Open study">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17L17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </button>
       </div>
       <textarea
         value={note}
@@ -932,10 +887,12 @@ function FullScreenNote({
 function RecentStudyCard({
   entry,
   fmtDate,
+  reference,
   onOpen,
 }: {
   entry: RecentEntry;
   fmtDate: (d: string | null) => string;
+  reference: string;
   onOpen: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -985,22 +942,24 @@ function RecentStudyCard({
         <span className="rd-pill">Read</span>
         <button
           type="button"
-          className="rd-focus"
+          className="rd-iconbtn"
+          aria-label="Open study"
+          title="Open study"
           onClick={(e) => {
             e.stopPropagation();
             onOpen();
           }}
         >
-          Open
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17L17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
         </button>
       </div>
       <h3 className="rd-card-title">
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
-      <div className="rd-card-meta">
-        {entryBooks(entry).join(" · ")}
-        {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
-      </div>
+      {reference && <div className="rd-card-meta">{reference}</div>}
 
       {!expanded ? (
         entry.scripture_text ? (
@@ -1046,6 +1005,7 @@ function RecentStudyCard({
           </div>
         </div>
       )}
+      {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
     </div>
   );
 }
