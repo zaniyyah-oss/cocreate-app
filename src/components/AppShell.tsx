@@ -63,10 +63,10 @@ const SHELL_CSS = `
 }
 
 /* Fixed mobile bottom nav — always visible while scrolling */
-.app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:10px 4px calc(10px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
-.app-bottomnav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8678;text-decoration:none;padding:4px 8px;transition:color .15s;min-width:52px;}
-.app-bottomnav a.active{color:#181A4D;}
-.app-bottomnav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.app-bottomnav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(20,20,20,0.08);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0));z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.04);transform:translateZ(0);will-change:transform;}
+.app-bottomnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8a8678;text-decoration:none;width:48px;height:44px;border-radius:14px;transition:color .15s, background .15s;}
+.app-bottomnav a.active{color:#181A4D;background:#DCE07A;}
+.app-bottomnav svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .app-bottomnav span{font-size:9.5px;font-weight:700;letter-spacing:0.02em;}
 
 @media (max-width:1023px){
