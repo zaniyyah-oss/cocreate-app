@@ -1184,7 +1184,7 @@ function HomePage() {
     <AppShell current="home" hideSide>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hp">
-        {signedIn ? <HomeIconBar /> : <HomeTourBar />}
+        {signedIn ? null : <HomeTourBar />}
         <HomeMasthead signedIn={signedIn} />
         {signedIn && <ContinueStrip />}
         <LatestSection />
