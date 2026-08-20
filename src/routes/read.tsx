@@ -197,6 +197,35 @@ function ReadLibrary() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [filteredRecent, listSort, bookFullName, topicById]);
 
+  const [newStudyBusy, setNewStudyBusy] = useState(false);
+  const handleNewStudy = async () => {
+    if (newStudyBusy) return;
+    setNewStudyBusy(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      if (!uid) return;
+      const { data: tpl } = await supabase
+        .from("devotional_templates")
+        .select("id")
+        .eq("is_default", true)
+        .maybeSingle();
+      const templateId = (tpl as any)?.id ?? null;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .insert({ user_id: uid, template_id: templateId, entry_date: today } as any)
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,topic_ids")
+        .single();
+      if (error) throw error;
+      setOpenEntry(data as RecentEntry);
+    } catch {
+      // ignore — user may be offline or not signed in
+    } finally {
+      setNewStudyBusy(false);
+    }
+  };
+
   return (
     <AppShell>
       <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
