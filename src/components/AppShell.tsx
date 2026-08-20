@@ -62,7 +62,7 @@ const SHELL_CSS = `
 .app-main{flex:1;min-width:0;padding-bottom:calc(84px + env(safe-area-inset-bottom,0));}
 
 /* Notes page is full-bleed, no card container, viewport-locked so internal panels scroll independently */
-.app-shell.is-notes .app-main{padding-bottom:0;}
+@media (min-width:1024px){ .app-shell.is-notes .app-main{padding-bottom:0;} }
 @media (min-width:1024px){
   .app-shell.is-notes, .app-shell.is-notes .app-layout{height:100vh;min-height:0;overflow:hidden;}
   .app-shell.is-notes .app-main-wrap{height:100vh;min-height:0;overflow:hidden;}
@@ -81,8 +81,6 @@ const SHELL_CSS = `
   .app-shell{background:#eee9d9;}
   .app-main{background:#eee9d9;}
 
-  /* Notes page: full-bleed list + panel, nav sits at end of page */
-  .app-shell.is-notes .app-bottomnav{position:static;left:auto;right:auto;bottom:auto;box-shadow:none;transform:none;}
 }
 
 @media (min-width:1024px){
