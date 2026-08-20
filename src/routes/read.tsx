@@ -431,11 +431,16 @@ function ReadLibrary() {
         .rd-full-back:hover{background:rgba(24,26,77,.06);}
         .rd-full-meta{font-size:12px;color:#8a8879;font-weight:600;}
         .rd-full-body{flex:1;overflow-y:auto;padding:32px max(24px,5vw) 80px;max-width:920px;width:100%;margin:0 auto;box-sizing:border-box;}
+        .rd-full-body{flex:1;overflow-y:auto;padding:32px max(20px,4vw) 96px;max-width:1080px;width:100%;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;}
         .rd-full-title{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:42px;line-height:1.1;color:#20201C;margin:0 0 8px;}
+        @media (max-width:640px){.rd-full-title{font-size:30px;}.rd-full-body{padding:20px 16px 96px;}}
         .rd-full-sub{font-size:13px;color:#8a8879;font-weight:600;margin-bottom:24px;}
-        .rd-full-textarea{width:100%;min-height:60vh;resize:vertical;border:1px solid #ECE4CE;background:#fff;border-radius:12px;padding:20px;font-family:inherit;font-size:16px;line-height:1.6;color:#20201C;box-sizing:border-box;}
+        .rd-full-textarea{width:100%;flex:1;min-height:60vh;overflow-y:auto;border:1px solid #ECE4CE;background:#fff;border-radius:12px;padding:20px;font-family:inherit;font-size:16px;line-height:1.7;color:#20201C;box-sizing:border-box;}
+        .rd-full-textarea b,.rd-full-textarea strong{font-weight:800;}
+        .rd-full-textarea p{margin:0 0 12px;}
+        .rd-full-textarea ul,.rd-full-textarea ol{margin:0 0 12px;padding-left:22px;}
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
-      `}</style>
+
 
       <div className="rd-wrap">
         <div className="rd-eyebrow">Workspace · Read</div>
