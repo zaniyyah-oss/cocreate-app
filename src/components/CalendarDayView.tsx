@@ -194,6 +194,19 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   });
   const dayItems = itemsQ.data?.get(selectedISO) ?? [];
 
+  const recurQ = useRecurringTasks(userId);
+  const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
+  const recurToday = useMemo(
+    () => (recurQ.data ?? []).filter(t => occursOn(t, selected)),
+    [recurQ.data, selectedISO],
+  );
+  const toggleRecur = async (t: RecurringTask, done: boolean) => {
+    if (!userId) return;
+    await toggleRecurringCompletion(userId, t.id, selectedISO, done);
+    qc.invalidateQueries({ queryKey: ["recurring-task-completions"] });
+  };
+
+
   const [cursor, setCursor] = useState(() => ({ y: selected.getFullYear(), m: selected.getMonth() }));
   useEffect(() => { setCursor({ y: selected.getFullYear(), m: selected.getMonth() }); }, [selectedISO]);
 
