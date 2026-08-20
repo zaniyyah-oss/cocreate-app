@@ -12,7 +12,6 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import GlobalBrandLoader from "../components/GlobalBrandLoader";
-import BootBrandLoader from "../components/BootBrandLoader";
 
 
 function NotFoundComponent() {
@@ -120,7 +119,6 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <BootBrandLoader />
         {children}
         <Scripts />
       </body>

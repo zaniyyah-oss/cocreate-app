@@ -9,7 +9,6 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ContinueStrip } from "@/components/ContinueStrip";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
 
 
 export const Route = createFileRoute("/")({
@@ -1083,7 +1082,6 @@ function SiteFooter() {
 function HomePage() {
   const topicsQ = useTopics();
   const [signedIn, setSignedIn] = useState(false);
-  const { gated, leaving } = useWorkspaceLandingGate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session?.user.id));
@@ -1091,9 +1089,6 @@ function HomePage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // The branded loader is rendered globally (survives the navigation); Home
-  // simply renders nothing while the hand-off to the Workspace happens.
-  if (gated || leaving) return null;
 
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
