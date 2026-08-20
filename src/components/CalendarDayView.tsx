@@ -3,6 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEventDialog, type UserEvent } from "@/routes/devotionals.$id";
+import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import {
+  occursOn,
+  toggleRecurringCompletion,
+  useRecurringCompletions,
+  useRecurringTasks,
+  type RecurringTask,
+} from "@/lib/recurring-tasks";
 
 function isoDate(d: Date): string {
   const y = d.getFullYear();
