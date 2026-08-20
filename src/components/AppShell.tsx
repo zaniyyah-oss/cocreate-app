@@ -25,9 +25,10 @@ const ICON = {
 function buildDesktopNav(labels: Record<string, string>) {
   return [
     { key: "home" as const,        label: labels.home_label        || "Home",      to: "/",            icon: ICON.home },
+    { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read",        icon: ICON.read },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
-    { key: "explore" as const,    label: "Saved", to: "/explore", icon: ICON.explore },
+    { key: "notes" as const,       label: labels.notes_label       || "Notes",      to: "/notes",       icon: ICON.notes },
   ];
 }
 
