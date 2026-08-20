@@ -139,12 +139,22 @@ function ReadLibrary() {
     });
   }, [recent, filterTopicIds]);
 
-  // Only surface topics that have at least one entry.
+  // All user topics; those with entries first (with counts), then the rest.
+  const topicCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of recent) for (const id of e.topic_ids ?? []) m.set(id, (m.get(id) ?? 0) + 1);
+    return m;
+  }, [recent]);
+
   const availableTopics = useMemo(() => {
-    const used = new Set<string>();
-    for (const e of recent) (e.topic_ids ?? []).forEach((id) => used.add(id));
-    return topics.filter((t) => used.has(t.id));
-  }, [recent, topics]);
+    return [...topics].sort((a, b) => {
+      const ca = topicCounts.get(a.id) ?? 0;
+      const cb = topicCounts.get(b.id) ?? 0;
+      if (ca !== cb) return cb - ca;
+      return (a.display_name ?? a.name).localeCompare(b.display_name ?? b.name);
+    });
+  }, [topics, topicCounts]);
+
 
   const filtered = books.filter((b) => b.testament === tab);
   const totalForTab = filtered.length;
@@ -239,10 +249,13 @@ function ReadLibrary() {
         .rd-frow:last-child{margin-bottom:0;}
         .rd-flabel{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a8879;margin-bottom:10px;}
         .rd-topicpills{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
-        .rd-tpill{font-size:12px;font-weight:800;padding:8px 14px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;transition:all .15s ease;}
-        .rd-tpill:hover{border-color:#FFAE00;color:#20201C;}
-        .rd-tpill.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
-        .rd-tpill.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
+        .rd-tpill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;padding:10px 18px;border-radius:999px;letter-spacing:.02em;text-transform:uppercase;border:none;cursor:pointer;font-family:inherit;transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease;opacity:.92;}
+        .rd-tpill:hover{opacity:1;transform:translateY(-1px);}
+        .rd-tpill.on{opacity:1;box-shadow:0 0 0 2px #20201C;}
+        .rd-tpill .rd-tcount{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:rgba(255,255,255,.55);color:#20201C;font-size:11px;font-weight:800;letter-spacing:0;}
+        .rd-tpill.dark .rd-tcount{background:rgba(255,255,255,.25);color:#fff;}
+        .rd-tpill.clear{background:transparent;border:1.5px dashed #ECE4CE;color:#8a8879;text-transform:none;letter-spacing:0;opacity:1;}
+
 
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
@@ -505,16 +518,14 @@ function ReadLibrary() {
                       {availableTopics.map((t) => {
                         const on = filterTopicIds.includes(t.id);
                         const bc = brandColor((t as any).color_key) ?? brandColor("amber")!;
+                        const count = topicCounts.get(t.id) ?? 0;
+                        const dark = bc.onHex.toLowerCase() === "#fff" || bc.onHex.toLowerCase() === "#ffffff";
                         return (
                           <button
                             key={t.id}
                             type="button"
-                            className={`rd-tpill ${on ? "on" : ""}`}
-                            style={{
-                              background: on ? bc.hex : "#fff",
-                              color: on ? bc.onHex : "#4a4a44",
-                              borderColor: bc.hex,
-                            }}
+                            className={`rd-tpill ${on ? "on" : ""} ${dark ? "dark" : ""}`}
+                            style={{ background: bc.hex, color: bc.onHex }}
                             onClick={() =>
                               setFilterTopicIds((cur) =>
                                 cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
@@ -522,9 +533,11 @@ function ReadLibrary() {
                             }
                           >
                             {t.display_name ?? t.name}
+                            {count > 0 && <span className="rd-tcount">{count}</span>}
                           </button>
                         );
                       })}
+
                       {filterTopicIds.length > 0 && (
                         <button type="button" className="rd-tpill clear" onClick={() => setFilterTopicIds([])}>
                           Clear
