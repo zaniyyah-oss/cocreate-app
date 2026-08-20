@@ -93,6 +93,7 @@ function ReadLibrary() {
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
   const topicsQ = useAllTopics();
+  const [section, setSection] = useState<"studies" | "devotionals" | "saved">("studies");
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [view, setView] = useState<"tiles" | "list">("tiles");
@@ -219,6 +220,22 @@ function ReadLibrary() {
           transition:all .15s ease;
         }
         .rd-tabs button.active{background:#181A4D;color:#fff;}
+
+        .rd-subnav{
+          display:inline-flex;gap:6px;background:#fff;border:1.5px solid #ECE4CE;
+          border-radius:999px;padding:5px;width:fit-content;margin:0 0 32px;
+        }
+        .rd-subnav button{
+          border:none;background:transparent;padding:11px 22px;border-radius:999px;
+          font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;color:#8a8879;
+          transition:background .15s ease, color .15s ease;
+        }
+        .rd-subnav button.active{background:#181A4D;color:#FBF8ED;}
+        .rd-subnav button:not(.active):hover{color:#20201C;}
+        .rd-panel{animation:rdFade .18s ease;}
+        @keyframes rdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+        .rd-tabsub{font-size:15px;color:#4a4a44;max-width:640px;line-height:1.5;margin:-8px 0 28px;}
+
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
           font-size:14px;font-weight:700;text-decoration:none;
@@ -395,161 +412,186 @@ function ReadLibrary() {
       `}</style>
 
       <div className="rd-wrap">
-        <div className="rd-topbar">
-          <div className="rd-tabs" role="tablist">
-            <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
-            <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
-          </div>
-          <Link to="/notes" className="rd-allstudies">→ All studies</Link>
-        </div>
-
         <div className="rd-eyebrow">Workspace · Read</div>
         <h1 className="rd-h1">Read</h1>
         <p className="rd-sub">
           Every study you've saved, grouped by book of the Bible. Click a book to see everything you've written on it.
         </p>
 
-
-        <div className="rd-build">
-          <div className="rd-build-copy">
-            <h2>Create your own devotional</h2>
-            <p>Pick a length, choose a color, and shape what you'll read, pray, and do each day.</p>
-            <Link to="/plans/new" search={{ length: 3 }} className="rd-build-cta">Start building →</Link>
-          </div>
-          <div className="rd-build-lens">
-            {[1, 3, 5, 10].map((n) => (
-              <Link key={n} to="/plans/new" search={{ length: n }} className="rd-lencard">
-                <span className="n">{n}</span>
-                <span className="l">{n === 1 ? "Day" : "Days"}</span>
-              </Link>
-            ))}
-          </div>
+        <div className="rd-subnav" role="tablist">
+          <button role="tab" className={section === "studies" ? "active" : ""} onClick={() => setSection("studies")}>Studies</button>
+          <button role="tab" className={section === "devotionals" ? "active" : ""} onClick={() => setSection("devotionals")}>Devotionals</button>
+          <button role="tab" className={section === "saved" ? "active" : ""} onClick={() => setSection("saved")}>Saved</button>
         </div>
 
-        <SavedDevotionalsSection
-          title="Your devotionals"
-          note="Everything you've built, in one place"
-          emptyText="You haven't built one yet. Use the builder above to start."
-        />
+        {section === "studies" && (
+          <div className="rd-panel">
+            <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
+            <div className="rd-topbar">
+              <div className="rd-tabs" role="tablist">
+                <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
+                <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
+              </div>
+              <Link to="/notes" className="rd-allstudies">→ All studies</Link>
+            </div>
 
+            <div className="rd-stat">
+              <span className="num">{studiedCount}</span>
+              <span className="lbl">books studied out of 66</span>
+            </div>
 
+            {availableTopics.length > 0 && (
+              <div className="rd-topicfilter">
+                <span className="lbl">Filter by topic</span>
+                {availableTopics.map((t) => {
+                  const on = filterTopicIds.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`rd-tchip ${on ? "on" : ""}`}
+                      onClick={() =>
+                        setFilterTopicIds((cur) =>
+                          cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                        )
+                      }
+                    >
+                      {t.display_name ?? t.name}
+                    </button>
+                  );
+                })}
+                {filterTopicIds.length > 0 && (
+                  <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
 
-        <div className="rd-stat">
-          <span className="num">{studiedCount}</span>
-          <span className="lbl">books studied out of 66</span>
-        </div>
+            <div className="rd-section-label">
+              {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
+            </div>
 
-        {availableTopics.length > 0 && (
-          <div className="rd-topicfilter">
-            <span className="lbl">Filter by topic</span>
-            {availableTopics.map((t) => {
-              const on = filterTopicIds.includes(t.id);
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`rd-tchip ${on ? "on" : ""}`}
-                  onClick={() =>
-                    setFilterTopicIds((cur) =>
-                      cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
-                    )
-                  }
-                >
-                  {t.display_name ?? t.name}
-                </button>
-              );
-            })}
-            {filterTopicIds.length > 0 && (
-              <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
-                Clear
-              </button>
+            <div className="rd-grid">
+              {filtered.map((b) => {
+                const n = counts[b.abbreviation] ?? 0;
+                const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
+                return (
+                  <Link
+                    key={b.abbreviation}
+                    to="/read/$abbr"
+                    params={{ abbr: b.abbreviation }}
+                    search={{} as any}
+                    className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
+                    title={b.full_name}
+                  >
+                    {b.abbreviation}
+                    {n > 0 && <span className="rd-badge">{n}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <TopicsSection
+              topics={topics}
+              entries={recent}
+              selectedIds={filterTopicIds}
+              onToggle={(id) =>
+                setFilterTopicIds((cur) =>
+                  cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+                )
+              }
+              onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
+            />
+
+            {filteredRecent.length > 0 && (
+              <>
+                <div className="rd-recent-header">
+                  <div className="rd-section-label" style={{ margin: 0 }}>
+                    {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+                  </div>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    {view === "list" && (
+                      <label className="rd-listsort">
+                        Sort
+                        <select value={listSort} onChange={(e) => setListSort(e.target.value as any)}>
+                          <option value="recent">Most recent</option>
+                          <option value="book">By book</option>
+                          <option value="topic">By topic</option>
+                        </select>
+                      </label>
+                    )}
+                    <div className="rd-viewtoggle" role="tablist">
+                      <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
+                      <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
+                    </div>
+                  </div>
+                </div>
+
+                {view === "tiles" ? (
+                  <div className="rd-recent-grid">
+                    {filteredRecent.map((e) => (
+                      <RecentStudyCard
+                        key={e.id}
+                        entry={e}
+                        fmtDate={fmtDate}
+                        onOpen={() => setOpenEntry(e)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <ListView
+                    groups={grouped}
+                    fmtDate={fmtDate}
+                    bookFullName={bookFullName}
+                    onOpen={(e) => setOpenEntry(e)}
+                  />
+                )}
+              </>
             )}
           </div>
         )}
 
-        <div className="rd-section-label">
-          {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
-        </div>
+        {section === "devotionals" && (
+          <div className="rd-panel">
+            <p className="rd-tabsub">Build a multi-day devotional and keep everything you've built in one place.</p>
 
-        <div className="rd-grid">
-          {filtered.map((b) => {
-            const n = counts[b.abbreviation] ?? 0;
-            const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
-            return (
-              <Link
-                key={b.abbreviation}
-                to="/read/$abbr"
-                params={{ abbr: b.abbreviation }}
-                search={{} as any}
-                className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
-                title={b.full_name}
-              >
-                {b.abbreviation}
-                {n > 0 && <span className="rd-badge">{n}</span>}
-              </Link>
-            );
-          })}
-        </div>
-
-        <TopicsSection
-          topics={topics}
-          entries={recent}
-          selectedIds={filterTopicIds}
-          onToggle={(id) =>
-            setFilterTopicIds((cur) =>
-              cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
-            )
-          }
-          onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
-        />
-
-
-
-        {filteredRecent.length > 0 && (
-          <>
-            <div className="rd-recent-header">
-              <div className="rd-section-label" style={{ margin: 0 }}>
-                {filterTopicIds.length > 0 ? "Matching studies" : "Recently studied"}
+            <div className="rd-build">
+              <div className="rd-build-copy">
+                <h2>Create your own devotional</h2>
+                <p>Pick a length, choose a color, and shape what you'll read, pray, and do each day.</p>
+                <Link to="/plans/new" search={{ length: 3 }} className="rd-build-cta">Start building →</Link>
               </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                {view === "list" && (
-                  <label className="rd-listsort">
-                    Sort
-                    <select value={listSort} onChange={(e) => setListSort(e.target.value as any)}>
-                      <option value="recent">Most recent</option>
-                      <option value="book">By book</option>
-                      <option value="topic">By topic</option>
-                    </select>
-                  </label>
-                )}
-                <div className="rd-viewtoggle" role="tablist">
-                  <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
-                  <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
-                </div>
+              <div className="rd-build-lens">
+                {[1, 3, 5, 10].map((n) => (
+                  <Link key={n} to="/plans/new" search={{ length: n }} className="rd-lencard">
+                    <span className="n">{n}</span>
+                    <span className="l">{n === 1 ? "Day" : "Days"}</span>
+                  </Link>
+                ))}
               </div>
             </div>
 
-            {view === "tiles" ? (
-              <div className="rd-recent-grid">
-                {filteredRecent.map((e) => (
-                  <RecentStudyCard
-                    key={e.id}
-                    entry={e}
-                    fmtDate={fmtDate}
-                    onOpen={() => setOpenEntry(e)}
-                  />
-                ))}
+            <SavedDevotionalsSection
+              title="Your devotionals"
+              note="Everything you've built, in one place"
+              emptyText="You haven't built one yet. Use the builder above to start."
+            />
+          </div>
+        )}
+
+        {section === "saved" && (
+          <div className="rd-panel">
+            <p className="rd-tabsub">Save teachings, essays, podcasts, and videos to come back to later.</p>
+            <div className="rd-stat" style={{ display: "block", textAlign: "center", padding: "48px 24px" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>⌘</div>
+              <div className="rd-section-label" style={{ margin: "0 0 8px" }}>Saved content</div>
+              <div style={{ fontSize: 14, color: "#8a8879", maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
+                Nothing saved yet. Once the saved-content model is ready, you'll find everything you've bookmarked to read, listen to, or watch right here.
               </div>
-            ) : (
-              <ListView
-                groups={grouped}
-                fmtDate={fmtDate}
-                bookFullName={bookFullName}
-                onOpen={(e) => setOpenEntry(e)}
-              />
-            )}
-          </>
+            </div>
+          </div>
         )}
       </div>
       </div>
