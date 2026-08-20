@@ -628,58 +628,50 @@ function ReadLibrary() {
 }
 
 function ListView({
-  groups,
+  items,
   fmtDate,
+  refLine,
   bookFullName,
   onOpen,
 }: {
-  groups: { key: string; label: string; items: RecentEntry[] }[];
+  items: RecentEntry[];
   fmtDate: (d: string | null) => string;
+  refLine: (e: RecentEntry) => string;
   bookFullName: Map<string, string>;
   onOpen: (e: RecentEntry) => void;
 }) {
-  const flatFirst = groups.flatMap((g) => g.items)[0] ?? null;
-  const [selectedId, setSelectedId] = useState<string | null>(flatFirst?.id ?? null);
+  const first = items[0] ?? null;
+  const [selectedId, setSelectedId] = useState<string | null>(first?.id ?? null);
   useEffect(() => {
-    if (!selectedId && flatFirst) setSelectedId(flatFirst.id);
-  }, [flatFirst, selectedId]);
+    if (!selectedId && first) setSelectedId(first.id);
+  }, [first, selectedId]);
 
-  const selected =
-    groups.flatMap((g) => g.items).find((e) => e.id === selectedId) ?? null;
+  const selected = items.find((e) => e.id === selectedId) ?? null;
 
   return (
     <div className="rd-listframe">
       <aside className="rd-list-col">
         <div className="rd-list-scroll">
-          {groups.map((g) => (
-            <div key={g.key}>
-              {(groups.length > 1 || g.key !== "all") && (
-                <div className="rd-list-group">{g.label} · {g.items.length}</div>
-              )}
-              {g.items.map((e) => {
-                const isOpen = e.id === selectedId;
-                const preview = stripHtml(e.scripture_text).slice(0, 120);
-                return (
-                  <button
-                    key={`${g.key}-${e.id}`}
-                    className={`rd-list-row ${isOpen ? "open" : ""}`}
-                    onClick={() => setSelectedId(e.id)}
-                  >
-                    <div className="rd-list-top">
-                      <span className="rd-list-title">
-                        {e.entry_title || e.scripture_reference || "Untitled study"}
-                      </span>
-                      <span className="rd-list-date">{fmtDate(e.entry_date)}</span>
-                    </div>
-                    <div className="rd-list-meta">
-                      {entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-                    </div>
-                    {preview && <div className="rd-list-preview">{preview}</div>}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          {items.map((e) => {
+            const isOpen = e.id === selectedId;
+            const preview = stripHtml(e.scripture_text).slice(0, 120);
+            return (
+              <button
+                key={e.id}
+                className={`rd-list-row ${isOpen ? "open" : ""}`}
+                onClick={() => setSelectedId(e.id)}
+              >
+                <div className="rd-list-top">
+                  <span className="rd-list-title">
+                    {e.entry_title || e.scripture_reference || "Untitled study"}
+                  </span>
+                </div>
+                <div className="rd-list-meta">{refLine(e)}</div>
+                {preview && <div className="rd-list-preview">{preview}</div>}
+                <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
+              </button>
+            );
+          })}
         </div>
       </aside>
       <section className="rd-detail">
@@ -689,7 +681,7 @@ function ListView({
           <DetailPane
             entry={selected}
             fmtDate={fmtDate}
-            bookFullName={entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
+            bookFullName={refLine(selected) || entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
             onOpen={() => onOpen(selected)}
           />
         )}
@@ -697,6 +689,7 @@ function ListView({
     </div>
   );
 }
+
 
 function DetailPane({
   entry,
