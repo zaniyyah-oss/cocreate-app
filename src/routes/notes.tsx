@@ -323,8 +323,6 @@ function NotesLibrary({ userId }: { userId: string }) {
     () => [...tagOptions].sort((a, b) => b.count - a.count).slice(0, 6),
     [tagOptions],
   );
-  const topKeys = new Set(topTags.map((t) => t.key));
-  const moreTags = tagOptions.filter((t) => !topKeys.has(t.key));
 
   const filteredDocs = useMemo(() => {
     const q = search.trim().toLowerCase();
