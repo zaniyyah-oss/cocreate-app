@@ -644,150 +644,35 @@ function ListView({
   bookFullName: Map<string, string>;
   onOpen: (e: RecentEntry) => void;
 }) {
-  const first = items[0] ?? null;
-  const [selectedId, setSelectedId] = useState<string | null>(first?.id ?? null);
-  useEffect(() => {
-    if (!selectedId && first) setSelectedId(first.id);
-  }, [first, selectedId]);
-
-  const selected = items.find((e) => e.id === selectedId) ?? null;
-
   return (
-    <div className="rd-listframe">
-      <aside className="rd-list-col">
-        <div className="rd-list-scroll">
-          {items.map((e) => {
-            const isOpen = e.id === selectedId;
-            const preview = stripHtml(e.scripture_text).slice(0, 120);
-            return (
-              <button
-                key={e.id}
-                className={`rd-list-row ${isOpen ? "open" : ""}`}
-                onClick={() => setSelectedId(e.id)}
-              >
-                <div className="rd-list-top">
-                  <span className="rd-list-title">
-                    {e.entry_title || e.scripture_reference || "Untitled study"}
-                  </span>
-                </div>
-                <div className="rd-list-meta">{refLine(e)}</div>
-                {preview && <div className="rd-list-preview">{preview}</div>}
-                <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
-              </button>
-            );
-          })}
-        </div>
-      </aside>
-      <section className="rd-detail">
-        {!selected ? (
-          <div className="rd-detail-empty">Select a study on the left to read it.</div>
-        ) : (
-          <DetailPane
-            entry={selected}
-            fmtDate={fmtDate}
-            bookFullName={refLine(selected) || entryBooks(selected).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-            onOpen={() => onOpen(selected)}
-          />
-        )}
-      </section>
+    <div className="rd-listframe single">
+      <div className="rd-list-scroll">
+        {items.map((e) => {
+          const preview = stripHtml(e.scripture_text).slice(0, 200);
+          return (
+            <button
+              key={e.id}
+              className="rd-list-row"
+              onClick={() => onOpen(e)}
+            >
+              <div className="rd-list-top">
+                <span className="rd-list-title">
+                  {e.entry_title || e.scripture_reference || "Untitled study"}
+                </span>
+              </div>
+              <div className="rd-list-meta">
+                {refLine(e) || entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
+              </div>
+              {preview && <div className="rd-list-preview">{preview}</div>}
+              <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-
-function DetailPane({
-  entry,
-  fmtDate,
-  bookFullName,
-  onOpen,
-}: {
-  entry: RecentEntry;
-  fmtDate: (d: string | null) => string;
-  bookFullName: string;
-  onOpen: () => void;
-}) {
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const timer = useRef<number | null>(null);
-
-  useEffect(() => {
-    setNote(entry.scripture_text ?? "");
-    setStatus("");
-  }, [entry.id, entry.scripture_text]);
-
-  const save = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const schedule = (val: string) => {
-    setNote(val);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => save(val), 700);
-  };
-
-  return (
-    <>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 6 }}>
-            {bookFullName}
-          </div>
-          <h2 style={{ fontFamily: "'Archivo Black','Poppins',sans-serif", fontSize: 26, margin: 0, lineHeight: 1.1, color: "#20201C" }}>
-            {entry.entry_title || entry.scripture_reference || "Untitled study"}
-          </h2>
-          <div style={{ fontSize: 12, color: "#8a8879", fontWeight: 600, marginTop: 4 }}>
-            {fmtDate(entry.entry_date)}
-          </div>
-        </div>
-        <button className="rd-iconbtn" onClick={onOpen} aria-label="Open study" title="Open study">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17L17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
-        </button>
-      </div>
-      <textarea
-        value={note}
-        placeholder="Add a note from your reading…"
-        onChange={(e) => schedule(e.target.value)}
-        onBlur={() => {
-          if (timer.current) {
-            window.clearTimeout(timer.current);
-            timer.current = null;
-          }
-          if ((entry.scripture_text ?? "") !== note) save(note);
-        }}
-        style={{
-          width: "100%",
-          flex: 1,
-          minHeight: 320,
-          resize: "vertical",
-          border: "1px solid #ECE4CE",
-          background: "#FBF8ED",
-          borderRadius: 10,
-          padding: "14px 16px",
-          fontFamily: "inherit",
-          fontSize: 14,
-          lineHeight: 1.6,
-          color: "#20201C",
-          marginTop: 12,
-          boxSizing: "border-box",
-        }}
-      />
-      <div style={{ fontSize: 11, color: "#8a8879", marginTop: 8, minHeight: 14 }}>
-        {status === "saving" && "Saving…"}
-        {status === "saved" && "Saved"}
-        {status === "error" && "Couldn't save"}
-      </div>
-    </>
-  );
-}
 
 function FullScreenNote({
   entry,
