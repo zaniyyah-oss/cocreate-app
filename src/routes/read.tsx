@@ -493,7 +493,6 @@ function ReadLibrary() {
 
         {section === "studies" && (
           <div className="rd-panel">
-            <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
             <div className="rd-studybar">
               <div className="rd-studybar-left">
