@@ -269,7 +269,7 @@ function ReadLibrary() {
         }
         .rd-h1{
           font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;
-          font-size:64px;line-height:1;letter-spacing:-.02em;margin:0 0 20px;color:#20201C;
+          font-size:46px;line-height:1;letter-spacing:-.02em;margin:0 0 16px;color:#20201C;
         }
         .rd-sub{font-size:16px;line-height:1.5;color:#4a4a44;max-width:640px;margin:0 0 28px;}
 
@@ -299,7 +299,7 @@ function ReadLibrary() {
           .rd-tabs button{padding:9px 18px;font-size:13px;}
           .rd-subnav{margin-bottom:14px;}
           .rd-tabsub{margin:-2px 0 14px;font-size:12px;line-height:1.4;}
-          .rd-h1{font-size:40px;margin-bottom:14px;}
+          .rd-h1{font-size:32px;margin-bottom:12px;}
           .rd-eyebrow{margin-bottom:10px;}
           .rd-wrap{padding:20px 16px 96px;}
           /* Study bar: buttons on one line, smaller */
