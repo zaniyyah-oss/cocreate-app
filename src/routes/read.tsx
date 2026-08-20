@@ -97,6 +97,7 @@ function ReadLibrary() {
   const [section, setSection] = useState<"studies" | "devotionals" | "saved">("studies");
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [view, setView] = useState<"tiles" | "list">("tiles");
   const [listSort, setListSort] = useState<"recent" | "book" | "topic">("recent");
   const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
@@ -262,9 +263,27 @@ function ReadLibrary() {
         @keyframes rdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
         .rd-tabsub{font-size:15px;color:#4a4a44;max-width:640px;line-height:1.5;margin:-8px 0 28px;}
         .rd-studybar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 28px;}
+        .rd-studybar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
         .rd-newstudy{display:inline-flex;align-items:center;gap:8px;background:#DCE07A;color:#181A4D;border:none;font-family:inherit;font-size:14px;font-weight:800;padding:11px 20px;border-radius:999px;cursor:pointer;transition:background .15s ease;}
         .rd-newstudy:hover{background:#CAC307;}
         .rd-newstudy:disabled{opacity:.6;cursor:default;}
+        .rd-filtertoggle{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #ECE4CE;color:#20201C;font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 18px;border-radius:999px;cursor:pointer;transition:border-color .15s ease, background .15s ease, color .15s ease;}
+        .rd-filtertoggle:hover{border-color:#FFAE00;}
+        .rd-filtertoggle.hasfilter{border-color:#0F4A42;color:#0F4A42;}
+        .rd-filtertoggle.open{background:#181A4D;color:#FBF8ED;border-color:#181A4D;}
+        .rd-filtertoggle .rd-caret{font-size:10px;transition:transform .15s ease;}
+        .rd-filtertoggle.open .rd-caret{transform:rotate(180deg);}
+        .rd-fcount{background:#0F4A42;color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;font-weight:800;min-width:16px;text-align:center;}
+        .rd-filtertoggle.open .rd-fcount{background:rgba(251,248,237,.25);color:#FBF8ED;}
+        .rd-filter-drawer{background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;padding:22px 24px;margin:0 0 28px;animation:rdFade .18s ease;}
+        .rd-frow{margin-bottom:20px;}
+        .rd-frow:last-child{margin-bottom:0;}
+        .rd-flabel{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a8879;margin-bottom:10px;}
+        .rd-topicpills{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+        .rd-tpill{font-size:12px;font-weight:800;padding:8px 14px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid #ECE4CE;background:#fff;color:#4a4a44;cursor:pointer;font-family:inherit;transition:all .15s ease;}
+        .rd-tpill:hover{border-color:#FFAE00;color:#20201C;}
+        .rd-tpill.on{background:#0F4A42;color:#fff;border-color:#0F4A42;}
+        .rd-tpill.clear{border-style:dashed;color:#8a8879;text-transform:none;letter-spacing:0;}
 
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
@@ -459,92 +478,95 @@ function ReadLibrary() {
             <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
             <div className="rd-studybar">
-              <button
-                type="button"
-                className="rd-newstudy"
-                onClick={handleNewStudy}
-                disabled={newStudyBusy}
-              >
-                <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
-              </button>
+              <div className="rd-studybar-left">
+                <button
+                  type="button"
+                  className="rd-newstudy"
+                  onClick={handleNewStudy}
+                  disabled={newStudyBusy}
+                >
+                  <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
+                </button>
+                <button
+                  type="button"
+                  className={`rd-filtertoggle ${filterOpen ? "open" : ""} ${filterTopicIds.length > 0 ? "hasfilter" : ""}`}
+                  onClick={() => setFilterOpen((o) => !o)}
+                  aria-expanded={filterOpen}
+                >
+                  Filter by book or topic
+                  {filterTopicIds.length > 0 && <span className="rd-fcount">{filterTopicIds.length}</span>}
+                  <span className="rd-caret">▾</span>
+                </button>
+                <Link to="/notes" className="rd-allstudies">→ All studies</Link>
+              </div>
               <div className="rd-viewtoggle" role="tablist">
                 <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
                 <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
               </div>
             </div>
 
-            <div className="rd-topbar">
-              <div className="rd-tabs" role="tablist">
-                <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
-                <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
-              </div>
-              <Link to="/notes" className="rd-allstudies">→ All studies</Link>
-            </div>
-
-
-            {availableTopics.length > 0 && (
-              <div className="rd-topicfilter">
-                <span className="lbl">Filter by topic</span>
-                {availableTopics.map((t) => {
-                  const on = filterTopicIds.includes(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`rd-tchip ${on ? "on" : ""}`}
-                      onClick={() =>
-                        setFilterTopicIds((cur) =>
-                          cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
-                        )
-                      }
-                    >
-                      {t.display_name ?? t.name}
-                    </button>
-                  );
-                })}
-                {filterTopicIds.length > 0 && (
-                  <button type="button" className="rd-tchip clear" onClick={() => setFilterTopicIds([])}>
-                    Clear
-                  </button>
+            {filterOpen && (
+              <div className="rd-filter-drawer">
+                <div className="rd-frow">
+                  <div className="rd-flabel">Testament</div>
+                  <div className="rd-tabs" role="tablist">
+                    <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
+                    <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
+                  </div>
+                </div>
+                <div className="rd-frow">
+                  <div className="rd-flabel">{tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books</div>
+                  <div className="rd-grid">
+                    {filtered.map((b) => {
+                      const n = counts[b.abbreviation] ?? 0;
+                      const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
+                      return (
+                        <Link
+                          key={b.abbreviation}
+                          to="/read/$abbr"
+                          params={{ abbr: b.abbreviation }}
+                          search={{} as any}
+                          className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
+                          title={b.full_name}
+                        >
+                          {b.abbreviation}
+                          {n > 0 && <span className="rd-badge">{n}</span>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+                {availableTopics.length > 0 && (
+                  <div className="rd-frow">
+                    <div className="rd-flabel">Topic</div>
+                    <div className="rd-topicpills">
+                      {availableTopics.map((t) => {
+                        const on = filterTopicIds.includes(t.id);
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            className={`rd-tpill ${on ? "on" : ""}`}
+                            onClick={() =>
+                              setFilterTopicIds((cur) =>
+                                cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
+                              )
+                            }
+                          >
+                            {t.display_name ?? t.name}
+                          </button>
+                        );
+                      })}
+                      {filterTopicIds.length > 0 && (
+                        <button type="button" className="rd-tpill clear" onClick={() => setFilterTopicIds([])}>
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
-
-            <div className="rd-section-label">
-              {tab === "OT" ? "Old Testament" : "New Testament"} — {totalForTab} books
-            </div>
-
-            <div className="rd-grid">
-              {filtered.map((b) => {
-                const n = counts[b.abbreviation] ?? 0;
-                const dim = topicBookSet !== null && !topicBookSet.has(b.abbreviation);
-                return (
-                  <Link
-                    key={b.abbreviation}
-                    to="/read/$abbr"
-                    params={{ abbr: b.abbreviation }}
-                    search={{} as any}
-                    className={`rd-chip ${n > 0 ? "on" : ""} ${dim ? "dim" : ""}`}
-                    title={b.full_name}
-                  >
-                    {b.abbreviation}
-                    {n > 0 && <span className="rd-badge">{n}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-
-            <TopicsSection
-              topics={topics}
-              entries={recent}
-              selectedIds={filterTopicIds}
-              onToggle={(id) =>
-                setFilterTopicIds((cur) =>
-                  cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
-                )
-              }
-              onDelete={(id) => setFilterTopicIds((cur) => cur.filter((x) => x !== id))}
-            />
 
             {filteredRecent.length > 0 && (
               <>
@@ -620,12 +642,19 @@ function ReadLibrary() {
 
         {section === "saved" && (
           <div className="rd-panel">
-            <p className="rd-tabsub">Save teachings, essays, podcasts, and videos to come back to later.</p>
-            <div className="rd-stat" style={{ display: "block", textAlign: "center", padding: "48px 24px" }}>
+            <p className="rd-tabsub">Save teachings, essays, podcasts, and videos to come back to later. Manage the topic categories that organize platform content here.</p>
+            <TopicsSection
+              topics={topics}
+              entries={recent}
+              selectedIds={[]}
+              onToggle={() => {}}
+              onDelete={() => {}}
+            />
+            <div className="rd-stat" style={{ display: "block", textAlign: "center", padding: "40px 24px", marginTop: 32 }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>⌘</div>
               <div className="rd-section-label" style={{ margin: "0 0 8px" }}>Saved content</div>
               <div style={{ fontSize: 14, color: "#8a8879", maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
-                Nothing saved yet. Once the saved-content model is ready, you'll find everything you've bookmarked to read, listen to, or watch right here.
+                Nothing saved yet. Once the saved-content model is ready, you'll find everything you've bookmarked to read, listen to, or watch right here — organized by the categories above.
               </div>
             </div>
           </div>
