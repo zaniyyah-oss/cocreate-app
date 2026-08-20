@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { CalendarDayView } from "@/components/CalendarDayView";
+import { RecurringTasksPanel } from "@/components/RecurringTasksPanel";
 import { MonthCalendarView, WeekListView } from "./devotionals.$id";
 
 export const Route = createFileRoute("/calendar")({
