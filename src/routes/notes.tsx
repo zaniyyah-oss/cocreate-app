@@ -424,17 +424,6 @@ function NotesLibrary({ userId }: { userId: string }) {
           <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span>
           {createDoc.isPending ? "Creating…" : "New note"}
         </button>
-        <select
-          className="nt-select"
-          aria-label="More tags"
-          value={topKeys.has(tagFilter) ? "" : tagFilter}
-          onChange={(e) => setTagFilter(e.target.value)}
-        >
-          <option value="">More tags{moreTags.length ? ` (${moreTags.length})` : ""}</option>
-          {moreTags.map((t) => (
-            <option key={t.key} value={t.key}>{t.display} ({t.count})</option>
-          ))}
-        </select>
         <div className={`nt-search ${searchOpen ? "" : "hidden"}`}>
           <SearchIcon />
           <input
