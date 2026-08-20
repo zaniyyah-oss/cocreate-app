@@ -525,7 +525,6 @@ function HomeTourBar() {
 
 function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () => void }) {
   const items = [
-    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
     { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
     { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
     { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
