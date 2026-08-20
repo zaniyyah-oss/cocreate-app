@@ -518,16 +518,14 @@ function ReadLibrary() {
                       {availableTopics.map((t) => {
                         const on = filterTopicIds.includes(t.id);
                         const bc = brandColor((t as any).color_key) ?? brandColor("amber")!;
+                        const count = topicCounts.get(t.id) ?? 0;
+                        const dark = bc.onHex.toLowerCase() === "#fff" || bc.onHex.toLowerCase() === "#ffffff";
                         return (
                           <button
                             key={t.id}
                             type="button"
-                            className={`rd-tpill ${on ? "on" : ""}`}
-                            style={{
-                              background: on ? bc.hex : "#fff",
-                              color: on ? bc.onHex : "#4a4a44",
-                              borderColor: bc.hex,
-                            }}
+                            className={`rd-tpill ${on ? "on" : ""} ${dark ? "dark" : ""}`}
+                            style={{ background: bc.hex, color: bc.onHex }}
                             onClick={() =>
                               setFilterTopicIds((cur) =>
                                 cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]
@@ -535,9 +533,11 @@ function ReadLibrary() {
                             }
                           >
                             {t.display_name ?? t.name}
+                            {count > 0 && <span className="rd-tcount">{count}</span>}
                           </button>
                         );
                       })}
+
                       {filterTopicIds.length > 0 && (
                         <button type="button" className="rd-tpill clear" onClick={() => setFilterTopicIds([])}>
                           Clear
