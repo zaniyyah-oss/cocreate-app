@@ -440,7 +440,7 @@ function ReadLibrary() {
         .rd-full-textarea p{margin:0 0 12px;}
         .rd-full-textarea ul,.rd-full-textarea ol{margin:0 0 12px;padding-left:22px;}
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
-
+      `}</style>
 
       <div className="rd-wrap">
         <div className="rd-eyebrow">Workspace · Read</div>
