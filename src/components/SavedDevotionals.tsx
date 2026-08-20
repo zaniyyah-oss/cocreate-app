@@ -119,8 +119,10 @@ export function SavedDevotionalsSection({
             const c = planColor(p.color);
             return (
               <article key={p.id} className="sd-card" style={{ borderLeftColor: c.hex }}>
-                <h3 className="sd-name">{p.name}</h3>
-                <div className="sd-meta">{p.length_days}-Day Devotional</div>
+                <div className="sd-info">
+                  <h3 className="sd-name">{p.name}</h3>
+                  <div className="sd-meta">{p.length_days}-Day Devotional</div>
+                </div>
                 <div className="sd-actions">
                   <button
                     type="button"
