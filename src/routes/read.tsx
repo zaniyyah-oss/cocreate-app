@@ -782,120 +782,46 @@ function RecentStudyCard({
   reference: string;
   onOpen: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const saveTimer = useRef<number | null>(null);
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
-
-  useEffect(() => {
-    if (expanded) {
-      const t = window.setTimeout(() => taRef.current?.focus(), 60);
-      return () => window.clearTimeout(t);
-    }
-  }, [expanded]);
-
-  const saveNote = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const scheduleSave = (val: string) => {
-    setNote(val);
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
-  };
-
   return (
     <div
       className="rd-card"
       role="button"
       tabIndex={0}
-      onClick={() => setExpanded((o) => !o)}
+      onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setExpanded((o) => !o);
+          onOpen();
         }
       }}
       style={{ cursor: "pointer" }}
     >
-      <div className="rd-card-top" onClick={(e) => e.stopPropagation()}>
+      <div className="rd-card-top">
         <span className="rd-pill">Read</span>
-        <button
-          type="button"
-          className="rd-iconbtn"
-          aria-label="Open study"
-          title="Open study"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen();
-          }}
-        >
+        <span className="rd-iconbtn" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M7 17L17 7" />
             <path d="M8 7h9v9" />
           </svg>
-        </button>
+        </span>
       </div>
       <h3 className="rd-card-title">
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
       {reference && <div className="rd-card-meta">{reference}</div>}
 
-      {!expanded ? (
-        entry.scripture_text ? (
-          <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
-        ) : (
-          <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
-            Click to add a note…
-          </div>
-        )
+      {entry.scripture_text ? (
+        <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
       ) : (
-        <div onClick={(e) => e.stopPropagation()}>
-          <textarea
-            ref={taRef}
-            value={note}
-            placeholder="Add a note from your reading…"
-            onChange={(e) => scheduleSave(e.target.value)}
-            onBlur={() => {
-              if (saveTimer.current) {
-                window.clearTimeout(saveTimer.current);
-                saveTimer.current = null;
-              }
-              if ((entry.scripture_text ?? "") !== note) saveNote(note);
-            }}
-            style={{
-              width: "100%",
-              minHeight: 180,
-              resize: "vertical",
-              border: "1px solid #ECE4CE",
-              background: "#FBF8ED",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontFamily: "inherit",
-              fontSize: 14,
-              lineHeight: 1.55,
-              color: "#20201C",
-            }}
-          />
-          <div style={{ fontSize: 11, color: "#8a8879", marginTop: 6, minHeight: 14 }}>
-            {status === "saving" && "Saving…"}
-            {status === "saved" && "Saved"}
-            {status === "error" && "Couldn't save"}
-            {!status && "Click card again to collapse"}
-          </div>
+        <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
+          Tap to add a note…
         </div>
       )}
       {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
     </div>
   );
 }
+
 
 function TopicsSection({
   topics,
