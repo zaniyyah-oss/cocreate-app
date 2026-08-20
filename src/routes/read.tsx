@@ -293,6 +293,21 @@ function ReadLibrary() {
           text-decoration:none;font-size:13px;font-weight:800;padding:10px 18px;border-radius:999px;
         }
         .rd-build-cta:hover{background:#CAC307;}
+        /* Compact the devotional-builder hero on mobile so saved devotionals stay above the fold. */
+        @media (max-width:640px){
+          .rd-topbar{margin-bottom:22px;}
+          .rd-tabs button{padding:9px 18px;font-size:13px;}
+          .rd-subnav{margin-bottom:20px;}
+          .rd-tabsub{margin:-2px 0 16px;font-size:13px;line-height:1.4;}
+          .rd-build{
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            padding:12px 14px;margin:0 0 18px;border-radius:14px;
+          }
+          .rd-build-copy h2{font-size:14px;margin:0;line-height:1.2;}
+          .rd-build-copy p{display:none;}
+          .rd-build-lens{display:none;}
+          .rd-build-cta{padding:9px 15px;font-size:12px;flex-shrink:0;}
+        }
 
 
 

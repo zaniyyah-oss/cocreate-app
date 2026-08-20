@@ -12,7 +12,15 @@ const CSS = `
 .sd-title{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;font-weight:900;margin:0;color:#20201C;}
 .sd-note{font-size:13px;color:#8a8879;}
 .sd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:34px;}
-@media (max-width:900px){.sd-grid{grid-template-columns:1fr;}}
+@media (max-width:900px){.sd-grid{grid-template-columns:1fr;gap:12px;margin-bottom:20px;}}
+@media (max-width:640px){
+  .sd-head{margin:0 0 12px;}
+  .sd-title{font-size:17px;}
+  .sd-card{padding:14px 16px;gap:8px;}
+  .sd-name{font-size:16px;}
+  .sd-actions{gap:6px;}
+  .sd-btn{padding:7px 12px;font-size:11px;}
+}
 .sd-card{
   background:#fff;border:1.5px solid #ECE4CE;border-left-width:10px;border-radius:16px;
   padding:20px 22px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s ease;
