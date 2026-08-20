@@ -72,8 +72,7 @@ function PlanFocusPage() {
     setDayTask(active.day?.task_content ?? "");
   }, [active?.assignment.id, active?.day_number]);
 
-  const locked = false;
-  const isOwner = true;
+  const completed = active?.day_state === "completed";
   const c = planColor(active?.plan.color);
 
   const notesQ = useQuery({
@@ -98,7 +97,7 @@ function PlanFocusPage() {
   }, [openNoteId]);
 
   async function persist(patch: { read_reflection?: string; pray_reflection?: string; task_done?: boolean }) {
-    if (!active || locked) return;
+    if (!active) return;
     setSaving(true);
     try {
       await saveResponse({
@@ -221,7 +220,6 @@ function PlanFocusPage() {
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Also want to jot something down?</p>
               <textarea
                 style={field}
-                disabled={locked}
                 placeholder="What did you notice? What is God saying?"
                 value={readText}
                 onChange={(e) => setReadText(e.target.value)}
@@ -241,7 +239,6 @@ function PlanFocusPage() {
               <p style={{ margin: "0 0 8px", fontSize: 13, color: "#68655C" }}>Anything else on your heart?</p>
               <textarea
                 style={field}
-                disabled={locked}
                 placeholder="Speak plainly to God..."
                 value={prayText}
                 onChange={(e) => setPrayText(e.target.value)}
@@ -255,11 +252,10 @@ function PlanFocusPage() {
                 <button
                   type="button"
                   aria-label="Toggle task"
-                  disabled={locked}
-                  onClick={() => { const next = !taskDone; setTaskDone(next); persist({ task_done: next }); }}
+                    onClick={() => { const next = !taskDone; setTaskDone(next); persist({ task_done: next }); }}
                   style={{
                     width: 20, height: 20, borderRadius: 6, border: `2px solid ${c.hex}`,
-                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: locked ? "default" : "pointer",
+                    background: taskDone ? c.hex : "#fff", flex: "none", cursor: "pointer",
                   }}
                 />
                 <textarea
@@ -327,7 +323,7 @@ function PlanFocusPage() {
               </button>
             </div>
 
-            {locked ? (
+            {completed ? (
               <div style={{
                 display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 10,
                 padding: "12px 14px", fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: c.hex,
