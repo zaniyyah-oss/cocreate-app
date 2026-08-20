@@ -562,10 +562,6 @@ function ReadLibrary() {
                         </select>
                       </label>
                     )}
-                    <div className="rd-viewtoggle" role="tablist">
-                      <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
-                      <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
-                    </div>
                   </div>
                 </div>
 
