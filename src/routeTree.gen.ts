@@ -43,6 +43,7 @@ import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
+import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
@@ -219,6 +220,11 @@ const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminCollectionsRoute,
 } as any)
+const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
+  id: '/plans/focus/$date',
+  path: '/plans/focus/$date',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
   id: '/focus/$id',
   path: '/focus/$id',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
 }
 export interface FileRoutesById {
@@ -364,6 +372,7 @@ export interface FileRoutesById {
   '/admin/edit/$id': typeof AdminEditIdRoute
   '/devotionals/$slug/overview': typeof DevotionalsSlugOverviewRoute
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
+  '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
 }
 export interface FileRouteTypes {
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/focus/$date'
     | '/admin/collections/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/focus/$date'
     | '/admin/collections'
   id:
     | '__root__'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/admin/edit/$id'
     | '/devotionals/$slug/overview'
     | '/devotionals/focus/$id'
+    | '/plans/focus/$date'
     | '/admin/collections/'
   fileRoutesById: FileRoutesById
 }
@@ -514,6 +526,7 @@ export interface RootRouteChildren {
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
+  PlansFocusDateRoute: typeof PlansFocusDateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -756,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectionsIndexRouteImport
       parentRoute: typeof AdminCollectionsRoute
     }
+    '/plans/focus/$date': {
+      id: '/plans/focus/$date'
+      path: '/plans/focus/$date'
+      fullPath: '/plans/focus/$date'
+      preLoaderRoute: typeof PlansFocusDateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/devotionals/focus/$id': {
       id: '/devotionals/focus/$id'
       path: '/focus/$id'
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,
+  PlansFocusDateRoute: PlansFocusDateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

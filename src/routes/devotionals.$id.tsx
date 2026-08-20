@@ -13,6 +13,7 @@ import { CalendarDayView } from "@/components/CalendarDayView";
 import { BookTagger } from "@/components/BookTagger";
 import { TopicPicker } from "@/components/TopicPicker";
 import { TodoStatusSelect, TodoStatusSelectStyles } from "@/components/TodoStatusSelect";
+import { PlanDayBanner } from "@/components/PlanDayBanner";
 
 
 type Template = Database["public"]["Tables"]["devotional_templates"]["Row"];
@@ -1030,6 +1031,8 @@ function EntryPage() {
                 />
               </div>
             </div>
+
+            <PlanDayBanner userId={userId} dateISO={selectedDate} />
 
             <TodayEventsBanner userId={userId} dateISO={selectedDate} />
 
