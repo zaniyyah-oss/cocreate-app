@@ -373,7 +373,28 @@ const CSS = `
 .hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
 .hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
 .hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
-@media (max-width:1023px){.hp-iconbar{display:none;}}
+/* Blue icon bar is mobile-only now; desktop uses the hamburger side menu */
+@media (min-width:1024px){.hp-iconbar{display:none;}}
+
+/* Hamburger + slide-in side menu (home page) */
+.hp-mast-burger{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--navy);flex-shrink:0;transition:background .15s;}
+.hp-mast-burger:hover{background:#FBF8ED;}
+.hp-mast-burger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-scrim{position:fixed;inset:0;background:rgba(20,20,20,0.32);z-index:80;}
+.hp-drawer{position:fixed;top:0;left:0;bottom:0;width:250px;background:#fff;border-right:1px solid rgba(20,20,20,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.16);z-index:81;display:flex;flex-direction:column;padding:18px 12px;font-family:'Poppins',sans-serif;}
+.hp-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;margin-bottom:20px;gap:8px;}
+.hp-drawer-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.hp-drawer-logo .mark{width:30px;height:30px;background:var(--limelight);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:900;}
+.hp-drawer-logo .word{font-weight:900;font-size:19px;color:var(--navy);letter-spacing:-0.02em;}
+.hp-drawer-close{background:transparent;border:none;cursor:pointer;color:#8a8678;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;}
+.hp-drawer-close:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:#8a8678;text-decoration:none;margin-bottom:2px;transition:background .15s,color .15s;}
+.hp-drawer-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.hp-drawer-item:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-item.active{background:var(--limelight);color:var(--navy);}
+.hp-drawer-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hp-drawer-signin{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;}
 
 
 /* Photo-overlay cards must stay white even though they are <a> tags. */
