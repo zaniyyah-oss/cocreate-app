@@ -169,10 +169,6 @@ function PlanFocusPage() {
       display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10.5, fontWeight: 700,
     }}>{letter}</span>
   );
-  const given = {
-    background: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 14, marginBottom: 8,
-    color: "#20201C", whiteSpace: "pre-wrap" as const,
-  };
   const field = {
     width: "100%", border: "1px solid #E4DFCF", borderRadius: 8, padding: "10px 12px",
     fontFamily: "inherit", fontSize: 13.5, background: "#fff", minHeight: 70, resize: "vertical" as const,
