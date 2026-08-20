@@ -143,10 +143,6 @@ function ReadLibrary() {
     return topics.filter((t) => used.has(t.id));
   }, [recent, topics]);
 
-  const studiedCount = useMemo(
-    () => Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).length,
-    [counts]
-  );
   const filtered = books.filter((b) => b.testament === tab);
   const totalForTab = filtered.length;
 
