@@ -33,6 +33,7 @@ import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
+import { Route as PlansNewRouteImport } from './routes/plans.new'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -168,6 +169,11 @@ const PodcastsIdRoute = PodcastsIdRouteImport.update({
   path: '/podcasts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlansNewRoute = PlansNewRouteImport.update({
+  id: '/plans/new',
+  path: '/plans/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EssaysIdRoute = EssaysIdRouteImport.update({
   id: '/essays/$id',
   path: '/essays/$id',
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
+  '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -303,6 +310,7 @@ export interface FileRoutesByTo {
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
+  '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
+  '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
   '/read/$abbr': typeof ReadAbbrRoute
   '/teachings/$id': typeof TeachingsIdRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
+    | '/plans/new'
     | '/podcasts/$id'
     | '/read/$abbr'
     | '/teachings/$id'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
+    | '/plans/new'
     | '/podcasts/$id'
     | '/read/$abbr'
     | '/teachings/$id'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
+    | '/plans/new'
     | '/podcasts/$id'
     | '/read/$abbr'
     | '/teachings/$id'
@@ -498,6 +510,7 @@ export interface RootRouteChildren {
   WatchRoute: typeof WatchRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
+  PlansNewRoute: typeof PlansNewRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
@@ -671,6 +684,13 @@ declare module '@tanstack/react-router' {
       path: '/podcasts/$id'
       fullPath: '/podcasts/$id'
       preLoaderRoute: typeof PodcastsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans/new': {
+      id: '/plans/new'
+      path: '/plans/new'
+      fullPath: '/plans/new'
+      preLoaderRoute: typeof PlansNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/essays/$id': {
@@ -860,6 +880,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchRoute: WatchRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
+  PlansNewRoute: PlansNewRoute,
   PodcastsIdRoute: PodcastsIdRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,

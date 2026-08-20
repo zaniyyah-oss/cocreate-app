@@ -383,7 +383,23 @@ function ReadLibrary() {
         <h1 className="rd-h1">Read</h1>
         <p className="rd-sub">
           Every study you've saved, grouped by book of the Bible. Click a book to see everything you've written on it.
-        </p>
+
+        <div className="rd-build">
+          <div className="rd-build-copy">
+            <h2>Create your own devotional</h2>
+            <p>Pick a length, choose a color, and shape what you'll read, pray, and do each day.</p>
+            <Link to="/plans/new" search={{ length: 3 }} className="rd-build-cta">Start building →</Link>
+          </div>
+          <div className="rd-build-lens">
+            {[1, 3, 5, 10].map((n) => (
+              <Link key={n} to="/plans/new" search={{ length: n }} className="rd-lencard">
+                <span className="n">{n}</span>
+                <span className="l">{n === 1 ? "Day" : "Days"}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
 
         <div className="rd-stat">
           <span className="num">{studiedCount}</span>
