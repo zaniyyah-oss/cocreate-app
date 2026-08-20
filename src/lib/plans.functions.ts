@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   createPlanInput,
   updatePlanDaysInput,
+  updatePlanInput,
   startAssignmentInput,
   completeDayInput,
   saveDayResponseInput,
@@ -129,8 +130,8 @@ export const updatePlan = createServerFn({ method: "POST" })
     if (error) throw error;
 
     const rows = data.days
-      .filter((d) => d.day_number <= data.length_days)
-      .map((d) => ({
+      .filter((d: { day_number: number }) => d.day_number <= data.length_days)
+      .map((d: any) => ({
         plan_id: data.plan_id,
         day_number: d.day_number,
         read_content: d.read_content ?? null,
