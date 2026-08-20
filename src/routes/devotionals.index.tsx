@@ -16,18 +16,20 @@ export const Route = createFileRoute("/devotionals/")({
   }),
 });
 
+const DEFAULT_TPL_KEY = "cocreate:default-template-id";
+const readCachedTemplateId = () => {
+  if (typeof window === "undefined") return null;
+  try { return window.localStorage.getItem(DEFAULT_TPL_KEY); } catch { return null; }
+};
+
 function DevotionalsIndex() {
   // "/devotionals" is no longer a browsing page. It IS Abide — redirect
   // straight to the platform default (Abide) entry page.
-  const [userId, setUserId] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  const cachedId = readCachedTemplateId();
 
   const defaultQ = useQuery({
     queryKey: ["platform-default-template-id"],
+    initialData: cachedId ?? undefined,
     queryFn: async () => {
       const { data } = await supabase
         .from("devotional_templates")
@@ -35,14 +37,16 @@ function DevotionalsIndex() {
         .eq("is_default" as any, true)
         .eq("status", "published")
         .maybeSingle();
-      return data?.id ?? null;
+      const id = data?.id ?? null;
+      try { if (id) window.localStorage.setItem(DEFAULT_TPL_KEY, id); } catch { /* ignore */ }
+      return id;
     },
   });
 
   // Guests fall through to the same redirect below — they get the guest preview
-  // inside /devotionals/$id.
+  // inside /devotionals/$id. No need to wait on the auth session here.
 
-  if (defaultQ.isLoading || userId === undefined) {
+  if (!defaultQ.data && defaultQ.isLoading) {
     return (
       <AppShell current="devotionals">
         <div style={{ minHeight: "60vh" }} />
