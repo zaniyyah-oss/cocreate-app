@@ -175,9 +175,9 @@ function PlanFocusPage() {
   };
   // Guided devotional copy: read-only, shown in full (no inner scrolling).
   const guided = {
-    background: "#fff", border: "1px solid #E4DFCF", borderRadius: 8, padding: "12px 14px",
-    fontFamily: "inherit", fontSize: 14.5, lineHeight: 1.6, color: "#20201C",
-    whiteSpace: "pre-wrap" as const, marginBottom: 12,
+    background: "#fff", border: "1px solid #E4DFCF", borderRadius: 8, padding: "18px 16px",
+    fontFamily: "inherit", fontSize: 16.5, lineHeight: 1.75, color: "#20201C",
+    whiteSpace: "pre-wrap" as const, marginBottom: 14, minHeight: 120,
   };
 
   return (
