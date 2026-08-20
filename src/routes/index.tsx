@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ContinueStrip } from "@/components/ContinueStrip";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useWorkspaceLandingGate } from "@/hooks/use-workspace-landing-gate";
 
@@ -1102,7 +1104,9 @@ function HomePage() {
       <div className="hp">
         {signedIn ? <HomeIconBar /> : <HomeTourBar />}
         <HomeMasthead signedIn={signedIn} />
+        {signedIn && <ContinueStrip />}
         <LatestSection />
+
         <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
         <FeaturedCollectionSection />
         <StreamingSection />

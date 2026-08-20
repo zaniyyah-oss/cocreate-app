@@ -7,7 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 
 export const Route = createFileRoute("/notes")({
+  validateSearch: (s: Record<string, unknown>): { doc?: string } =>
+    typeof s.doc === "string" ? { doc: s.doc } : {},
+
   component: NotesPage,
+
   head: () => ({
     meta: [
       { title: "Notes — CoCreate" },
@@ -264,14 +268,17 @@ function NotesLibrary({ userId }: { userId: string }) {
     setOpenIds((cur) => cur.slice(0, layout));
   }, [layout]);
 
-  // Auto-open the newest doc on first load so the workspace never looks empty.
+  // Auto-open the requested doc (deep link) or the newest doc on first load.
+  const { doc: docParam } = Route.useSearch();
   const bootstrappedRef = useRef(false);
   useEffect(() => {
     if (bootstrappedRef.current) return;
     if (!docsQ.isSuccess) return;
     if (docs.length === 0) { bootstrappedRef.current = true; return; }
     bootstrappedRef.current = true;
-    setOpenIds([docs[0].id]);
+    const target = docParam && docs.some((d) => d.id === docParam) ? docParam : docs[0].id;
+    setOpenIds([target]);
+
   }, [docsQ.isSuccess, docs]);
 
   const openDoc = (id: string) => {
