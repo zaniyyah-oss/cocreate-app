@@ -402,7 +402,7 @@ function ReadLibrary() {
         .rd-list-row.open{background:rgba(220,224,122,.28);border-left-color:#CAC307;padding-left:15px;}
         .rd-list-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px;}
         .rd-list-title{font-weight:700;font-size:13px;color:#20201C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .rd-list-date{font-size:10px;color:#9a968a;font-weight:600;flex-shrink:0;}
+        .rd-list-date{font-size:10px;color:#9a968a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;}
         .rd-list-meta{font-size:11px;color:#8a8879;line-height:1.4;}
         .rd-list-preview{font-size:11px;color:#8a8678;line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
         .rd-detail{padding:22px 26px;overflow-y:auto;display:flex;flex-direction:column;}
@@ -744,7 +744,12 @@ function DetailPane({
             {fmtDate(entry.entry_date)}
           </div>
         </div>
-        <button className="rd-focus" onClick={onOpen}>Open</button>
+        <button className="rd-iconbtn" onClick={onOpen} aria-label="Open study" title="Open study">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17L17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </button>
       </div>
       <textarea
         value={note}
