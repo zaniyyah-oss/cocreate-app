@@ -680,6 +680,14 @@ function DocPanel({
     <div className="nt-panel">
       <header className="nt-panel-header">
         <div className="nt-panel-header-info">
+          <button
+            type="button"
+            className="nt-backbtn"
+            onClick={() => { void flushSave(); onClose(); }}
+          >
+            ← Notes
+          </button>
+
           {primaryTag && (
             <div className="nt-tag-pill" style={primaryColor ? { background: primaryColor, color: "#181A4D" } : undefined}>{primaryTag}</div>
           )}
