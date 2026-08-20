@@ -751,20 +751,21 @@ function FullScreenNote({
           {entry.entry_title || entry.scripture_reference || "Untitled study"}
         </h1>
         <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
-        <textarea
-          ref={taRef}
+        <RichTextField
           className="rd-full-textarea"
           value={note}
           placeholder="Continue your study…"
-          onChange={(e) => schedule(e.target.value)}
+          allowImages
+          onChange={(html) => schedule(html)}
           onBlur={() => {
             if (timer.current) {
               window.clearTimeout(timer.current);
               timer.current = null;
             }
-            if ((entry.scripture_text ?? "") !== note) save(note);
+            if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
           }}
         />
+
       </div>
     </div>
   );
