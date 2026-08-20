@@ -31,6 +31,8 @@ type Doc = {
   body_text: string;
   tags: string[];
   status: "open" | "closed";
+  pinned?: boolean;
+
   created_at: string;
   updated_at: string;
 };
