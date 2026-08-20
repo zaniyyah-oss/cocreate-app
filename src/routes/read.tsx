@@ -453,6 +453,21 @@ function ReadLibrary() {
           <div className="rd-panel">
             <p className="rd-tabsub">Every reflection you've logged, whenever you write it. Click a book to see everything you've studied on it.</p>
 
+            <div className="rd-studybar">
+              <button
+                type="button"
+                className="rd-newstudy"
+                onClick={handleNewStudy}
+                disabled={newStudyBusy}
+              >
+                <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span> New study
+              </button>
+              <div className="rd-viewtoggle" role="tablist">
+                <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
+                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
+              </div>
+            </div>
+
             <div className="rd-topbar">
               <div className="rd-tabs" role="tablist">
                 <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
@@ -461,10 +476,6 @@ function ReadLibrary() {
               <Link to="/notes" className="rd-allstudies">→ All studies</Link>
             </div>
 
-            <div className="rd-stat">
-              <span className="num">{studiedCount}</span>
-              <span className="lbl">books studied out of 66</span>
-            </div>
 
             {availableTopics.length > 0 && (
               <div className="rd-topicfilter">
