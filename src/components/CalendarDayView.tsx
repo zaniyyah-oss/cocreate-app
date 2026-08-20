@@ -473,12 +473,46 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 </div>
               )}
 
-              {!itemsQ.isLoading && dayItems.length === 0 && (
-                <div className="cald-empty">
-                  <strong>Nothing scheduled.</strong>
-                  <div>Tap a time slot or the Add button to add an event or focus item.</div>
+              {recurToday.length > 0 && (
+                <div className="cald-untimed">
+                  <div className="cald-items-label">Recurring tasks</div>
+                  {recurToday.map(t => {
+                    const done = recurDone.data?.has(`${t.id}|${selectedISO}`) ?? false;
+                    return (
+                      <div key={t.id} className="cald-recur" style={{ borderColor: t.color }}>
+                        <span className="swatch-bar" style={{ background: t.color }} />
+                        <input
+                          type="checkbox"
+                          checked={done}
+                          onChange={(e) => { void toggleRecur(t, e.target.checked); }}
+                          aria-label={`Mark ${t.title} done`}
+                        />
+                        <button type="button" className="cald-recur-body" onClick={() => setRecurEdit(t)}>
+                          <div className="ev-title" style={{ textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1 }}>
+                            {t.title}
+                            <span className="ev-tag">repeats</span>
+                          </div>
+                          {(t.start_time || t.notes) && (
+                            <div className="ev-notes">
+                              {t.start_time ? fmtTime(t.start_time.slice(0, 5)) : ""}
+                              {t.start_time && t.notes ? " · " : ""}
+                              {t.notes ?? ""}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
+              {!itemsQ.isLoading && dayItems.length === 0 && recurToday.length === 0 && (
+                <div className="cald-empty">
+                  <strong>Nothing scheduled.</strong>
+                  <div>Tap a time slot or the Add button to add an event, focus item, or recurring task.</div>
+                </div>
+              )}
+
             </>
           );
         })()}
