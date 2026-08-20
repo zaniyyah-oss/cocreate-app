@@ -72,7 +72,7 @@ function CalendarPage() {
         </div>
 
         {view === "today" ? (
-          <CalendarDayView userId={userId} templateId={templateId} />
+          <CalendarDayView userId={userId} defaultTemplateId={templateId} />
         ) : view === "week" ? (
           templateId ? (
             <WeekListView templateId={templateId} userId={userId} />
