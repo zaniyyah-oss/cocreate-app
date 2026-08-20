@@ -539,9 +539,24 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         event={editEvent}
         onSaved={onSaved}
       />
+      <RecurringTaskDialog
+        open={recurAddOpen}
+        onOpenChange={setRecurAddOpen}
+        userId={userId}
+        defaultDate={selectedISO}
+        onSaved={onRecurSaved}
+      />
+      <RecurringTaskDialog
+        open={!!recurEdit}
+        onOpenChange={(v) => { if (!v) setRecurEdit(null); }}
+        userId={userId}
+        task={recurEdit}
+        onSaved={onRecurSaved}
+      />
     </div>
   );
 }
+
 
 const CSS = `
 .cald-layout{display:grid;grid-template-columns:1fr;gap:0;font-family:'Poppins',sans-serif;color:#20201C;}
