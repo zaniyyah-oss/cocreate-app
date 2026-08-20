@@ -599,21 +599,8 @@ function ReadLibrary() {
 
         {section === "saved" && (
           <div className="rd-panel">
-            <p className="rd-tabsub">Save teachings, essays, podcasts, and videos to come back to later. Manage the topic categories that organize platform content here.</p>
-            <TopicsSection
-              topics={topics}
-              entries={recent}
-              selectedIds={[]}
-              onToggle={() => {}}
-              onDelete={() => {}}
-            />
-            <div className="rd-stat" style={{ display: "block", textAlign: "center", padding: "40px 24px", marginTop: 32 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>⌘</div>
-              <div className="rd-section-label" style={{ margin: "0 0 8px" }}>Saved content</div>
-              <div style={{ fontSize: 14, color: "#8a8879", maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
-                Nothing saved yet. Once the saved-content model is ready, you'll find everything you've bookmarked to read, listen to, or watch right here — organized by the categories above.
-              </div>
-            </div>
+            <p className="rd-tabsub">Teachings, essays, podcasts, and videos you've saved from CoCreate.</p>
+            <SavedContentPanel />
           </div>
         )}
       </div>
