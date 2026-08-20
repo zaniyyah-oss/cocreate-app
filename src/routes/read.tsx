@@ -406,7 +406,9 @@ function ReadLibrary() {
 
         /* List view (Apple-Notes style) */
         .rd-listframe{display:grid;grid-template-columns:340px 1fr;gap:0;background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;min-height:560px;}
+        .rd-listframe.single{display:block;min-height:0;}
         @media (max-width:820px){.rd-listframe{grid-template-columns:1fr;}}
+
         .rd-list-col{border-right:1px solid rgba(24,26,77,.07);display:flex;flex-direction:column;background:#fff;}
         @media (max-width:820px){.rd-list-col{border-right:none;border-bottom:1px solid rgba(24,26,77,.07);max-height:340px;}}
         .rd-list-scroll{overflow-y:auto;flex:1;}
