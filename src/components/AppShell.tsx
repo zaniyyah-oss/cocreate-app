@@ -282,7 +282,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
           </button>
 
           {desktopNav.map((n) => {
-            const item = (
+            return (
               <Link
                 key={n.key}
                 to={n.to}
@@ -292,30 +292,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                 {n.icon}<span className="lbl">{n.label}</span>
               </Link>
             );
-            if (n.key === "explore") {
-              return (
-                <Fragment key={n.key}>
-                  <div className="app-side-divider" />
-                  <div className="app-side-label">Your reference</div>
-                  <Link
-                    to="/read"
-                    className={`app-side-item${pathname === "/read" || pathname.startsWith("/read/") ? " active" : ""}`}
-                    title={collapsed ? "Read" : undefined}
-                  >
-                    {ICON.book}<span className="lbl">Read</span>
-                  </Link>
-                  <Link
-                    to="/notes"
-                    className={`app-side-item${pathname === "/notes" || pathname.startsWith("/notes/") ? " active" : ""}`}
-                    title={collapsed ? "Notes" : undefined}
-                  >
-                    {ICON.notes}<span className="lbl">Notes</span>
-                  </Link>
-                  {item}
-                </Fragment>
-              );
-            }
-            return item;
           })}
           <div className="app-side-foot">
             {userId ? (
