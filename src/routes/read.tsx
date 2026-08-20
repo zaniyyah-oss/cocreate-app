@@ -426,6 +426,9 @@ function ReadLibrary() {
           </div>
         </div>
 
+        <SavedDevotionalsSection />
+
+
 
         <div className="rd-stat">
           <span className="num">{studiedCount}</span>
