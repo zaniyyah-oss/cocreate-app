@@ -134,8 +134,8 @@ const NOTES_CSS = `
 .nt-railempty{font-size:12.5px;color:#8a8678;padding:8px 0 18px;border-bottom:1px solid #E7E1CF;margin-bottom:6px;}
 
 /* ── Split body ─────────────────────────────────────────────── */
-.nt-split{display:flex;gap:24px;flex:1;min-height:0;margin-top:18px;}
-.nt-listcol{width:390px;flex-shrink:0;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:10px;}
+.nt-split{display:block;flex:1;min-height:0;margin-top:18px;}
+.nt-listcol{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start;}
 .nt-card{background:#fff;border:1px solid #E7E1CF;border-radius:14px;padding:16px 18px;cursor:pointer;border-left:4px solid transparent;text-align:left;font-family:inherit;width:100%;transition:border-color .15s ease;}
 .nt-card:hover{border-color:#d8d2bd;}
 .nt-card.open{border-left-color:#DCE07A;background:#F3F6DC;border-color:#EAEECB;}
@@ -147,9 +147,24 @@ const NOTES_CSS = `
 .nt-doc-preview{font-size:12.5px;color:#6B6862;line-height:1.45;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .nt-doc-empty{padding:26px 4px;color:#8a8678;font-size:12.5px;line-height:1.55;}
 
-.nt-detailcol{flex:1;min-width:0;overflow-y:auto;}
+/* Detail is a separate full view — never side-by-side with the list. */
+.nt-detailcol{display:none;flex:1;min-width:0;}
 .nt-detailcard{background:#fff;border:1px solid #E7E1CF;border-radius:18px;min-height:100%;display:flex;flex-direction:column;overflow:hidden;}
-.nt-backbtn{display:none;}
+.nt-wrap.detail .nt-eyebrow,
+.nt-wrap.detail .nt-h1,
+.nt-wrap.detail .nt-desc,
+.nt-wrap.detail .nt-mobilebar,
+.nt-wrap.detail .nt-toolbar,
+.nt-wrap.detail .nt-sectionlabel,
+.nt-wrap.detail .nt-chiprow,
+.nt-wrap.detail .nt-rail,
+.nt-wrap.detail .nt-railempty,
+.nt-wrap.detail .nt-listcol{display:none;}
+.nt-wrap.detail .nt-split{margin-top:0;}
+.nt-wrap.detail .nt-detailcol{display:block;}
+.nt-backbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:inherit;font-weight:700;font-size:13px;color:#181A4D;cursor:pointer;padding:6px 0;margin-bottom:6px;}
+.nt-backbtn:hover{text-decoration:underline;}
+
 
 /* ── Detail panel ───────────────────────────────────────────── */
 .nt-edit-btn{background:#FBF8ED;border:1px solid rgba(24,26,77,0.15);color:#181A4D;border-radius:999px;padding:6px 16px;font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;cursor:pointer;margin-right:4px;}
