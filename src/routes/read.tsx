@@ -352,6 +352,9 @@ function ReadLibrary() {
           line-height:1.15;margin:4px 0 0;color:#20201C;
         }
         .rd-card-meta{font-size:13px;color:#8a8879;font-weight:600;}
+        .rd-card-foot{margin-top:auto;padding-top:10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a968a;border-top:1px solid rgba(24,26,77,.06);}
+        .rd-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;border:1.5px solid #ECE4CE;background:#fff;color:#181A4D;cursor:pointer;padding:0;transition:background .12s, border-color .12s, color .12s;}
+        .rd-iconbtn:hover{background:#181A4D;border-color:#181A4D;color:#fff;}
         .rd-card-snip{
           font-size:14px;line-height:1.55;color:#4a4a44;
           display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
@@ -997,6 +1000,7 @@ function RecentStudyCard({
           </div>
         </div>
       )}
+      {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
     </div>
   );
 }
