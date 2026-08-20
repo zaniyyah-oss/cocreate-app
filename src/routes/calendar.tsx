@@ -84,7 +84,10 @@ function CalendarPage() {
         ) : (
           <div style={{ minHeight: "40vh" }} />
         )}
+
+        <RecurringTasksPanel userId={userId} defaultDate={isoDate(new Date())} />
       </div>
+
     </AppShell>
   );
 }
