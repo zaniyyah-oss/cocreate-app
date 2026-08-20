@@ -523,7 +523,62 @@ function HomeTourBar() {
 }
 
 
+function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () => void }) {
+  const items = [
+    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
+    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
+  ];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <>
+      <div className="hp-drawer-scrim" onClick={onClose} />
+      <aside className="hp-drawer" aria-label="Primary">
+        <div className="hp-drawer-head">
+          <Link to="/" className="hp-drawer-logo" onClick={onClose}>
+            <div className="mark">C</div><div className="word">CoCreate</div>
+          </Link>
+          <button type="button" className="hp-drawer-close" onClick={onClose} aria-label="Close menu">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.active ? " active" : ""}`} onClick={onClose}>
+            {it.icon}<span>{it.label}</span>
+          </Link>
+        ))}
+        <div className="hp-drawer-foot">
+          {signedIn ? (
+            <>
+              <Link to="/profile" className="hp-drawer-item" onClick={onClose} style={{ marginBottom: 0 }}>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+                <span>Profile</span>
+              </Link>
+              <button
+                type="button"
+                onClick={async () => { await supabase.auth.signOut(); onClose(); }}
+                style={{ background: "transparent", border: "1.5px solid rgba(20,20,20,0.12)", color: "#20201c", fontWeight: 700, fontSize: 12, padding: "7px 13px", borderRadius: 16, fontFamily: "'Poppins',sans-serif", cursor: "pointer" }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="hp-drawer-signin" onClick={onClose}>Sign in</Link>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
 function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+
   const topicsQ = useTopics();
   const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
   const list = (topicsQ.data ?? [])
