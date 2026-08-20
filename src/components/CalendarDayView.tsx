@@ -269,6 +269,15 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         >
           + Add focus item
         </button>
+        <button
+          type="button"
+          className="cald-addbtn cald-addbtn-focus"
+          onClick={() => setRecurAddOpen(true)}
+          disabled={!userId}
+        >
+          + Recurring task
+        </button>
+
 
         <div className="cald-mini">
           <div className="cald-mini-head">
