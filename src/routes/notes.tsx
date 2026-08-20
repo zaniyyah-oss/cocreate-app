@@ -346,7 +346,10 @@ function NotesLibrary({ userId }: { userId: string }) {
     if (docParam && docs.some((d) => d.id === docParam)) setOpenId(docParam);
   }, [docsQ.isSuccess, docs]);
 
-  const openDoc = (id: string) => setOpenId(id);
+  const openDoc = (id: string) => {
+    setOpenId(id);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  };
   const closePanel = () => setOpenId(null);
 
   const createDoc = useMutation({
