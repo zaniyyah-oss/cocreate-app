@@ -609,6 +609,11 @@ const CSS = `
 .cald-untimed{background:#fff;border-radius:16px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
 .cald-items-label{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#181A4D;opacity:0.5;}
+.cald-recur{display:flex;align-items:center;gap:10px;border:1.5px solid #E4DFCF;border-radius:12px;padding:10px 12px;background:#FBF8ED;}
+.cald-recur .swatch-bar{width:4px;align-self:stretch;border-radius:3px;flex:none;}
+.cald-recur input[type=checkbox]{width:17px;height:17px;flex:none;cursor:pointer;accent-color:#181A4D;}
+.cald-recur-body{flex:1;min-width:0;text-align:left;background:transparent;border:none;padding:0;font-family:inherit;cursor:pointer;}
+
 .cald-event{width:100%;display:flex;align-items:stretch;gap:12px;border-radius:12px;border:1.5px solid transparent;padding:10px 14px;background:transparent;font-family:inherit;cursor:pointer;}
 .cald-event .swatch-bar{width:4px;border-radius:3px;flex-shrink:0;}
 .cald-event .ev-title{font-size:14px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:8px;}
