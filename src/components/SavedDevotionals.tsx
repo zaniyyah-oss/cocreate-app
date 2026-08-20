@@ -43,7 +43,15 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function SavedDevotionalsSection() {
+export function SavedDevotionalsSection({
+  title = "Saved devotionals",
+  note = "Devotionals you built or saved",
+  emptyText = "Nothing here yet. Build a devotional from the Read page and it will show up here.",
+}: {
+  title?: string;
+  note?: string;
+  emptyText?: string;
+} = {}) {
   const navigate = useNavigate();
   const fetchPlans = useServerFn(listPlans);
   const startAssignment = useServerFn(startPlanAssignment);
@@ -92,16 +100,14 @@ export function SavedDevotionalsSection() {
     <section>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="sd-head">
-        <h2 className="sd-title">Saved devotionals</h2>
-        <span className="sd-note">Devotionals you built or saved</span>
+        <h2 className="sd-title">{title}</h2>
+        <span className="sd-note">{note}</span>
       </div>
 
       {plans.isLoading ? (
         <div className="sd-empty">Loading your devotionals…</div>
       ) : rows.length === 0 ? (
-        <div className="sd-empty">
-          Nothing here yet. Build a devotional from the Read page and it will show up here.
-        </div>
+        <div className="sd-empty">{emptyText}</div>
       ) : (
         <div className="sd-grid">
           {rows.map((p) => {
