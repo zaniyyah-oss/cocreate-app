@@ -437,6 +437,7 @@ function NotesLibrary({ userId }: { userId: string }) {
       {topTags.length > 0 && (
         <>
           <div className="nt-sectionlabel">Browse by tag</div>
+          <div className="nt-chiprow">
           <div className="nt-alltags" ref={allTagsRef}>
             <button
               type="button"
