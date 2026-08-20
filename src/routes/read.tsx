@@ -260,6 +260,10 @@ function ReadLibrary() {
         .rd-panel{animation:rdFade .18s ease;}
         @keyframes rdFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
         .rd-tabsub{font-size:15px;color:#4a4a44;max-width:640px;line-height:1.5;margin:-8px 0 28px;}
+        .rd-studybar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 28px;}
+        .rd-newstudy{display:inline-flex;align-items:center;gap:8px;background:#DCE07A;color:#181A4D;border:none;font-family:inherit;font-size:14px;font-weight:800;padding:11px 20px;border-radius:999px;cursor:pointer;transition:background .15s ease;}
+        .rd-newstudy:hover{background:#CAC307;}
+        .rd-newstudy:disabled{opacity:.6;cursor:default;}
 
         .rd-allstudies{
           display:inline-flex;align-items:center;gap:8px;color:#0F4A42;
