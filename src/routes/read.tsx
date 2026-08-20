@@ -879,10 +879,12 @@ function FullScreenNote({
 function RecentStudyCard({
   entry,
   fmtDate,
+  reference,
   onOpen,
 }: {
   entry: RecentEntry;
   fmtDate: (d: string | null) => string;
+  reference: string;
   onOpen: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -932,22 +934,24 @@ function RecentStudyCard({
         <span className="rd-pill">Read</span>
         <button
           type="button"
-          className="rd-focus"
+          className="rd-iconbtn"
+          aria-label="Open study"
+          title="Open study"
           onClick={(e) => {
             e.stopPropagation();
             onOpen();
           }}
         >
-          Open
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17L17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
         </button>
       </div>
       <h3 className="rd-card-title">
         {entry.entry_title || entry.scripture_reference || "Untitled study"}
       </h3>
-      <div className="rd-card-meta">
-        {entryBooks(entry).join(" · ")}
-        {entry.entry_date ? ` · ${fmtDate(entry.entry_date)}` : ""}
-      </div>
+      {reference && <div className="rd-card-meta">{reference}</div>}
 
       {!expanded ? (
         entry.scripture_text ? (
