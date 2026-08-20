@@ -345,14 +345,33 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
                   <div className="mark">C</div><div className="word">CoCreate</div>
                 </Link>
               </div>
-              <div className="app-topbar-actions">
+              <div className="app-topbar-actions" ref={menuRef}>
                 {userId ? (
                   <>
-                    <Link to="/profile" className="app-topbar-profile" aria-label="Profile">
-                      {ICON.profile}
-                    </Link>
-                    <NotificationBell />
-                    <button className="app-signout" onClick={signOut}>Sign out</button>
+                    <button
+                      type="button"
+                      className="app-topbar-hamburger"
+                      onClick={() => setMenuOpen((o) => !o)}
+                      aria-label="Menu"
+                      aria-expanded={menuOpen}
+                    >
+                      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    {menuOpen && (
+                      <div className="app-topbar-menu-panel" role="menu">
+                        <Link to="/profile" className="app-topbar-menu-item" role="menuitem" onClick={() => setMenuOpen(false)}>
+                          {ICON.profile}<span>Profile</span>
+                        </Link>
+                        <Link to="/notifications" className="app-topbar-menu-item" role="menuitem" onClick={() => setMenuOpen(false)}>
+                          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+                          <span>Notifications</span>
+                        </Link>
+                        <button type="button" className="app-topbar-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); signOut(); }}>
+                          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+                          <span>Sign out</span>
+                        </button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <Link to="/auth" className="app-signin">Sign in</Link>
