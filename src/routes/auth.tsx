@@ -57,17 +57,18 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setError(null); setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
+    const result = await signInWithGoogle();
     if (result.error) {
       setError(result.error.message || "Google sign-in failed");
       setLoading(false);
       return;
     }
-    if (!result.redirected) {
+    if (!result.pending) {
       navigate({ to: "/" });
+      return;
     }
+    // Native / redirect flow continues outside this page.
+    if (isNativeApp()) setLoading(false);
   };
 
   return (
