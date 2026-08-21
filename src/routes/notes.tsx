@@ -119,13 +119,13 @@ const NOTES_CSS = `
 /* ── Tag chips ──────────────────────────────────────────────── */
 .nt-sectionlabel{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8a8678;margin:0 0 10px;}
 .nt-chiprow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
-.nt-chip{font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 15px;border-radius:999px;cursor:pointer;border:1px solid transparent;background:#fff;color:#20201C;border-color:#E7E1CF;transition:transform .12s ease,box-shadow .12s ease;}
+.nt-chip{font-family:inherit;font-weight:700;font-size:12.5px;padding:8px 15px;border-radius:999px;cursor:pointer;border:1px solid transparent;background:#fff;color:#20201C;border-color:#E7E1CF;transition:transform .12s ease,box-shadow .12s ease;white-space:nowrap;}
 .nt-chip:hover{transform:translateY(-1px);}
 .nt-chip.active{box-shadow:0 0 0 2px #181A4D;}
 .nt-chip.all{background:#181A4D;color:#DCE07A;border-color:#181A4D;}
 .nt-chip.all.open{box-shadow:0 0 0 2px #0F4A42;}
 .nt-alltags-caret{font-size:9px;margin-left:3px;opacity:.85;}
-.nt-alltags{position:relative;display:inline-block;}
+.nt-alltags{position:relative;display:inline-block;flex-shrink:0;}
 .nt-alltags-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:80;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:14px;padding:8px;min-width:230px;max-height:320px;overflow:auto;box-shadow:0 10px 28px rgba(24,26,77,0.18);display:flex;flex-direction:column;gap:1px;}
 .nt-alltags-item{display:flex;align-items:center;gap:9px;border:none;background:transparent;border-radius:9px;padding:8px 10px;font-family:inherit;font-size:12.5px;font-weight:600;color:#20201C;cursor:pointer;text-align:left;width:100%;}
 .nt-alltags-item:hover{background:#FBF8ED;}
