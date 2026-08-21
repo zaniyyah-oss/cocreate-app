@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CoCreate</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #dce07a;
+        font-family: Poppins, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .badge {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: #181a4d;
+        color: #fbf8ed;
+        font-weight: 900;
+        font-size: 29px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .word {
+        font-weight: 900;
+        font-size: 23px;
+        color: #181a4d;
+        letter-spacing: -0.01em;
+      }
+      .msg {
+        margin-top: 18px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(24, 26, 77, 0.62);
+        max-width: 260px;
+        line-height: 1.6;
+      }
+      button {
+        margin-top: 20px;
+        padding: 11px 20px;
+        border: none;
+        border-radius: 10px;
+        background: #181a4d;
+        color: #fff;
+        font-weight: 800;
+        font-size: 13px;
+        font-family: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="lockup">
+        <div class="badge">C</div>
+        <div class="word">CoCreate</div>
+      </div>
+      <p class="msg">You're offline. Reconnect to continue your devotional practice.</p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>
