@@ -15,6 +15,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ReadRouteImport } from './routes/read'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -80,6 +81,11 @@ const ReadRoute = ReadRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/messages': typeof MessagesRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notes'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/read'
     | '/saved'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notes'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/read'
     | '/saved'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notes'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/read'
     | '/saved'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ReadRoute: typeof ReadRouteWithChildren
   SavedRoute: typeof SavedRoute
@@ -597,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -932,6 +952,7 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ReadRoute: ReadRouteWithChildren,
   SavedRoute: SavedRoute,

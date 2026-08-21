@@ -56,7 +56,7 @@ const CSS = `
 
 function PrivacyPage() {
   return (
-    <AppShell navKey="home">
+    <AppShell current="home">
       <style>{CSS}</style>
       <div className="priv">
         <div className="wrap">
