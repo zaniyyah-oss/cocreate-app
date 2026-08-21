@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- CoCreate app-specific privacy + compliance strings required for App Store submission -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -79,5 +80,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- App uses standard HTTPS encryption only; no custom encryption -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- Privacy usage descriptions (required by Apple for App Store review) -->
+	<key>NSCameraUsageDescription</key>
+	<string>CoCreate uses the camera to let you add photos to your devotional workspace and notes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CoCreate accesses your photo library so you can attach images to your devotional workspace and notes.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>CoCreate can save images from your workspace to your photo library.</string>
 </dict>
 </plist>
