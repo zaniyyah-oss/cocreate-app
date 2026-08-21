@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import GlobalBrandLoader from "../components/GlobalBrandLoader";
+import { initNativeShell } from "../lib/native";
 
 
 function NotFoundComponent() {
