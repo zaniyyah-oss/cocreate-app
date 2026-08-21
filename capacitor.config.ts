@@ -33,7 +33,7 @@ const config: CapacitorConfig = {
   plugins: {
     Keyboard: {
       resize: "native",
-о      resizeOnFullScreen: true,
+resizeOnFullScreen: true,
     },
     StatusBar: {
       style: "LIGHT",
