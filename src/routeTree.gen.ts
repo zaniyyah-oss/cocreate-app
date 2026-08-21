@@ -37,6 +37,7 @@ import { Route as PlansNewRouteImport } from './routes/plans.new'
 import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
+import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as AdminPageContentRouteImport } from './routes/admin.page-content'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
@@ -191,6 +192,11 @@ const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
   path: '/collections/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth_/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminPageContentRoute = AdminPageContentRouteImport.update({
   id: '/page-content',
   path: '/page-content',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
   '/admin/page-content': typeof AdminPageContentRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
   '/admin/page-content': typeof AdminPageContentRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/admin/invites': typeof AdminInvitesRoute
   '/admin/new': typeof AdminNewRoute
   '/admin/page-content': typeof AdminPageContentRoute
+  '/auth_/callback': typeof AuthCallbackRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/devotionals/$id': typeof DevotionalsIdRoute
   '/essays/$id': typeof EssaysIdRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/admin/new'
     | '/admin/page-content'
+    | '/auth/callback'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/admin/new'
     | '/admin/page-content'
+    | '/auth/callback'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/admin/new'
     | '/admin/page-content'
+    | '/auth_/callback'
     | '/collections/$slug'
     | '/devotionals/$id'
     | '/essays/$id'
@@ -532,6 +544,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   TourRoute: typeof TourRoute
   WatchRoute: typeof WatchRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   EssaysIdRoute: typeof EssaysIdRoute
   PlansNewRoute: typeof PlansNewRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth_/callback': {
+      id: '/auth_/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/page-content': {
       id: '/admin/page-content'
       path: '/page-content'
@@ -918,6 +938,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   TourRoute: TourRoute,
   WatchRoute: WatchRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   EssaysIdRoute: EssaysIdRoute,
   PlansNewRoute: PlansNewRoute,
