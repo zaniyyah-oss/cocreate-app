@@ -515,10 +515,6 @@ function ReadLibrary() {
                 </button>
                 <Link to="/notes" className="rd-allstudies">→ All studies</Link>
               </div>
-              <div className="rd-viewtoggle" role="tablist">
-                <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
-                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
-              </div>
             </div>
 
             {filterOpen && (
