@@ -745,6 +745,103 @@ function StudiesTable({
 
 
 
+function FullScreenNote({
+  entry,
+  bookFullName,
+  onClose,
+}: {
+  entry: RecentEntry;
+  bookFullName: string;
+  onClose: () => void;
+}) {
+  const [note, setNote] = useState(entry.scripture_text ?? "");
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
+  const timer = useRef<number | null>(null);
+  const noteRef = useRef(note);
+  noteRef.current = note;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+
+  const save = async (val: string) => {
+    setStatus("saving");
+    const { error } = await supabase
+      .from("devotional_entries")
+      .update({ scripture_text: val })
+      .eq("id", entry.id);
+    setStatus(error ? "error" : "saved");
+    if (!error) window.setTimeout(() => setStatus(""), 1500);
+  };
+
+  const schedule = (val: string) => {
+    setNote(val);
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => save(val), 700);
+  };
+
+  const fmt = (d: string | null) =>
+    d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "";
+
+  return (
+    <div className="rd-full" role="dialog" aria-modal="true">
+      <div className="rd-full-bar">
+        <button
+          className="rd-full-back"
+          onClick={() => {
+            if (timer.current) {
+              window.clearTimeout(timer.current);
+              timer.current = null;
+            }
+            if ((entry.scripture_text ?? "") !== note) save(note);
+            onClose();
+          }}
+          aria-label="Back to Read"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+        <span className="rd-full-meta">
+          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : status === "error" ? "Couldn't save" : ""}
+        </span>
+      </div>
+      <div className="rd-full-body">
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 10 }}>
+          {bookFullName}
+        </div>
+        <h1 className="rd-full-title">
+          {entry.entry_title || entry.scripture_reference || "Untitled study"}
+        </h1>
+        <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
+        <RichTextField
+          className="rd-full-textarea"
+          value={note}
+          placeholder="Continue your study…"
+          allowImages
+          onChange={(html) => schedule(html)}
+          onBlur={() => {
+            if (timer.current) {
+              window.clearTimeout(timer.current);
+              timer.current = null;
+            }
+            if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
+          }}
+        />
+
+      </div>
+    </div>
+  );
+}
+
 function TopicsSection({
   topics,
   entries,
