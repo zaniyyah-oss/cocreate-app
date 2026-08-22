@@ -594,27 +594,13 @@ function ReadLibrary() {
                   </div>
                 </div>
 
-                {view === "tiles" ? (
-                  <div className="rd-recent-grid">
-                    {filteredRecent.map((e) => (
-                      <RecentStudyCard
-                        key={e.id}
-                        entry={e}
-                        fmtDate={fmtDate}
-                        reference={refLine(e)}
-                        onOpen={() => setOpenEntry(e)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <ListView
-                    items={filteredRecent}
-                    fmtDate={fmtDate}
-                    refLine={refLine}
-                    bookFullName={bookFullName}
-                    onOpen={(e) => setOpenEntry(e)}
-                  />
-                )}
+                <StudiesTable
+                  items={filteredRecent}
+                  fmtDate={fmtDate}
+                  bookFullName={bookFullName}
+                  topicById={topicById}
+                  onOpen={(e) => setOpenEntry(e)}
+                />
               </>
             )}
           </div>
