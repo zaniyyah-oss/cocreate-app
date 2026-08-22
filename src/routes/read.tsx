@@ -99,8 +99,7 @@ function ReadLibrary() {
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [view, setView] = useState<"tiles" | "list">("tiles");
-  
+
   const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
 
   const books = booksQ.data ?? [];
