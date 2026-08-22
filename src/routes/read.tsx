@@ -99,8 +99,7 @@ function ReadLibrary() {
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [view, setView] = useState<"tiles" | "list">("tiles");
-  
+
   const [openEntry, setOpenEntry] = useState<RecentEntry | null>(null);
 
   const books = booksQ.data ?? [];
@@ -162,11 +161,6 @@ function ReadLibrary() {
   const fmtDate = (d: string | null) =>
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
-  const refLine = (e: RecentEntry) => {
-    const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
-    const ref = (e.scripture_reference ?? "").trim();
-    return [books.join(" · "), ref].filter(Boolean).join(" — ");
-  };
 
   const [newStudyBusy, setNewStudyBusy] = useState(false);
   const handleNewStudy = async () => {
@@ -479,6 +473,49 @@ function ReadLibrary() {
         .rd-full-textarea .rtf-editor ul,.rd-full-textarea .rtf-editor ol{margin:0 0 12px;padding-left:22px;}
 
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
+
+        /* Studies table */
+        .rd-table-wrap{background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;}
+        .rd-table{width:100%;border-collapse:collapse;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;table-layout:fixed;}
+        .rd-table thead{background:#FBF8ED;}
+        .rd-th{padding:12px 14px;text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8879;border-bottom:1.5px solid #ECE4CE;white-space:nowrap;}
+        .rd-th-date{width:96px;}
+        .rd-th-book{width:170px;}
+        .rd-th-topic{width:200px;}
+        .rd-th-title{width:auto;}
+        .rd-th-preview{width:34%;}
+        .rd-th-open{width:44px;}
+        .rd-tr{border-bottom:1px solid rgba(24,26,77,.06);cursor:pointer;transition:background .12s ease;outline:none;}
+        .rd-tr:last-child{border-bottom:none;}
+        .rd-tr:hover,.rd-tr:focus-visible{background:#FBF8ED;}
+        .rd-td{padding:14px 14px;vertical-align:middle;}
+        .rd-td-date{font-size:12px;font-weight:700;color:#8a8879;letter-spacing:.04em;white-space:nowrap;}
+        .rd-cell-book{font-size:13px;font-weight:700;color:#0F4A42;line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .rd-cell-topics{display:flex;flex-wrap:wrap;gap:5px;}
+        .rd-tpill-sm{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;background:#0F4A42;color:#fff;white-space:nowrap;}
+        .rd-cell-muted{font-size:13px;color:#bbb6a6;}
+        .rd-cell-title{font-size:14px;font-weight:700;color:#20201C;line-height:1.3;display:block;}
+        .rd-cell-preview{font-size:13px;color:#5a5a52;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .rd-open-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;border:1.5px solid #ECE4CE;background:#fff;color:#181A4D;}
+        .rd-tr:hover .rd-open-btn,.rd-tr:focus-visible .rd-open-btn{background:#181A4D;border-color:#181A4D;color:#fff;}
+        @media (max-width:820px){
+          .rd-table-wrap{border-radius:0;border:none;}
+          .rd-table thead{display:none;}
+          .rd-table,.rd-table tbody,.rd-table tr,.rd-table td{display:block;width:100%;}
+          .rd-table,.rd-table tbody{border:none;}
+          .rd-tr{border:1.5px solid #ECE4CE;border-radius:14px;margin-bottom:10px;padding:6px 4px;background:#fff;}
+          .rd-tr:hover,.rd-tr:focus-visible{background:#fff;}
+          .rd-tr:hover .rd-open-btn{background:#fff;color:#181A4D;border-color:#ECE4CE;}
+          .rd-td{padding:6px 14px;border:none;display:flex;gap:8px;align-items:baseline;}
+          .rd-td::before{content:attr(data-lbl);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a968a;min-width:64px;}
+          .rd-td-date::before{content:"Date";}
+          .rd-td-book::before{content:"Book";}
+          .rd-td-topic::before{content:"Topic";}
+          .rd-td-title::before{content:"Title";}
+          .rd-td-preview::before{content:"Preview";}
+          .rd-td-open{display:none;}
+          .rd-cell-preview{-webkit-line-clamp:3;}
+        }
       `}</style>
 
       <div className="rd-wrap">
@@ -515,10 +552,6 @@ function ReadLibrary() {
                   <span className="rd-caret">▾</span>
                 </button>
                 <Link to="/notes" className="rd-allstudies">→ All studies</Link>
-              </div>
-              <div className="rd-viewtoggle" role="tablist">
-                <button className={view === "tiles" ? "active" : ""} onClick={() => setView("tiles")}>Tiles</button>
-                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>List</button>
               </div>
             </div>
 
@@ -599,27 +632,13 @@ function ReadLibrary() {
                   </div>
                 </div>
 
-                {view === "tiles" ? (
-                  <div className="rd-recent-grid">
-                    {filteredRecent.map((e) => (
-                      <RecentStudyCard
-                        key={e.id}
-                        entry={e}
-                        fmtDate={fmtDate}
-                        reference={refLine(e)}
-                        onOpen={() => setOpenEntry(e)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <ListView
-                    items={filteredRecent}
-                    fmtDate={fmtDate}
-                    refLine={refLine}
-                    bookFullName={bookFullName}
-                    onOpen={(e) => setOpenEntry(e)}
-                  />
-                )}
+                <StudiesTable
+                  items={filteredRecent}
+                  fmtDate={fmtDate}
+                  bookFullName={bookFullName}
+                  topicById={topicById}
+                  onOpen={(e) => setOpenEntry(e)}
+                />
               </>
             )}
           </div>
@@ -673,47 +692,100 @@ function ReadLibrary() {
   );
 }
 
-function ListView({
+function StudiesTable({
   items,
   fmtDate,
-  refLine,
   bookFullName,
+  topicById,
   onOpen,
 }: {
   items: RecentEntry[];
   fmtDate: (d: string | null) => string;
-  refLine: (e: RecentEntry) => string;
   bookFullName: Map<string, string>;
+  topicById: Map<string, { id: string; name: string; display_name: string | null }>;
   onOpen: (e: RecentEntry) => void;
 }) {
   return (
-    <div className="rd-listframe single">
-      <div className="rd-list-scroll">
-        {items.map((e) => {
-          const preview = stripHtml(e.scripture_text).slice(0, 200);
-          return (
-            <button
-              key={e.id}
-              className="rd-list-row"
-              onClick={() => onOpen(e)}
-            >
-              <div className="rd-list-top">
-                <span className="rd-list-title">
-                  {e.entry_title || e.scripture_reference || "Untitled study"}
-                </span>
-              </div>
-              <div className="rd-list-meta">
-                {refLine(e) || entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-              </div>
-              {preview && <div className="rd-list-preview">{preview}</div>}
-              <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
-            </button>
-          );
-        })}
-      </div>
+    <div className="rd-table-wrap">
+      <table className="rd-table">
+        <thead>
+          <tr>
+            <th className="rd-th rd-th-date">Date</th>
+            <th className="rd-th rd-th-book">Book</th>
+            <th className="rd-th rd-th-topic">Topic</th>
+            <th className="rd-th rd-th-title">Title</th>
+            <th className="rd-th rd-th-preview">Preview</th>
+            <th className="rd-th rd-th-open" aria-label="Open study"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((e) => {
+            const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
+            const topics = (e.topic_ids ?? [])
+              .map((id) => topicById.get(id))
+              .filter((t): t is { id: string; name: string; display_name: string | null } => !!t)
+              .map((t) => t.display_name ?? t.name);
+            const preview = stripHtml(e.scripture_text).slice(0, 160);
+            const title = e.entry_title || e.scripture_reference || "Untitled study";
+            return (
+              <tr
+                key={e.id}
+                className="rd-tr"
+                onClick={() => onOpen(e)}
+                tabIndex={0}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    onOpen(e);
+                  }
+                }}
+              >
+                <td className="rd-td rd-td-date">{fmtDate(e.entry_date) || "—"}</td>
+                <td className="rd-td rd-td-book">
+                  {books.length > 0 ? (
+                    <span className="rd-cell-book">{books.join(", ")}</span>
+                  ) : (
+                    <span className="rd-cell-muted">—</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-topic">
+                  {topics.length > 0 ? (
+                    <span className="rd-cell-topics">
+                      {topics.map((t) => (
+                        <span key={t} className="rd-tpill-sm">{t}</span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="rd-cell-muted">—</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-title">
+                  <span className="rd-cell-title">{title}</span>
+                </td>
+                <td className="rd-td rd-td-preview">
+                  {preview ? (
+                    <span className="rd-cell-preview">{preview}</span>
+                  ) : (
+                    <span className="rd-cell-muted">No notes yet</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-open">
+                  <span className="rd-open-btn" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 17L17 7" />
+                      <path d="M8 7h9v9" />
+                    </svg>
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
+
 
 
 function FullScreenNote({
@@ -812,58 +884,6 @@ function FullScreenNote({
     </div>
   );
 }
-
-function RecentStudyCard({
-  entry,
-  fmtDate,
-  reference,
-  onOpen,
-}: {
-  entry: RecentEntry;
-  fmtDate: (d: string | null) => string;
-  reference: string;
-  onOpen: () => void;
-}) {
-  return (
-    <div
-      className="rd-card"
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-      style={{ cursor: "pointer" }}
-    >
-      <div className="rd-card-top">
-        <span className="rd-pill">Read</span>
-        <span className="rd-iconbtn" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17L17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
-        </span>
-      </div>
-      <h3 className="rd-card-title">
-        {entry.entry_title || entry.scripture_reference || "Untitled study"}
-      </h3>
-      {reference && <div className="rd-card-meta">{reference}</div>}
-
-      {entry.scripture_text ? (
-        <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
-      ) : (
-        <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
-          Tap to add a note…
-        </div>
-      )}
-      {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
-    </div>
-  );
-}
-
 
 function TopicsSection({
   topics,
