@@ -649,196 +649,100 @@ function ReadLibrary() {
   );
 }
 
-function ListView({
+function StudiesTable({
   items,
   fmtDate,
-  refLine,
   bookFullName,
+  topicById,
   onOpen,
 }: {
   items: RecentEntry[];
   fmtDate: (d: string | null) => string;
-  refLine: (e: RecentEntry) => string;
   bookFullName: Map<string, string>;
+  topicById: Map<string, { id: string; name: string; display_name: string | null }>;
   onOpen: (e: RecentEntry) => void;
 }) {
   return (
-    <div className="rd-listframe single">
-      <div className="rd-list-scroll">
-        {items.map((e) => {
-          const preview = stripHtml(e.scripture_text).slice(0, 200);
-          return (
-            <button
-              key={e.id}
-              className="rd-list-row"
-              onClick={() => onOpen(e)}
-            >
-              <div className="rd-list-top">
-                <span className="rd-list-title">
-                  {e.entry_title || e.scripture_reference || "Untitled study"}
-                </span>
-              </div>
-              <div className="rd-list-meta">
-                {refLine(e) || entryBooks(e).map((b) => bookFullName.get(b) ?? b).join(" · ")}
-              </div>
-              {preview && <div className="rd-list-preview">{preview}</div>}
-              <div className="rd-list-date">{fmtDate(e.entry_date)}</div>
-            </button>
-          );
-        })}
-      </div>
+    <div className="rd-table-wrap">
+      <table className="rd-table">
+        <thead>
+          <tr>
+            <th className="rd-th rd-th-date">Date</th>
+            <th className="rd-th rd-th-book">Book</th>
+            <th className="rd-th rd-th-topic">Topic</th>
+            <th className="rd-th rd-th-title">Title</th>
+            <th className="rd-th rd-th-preview">Preview</th>
+            <th className="rd-th rd-th-open" aria-label="Open study"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((e) => {
+            const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
+            const topics = (e.topic_ids ?? [])
+              .map((id) => topicById.get(id))
+              .filter((t): t is { id: string; name: string; display_name: string | null } => !!t)
+              .map((t) => t.display_name ?? t.name);
+            const preview = stripHtml(e.scripture_text).slice(0, 160);
+            const title = e.entry_title || e.scripture_reference || "Untitled study";
+            return (
+              <tr
+                key={e.id}
+                className="rd-tr"
+                onClick={() => onOpen(e)}
+                tabIndex={0}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    onOpen(e);
+                  }
+                }}
+              >
+                <td className="rd-td rd-td-date">{fmtDate(e.entry_date) || "—"}</td>
+                <td className="rd-td rd-td-book">
+                  {books.length > 0 ? (
+                    <span className="rd-cell-book">{books.join(", ")}</span>
+                  ) : (
+                    <span className="rd-cell-muted">—</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-topic">
+                  {topics.length > 0 ? (
+                    <span className="rd-cell-topics">
+                      {topics.map((t) => (
+                        <span key={t} className="rd-tpill-sm">{t}</span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="rd-cell-muted">—</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-title">
+                  <span className="rd-cell-title">{title}</span>
+                </td>
+                <td className="rd-td rd-td-preview">
+                  {preview ? (
+                    <span className="rd-cell-preview">{preview}</span>
+                  ) : (
+                    <span className="rd-cell-muted">No notes yet</span>
+                  )}
+                </td>
+                <td className="rd-td rd-td-open">
+                  <span className="rd-open-btn" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 17L17 7" />
+                      <path d="M8 7h9v9" />
+                    </svg>
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-
-function FullScreenNote({
-  entry,
-  bookFullName,
-  onClose,
-}: {
-  entry: RecentEntry;
-  bookFullName: string;
-  onClose: () => void;
-}) {
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const timer = useRef<number | null>(null);
-  const noteRef = useRef(note);
-  noteRef.current = note;
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
-
-
-  const save = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const schedule = (val: string) => {
-    setNote(val);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => save(val), 700);
-  };
-
-  const fmt = (d: string | null) =>
-    d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "";
-
-  return (
-    <div className="rd-full" role="dialog" aria-modal="true">
-      <div className="rd-full-bar">
-        <button
-          className="rd-full-back"
-          onClick={() => {
-            if (timer.current) {
-              window.clearTimeout(timer.current);
-              timer.current = null;
-            }
-            if ((entry.scripture_text ?? "") !== note) save(note);
-            onClose();
-          }}
-          aria-label="Back to Read"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          Back
-        </button>
-        <span className="rd-full-meta">
-          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : status === "error" ? "Couldn't save" : ""}
-        </span>
-      </div>
-      <div className="rd-full-body">
-        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#0F4A42", marginBottom: 10 }}>
-          {bookFullName}
-        </div>
-        <h1 className="rd-full-title">
-          {entry.entry_title || entry.scripture_reference || "Untitled study"}
-        </h1>
-        <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
-        <RichTextField
-          className="rd-full-textarea"
-          value={note}
-          placeholder="Continue your study…"
-          allowImages
-          onChange={(html) => schedule(html)}
-          onBlur={() => {
-            if (timer.current) {
-              window.clearTimeout(timer.current);
-              timer.current = null;
-            }
-            if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
-          }}
-        />
-
-      </div>
-    </div>
-  );
-}
-
-function RecentStudyCard({
-  entry,
-  fmtDate,
-  reference,
-  onOpen,
-}: {
-  entry: RecentEntry;
-  fmtDate: (d: string | null) => string;
-  reference: string;
-  onOpen: () => void;
-}) {
-  return (
-    <div
-      className="rd-card"
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-      style={{ cursor: "pointer" }}
-    >
-      <div className="rd-card-top">
-        <span className="rd-pill">Read</span>
-        <span className="rd-iconbtn" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17L17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
-        </span>
-      </div>
-      <h3 className="rd-card-title">
-        {entry.entry_title || entry.scripture_reference || "Untitled study"}
-      </h3>
-      {reference && <div className="rd-card-meta">{reference}</div>}
-
-      {entry.scripture_text ? (
-        <div className="rd-card-snip">{stripHtml(entry.scripture_text)}</div>
-      ) : (
-        <div className="rd-card-snip" style={{ fontStyle: "italic", color: "#8a8879" }}>
-          Tap to add a note…
-        </div>
-      )}
-      {entry.entry_date && <div className="rd-card-foot">{fmtDate(entry.entry_date)}</div>}
-    </div>
-  );
-}
 
 
 function TopicsSection({
