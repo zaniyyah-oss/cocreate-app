@@ -161,11 +161,6 @@ function ReadLibrary() {
   const fmtDate = (d: string | null) =>
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
-  const refLine = (e: RecentEntry) => {
-    const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
-    const ref = (e.scripture_reference ?? "").trim();
-    return [books.join(" · "), ref].filter(Boolean).join(" — ");
-  };
 
   const [newStudyBusy, setNewStudyBusy] = useState(false);
   const handleNewStudy = async () => {
