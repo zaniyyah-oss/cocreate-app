@@ -463,6 +463,17 @@ type SaveField =
   | "books_of_bible"
   | "topic_ids";
 
+/** Fields that belong to the Read section, i.e. to the study itself. */
+const READ_FIELDS = new Set<SaveField>([
+  "scripture_reference",
+  "scripture_text",
+  "book_of_bible",
+  "book_source",
+  "book_confirmed",
+  "books_of_bible",
+  "topic_ids",
+]);
+
 
 function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
