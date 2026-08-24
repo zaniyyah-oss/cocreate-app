@@ -204,9 +204,15 @@ function ReadLibrary() {
   };
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const handleDeleteStudy = async (entryId: string) => {
-    if (deletingId) return;
-    if (typeof window !== "undefined" && !window.confirm("Delete this study? This can't be undone.")) return;
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const pendingDeleteEntry = useMemo(
+    () => recent.find((r) => r.id === pendingDeleteId) ?? null,
+    [recent, pendingDeleteId]
+  );
+  const confirmDeleteStudy = async () => {
+    const entryId = pendingDeleteId;
+    if (!entryId || deletingId) return;
+    setPendingDeleteId(null);
     setDeletingId(entryId);
     try {
       await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
