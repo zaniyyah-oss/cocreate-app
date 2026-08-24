@@ -1,39 +1,43 @@
-# Read page restructure
+# Continue an existing study instead of starting fresh
 
-Reorganize `/read` around three sub-destinations, plus the schema and feed changes your answers imply.
+Today the workspace always addresses "the study for this date", so every day starts blank and there is no way to reopen a study you already began. This adds a choice at the start of the day, keeps the three-column layout feeling like a blank slate, and allows a second work-in-progress study per day.
 
-## 1. Sub-nav
+## 1. The empty-day choice
 
-A segmented control at the top of the Read page: **Studies · Devotionals · Saved**. The Old/New Testament toggle stops being top-level nav and moves inside Studies, next to the book grid.
+When today's Read / Pray / To-Do columns are all empty, a single slim card sits above the columns:
 
-## 2. Studies
+```text
+  Start today's study            [ Start new study ]  [ Continue a study ▾ ]
+```
 
-- Flat reverse-chronological feed of every entry, with the date shown on each card (no date section headers).
-- The feed now includes entries tagged with a **book** *or* with a **topic** — today it only shows confirmed book tags, so topic-only entries appear for the first time. Entries with neither stay hidden.
-- Cards show the book abbreviations (multiple, when present) plus topic pills, the entry title, date, and a snippet.
-- Topic filter here uses **your topics** — the ones you create on this page — and matches entries by `topic_ids`.
-- Multiple studies per day: a "New study" button in Studies creates a fresh entry for today and opens it. The Workspace page keeps showing a single study per day for now; extra studies are created and opened from Read.
+- **Start new study** dismisses the card and you write as you do now.
+- **Continue a study** opens a small searchable list of your recent studies (title, book, topic, last edited). Picking one loads that study into the columns — you keep writing in the same study, nothing is duplicated.
+- The card disappears the moment there is any content, so a day in progress looks exactly like it does today.
 
-## 3. Devotionals
+## 2. Switching and adding a second study
 
-The existing "Create your own devotional" card, the 1/3/5/10-day quick starts, and "Your devotionals" — kept together and resized to match the page width and card rhythm of the other tabs.
+One quiet line replaces nothing and adds nothing heavy — it sits in the existing header row next to the date:
 
-## 4. Saved
+```text
+  Mon, Aug 24        Romans · Grace in suffering ▾        + Add study
+```
 
-Moves the saved-content experience out of the Library page and into Read:
+- The title is a button. Its menu lists the studies attached to today, then "Continue a past study…" and "Start new study".
+- **+ Add study** creates a second study for the day and switches to it. Only appears once one study has content, so day one still looks like a blank slate.
+- No tabs, no extra columns, no change to Read / Pray / To-Do themselves.
 
-- Saved CoCreate content (teachings, podcasts, essays, devotional templates) — nothing from outside the app.
-- Sorted most-recently-saved first.
-- Filterable by **Categories** — the app-curated content topics, kept deliberately distinct in naming from your personal Studies topics.
-- The Library page's Saved tab points here so there is one saved surface, not two.
+## 3. Two studies for one day in Read
 
-## 5. Devotional review
+The Studies table already lists one row per study, so two studies on the same date show as two rows with the same date. Adjustments:
 
-In devotional focus/review, the notes panel lists only the notes tied to that devotional plan day (`plan_assignment_id` + `plan_day_number`), and those notes are openable and editable inline from the review screen.
+- The Date column shows the date once per day and leaves it blank on the second row of that day, so the pairing reads clearly.
+- The table's Open action opens that specific study, and the workspace link from Read carries the study id, so returning to a study never falls back to "the first study of that day".
 
 ## Technical notes
 
-- **Schema:** add `entry_id` (nullable uuid, FK to `devotional_entries`) to `workspace_items` where a note originates from a specific study, and stop treating `(user_id, entry_date)` as an identity. New reads/writes address an entry by id; date-addressed flows keep working by resolving to the *earliest* entry of that date.
-- `devotional_entries` gains no chapter/verse columns in this pass — cards continue showing book + free-text `scripture_reference`.
-- Split `read.tsx` (~1150 lines) into `ReadStudies`, `ReadDevotionals`, and `ReadSaved` components with the shared CSS in one module.
-- Saved tab reuses the existing `useSavedItems` / `useContentLookup` / `useTemplateLookup` hooks from `saved-shared.tsx`; no new table.
+- No schema change needed — `devotional_entries` has no uniqueness on `(user_id, template_id, entry_date)`, so multiple rows per day are already valid. The work is switching the app from date-addressed to id-addressed reads.
+- `src/routes/devotionals.$id.tsx`: add an `entry` search param. When present, the workspace loads and saves that entry id. When absent, behaviour stays as today (earliest entry for the date), so existing links and the calendar keep working.
+- Replace the `.eq("entry_date", …).maybeSingle()` lookups in the save/ensure/to-do paths with lookups by resolved entry id, and make "create" always insert a new row rather than reuse the day's row.
+- The recent-study picker reuses the existing recent-entries query from `src/routes/read.tsx`, extracted into a shared hook so both surfaces use one source.
+- `src/routes/read.tsx`: pass `search: { entry: e.id }` when navigating to the workspace, and add the repeated-date suppression in `StudiesTable`.
+- Notes created in the workspace continue to attach to the resolved entry, so a second study's notes stay with that study.
