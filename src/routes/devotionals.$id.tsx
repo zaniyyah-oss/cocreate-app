@@ -590,11 +590,13 @@ function EntryPage() {
         .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""))),
     [pastQ.data, selectedDate]
   );
+  // The active study can be one from another date that the user chose to continue —
+  // in that case we keep the selected date and just load that study's content.
   const activeEntryId =
-    search.entry && dayEntries.some((e) => e.id === search.entry)
+    search.entry && (pastQ.data ?? []).some((e) => e.id === search.entry)
       ? search.entry
       : (dayEntries[0]?.id ?? null);
-  const currentEntry: Entry | undefined = dayEntries.find((e) => e.id === activeEntryId);
+  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.id === activeEntryId);
 
   // --- Study switching: start new, or continue an existing study ---------------
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
@@ -604,13 +606,13 @@ function EntryPage() {
   const [addingStudy, setAddingStudy] = useState(false);
 
   const goToEntry = (e: { id: string; entry_date: string | null }) => {
-    const d = e.entry_date ?? selectedDate;
-    setSelectedDate(d);
     setStudyMenuOpen(false);
     setPickerOpen(false);
     setStudyQuery("");
-    navigate({ to: "/devotionals/$id", params: { id }, search: { date: d, entry: e.id } as any });
+    // Stay on the currently selected date; only swap which study is loaded.
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: e.id } as any });
   };
+
 
   const addStudyForDay = async () => {
     if (!userId || addingStudy) return;
@@ -633,10 +635,12 @@ function EntryPage() {
     }
   };
 
+  // Name studies by what they're reading (the Read scripture field) first.
   const studyLabel = (e: Entry | undefined, idx: number) =>
-    (e?.entry_title && e.entry_title.trim()) ||
     (e?.scripture_reference && e.scripture_reference.trim()) ||
-    `Study ${idx + 1}`;
+    (e?.entry_title && e.entry_title.trim()) ||
+    `Study ${Math.max(1, idx + 1)}`;
+
 
   // Past studies (any date) available to continue, most recent first.
   const continuable = useMemo(() => {
@@ -1133,7 +1137,7 @@ function EntryPage() {
               </div>
             </div>
 
-            {!isGuest && dayEntries.length === 0 && !startDismissed && (
+            {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
               <div className="de-startcard">
                 <span className="txt">Start today's study</span>
                 <span className="acts">
@@ -1160,7 +1164,7 @@ function EntryPage() {
                               {studyLabel(e, i)}
                               <span className="sub">
                                 {formatDate(e.entry_date ?? selectedDate)}
-                                {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                {e.entry_title ? ` · ${e.entry_title}` : ""}
                               </span>
                             </button>
                           ))
@@ -1214,7 +1218,7 @@ function EntryPage() {
                     </div>
                     <div className="de-readbar">
                       <div className="de-readbar-left">
-                        {!isGuest && dayEntries.length > 0 && (
+                        {!isGuest && (dayEntries.length > 0 || !!currentEntry) && (
                           <span className="de-studywrap">
                             <button
                               type="button"
@@ -1230,7 +1234,17 @@ function EntryPage() {
                             </button>
                             {studyMenuOpen && (
                               <div className="de-studymenu" role="menu">
-                                <div className="grp">Today's studies</div>
+                                {currentEntry && !dayEntries.some((e) => e.id === currentEntry.id) && (
+                                  <>
+                                    <div className="grp">Continuing</div>
+                                    <button type="button" className="de-studyopt on">
+                                      {studyLabel(currentEntry, 0)}
+                                      <span className="sub">{formatDate(currentEntry.entry_date ?? selectedDate)}</span>
+                                    </button>
+                                    <div className="de-studysep" />
+                                  </>
+                                )}
+                                {dayEntries.length > 0 && <div className="grp">Today's studies</div>}
                                 {dayEntries.map((e, i) => (
                                   <button
                                     key={e.id}
@@ -1239,9 +1253,10 @@ function EntryPage() {
                                     onClick={() => goToEntry(e)}
                                   >
                                     {studyLabel(e, i)}
-                                    {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                    {e.entry_title ? <span className="sub">{e.entry_title}</span> : null}
                                   </button>
                                 ))}
+
                                 <div className="de-studysep" />
                                 <div className="grp">Continue a past study</div>
                                 <input
@@ -1258,7 +1273,7 @@ function EntryPage() {
                                       {studyLabel(e, i)}
                                       <span className="sub">
                                         {formatDate(e.entry_date ?? selectedDate)}
-                                        {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
                                       </span>
                                     </button>
                                   ))
