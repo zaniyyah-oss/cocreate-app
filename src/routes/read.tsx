@@ -756,7 +756,6 @@ function StudiesTable({
             <th className="rd-th rd-th-topic">Topic</th>
             <th className="rd-th rd-th-title">Title</th>
             <th className="rd-th rd-th-preview">Preview</th>
-            <th className="rd-th rd-th-open" aria-label="Open study"></th>
             <th className="rd-th rd-th-del" aria-label="Delete study"></th>
           </tr>
         </thead>
