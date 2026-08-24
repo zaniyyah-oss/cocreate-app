@@ -10,8 +10,8 @@ import { RichTextField } from "@/components/RichTextField";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
-import { BookTagger } from "@/components/BookTagger";
-import { TopicPicker } from "@/components/TopicPicker";
+import { BookTagger, useBibleBooks } from "@/components/BookTagger";
+import { TopicPicker, useAllTopics } from "@/components/TopicPicker";
 import { TodoStatusSelect, TodoStatusSelectStyles } from "@/components/TodoStatusSelect";
 import { PlanDayBanner } from "@/components/PlanDayBanner";
 
@@ -163,6 +163,18 @@ const CSS = `
 .de-studyadd{background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:rgba(24,26,77,0.7);cursor:pointer;}
 .de-studyadd:hover{border-color:#181A4D;color:#181A4D;}
 .de-studywrap{position:relative;}
+/* Read box toolbar: study switcher + add study + quiet tag icons */
+.de-readbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 8px;}
+.de-readbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+.de-readbar-right{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.de-readbar .de-studymenu{left:0;right:auto;}
+.de-readchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;}
+.de-readchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(24,26,77,0.05);color:#181A4D;}
+.de-readchip.topic{background:#0F4A42;color:#fff;}
+.de-readchip.suggest{background:transparent;border:1px dashed rgba(24,26,77,0.25);color:rgba(24,26,77,0.7);cursor:pointer;}
+.de-readchip.suggest:hover{border-color:#181A4D;color:#181A4D;}
+.de-readchip button{background:transparent;border:none;color:inherit;font-size:13px;line-height:1;cursor:pointer;padding:0;}
+
 .de-studymenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:280px;max-width:340px;padding:6px;max-height:340px;overflow:auto;}
 .de-studymenu .grp{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,26,77,0.4);padding:8px 10px 4px;}
 .de-studyopt{display:block;width:100%;text-align:left;border:none;background:transparent;border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#20201C;cursor:pointer;}
@@ -1104,74 +1116,8 @@ function EntryPage() {
               <div className="de-headcard-inner">
                 <div className="de-headtop">
                   <span className="de-headdate">{formatDate(selectedDate)}</span>
-                  {!isGuest && (
-                    <span className="de-studyline">
-                      {dayEntries.length > 0 && (
-                        <span className="de-studywrap">
-                          <button
-                            type="button"
-                            className="de-studybtn"
-                            onClick={() => setStudyMenuOpen((v) => !v)}
-                            aria-haspopup="menu"
-                            aria-expanded={studyMenuOpen}
-                          >
-                            <span className="lbl">
-                              {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
-                            </span>
-                            <span aria-hidden="true">▾</span>
-                          </button>
-                          {studyMenuOpen && (
-                            <div className="de-studymenu" role="menu">
-                              <div className="grp">Today's studies</div>
-                              {dayEntries.map((e, i) => (
-                                <button
-                                  key={e.id}
-                                  type="button"
-                                  className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
-                                  onClick={() => goToEntry(e)}
-                                >
-                                  {studyLabel(e, i)}
-                                  {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
-                                </button>
-                              ))}
-                              <div className="de-studysep" />
-                              <div className="grp">Continue a past study</div>
-                              <input
-                                className="de-studysearch"
-                                placeholder="Search your studies…"
-                                value={studyQuery}
-                                onChange={(ev) => setStudyQuery(ev.target.value)}
-                              />
-                              {continuable.length === 0 ? (
-                                <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
-                              ) : (
-                                continuable.map((e, i) => (
-                                  <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
-                                    {studyLabel(e, i)}
-                                    <span className="sub">
-                                      {formatDate(e.entry_date ?? selectedDate)}
-                                      {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
-                                    </span>
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          )}
-                        </span>
-                      )}
-                      {dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
-                        <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
-                          + Add study
-                        </button>
-                      )}
-                      {dayEntries.length >= MAX_STUDIES_PER_DAY && (
-                        <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
-                          More in Read →
-                        </Link>
-                      )}
-                    </span>
-                  )}
                 </div>
+
                 <input
                   className="de-title-input"
                   placeholder="Name today's entry..."
@@ -1266,28 +1212,126 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
-                    <BookTagger
-                      values={booksOfBible}
+                    <div className="de-readbar">
+                      <div className="de-readbar-left">
+                        {!isGuest && dayEntries.length > 0 && (
+                          <span className="de-studywrap">
+                            <button
+                              type="button"
+                              className="de-studybtn"
+                              onClick={() => setStudyMenuOpen((v) => !v)}
+                              aria-haspopup="menu"
+                              aria-expanded={studyMenuOpen}
+                            >
+                              <span className="lbl">
+                                {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
+                              </span>
+                              <span aria-hidden="true">▾</span>
+                            </button>
+                            {studyMenuOpen && (
+                              <div className="de-studymenu" role="menu">
+                                <div className="grp">Today's studies</div>
+                                {dayEntries.map((e, i) => (
+                                  <button
+                                    key={e.id}
+                                    type="button"
+                                    className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
+                                    onClick={() => goToEntry(e)}
+                                  >
+                                    {studyLabel(e, i)}
+                                    {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                  </button>
+                                ))}
+                                <div className="de-studysep" />
+                                <div className="grp">Continue a past study</div>
+                                <input
+                                  className="de-studysearch"
+                                  placeholder="Search your studies…"
+                                  value={studyQuery}
+                                  onChange={(ev) => setStudyQuery(ev.target.value)}
+                                />
+                                {continuable.length === 0 ? (
+                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
+                                ) : (
+                                  continuable.map((e, i) => (
+                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                                      {studyLabel(e, i)}
+                                      <span className="sub">
+                                        {formatDate(e.entry_date ?? selectedDate)}
+                                        {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                      </span>
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </span>
+                        )}
+                        {!isGuest && dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
+                          <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
+                            + Add study
+                          </button>
+                        )}
+                        {!isGuest && dayEntries.length >= MAX_STUDIES_PER_DAY && (
+                          <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
+                            More in Read →
+                          </Link>
+                        )}
+                      </div>
+                      <div className="de-readbar-right">
+                        <BookTagger
+                          iconOnly
+                          values={booksOfBible}
+                          suggestion={
+                            booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
+                              ? bookOfBible
+                              : null
+                          }
+                          disabled={!userId}
+                          onToggle={(abbr: string) => {
+                            const next = booksOfBible.includes(abbr)
+                              ? booksOfBible.filter((b) => b !== abbr)
+                              : [...booksOfBible, abbr];
+                            setBooksOfBible(next);
+                            const primary = next[0] ?? null;
+                            setBookOfBible(primary);
+                            setBookSource("manual");
+                            setBookConfirmed(next.length > 0);
+                            scheduleSave("books_of_bible", next);
+                            scheduleSave("book_of_bible", primary);
+                            scheduleSave("book_source", "manual");
+                            scheduleSave("book_confirmed", next.length > 0);
+                          }}
+                          onConfirmSuggestion={() => {
+                            if (!bookOfBible) return;
+                            const next = booksOfBible.includes(bookOfBible)
+                              ? booksOfBible
+                              : [...booksOfBible, bookOfBible];
+                            setBooksOfBible(next);
+                            setBookConfirmed(true);
+                            scheduleSave("books_of_bible", next);
+                            scheduleSave("book_confirmed", true);
+                          }}
+                        />
+                        <TopicPicker
+                          iconOnly
+                          value={topicIds}
+                          disabled={!userId}
+                          onChange={(next) => {
+                            setTopicIds(next);
+                            scheduleSave("topic_ids", next);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <ReadTagChips
+                      books={booksOfBible}
+                      topicIds={topicIds}
                       suggestion={
                         booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
                           ? bookOfBible
                           : null
                       }
-                      disabled={!userId}
-                      onToggle={(abbr: string) => {
-                        const next = booksOfBible.includes(abbr)
-                          ? booksOfBible.filter((b) => b !== abbr)
-                          : [...booksOfBible, abbr];
-                        setBooksOfBible(next);
-                        const primary = next[0] ?? null;
-                        setBookOfBible(primary);
-                        setBookSource("manual");
-                        setBookConfirmed(next.length > 0);
-                        scheduleSave("books_of_bible", next);
-                        scheduleSave("book_of_bible", primary);
-                        scheduleSave("book_source", "manual");
-                        scheduleSave("book_confirmed", next.length > 0);
-                      }}
                       onConfirmSuggestion={() => {
                         if (!bookOfBible) return;
                         const next = booksOfBible.includes(bookOfBible)
@@ -1298,18 +1342,23 @@ function EntryPage() {
                         scheduleSave("books_of_bible", next);
                         scheduleSave("book_confirmed", true);
                       }}
+                      onRemoveBook={(abbr) => {
+                        const next = booksOfBible.filter((b) => b !== abbr);
+                        setBooksOfBible(next);
+                        const primary = next[0] ?? null;
+                        setBookOfBible(primary);
+                        setBookConfirmed(next.length > 0);
+                        scheduleSave("books_of_bible", next);
+                        scheduleSave("book_of_bible", primary);
+                        scheduleSave("book_confirmed", next.length > 0);
+                      }}
+                      onRemoveTopic={(id) => {
+                        const next = topicIds.filter((t) => t !== id);
+                        setTopicIds(next);
+                        scheduleSave("topic_ids", next);
+                      }}
                     />
-                    <div className="de-read-part" style={{ paddingTop: 0, paddingBottom: 4 }}>
-                      <TopicPicker
-                        value={topicIds}
-                        disabled={!userId}
-                        placeholder="+ Add topic"
-                        onChange={(next) => {
-                          setTopicIds(next);
-                          scheduleSave("topic_ids", next);
-                        }}
-                      />
-                    </div>
+
                     <div className="de-read-part">
                       {/* preserve original wrapper start */}
                       <input
@@ -2957,6 +3006,62 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
           qc.invalidateQueries({ queryKey: ["devo-content-dates"] });
           qc.invalidateQueries({ queryKey: ["topical-dates"] });
         }} />
+    </div>
+  );
+}
+
+function ReadTagChips({
+  books,
+  topicIds,
+  suggestion,
+  onConfirmSuggestion,
+  onRemoveBook,
+  onRemoveTopic,
+}: {
+  books: string[];
+  topicIds: string[];
+  suggestion?: string | null;
+  onConfirmSuggestion: () => void;
+  onRemoveBook: (abbr: string) => void;
+  onRemoveTopic: (id: string) => void;
+}) {
+  const booksQ = useBibleBooks();
+  const topicsQ = useAllTopics();
+  const bookName = (abbr: string) =>
+    (booksQ.data ?? []).find((b) => b.abbreviation === abbr)?.full_name ?? abbr;
+  const topicName = (id: string) => {
+    const t = (topicsQ.data ?? []).find((x) => x.id === id);
+    return t ? t.display_name ?? t.name : null;
+  };
+  const hasAny = books.length > 0 || topicIds.length > 0 || !!suggestion;
+  if (!hasAny) return null;
+  return (
+    <div className="de-readchips">
+      {books.map((abbr) => (
+        <span key={abbr} className="de-readchip">
+          {bookName(abbr)}
+          <button type="button" aria-label={`Remove ${bookName(abbr)}`} onClick={() => onRemoveBook(abbr)}>
+            ×
+          </button>
+        </span>
+      ))}
+      {topicIds.map((id) => {
+        const name = topicName(id);
+        if (!name) return null;
+        return (
+          <span key={id} className="de-readchip topic">
+            {name}
+            <button type="button" aria-label={`Remove ${name}`} onClick={() => onRemoveTopic(id)}>
+              ×
+            </button>
+          </span>
+        );
+      })}
+      {suggestion && (
+        <button type="button" className="de-readchip suggest" onClick={onConfirmSuggestion}>
+          Add {bookName(suggestion)}?
+        </button>
+      )}
     </div>
   );
 }
