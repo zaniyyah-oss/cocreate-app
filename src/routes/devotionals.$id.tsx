@@ -163,6 +163,18 @@ const CSS = `
 .de-studyadd{background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:rgba(24,26,77,0.7);cursor:pointer;}
 .de-studyadd:hover{border-color:#181A4D;color:#181A4D;}
 .de-studywrap{position:relative;}
+/* Read box toolbar: study switcher + add study + quiet tag icons */
+.de-readbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 8px;}
+.de-readbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+.de-readbar-right{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.de-readbar .de-studymenu{left:0;right:auto;}
+.de-readchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;}
+.de-readchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(24,26,77,0.05);color:#181A4D;}
+.de-readchip.topic{background:#0F4A42;color:#fff;}
+.de-readchip.suggest{background:transparent;border:1px dashed rgba(24,26,77,0.25);color:rgba(24,26,77,0.7);cursor:pointer;}
+.de-readchip.suggest:hover{border-color:#181A4D;color:#181A4D;}
+.de-readchip button{background:transparent;border:none;color:inherit;font-size:13px;line-height:1;cursor:pointer;padding:0;}
+
 .de-studymenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:280px;max-width:340px;padding:6px;max-height:340px;overflow:auto;}
 .de-studymenu .grp{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,26,77,0.4);padding:8px 10px 4px;}
 .de-studyopt{display:block;width:100%;text-align:left;border:none;background:transparent;border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#20201C;cursor:pointer;}
