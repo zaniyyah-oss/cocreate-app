@@ -514,7 +514,6 @@ function ReadLibrary() {
         .rd-th-topic{width:200px;}
         .rd-th-title{width:auto;}
         .rd-th-preview{width:34%;}
-        .rd-th-open{width:44px;}
         .rd-th-del{width:38px;}
         .rd-del-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:none;background:transparent;color:rgba(24,26,77,0.32);cursor:pointer;padding:0;}
         .rd-del-btn:hover{background:rgba(255,52,12,0.1);color:#B3220C;}
@@ -528,10 +527,10 @@ function ReadLibrary() {
         .rd-cell-topics{display:flex;flex-wrap:wrap;gap:5px;}
         .rd-tpill-sm{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;background:#0F4A42;color:#fff;white-space:nowrap;}
         .rd-cell-muted{font-size:13px;color:#bbb6a6;}
-        .rd-cell-title{font-size:14px;font-weight:700;color:#20201C;line-height:1.3;display:block;}
+        .rd-cell-title{font-size:14px;font-weight:700;color:#20201C;line-height:1.3;display:inline;}
+        .rd-edit-hint{display:inline-block;margin-left:10px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0F4A42;opacity:0;transition:opacity .12s ease;vertical-align:baseline;}
+        .rd-tr:hover .rd-edit-hint,.rd-tr:focus-visible .rd-edit-hint{opacity:1;}
         .rd-cell-preview{font-size:13px;color:#5a5a52;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-        .rd-open-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;border:1.5px solid #ECE4CE;background:#fff;color:#181A4D;}
-        .rd-tr:hover .rd-open-btn,.rd-tr:focus-visible .rd-open-btn{background:#181A4D;border-color:#181A4D;color:#fff;}
         @media (max-width:820px){
           .rd-table-wrap{border-radius:0;border:none;}
           .rd-table thead{display:none;}
@@ -539,7 +538,6 @@ function ReadLibrary() {
           .rd-table,.rd-table tbody{border:none;}
           .rd-tr{position:relative;border:1.5px solid #ECE4CE;border-radius:14px;margin-bottom:10px;padding:6px 4px;background:#fff;}
           .rd-tr:hover,.rd-tr:focus-visible{background:#fff;}
-          .rd-tr:hover .rd-open-btn{background:#fff;color:#181A4D;border-color:#ECE4CE;}
           .rd-td{padding:6px 14px;border:none;display:flex;gap:8px;align-items:baseline;}
           .rd-td::before{content:attr(data-lbl);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a968a;min-width:64px;}
           .rd-td-date::before{content:"Date";}
@@ -547,7 +545,6 @@ function ReadLibrary() {
           .rd-td-topic::before{content:"Topic";}
           .rd-td-title::before{content:"Title";}
           .rd-td-preview::before{content:"Preview";}
-          .rd-td-open{display:none;}
           .rd-td-del{display:block;position:absolute;top:10px;right:10px;padding:0;border:none;}
           .rd-cell-preview{-webkit-line-clamp:3;}
         }
@@ -756,7 +753,6 @@ function StudiesTable({
             <th className="rd-th rd-th-topic">Topic</th>
             <th className="rd-th rd-th-title">Title</th>
             <th className="rd-th rd-th-preview">Preview</th>
-            <th className="rd-th rd-th-open" aria-label="Open study"></th>
             <th className="rd-th rd-th-del" aria-label="Delete study"></th>
           </tr>
         </thead>
@@ -803,6 +799,7 @@ function StudiesTable({
                 </td>
                 <td className="rd-td rd-td-title">
                   <span className="rd-cell-title">{title}</span>
+                  <span className="rd-edit-hint">Edit</span>
                 </td>
                 <td className="rd-td rd-td-preview">
                   {preview ? (
@@ -826,14 +823,6 @@ function StudiesTable({
                       <path d="M6 6l1 14h10l1-14" />
                     </svg>
                   </button>
-                </td>
-                <td className="rd-td rd-td-open">
-                  <span className="rd-open-btn" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M7 17L17 7" />
-                      <path d="M8 7h9v9" />
-                    </svg>
-                  </span>
                 </td>
               </tr>
             );
@@ -920,7 +909,7 @@ function FullScreenNote({
           {bookFullName}
         </div>
         <h1 className="rd-full-title">
-          {entry.entry_title || entry.scripture_reference || "Untitled study"}
+          {entry.scripture_reference || entry.entry_title || "Untitled study"}
         </h1>
         <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
         <RichTextField
