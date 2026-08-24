@@ -704,10 +704,47 @@ function DocPanel({
             ← Notes
           </button>
 
-          {primaryTag && (
+          {primaryTag && !focusMode && (
             <div className="nt-tag-pill" style={primaryColor ? { background: primaryColor, color: "#181A4D" } : undefined}>{primaryTag}</div>
           )}
-          <div className="nt-p-title">{title?.trim() || "Untitled"}</div>
+          {focusMode && editing ? (
+            <input
+              className="nt-p-title"
+              style={{ background: "transparent", border: "none", outline: "none", width: "100%" }}
+              placeholder="Untitled"
+              value={title}
+              onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
+              onBlur={() => { void flushSave(); }}
+            />
+          ) : (
+            <div className="nt-p-title">{title?.trim() || "Untitled"}</div>
+          )}
+          {focusMode && (
+            <div className="nt-panel-tagrow" style={{ marginBottom: 0 }}>
+              {tags.map((t) => {
+                const c = colorFor(t);
+                return (
+                  <span key={t} className="nt-panel-tag" style={c ? { background: c, color: "#181A4D" } : undefined}>
+                    #{displayTag(t)}
+                    {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag" style={c ? { color: "#181A4D" } : undefined}>×</button>}
+                  </span>
+                );
+              })}
+              {editing && (
+                <TagMultiSelect
+                  userId={userId}
+                  guest={false}
+                  selected={tags}
+                  colors={tagColors}
+                  onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
+                  onCreate={(t) => addTag(t)}
+                  onDeleted={(t) => setTags((cur) => cur.filter((x) => x !== t))}
+                  draft={tagDraft}
+                  setDraft={setTagDraft}
+                />
+              )}
+            </div>
+          )}
           <div className="nt-p-date">{formatLong(doc.updated_at)}</div>
         </div>
         <button
@@ -738,44 +775,48 @@ function DocPanel({
         </button>
       </header>
       <div className="nt-panel-body ws-doc">
-        {editing ? (
-          <input
-            className="nt-panel-title-input"
-            placeholder="Untitled"
-            value={title}
-            onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
-            onBlur={() => { void flushSave(); }}
-          />
-        ) : (
-          <div className="nt-panel-title-input" style={{ cursor: "default" }}>
-            {title?.trim() || "Untitled"}
-          </div>
-        )}
+        {!focusMode && (
+          <>
+            {editing ? (
+              <input
+                className="nt-panel-title-input"
+                placeholder="Untitled"
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); schedule({ title: e.target.value }); }}
+                onBlur={() => { void flushSave(); }}
+              />
+            ) : (
+              <div className="nt-panel-title-input" style={{ cursor: "default" }}>
+                {title?.trim() || "Untitled"}
+              </div>
+            )}
 
-        <div className="nt-panel-tagrow">
-          {tags.map((t) => {
-            const c = colorFor(t);
-            return (
-              <span key={t} className="nt-panel-tag" style={c ? { background: c, color: "#181A4D" } : undefined}>
-                #{displayTag(t)}
-                {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag" style={c ? { color: "#181A4D" } : undefined}>×</button>}
-              </span>
-            );
-          })}
-          {editing && (
-            <TagMultiSelect
-              userId={userId}
-              guest={false}
-              selected={tags}
-              colors={tagColors}
-              onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
-              onCreate={(t) => addTag(t)}
-              onDeleted={(t) => setTags((cur) => cur.filter((x) => x !== t))}
-              draft={tagDraft}
-              setDraft={setTagDraft}
-            />
-          )}
-        </div>
+            <div className="nt-panel-tagrow">
+              {tags.map((t) => {
+                const c = colorFor(t);
+                return (
+                  <span key={t} className="nt-panel-tag" style={c ? { background: c, color: "#181A4D" } : undefined}>
+                    #{displayTag(t)}
+                    {editing && <button onClick={() => removeTag(t)} aria-label="Remove tag" style={c ? { color: "#181A4D" } : undefined}>×</button>}
+                  </span>
+                );
+              })}
+              {editing && (
+                <TagMultiSelect
+                  userId={userId}
+                  guest={false}
+                  selected={tags}
+                  colors={tagColors}
+                  onToggle={(t) => (tags.includes(t) ? removeTag(t) : addTag(t))}
+                  onCreate={(t) => addTag(t)}
+                  onDeleted={(t) => setTags((cur) => cur.filter((x) => x !== t))}
+                  draft={tagDraft}
+                  setDraft={setTagDraft}
+                />
+              )}
+            </div>
+          </>
+        )}
 
         <WorkspaceEditor
           userId={userId}
