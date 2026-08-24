@@ -6,6 +6,7 @@ import { deleteStudyOnly } from "@/lib/study-delete";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 import { RichTextField } from "@/components/RichTextField";
 import { AppShell } from "@/components/AppShell";
@@ -615,6 +616,7 @@ function EntryPage() {
   // accumulate in Read.
   const [pendingNewStudy, setPendingNewStudy] = useState(false);
   const [deletingStudy, setDeletingStudy] = useState(false);
+  const [pendingDeleteStudyId, setPendingDeleteStudyId] = useState<string | null>(null);
 
   // The active study can be one from another date that the user chose to continue —
   // in that case we keep the selected date and just load that study's content.
