@@ -42,21 +42,14 @@ type RecentEntry = {
 };
 
 /**
- * A study only belongs in Read once actual study content has been written.
- * The workspace page title (entry_title) is intentionally NOT counted: a day
- * can be titled without any study in it, and that should never surface here as
- * an empty study. Only scripture, study notes, book/topic tags qualify.
+ * A study only belongs in Read once actual study notes have been written in the
+ * body. A title, scripture reference, or book/topic tag alone is not enough —
+ * those produce empty "No notes yet" rows.
  */
 function hasSubstance(e: RecentEntry): boolean {
-  const txt = (v?: string | null) => stripHtml(v ?? "").trim().length > 0;
-  const tags = (Array.isArray(e.books_of_bible) ? e.books_of_bible.length : 0) > 0
-    || (Array.isArray(e.topic_ids) ? e.topic_ids.length : 0) > 0;
-  return (
-    txt(e.scripture_reference) ||
-    txt(e.scripture_text) ||
-    tags
-  );
+  return stripHtml(e.scripture_text ?? "").trim().length > 0;
 }
+
 
 function entryBooks(e: {
   book_of_bible: string | null;
