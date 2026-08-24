@@ -108,5 +108,5 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-root.is-full .ws-editor-content table th{padding:10px 12px;}
 .ws-doc .ws-editor-content table td,
 .ws-root.is-full .ws-editor-content table td{padding:10px 12px;}
-.ws-doc .ws-toolbar{position:sticky;top:0;z-index:40;padding:10px 0 8px;box-shadow:0 2px 8px rgba(24,26,77,0.04);}
+.ws-doc .ws-toolbar{position:sticky;top:0;z-index:40;}
 `;
