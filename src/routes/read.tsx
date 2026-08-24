@@ -39,17 +39,20 @@ type RecentEntry = {
   topic_ids: string[] | null;
 };
 
-/** A study only belongs in Read once something has actually been written in it. */
+/**
+ * A study only belongs in Read once actual study content has been written.
+ * The workspace page title (entry_title) is intentionally NOT counted: a day
+ * can be titled without any study in it, and that should never surface here as
+ * an empty study. Only scripture, study notes, book/topic tags qualify.
+ */
 function hasSubstance(e: RecentEntry): boolean {
   const txt = (v?: string | null) => stripHtml(v ?? "").trim().length > 0;
-  const todos = Array.isArray(e.todo_items) ? e.todo_items.length > 0 : false;
+  const tags = (Array.isArray(e.books_of_bible) ? e.books_of_bible.length : 0) > 0
+    || (Array.isArray(e.topic_ids) ? e.topic_ids.length : 0) > 0;
   return (
-    txt(e.entry_title) ||
     txt(e.scripture_reference) ||
     txt(e.scripture_text) ||
-    txt(e.pray_text) ||
-    txt(e.todo_text) ||
-    todos
+    tags
   );
 }
 
