@@ -803,6 +803,7 @@ function StudiesTable({
                 </td>
                 <td className="rd-td rd-td-title">
                   <span className="rd-cell-title">{title}</span>
+                  <span className="rd-edit-hint">Edit</span>
                 </td>
                 <td className="rd-td rd-td-preview">
                   {preview ? (
@@ -826,14 +827,6 @@ function StudiesTable({
                       <path d="M6 6l1 14h10l1-14" />
                     </svg>
                   </button>
-                </td>
-                <td className="rd-td rd-td-open">
-                  <span className="rd-open-btn" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M7 17L17 7" />
-                      <path d="M8 7h9v9" />
-                    </svg>
-                  </span>
                 </td>
               </tr>
             );
