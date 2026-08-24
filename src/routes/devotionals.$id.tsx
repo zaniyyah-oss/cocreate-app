@@ -568,7 +568,21 @@ function EntryPage() {
     },
   });
 
-  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.entry_date === selectedDate);
+  // Studies attached to the selected day, oldest first (Study 1, Study 2, Study 3).
+  const MAX_STUDIES_PER_DAY = 3;
+  const dayEntries: Entry[] = useMemo(
+    () =>
+      (pastQ.data ?? [])
+        .filter((e) => e.entry_date === selectedDate)
+        .slice()
+        .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""))),
+    [pastQ.data, selectedDate]
+  );
+  const activeEntryId =
+    search.entry && dayEntries.some((e) => e.id === search.entry)
+      ? search.entry
+      : (dayEntries[0]?.id ?? null);
+  const currentEntry: Entry | undefined = dayEntries.find((e) => e.id === activeEntryId);
 
   // 5-section state
   const [entryTitle, setEntryTitle] = useState("");
