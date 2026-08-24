@@ -545,7 +545,6 @@ function ReadLibrary() {
           .rd-td-topic::before{content:"Topic";}
           .rd-td-title::before{content:"Title";}
           .rd-td-preview::before{content:"Preview";}
-          .rd-td-open{display:none;}
           .rd-td-del{display:block;position:absolute;top:10px;right:10px;padding:0;border:none;}
           .rd-cell-preview{-webkit-line-clamp:3;}
         }
