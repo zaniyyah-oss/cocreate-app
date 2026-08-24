@@ -731,6 +731,7 @@ function EntryPage() {
   const dayFieldsEntry: Entry | undefined = continuingEntry ? dayEntries[0] : currentEntry;
 
   const dayEntryIdRef = useRef<string | null>(null);
+  const continuingRef = useRef(false);
 
   useEffect(() => {
     currentEntryIdRef.current = currentEntry?.id ?? null;
@@ -739,6 +740,10 @@ function EntryPage() {
   useEffect(() => {
     dayEntryIdRef.current = dayFieldsEntry?.id ?? null;
   }, [dayFieldsEntry?.id]);
+
+  useEffect(() => {
+    continuingRef.current = Boolean(continuingEntry);
+  }, [continuingEntry?.id]);
 
   /* Visual balance (iPad + desktop, 3-column layout only):
      the Pray and To-Do writing areas end on the same baseline as the bottom
