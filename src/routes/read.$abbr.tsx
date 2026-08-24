@@ -50,6 +50,9 @@ function BookDetail() {
   const booksQ = useBibleBooks();
   const topicsQ = useAllTopics();
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
+  const [chapter, setChapter] = useState<number | null>(null);
+  const [verse, setVerse] = useState<number | null>(null);
+
   const book = (booksQ.data ?? []).find((b) => b.abbreviation === abbr);
   const topicsById = useMemo(() => {
     const m = new Map<string, Topic>();
