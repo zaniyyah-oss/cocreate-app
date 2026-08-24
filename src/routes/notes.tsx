@@ -592,6 +592,7 @@ function DocPanel({
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Record<string, unknown> | null>(null);
@@ -831,7 +832,7 @@ function DocPanel({
         <div className="nt-panel-actions">
           <button
             className="nt-panel-link del"
-            onClick={() => { if (confirm("Delete this document?")) removeDoc.mutate(); }}
+            onClick={() => setConfirmDelete(true)}
           >
             Delete
           </button>
@@ -839,6 +840,15 @@ function DocPanel({
             {saving || hasPending ? "Saving…" : savedFlash ? "Saved" : ""}
           </span>
         </div>
+
+        <DeleteConfirmModal
+          open={confirmDelete}
+          title="Delete this note?"
+          message="This note and everything in it will be permanently removed. This can't be undone."
+          busy={removeDoc.isPending}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => { removeDoc.mutate(); setConfirmDelete(false); }}
+        />
       </div>
     </div>
   );
