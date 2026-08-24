@@ -1104,6 +1104,73 @@ function EntryPage() {
               <div className="de-headcard-inner">
                 <div className="de-headtop">
                   <span className="de-headdate">{formatDate(selectedDate)}</span>
+                  {!isGuest && (
+                    <span className="de-studyline">
+                      {dayEntries.length > 0 && (
+                        <span className="de-studywrap">
+                          <button
+                            type="button"
+                            className="de-studybtn"
+                            onClick={() => setStudyMenuOpen((v) => !v)}
+                            aria-haspopup="menu"
+                            aria-expanded={studyMenuOpen}
+                          >
+                            <span className="lbl">
+                              {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
+                            </span>
+                            <span aria-hidden="true">▾</span>
+                          </button>
+                          {studyMenuOpen && (
+                            <div className="de-studymenu" role="menu">
+                              <div className="grp">Today's studies</div>
+                              {dayEntries.map((e, i) => (
+                                <button
+                                  key={e.id}
+                                  type="button"
+                                  className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
+                                  onClick={() => goToEntry(e)}
+                                >
+                                  {studyLabel(e, i)}
+                                  {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                </button>
+                              ))}
+                              <div className="de-studysep" />
+                              <div className="grp">Continue a past study</div>
+                              <input
+                                className="de-studysearch"
+                                placeholder="Search your studies…"
+                                value={studyQuery}
+                                onChange={(ev) => setStudyQuery(ev.target.value)}
+                              />
+                              {continuable.length === 0 ? (
+                                <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
+                              ) : (
+                                continuable.map((e, i) => (
+                                  <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                                    {studyLabel(e, i)}
+                                    <span className="sub">
+                                      {formatDate(e.entry_date ?? selectedDate)}
+                                      {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </span>
+                      )}
+                      {dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
+                        <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
+                          + Add study
+                        </button>
+                      )}
+                      {dayEntries.length >= MAX_STUDIES_PER_DAY && (
+                        <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
+                          More in Read →
+                        </Link>
+                      )}
+                    </span>
+                  )}
                 </div>
                 <input
                   className="de-title-input"
