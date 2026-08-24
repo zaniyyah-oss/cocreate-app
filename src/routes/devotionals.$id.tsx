@@ -914,26 +914,48 @@ function EntryPage() {
     const patch = pendingEntryPatchRef.current;
     pendingEntryPatchRef.current = null;
     entrySaveInFlightRef.current = true;
-    try {
-      const entryId = currentEntryIdRef.current;
-      if (entryId) {
-        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", entryId);
+
+    // While continuing a past study, Read edits go to that study and the rest of
+    // the page goes to the day's own study.
+    const continuing = continuingRef.current;
+    const readPatch: Record<string, unknown> = {};
+    const dayPatch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (continuing && READ_FIELDS.has(k as SaveField)) readPatch[k] = v;
+      else dayPatch[k] = v;
+    }
+
+    const writeTo = async (targetId: string | null, p: Record<string, unknown>, isDayRow: boolean) => {
+      if (Object.keys(p).length === 0) return;
+      if (targetId) {
+        const { error } = await supabase.from("devotional_entries").update(p as any).eq("id", targetId);
         if (error) throw error;
-        applyEntryPatchToCache(entryId, patch);
-      } else {
-        const { data, error } = await supabase.from("devotional_entries").insert({
-          user_id: userId, template_id: id, entry_date: selectedDate, ...patch,
-        } as any).select("*").single();
-        if (error) throw error;
-        currentEntryIdRef.current = data.id;
-        trackEvent("devotional_entry_created", { template_id: id });
-        applyEntryPatchToCache(data.id, patch, data as Entry);
+        applyEntryPatchToCache(targetId, p);
+        return;
+      }
+      const { data, error } = await supabase.from("devotional_entries").insert({
+        user_id: userId, template_id: id, entry_date: selectedDate, ...p,
+      } as any).select("*").single();
+      if (error) throw error;
+      dayEntryIdRef.current = data.id;
+      if (!continuing) currentEntryIdRef.current = data.id;
+      trackEvent("devotional_entry_created", { template_id: id });
+      applyEntryPatchToCache(data.id, p, data as Entry);
+      const count = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length;
+      dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
+      if (!continuing) {
         // The pending blank study just became real: keep the current in-progress
         // text and point the URL at the new row so autosave keeps updating it.
-        hydratedRef.current = `${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${((qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length)}`;
+        hydratedRef.current = `read:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
         setPendingNewStudy(false);
         navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: data.id } as any, replace: true });
       }
+      void isDayRow;
+    };
+
+    try {
+      await writeTo(currentEntryIdRef.current, readPatch, false);
+      await writeTo(dayEntryIdRef.current, dayPatch, true);
       const key = Object.keys(patch)[0];
       setSavingField(null);
       setSavedField(key);
