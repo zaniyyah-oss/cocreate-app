@@ -647,17 +647,20 @@ function EntryPage() {
     navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
   };
 
-  // Delete a study. Workspace notes created inside it are detached, not deleted.
+  // Delete only the study (Read column). The rest of the day — title, Where,
+  // Pray, To-Do — is never removed; the row goes away only if it's otherwise empty.
   const deleteStudy = async (entryId: string) => {
     if (!userId || deletingStudy) return;
-    if (typeof window !== "undefined" && !window.confirm("Delete this study? This can't be undone.")) return;
+    if (typeof window !== "undefined" && !window.confirm("Delete this study? The rest of the day's entry is kept.")) return;
     setDeletingStudy(true);
     try {
-      await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
-      const { error } = await supabase.from("devotional_entries").delete().eq("id", entryId);
-      if (error) throw error;
-      qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => (cur ?? []).filter((e) => e.id !== entryId));
-      if (currentEntryIdRef.current === entryId) currentEntryIdRef.current = null;
+      const outcome = await deleteStudyOnly(entryId);
+      if (outcome === "removed") {
+        qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => (cur ?? []).filter((e) => e.id !== entryId));
+        if (currentEntryIdRef.current === entryId) currentEntryIdRef.current = null;
+      } else {
+        await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+      }
       pendingEntryPatchRef.current = null;
       setStudyMenuOpen(false);
       const remaining = dayEntries.filter((e) => e.id !== entryId);

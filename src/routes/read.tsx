@@ -215,9 +215,7 @@ function ReadLibrary() {
     setPendingDeleteId(null);
     setDeletingId(entryId);
     try {
-      await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
-      const { error } = await supabase.from("devotional_entries").delete().eq("id", entryId);
-      if (error) throw error;
+      await deleteStudyOnly(entryId);
       await qc.invalidateQueries({ queryKey: ["read-recent-studies"] });
       await qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] });
     } catch (err) {
