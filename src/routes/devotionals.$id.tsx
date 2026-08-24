@@ -9,6 +9,7 @@ import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 import { RichTextField } from "@/components/RichTextField";
+import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
@@ -1519,13 +1520,23 @@ function EntryPage() {
                         value={scriptureRef}
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
-                      <RichTextField
-                        storageKey="scripture"
-                        className="de-textarea"
-                        placeholder="What did you notice? What is God saying?"
-                        value={scriptureText}
-                        onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
-                      />
+                      {focusSection === "read" ? (
+                        <ReadFocusEditor
+                          entryKey={activeEntryId ?? "new"}
+                          userId={userId ?? ""}
+                          value={scriptureText}
+                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
+                        />
+                      ) : (
+                        <RichTextField
+                          storageKey="scripture"
+                          className="de-textarea"
+                          placeholder="What did you notice? What is God saying?"
+                          value={scriptureText}
+                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
+                        />
+                      )}
+
                       {statusRow("scripture_text")}
                     </div>
 
@@ -3238,6 +3249,52 @@ function ReadTagChips({
           Add {bookName(suggestion)}?
         </button>
       )}
+    </div>
+  );
+}
+
+/* ---------- Focus-mode Read editor (full rich text bar, like Notes) ---------- */
+function ReadFocusEditor({
+  entryKey,
+  userId,
+  value,
+  onChange,
+}: {
+  entryKey: string;
+  userId: string;
+  value: string;
+  onChange: (html: string) => void;
+}) {
+  // Mount once per study: older entries may be plain text, so wrap them into
+  // paragraphs so the rich editor keeps the original spacing.
+  const initial = useMemo(() => {
+    const raw = (value ?? "").replace(/\r\n/g, "\n");
+    if (!raw.trim()) return "";
+    const hasBlocks = /<\s*(p|div|br|ul|ol|li|h[1-6]|blockquote|pre|table)\b/i.test(raw);
+    if (hasBlocks) return raw;
+    const escape = (t: string) =>
+      /<[a-z][\s\S]*>/i.test(raw) ? t : t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    return raw
+      .split(/\n{2,}/)
+      .map((para) => `<p>${escape(para).replace(/\n/g, "<br/>")}</p>`)
+      .join("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryKey]);
+
+  return (
+    <div className="de-read-doc ws-doc">
+      <style>{`
+        .de-read-doc{min-height:min(60vh,560px);}
+        .de-read-doc .ProseMirror{min-height:min(56vh,520px);outline:none;}
+      `}</style>
+      <WorkspaceEditor
+        key={entryKey}
+        userId={userId}
+        initialJSON={initial as unknown as any}
+        ignoreExternalUpdates
+        placeholder="What did you notice? What is God saying?"
+        onChange={(_json, _text, html) => onChange(html)}
+      />
     </div>
   );
 }
