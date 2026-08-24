@@ -30,7 +30,7 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-popover-label{font-size:11px;color:rgba(32,32,28,0.35);font-weight:600;margin:0 0 6px;width:100%;font-family:'Poppins',sans-serif;}
 .ws-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#20201C;border:2px solid transparent;}
 .ws-swatch:hover{border-color:rgba(32,32,28,0.12);}
-.ws-popbtn{background:transparent;border:none;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:#20201C;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.ws-popbtn{background:transparent;border:none;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:#20201C;padding:8px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;width:100%;}
 .ws-popbtn:hover{background:rgba(138,150,224,0.12);}
 .ws-popbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .ws-popbtn .ws-poptag{font-family:'Poppins',sans-serif;font-weight:700;font-size:11px;color:rgba(32,32,28,0.35);margin-left:auto;}
