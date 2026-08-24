@@ -892,6 +892,20 @@ function FullScreenNote({
   const timer = useRef<number | null>(null);
   const noteRef = useRef(note);
   noteRef.current = note;
+  const { userId } = useAuth();
+
+  // Studies are stored as HTML in scripture_text. Older entries can be plain
+  // text — wrap those so the rich editor loads them as a paragraph.
+  const initialContent = useMemo(() => {
+    const raw = entry.scripture_text ?? "";
+    if (!raw.trim()) return "";
+    if (/<[a-z][\s\S]*>/i.test(raw)) return raw;
+    return raw
+      .split(/\n{2,}/)
+      .map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\n/g, "<br/>")}</p>`)
+      .join("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
