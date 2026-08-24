@@ -204,9 +204,15 @@ function ReadLibrary() {
   };
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const handleDeleteStudy = async (entryId: string) => {
-    if (deletingId) return;
-    if (typeof window !== "undefined" && !window.confirm("Delete this study? This can't be undone.")) return;
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const pendingDeleteEntry = useMemo(
+    () => recent.find((r) => r.id === pendingDeleteId) ?? null,
+    [recent, pendingDeleteId]
+  );
+  const confirmDeleteStudy = async () => {
+    const entryId = pendingDeleteId;
+    if (!entryId || deletingId) return;
+    setPendingDeleteId(null);
     setDeletingId(entryId);
     try {
       await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
@@ -504,6 +510,24 @@ function ReadLibrary() {
 
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
 
+        /* Branded delete modal */
+        .rd-del-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;animation:rdFade .16s ease;}
+        .rd-del-card{background:#FBF8ED;border:1.5px solid #ECE4CE;border-radius:20px;width:100%;max-width:440px;padding:0;overflow:hidden;box-shadow:0 24px 60px -16px rgba(16,16,24,0.4);animation:rdPop .18s cubic-bezier(.2,.8,.2,1);}
+        @keyframes rdPop{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:none;}}
+        .rd-del-iconwrap{display:flex;align-items:center;justify-content:center;padding:30px 24px 18px;}
+        .rd-del-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:rgba(179,34,12,0.1);color:#B3220C;}
+        .rd-del-body{padding:0 28px 8px;text-align:center;}
+        .rd-del-title{font-family:'Archivo Black','Poppins',sans-serif;font-size:22px;font-weight:900;color:#20201C;margin:0 0 6px;line-height:1.2;}
+        .rd-del-studyname{font-size:14px;font-weight:700;color:#20201C;background:#fff;border:1px solid #ECE4CE;border-radius:10px;padding:8px 14px;margin:10px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .rd-del-copy{font-size:13px;line-height:1.5;color:#6b6a60;margin:8px 0 0;}
+        .rd-del-actions{display:flex;gap:10px;padding:20px 28px 28px;}
+        .rd-del-cancel{flex:1;background:#fff;border:1.5px solid #ECE4CE;color:#20201C;font-family:inherit;font-size:14px;font-weight:800;padding:13px 18px;border-radius:999px;cursor:pointer;transition:border-color .15s ease, background .15s ease;}
+        .rd-del-cancel:hover{border-color:#8a8879;background:#fff;}
+        .rd-del-confirm{flex:1;background:#B3220C;border:1.5px solid #B3220C;color:#fff;font-family:inherit;font-size:14px;font-weight:800;padding:13px 18px;border-radius:999px;cursor:pointer;transition:background .15s ease, border-color .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+        .rd-del-confirm:hover{background:#8a1A08;border-color:#8a1A08;}
+        .rd-del-confirm:disabled{opacity:.6;cursor:default;}
+        @media (max-width:480px){.rd-del-card{max-width:none;border-radius:0;}}
+
         /* Studies table */
         .rd-table-wrap{background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;}
         .rd-table{width:100%;border-collapse:collapse;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;table-layout:fixed;}
@@ -670,7 +694,7 @@ function ReadLibrary() {
                   bookFullName={bookFullName}
                   topicById={topicById}
                   onOpen={(e) => setOpenEntry(e)}
-                  onDelete={handleDeleteStudy}
+                  onDelete={(id) => setPendingDeleteId(id)}
                   deletingId={deletingId}
                 />
               </>
@@ -720,6 +744,15 @@ function ReadLibrary() {
           entry={openEntry}
           bookFullName={entryBooks(openEntry).map((b) => bookFullName.get(b) ?? b).join(" · ")}
           onClose={() => { setOpenEntry(null); qc.invalidateQueries({ queryKey: ["read-recent-studies"] }); qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] }); }}
+        />
+      )}
+
+      {pendingDeleteId && (
+        <DeleteStudyModal
+          entry={pendingDeleteEntry}
+          busy={deletingId === pendingDeleteId}
+          onCancel={() => setPendingDeleteId(null)}
+          onConfirm={confirmDeleteStudy}
         />
       )}
     </AppShell>
@@ -927,6 +960,57 @@ function FullScreenNote({
           }}
         />
 
+      </div>
+    </div>
+  );
+}
+
+function DeleteStudyModal({
+  entry,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  entry: RecentEntry | null;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel, busy]);
+
+  const studyName = entry
+    ? entry.scripture_reference || entry.entry_title || "Untitled study"
+    : "this study";
+
+  return (
+    <div className="rd-del-overlay" role="dialog" aria-modal="true" aria-label="Delete study" onClick={() => { if (!busy) onCancel(); }}>
+      <div className="rd-del-card" onClick={(e) => e.stopPropagation()}>
+        <div className="rd-del-iconwrap">
+          <span className="rd-del-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M6 6l1 14h10l1-14" />
+            </svg>
+          </span>
+        </div>
+        <div className="rd-del-body">
+          <h2 className="rd-del-title">Delete this study?</h2>
+          <div className="rd-del-studyname" title={studyName}>{studyName}</div>
+          <p className="rd-del-copy">This can't be undone. The study and its notes will be permanently removed from your library.</p>
+        </div>
+        <div className="rd-del-actions">
+          <button type="button" className="rd-del-cancel" onClick={onCancel} disabled={busy}>Cancel</button>
+          <button type="button" className="rd-del-confirm" onClick={onConfirm} disabled={busy}>
+            {busy ? "Deleting…" : "Delete"}
+          </button>
+        </div>
       </div>
     </div>
   );
