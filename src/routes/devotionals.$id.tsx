@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
@@ -79,6 +79,7 @@ export const Route = createFileRoute("/devotionals/$id")({
     date: typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
     view: s.view === "week" || s.view === "month" ? (s.view as "week" | "month") : ("today" as const),
     ws: typeof s.ws === "string" ? s.ws : undefined,
+    entry: typeof s.entry === "string" ? s.entry : undefined,
   }),
 
   errorComponent: ({ error }) => (
@@ -153,6 +154,30 @@ const CSS = `
 .de-subtitle-input:focus{border-bottom-color:#181A4D;}
 .de-subtitle-input::placeholder{color:#20201C;opacity:0.4;}
 .de-headrule{display:none;}
+
+/* Study switcher + start-of-day chooser */
+.de-studyline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;}
+.de-studybtn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#181A4D;cursor:pointer;max-width:280px;}
+.de-studybtn:hover{border-color:#181A4D;}
+.de-studybtn .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.de-studyadd{background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:rgba(24,26,77,0.7);cursor:pointer;}
+.de-studyadd:hover{border-color:#181A4D;color:#181A4D;}
+.de-studywrap{position:relative;}
+.de-studymenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:280px;max-width:340px;padding:6px;max-height:340px;overflow:auto;}
+.de-studymenu .grp{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,26,77,0.4);padding:8px 10px 4px;}
+.de-studyopt{display:block;width:100%;text-align:left;border:none;background:transparent;border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#20201C;cursor:pointer;}
+.de-studyopt:hover{background:#FBF8ED;}
+.de-studyopt.on{background:#FBF8ED;font-weight:700;}
+.de-studyopt .sub{display:block;font-size:11px;color:rgba(24,26,77,0.5);font-weight:400;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.de-studysep{height:1px;background:rgba(24,26,77,0.08);margin:6px 4px;}
+.de-startcard{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid rgba(24,26,77,0.10);border-radius:14px;padding:12px 16px;margin:0 0 14px;}
+.de-startcard .txt{font-size:13px;font-weight:700;color:#181A4D;}
+.de-startcard .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.de-startprimary{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;}
+.de-startghost{background:transparent;color:#181A4D;border:1px solid rgba(24,26,77,0.18);border-radius:999px;padding:8px 16px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;}
+.de-startghost:hover{border-color:#181A4D;}
+.de-studysearch{width:100%;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;margin:4px 0 6px;outline:none;}
+.de-studysearch:focus{border-color:#181A4D;}
 .de-headquote,.de-headref{display:none;}
 
 /* Card + badge */
@@ -543,7 +568,76 @@ function EntryPage() {
     },
   });
 
-  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.entry_date === selectedDate);
+  // Studies attached to the selected day, oldest first (Study 1, Study 2, Study 3).
+  const MAX_STUDIES_PER_DAY = 3;
+  const dayEntries: Entry[] = useMemo(
+    () =>
+      (pastQ.data ?? [])
+        .filter((e) => e.entry_date === selectedDate)
+        .slice()
+        .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""))),
+    [pastQ.data, selectedDate]
+  );
+  const activeEntryId =
+    search.entry && dayEntries.some((e) => e.id === search.entry)
+      ? search.entry
+      : (dayEntries[0]?.id ?? null);
+  const currentEntry: Entry | undefined = dayEntries.find((e) => e.id === activeEntryId);
+
+  // --- Study switching: start new, or continue an existing study ---------------
+  const [studyMenuOpen, setStudyMenuOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [studyQuery, setStudyQuery] = useState("");
+  const [startDismissed, setStartDismissed] = useState(false);
+  const [addingStudy, setAddingStudy] = useState(false);
+
+  const goToEntry = (e: { id: string; entry_date: string | null }) => {
+    const d = e.entry_date ?? selectedDate;
+    setSelectedDate(d);
+    setStudyMenuOpen(false);
+    setPickerOpen(false);
+    setStudyQuery("");
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: d, entry: e.id } as any });
+  };
+
+  const addStudyForDay = async () => {
+    if (!userId || addingStudy) return;
+    if (dayEntries.length >= MAX_STUDIES_PER_DAY) return;
+    setAddingStudy(true);
+    try {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
+        .select("*")
+        .single();
+      if (error) throw error;
+      qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => [data as Entry, ...(cur ?? [])]);
+      trackEvent("devotional_entry_created", { template_id: id });
+      goToEntry(data as Entry);
+    } catch (err) {
+      console.error("could not add study", err);
+    } finally {
+      setAddingStudy(false);
+    }
+  };
+
+  const studyLabel = (e: Entry | undefined, idx: number) =>
+    (e?.entry_title && e.entry_title.trim()) ||
+    (e?.scripture_reference && e.scripture_reference.trim()) ||
+    `Study ${idx + 1}`;
+
+  // Past studies (any date) available to continue, most recent first.
+  const continuable = useMemo(() => {
+    const q = studyQuery.trim().toLowerCase();
+    return (pastQ.data ?? [])
+      .filter((e) => e.entry_date !== selectedDate)
+      .filter((e) => {
+        if (!q) return true;
+        return `${e.entry_title ?? ""} ${e.scripture_reference ?? ""}`.toLowerCase().includes(q);
+      })
+      .slice(0, 40);
+  }, [pastQ.data, selectedDate, studyQuery]);
+
 
   // 5-section state
   const [entryTitle, setEntryTitle] = useState("");
@@ -790,7 +884,7 @@ function EntryPage() {
         .eq("user_id", userId)
         .eq("template_id", id)
         .eq("entry_date", selectedDate)
-        .maybeSingle();
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
       return existing?.id ?? null;
     }
     trackEvent("devotional_entry_created", { template_id: id });
@@ -1010,6 +1104,73 @@ function EntryPage() {
               <div className="de-headcard-inner">
                 <div className="de-headtop">
                   <span className="de-headdate">{formatDate(selectedDate)}</span>
+                  {!isGuest && (
+                    <span className="de-studyline">
+                      {dayEntries.length > 0 && (
+                        <span className="de-studywrap">
+                          <button
+                            type="button"
+                            className="de-studybtn"
+                            onClick={() => setStudyMenuOpen((v) => !v)}
+                            aria-haspopup="menu"
+                            aria-expanded={studyMenuOpen}
+                          >
+                            <span className="lbl">
+                              {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
+                            </span>
+                            <span aria-hidden="true">▾</span>
+                          </button>
+                          {studyMenuOpen && (
+                            <div className="de-studymenu" role="menu">
+                              <div className="grp">Today's studies</div>
+                              {dayEntries.map((e, i) => (
+                                <button
+                                  key={e.id}
+                                  type="button"
+                                  className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
+                                  onClick={() => goToEntry(e)}
+                                >
+                                  {studyLabel(e, i)}
+                                  {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                </button>
+                              ))}
+                              <div className="de-studysep" />
+                              <div className="grp">Continue a past study</div>
+                              <input
+                                className="de-studysearch"
+                                placeholder="Search your studies…"
+                                value={studyQuery}
+                                onChange={(ev) => setStudyQuery(ev.target.value)}
+                              />
+                              {continuable.length === 0 ? (
+                                <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
+                              ) : (
+                                continuable.map((e, i) => (
+                                  <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                                    {studyLabel(e, i)}
+                                    <span className="sub">
+                                      {formatDate(e.entry_date ?? selectedDate)}
+                                      {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </span>
+                      )}
+                      {dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
+                        <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
+                          + Add study
+                        </button>
+                      )}
+                      {dayEntries.length >= MAX_STUDIES_PER_DAY && (
+                        <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
+                          More in Read →
+                        </Link>
+                      )}
+                    </span>
+                  )}
                 </div>
                 <input
                   className="de-title-input"
@@ -1025,6 +1186,45 @@ function EntryPage() {
                 />
               </div>
             </div>
+
+            {!isGuest && dayEntries.length === 0 && !startDismissed && (
+              <div className="de-startcard">
+                <span className="txt">Start today's study</span>
+                <span className="acts">
+                  <button type="button" className="de-startprimary" onClick={() => { setStartDismissed(true); setPickerOpen(false); }}>
+                    Start new study
+                  </button>
+                  <span className="de-studywrap">
+                    <button type="button" className="de-startghost" onClick={() => setPickerOpen((v) => !v)}>
+                      Continue a study ▾
+                    </button>
+                    {pickerOpen && (
+                      <div className="de-studymenu" role="menu">
+                        <input
+                          className="de-studysearch"
+                          placeholder="Search your studies…"
+                          value={studyQuery}
+                          onChange={(ev) => setStudyQuery(ev.target.value)}
+                        />
+                        {continuable.length === 0 ? (
+                          <div className="de-studyopt" style={{ opacity: 0.5 }}>No studies to continue yet</div>
+                        ) : (
+                          continuable.map((e, i) => (
+                            <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                              {studyLabel(e, i)}
+                              <span className="sub">
+                                {formatDate(e.entry_date ?? selectedDate)}
+                                {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </span>
+                </span>
+              </div>
+            )}
 
             <PlanDayBanner userId={userId} dateISO={selectedDate} />
 
@@ -2107,7 +2307,7 @@ function PlanDayDialog({
         .from("devotional_entries")
         .select("scripture_reference, scripture_text, pray_text, todo_text, todo_items")
         .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
-        .maybeSingle();
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
       if (!alive) return;
       if (error) setErr(error.message);
       const e = data as any;
@@ -2143,7 +2343,7 @@ function PlanDayDialog({
     const { data: existing } = await supabase
       .from("devotional_entries").select("id")
       .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
-      .maybeSingle();
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
     const res = existing?.id
       ? await supabase.from("devotional_entries").update(patch as any).eq("id", existing.id)
       : await supabase.from("devotional_entries").insert({
@@ -2261,7 +2461,7 @@ function NewTodoDialog({
     const { data: existing } = await supabase
       .from("devotional_entries").select("id, todo_items")
       .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", date)
-      .maybeSingle();
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
     const newItem: TodoItem = { id: crypto.randomUUID(), text: text.trim(), done: false, due_date: date };
     let res;
     if (existing?.id) {
