@@ -505,7 +505,7 @@ function ReadLibrary() {
         .rd-full-title{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:42px;line-height:1.1;color:#20201C;margin:0 0 8px;}
         @media (max-width:640px){.rd-full-title{font-size:30px;}.rd-full-body{padding:20px 16px 96px;}}
         .rd-full-sub{font-size:13px;color:#8a8879;font-weight:600;margin-bottom:24px;}
-        .rd-full-doc{width:100%;flex:1;min-height:66vh;border:1px solid #ECE4CE;background:#fff;border-radius:16px;padding:12px clamp(20px,3.4vw,52px) 44px;box-sizing:border-box;box-shadow:0 1px 0 rgba(24,26,77,.04);}
+        .rd-full-doc{width:100%;flex:0 0 auto;min-height:66vh;height:auto;overflow:visible;border:1px solid #ECE4CE;background:#fff;border-radius:16px;padding:12px clamp(20px,3.4vw,52px) 44px;box-sizing:border-box;box-shadow:0 1px 0 rgba(24,26,77,.04);}
         .rd-full-doc .ws-toolbar{background:#fff;margin:0 0 8px;}
         .rd-full-doc .ws-editor-content{min-height:56vh;}
         @media (max-width:640px){.rd-full-doc{padding:8px 16px 32px;border-radius:14px;}}
@@ -890,12 +890,19 @@ function FullScreenNote({
   // Studies are stored as HTML in scripture_text. Older entries can be plain
   // text — wrap those so the rich editor loads them as a paragraph.
   const initialContent = useMemo(() => {
-    const raw = entry.scripture_text ?? "";
+    const raw = (entry.scripture_text ?? "").replace(/\r\n/g, "\n");
     if (!raw.trim()) return "";
-    if (/<[a-z][\s\S]*>/i.test(raw)) return raw;
+    const hasBlocks = /<\s*(p|div|br|ul|ol|li|h[1-6]|blockquote|pre|table)\b/i.test(raw);
+    if (hasBlocks) return raw;
+    // Older studies were stored as `white-space: pre-wrap` text (sometimes with
+    // inline <strong>/<em>). Turn its blank lines into real paragraphs so the
+    // rich editor keeps the spacing instead of collapsing everything into one
+    // block.
+    const escape = (t: string) =>
+      /<[a-z][\s\S]*>/i.test(raw) ? t : t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     return raw
       .split(/\n{2,}/)
-      .map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\n/g, "<br/>")}</p>`)
+      .map((para) => `<p>${escape(para).replace(/\n/g, "<br/>")}</p>`)
       .join("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry.id]);

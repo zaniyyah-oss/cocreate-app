@@ -135,6 +135,10 @@ const NOTES_CSS = `
 .nt-panel-close{background:none;border:none;cursor:pointer;color:#8a8678;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;flex-shrink:0;}
 .nt-panel-close:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
 .nt-panel-body{flex:1;padding:24px 34px 34px;}
+/* Focus mode: the open note takes the whole screen, nothing else visible. */
+.nt-panel.is-focus{position:fixed;inset:0;z-index:120;background:#fff;overflow-y:auto;border-radius:0;display:block;}
+.nt-panel.is-focus .nt-panel-header{position:sticky;top:0;z-index:10;border-radius:0;padding:18px max(24px,4vw) 14px;}
+.nt-panel.is-focus .nt-panel-body{max-width:1100px;margin:0 auto;padding:28px max(20px,3vw) 96px;}
 
 .nt-panel-title-input{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;color:#20201C;margin-bottom:8px;padding:0;outline:none;letter-spacing:-0.01em;}
 .nt-panel-title-input::placeholder{color:#181A4D;opacity:0.3;}
@@ -586,6 +590,7 @@ function DocPanel({
   const [hasPending, setHasPending] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Record<string, unknown> | null>(null);
@@ -597,6 +602,14 @@ function DocPanel({
     setEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.id]);
+
+  // Escape leaves focus mode (the note itself stays open).
+  useEffect(() => {
+    if (!focusMode) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFocusMode(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusMode]);
 
   const flushSave = async () => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -680,7 +693,7 @@ function DocPanel({
   const primaryColor = primaryTagRaw ? colorFor(primaryTagRaw) : undefined;
 
   return (
-    <div className="nt-panel">
+    <div className={`nt-panel ${focusMode ? "is-focus" : ""}`}>
       <header className="nt-panel-header">
         <div className="nt-panel-header-info">
           <button
@@ -706,6 +719,14 @@ function DocPanel({
           }}
         >
           {editing ? "Done" : "Edit"}
+        </button>
+        <button
+          type="button"
+          className={`nt-edit-btn ${focusMode ? "active" : ""}`}
+          onClick={() => setFocusMode((v) => !v)}
+          title={focusMode ? "Leave focus mode" : "Read and write with the whole screen"}
+        >
+          {focusMode ? "Exit focus" : "Focus"}
         </button>
         <button
           type="button"
