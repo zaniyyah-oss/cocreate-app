@@ -1519,13 +1519,23 @@ function EntryPage() {
                         value={scriptureRef}
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
-                      <RichTextField
-                        storageKey="scripture"
-                        className="de-textarea"
-                        placeholder="What did you notice? What is God saying?"
-                        value={scriptureText}
-                        onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
-                      />
+                      {focusSection === "read" ? (
+                        <ReadFocusEditor
+                          entryKey={activeEntryId ?? "new"}
+                          userId={userId ?? ""}
+                          value={scriptureText}
+                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
+                        />
+                      ) : (
+                        <RichTextField
+                          storageKey="scripture"
+                          className="de-textarea"
+                          placeholder="What did you notice? What is God saying?"
+                          value={scriptureText}
+                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
+                        />
+                      )}
+
                       {statusRow("scripture_text")}
                     </div>
 
