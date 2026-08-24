@@ -884,7 +884,7 @@ function EntryPage() {
         .eq("user_id", userId)
         .eq("template_id", id)
         .eq("entry_date", selectedDate)
-        .maybeSingle();
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
       return existing?.id ?? null;
     }
     trackEvent("devotional_entry_created", { template_id: id });
@@ -2307,7 +2307,7 @@ function PlanDayDialog({
         .from("devotional_entries")
         .select("scripture_reference, scripture_text, pray_text, todo_text, todo_items")
         .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
-        .maybeSingle();
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
       if (!alive) return;
       if (error) setErr(error.message);
       const e = data as any;
@@ -2343,7 +2343,7 @@ function PlanDayDialog({
     const { data: existing } = await supabase
       .from("devotional_entries").select("id")
       .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", defaultDate)
-      .maybeSingle();
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
     const res = existing?.id
       ? await supabase.from("devotional_entries").update(patch as any).eq("id", existing.id)
       : await supabase.from("devotional_entries").insert({
@@ -2461,7 +2461,7 @@ function NewTodoDialog({
     const { data: existing } = await supabase
       .from("devotional_entries").select("id, todo_items")
       .eq("user_id", userId).eq("template_id", templateId).eq("entry_date", date)
-      .maybeSingle();
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
     const newItem: TodoItem = { id: crypto.randomUUID(), text: text.trim(), done: false, due_date: date };
     let res;
     if (existing?.id) {
