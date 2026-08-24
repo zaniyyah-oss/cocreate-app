@@ -538,7 +538,8 @@ function ReadLibrary() {
         .rd-th-title{width:auto;}
         .rd-th-preview{width:34%;}
         .rd-th-del{width:38px;}
-        .rd-del-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:none;background:transparent;color:rgba(24,26,77,0.32);cursor:pointer;padding:0;}
+        .rd-del-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:none;background:transparent;color:rgba(24,26,77,0.32);cursor:pointer;padding:0;opacity:0;transition:opacity .12s ease, background .12s ease, color .12s ease;}
+        .rd-tr:hover .rd-del-btn,.rd-tr:focus-visible .rd-del-btn{opacity:1;}
         .rd-del-btn:hover{background:rgba(255,52,12,0.1);color:#B3220C;}
         .rd-del-btn:disabled{opacity:.4;cursor:not-allowed;}
         .rd-tr{border-bottom:1px solid rgba(24,26,77,.06);cursor:pointer;transition:background .12s ease;outline:none;}
