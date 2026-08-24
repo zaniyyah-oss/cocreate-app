@@ -13,16 +13,28 @@
  */
 export const WORKSPACE_EDITOR_CSS = `
 .ws-editor{border:none;background:transparent;position:relative;scroll-margin-top:110px;}
-.ws-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.10);background:#fff;margin:0 0 12px;}
-.ws-tb-btn{background:transparent;border:none;color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:11.5px;padding:5px 9px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
-.ws-tb-btn:hover{background:rgba(24,26,77,0.06);text-decoration:underline;text-underline-offset:3px;}
-.ws-tb-btn.on{background:#181A4D;color:#fff;text-decoration:underline;text-underline-offset:3px;}
-.ws-popover{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid rgba(24,26,77,0.14);border-radius:10px;padding:8px;box-shadow:0 6px 20px rgba(24,26,77,0.14);display:flex;flex-wrap:wrap;gap:6px;z-index:80;max-width:220px;}
-.ws-popover-col{flex-direction:column;flex-wrap:nowrap;min-width:170px;}
-.ws-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#20201C;}
-.ws-swatch:hover{transform:scale(1.08);}
-.ws-popbtn{background:transparent;border:none;text-align:left;font-family:'Poppins',sans-serif;font-size:12.5px;color:#181A4D;padding:6px 8px;border-radius:6px;cursor:pointer;}
-.ws-popbtn:hover{background:rgba(24,26,77,0.06);}
+.ws-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:6px;border:1px solid rgba(32,32,28,0.08);border-radius:12px;background:#fff;margin:0 0 12px;box-shadow:0 1px 2px rgba(32,32,28,0.04);position:relative;}
+.ws-tbgroup{display:flex;align-items:center;gap:2px;position:relative;}
+.ws-tbdiv{width:1px;height:20px;background:rgba(32,32,28,0.12);margin:0 6px;flex-shrink:0;}
+.ws-tb-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:8px;background:transparent;color:rgba(32,32,28,0.6);cursor:pointer;position:relative;transition:background .12s ease,color .12s ease;padding:0;}
+.ws-tb-btn:hover{background:rgba(138,150,224,0.12);color:#181A4D;}
+.ws-tb-btn.on{background:rgba(138,150,224,0.22);color:#181A4D;}
+.ws-tb-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.ws-tb-dd{display:inline-flex;align-items:center;gap:3px;height:32px;padding:0 8px 0 10px;border:none;border-radius:8px;background:transparent;color:rgba(32,32,28,0.6);cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;white-space:nowrap;transition:background .12s ease,color .12s ease;}
+.ws-tb-dd:hover{background:rgba(138,150,224,0.12);color:#181A4D;}
+.ws-tb-dd.on{background:rgba(138,150,224,0.22);color:#181A4D;}
+.ws-tb-dd svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ws-tb-swatchbar{position:absolute;bottom:5px;left:8px;right:8px;height:2.5px;border-radius:2px;}
+.ws-popover{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid rgba(32,32,28,0.08);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(24,26,77,0.14);display:flex;flex-wrap:wrap;gap:6px;z-index:80;min-width:180px;}
+.ws-popover-col{flex-direction:column;flex-wrap:nowrap;min-width:180px;}
+.ws-popover-label{font-size:11px;color:rgba(32,32,28,0.35);font-weight:600;margin:0 0 6px;width:100%;font-family:'Poppins',sans-serif;}
+.ws-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#20201C;border:2px solid transparent;}
+.ws-swatch:hover{border-color:rgba(32,32,28,0.12);}
+.ws-popbtn{background:transparent;border:none;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:#20201C;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.ws-popbtn:hover{background:rgba(138,150,224,0.12);}
+.ws-popbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.ws-popbtn .ws-poptag{font-family:'Poppins',sans-serif;font-weight:700;font-size:11px;color:rgba(32,32,28,0.35);margin-left:auto;}
+
 .ws-bubble{display:flex;gap:2px;background:#181A4D;color:#fff;border-radius:8px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
 .ws-bb-btn{background:transparent;border:none;color:#fff;font-family:'Poppins',sans-serif;font-weight:600;font-size:12.5px;padding:6px 9px;border-radius:5px;cursor:pointer;}
 .ws-bb-btn:hover{background:rgba(255,255,255,0.14);}
