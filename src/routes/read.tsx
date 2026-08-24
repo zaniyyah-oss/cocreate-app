@@ -8,6 +8,8 @@ import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
 import { stripHtml } from "@/components/RichTextField";
+import { formatBookRef } from "@/lib/scripture-ref";
+
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { useAuth } from "@/components/saved-shared";
 import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
@@ -787,7 +789,10 @@ function StudiesTable({
         </thead>
         <tbody>
           {items.map((e) => {
-            const books = entryBooks(e).map((b) => bookFullName.get(b) ?? b);
+            const books = entryBooks(e).map((b) =>
+              formatBookRef(bookFullName.get(b) ?? b, e.scripture_reference)
+            );
+
             const topics = (e.topic_ids ?? [])
               .map((id) => topicById.get(id))
               .filter((t): t is { id: string; name: string; display_name: string | null } => !!t)

@@ -5,6 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useBibleBooks } from "@/components/BookTagger";
 import { TopicPicker, useAllTopics, type TopicRow } from "@/components/TopicPicker";
+import { parseScriptureRef } from "@/lib/scripture-ref";
+
 
 export const Route = createFileRoute("/read/$abbr")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -48,6 +50,9 @@ function BookDetail() {
   const booksQ = useBibleBooks();
   const topicsQ = useAllTopics();
   const [filterTopicIds, setFilterTopicIds] = useState<string[]>([]);
+  const [chapter, setChapter] = useState<number | null>(null);
+  const [verse, setVerse] = useState<number | null>(null);
+
   const book = (booksQ.data ?? []).find((b) => b.abbreviation === abbr);
   const topicsById = useMemo(() => {
     const m = new Map<string, Topic>();
@@ -80,7 +85,7 @@ function BookDetail() {
   const entries = entriesQ.data ?? [];
   const fullName = book?.full_name ?? abbr;
 
-  const visibleEntries = useMemo(() => {
+  const topicMatched = useMemo(() => {
     if (filterTopicIds.length === 0) return entries;
     return entries.filter((e) => {
       const ids = e.topic_ids ?? [];
@@ -88,12 +93,47 @@ function BookDetail() {
     });
   }, [entries, filterTopicIds]);
 
+  // Chapters present in the (topic-filtered) entries.
+  const chapters = useMemo(() => {
+    const s = new Set<number>();
+    for (const e of topicMatched) {
+      const c = parseScriptureRef(e.scripture_reference).chapter;
+      if (c != null) s.add(c);
+    }
+    return [...s].sort((a, b) => a - b);
+  }, [topicMatched]);
+
+  const chapterMatched = useMemo(() => {
+    if (chapter == null) return topicMatched;
+    return topicMatched.filter(
+      (e) => parseScriptureRef(e.scripture_reference).chapter === chapter
+    );
+  }, [topicMatched, chapter]);
+
+  // Verses present within the selected chapter.
+  const verses = useMemo(() => {
+    if (chapter == null) return [] as number[];
+    const s = new Set<number>();
+    for (const e of chapterMatched) {
+      for (const v of parseScriptureRef(e.scripture_reference).verseNumbers) s.add(v);
+    }
+    return [...s].sort((a, b) => a - b);
+  }, [chapterMatched, chapter]);
+
+  const visibleEntries = useMemo(() => {
+    if (verse == null) return chapterMatched;
+    return chapterMatched.filter((e) =>
+      parseScriptureRef(e.scripture_reference).verseNumbers.includes(verse)
+    );
+  }, [chapterMatched, verse]);
+
   // Only show topics that at least one entry in this book uses.
   const availableTopics = useMemo(() => {
     const used = new Set<string>();
     entries.forEach((e) => (e.topic_ids ?? []).forEach((id) => used.add(id)));
     return (topicsQ.data ?? []).filter((t) => used.has(t.id));
   }, [entries, topicsQ.data]);
+
 
 
   return (
@@ -226,12 +266,66 @@ function BookDetail() {
             </div>
           )}
 
+          {chapters.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Chapter</span>
+              <div className="rb-filter-chips">
+                {chapters.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`rb-fchip ${chapter === c ? "on" : ""}`}
+                    onClick={() => {
+                      setVerse(null);
+                      setChapter((cur) => (cur === c ? null : c));
+                    }}
+                  >
+                    {abbr} {c}
+                  </button>
+                ))}
+                {chapter != null && (
+                  <button
+                    type="button"
+                    className="rb-fchip clear"
+                    onClick={() => { setChapter(null); setVerse(null); }}
+                  >
+                    All chapters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {chapter != null && verses.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Verse</span>
+              <div className="rb-filter-chips">
+                {verses.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`rb-fchip ${verse === v ? "on" : ""}`}
+                    onClick={() => setVerse((cur) => (cur === v ? null : v))}
+                  >
+                    v{v}
+                  </button>
+                ))}
+                {verse != null && (
+                  <button type="button" className="rb-fchip clear" onClick={() => setVerse(null)}>
+                    All verses
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {entries.length === 0 ? (
             <div className="rb-empty">
               No studies yet in {fullName} — entries you tag will show up here.
             </div>
           ) : visibleEntries.length === 0 ? (
-            <div className="rb-empty">No studies match the selected topics.</div>
+            <div className="rb-empty">No studies match the selected filters.</div>
+
           ) : (
             <div className="rb-list">
               {visibleEntries.map((e) => (
