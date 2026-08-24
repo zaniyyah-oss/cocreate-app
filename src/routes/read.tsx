@@ -113,7 +113,6 @@ function useRecentStudies() {
     refetchOnWindowFocus: false,
   });
 }
-}
 
 function ReadLibrary() {
   const qc = useQueryClient();
