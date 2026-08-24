@@ -613,7 +613,6 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
           </div>
         </>
       )}
-      </div>
 
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
     </div>
