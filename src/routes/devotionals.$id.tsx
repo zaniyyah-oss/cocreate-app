@@ -10,8 +10,8 @@ import { RichTextField } from "@/components/RichTextField";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDayView } from "@/components/CalendarDayView";
-import { BookTagger } from "@/components/BookTagger";
-import { TopicPicker } from "@/components/TopicPicker";
+import { BookTagger, useBibleBooks } from "@/components/BookTagger";
+import { TopicPicker, useAllTopics } from "@/components/TopicPicker";
 import { TodoStatusSelect, TodoStatusSelectStyles } from "@/components/TodoStatusSelect";
 import { PlanDayBanner } from "@/components/PlanDayBanner";
 
@@ -3006,6 +3006,62 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
           qc.invalidateQueries({ queryKey: ["devo-content-dates"] });
           qc.invalidateQueries({ queryKey: ["topical-dates"] });
         }} />
+    </div>
+  );
+}
+
+function ReadTagChips({
+  books,
+  topicIds,
+  suggestion,
+  onConfirmSuggestion,
+  onRemoveBook,
+  onRemoveTopic,
+}: {
+  books: string[];
+  topicIds: string[];
+  suggestion?: string | null;
+  onConfirmSuggestion: () => void;
+  onRemoveBook: (abbr: string) => void;
+  onRemoveTopic: (id: string) => void;
+}) {
+  const booksQ = useBibleBooks();
+  const topicsQ = useAllTopics();
+  const bookName = (abbr: string) =>
+    (booksQ.data ?? []).find((b) => b.abbreviation === abbr)?.full_name ?? abbr;
+  const topicName = (id: string) => {
+    const t = (topicsQ.data ?? []).find((x) => x.id === id);
+    return t ? t.display_name ?? t.name : null;
+  };
+  const hasAny = books.length > 0 || topicIds.length > 0 || !!suggestion;
+  if (!hasAny) return null;
+  return (
+    <div className="de-readchips">
+      {books.map((abbr) => (
+        <span key={abbr} className="de-readchip">
+          {bookName(abbr)}
+          <button type="button" aria-label={`Remove ${bookName(abbr)}`} onClick={() => onRemoveBook(abbr)}>
+            ×
+          </button>
+        </span>
+      ))}
+      {topicIds.map((id) => {
+        const name = topicName(id);
+        if (!name) return null;
+        return (
+          <span key={id} className="de-readchip topic">
+            {name}
+            <button type="button" aria-label={`Remove ${name}`} onClick={() => onRemoveTopic(id)}>
+              ×
+            </button>
+          </span>
+        );
+      })}
+      {suggestion && (
+        <button type="button" className="de-readchip suggest" onClick={onConfirmSuggestion}>
+          Add {bookName(suggestion)}?
+        </button>
+      )}
     </div>
   );
 }
