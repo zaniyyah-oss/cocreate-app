@@ -1137,7 +1137,7 @@ function EntryPage() {
               </div>
             </div>
 
-            {!isGuest && dayEntries.length === 0 && !startDismissed && (
+            {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
               <div className="de-startcard">
                 <span className="txt">Start today's study</span>
                 <span className="acts">
@@ -1218,7 +1218,7 @@ function EntryPage() {
                     </div>
                     <div className="de-readbar">
                       <div className="de-readbar-left">
-                        {!isGuest && dayEntries.length > 0 && (
+                        {!isGuest && (dayEntries.length > 0 || !!currentEntry) && (
                           <span className="de-studywrap">
                             <button
                               type="button"
