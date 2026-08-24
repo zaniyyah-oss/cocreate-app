@@ -25,12 +25,12 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-tb-dd.on{background:rgba(138,150,224,0.22);color:#181A4D;}
 .ws-tb-dd svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .ws-tb-swatchbar{position:absolute;bottom:5px;left:8px;right:8px;height:2.5px;border-radius:2px;}
-.ws-popover{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid rgba(32,32,28,0.08);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(24,26,77,0.14);display:flex;flex-wrap:wrap;gap:6px;z-index:80;min-width:180px;}
-.ws-popover-col{flex-direction:column;flex-wrap:nowrap;min-width:180px;}
+.ws-popover{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid rgba(32,32,28,0.08);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(24,26,77,0.14);display:flex;flex-wrap:wrap;gap:6px;z-index:80;min-width:180px;width:max-content;max-width:280px;}
+.ws-popover-col{flex-direction:column;flex-wrap:nowrap;min-width:200px;}
 .ws-popover-label{font-size:11px;color:rgba(32,32,28,0.35);font-weight:600;margin:0 0 6px;width:100%;font-family:'Poppins',sans-serif;}
 .ws-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#20201C;border:2px solid transparent;}
 .ws-swatch:hover{border-color:rgba(32,32,28,0.12);}
-.ws-popbtn{background:transparent;border:none;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:#20201C;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.ws-popbtn{background:transparent;border:none;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:#20201C;padding:8px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;width:100%;}
 .ws-popbtn:hover{background:rgba(138,150,224,0.12);}
 .ws-popbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .ws-popbtn .ws-poptag{font-family:'Poppins',sans-serif;font-weight:700;font-size:11px;color:rgba(32,32,28,0.35);margin-left:auto;}
