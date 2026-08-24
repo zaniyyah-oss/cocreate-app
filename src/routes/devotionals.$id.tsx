@@ -635,10 +635,12 @@ function EntryPage() {
     }
   };
 
+  // Name studies by what they're reading (the Read scripture field) first.
   const studyLabel = (e: Entry | undefined, idx: number) =>
-    (e?.entry_title && e.entry_title.trim()) ||
     (e?.scripture_reference && e.scripture_reference.trim()) ||
-    `Study ${idx + 1}`;
+    (e?.entry_title && e.entry_title.trim()) ||
+    `Study ${Math.max(1, idx + 1)}`;
+
 
   // Past studies (any date) available to continue, most recent first.
   const continuable = useMemo(() => {
