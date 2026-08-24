@@ -17,6 +17,19 @@ import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
 import { Indent } from "./indent-extension";
 import { Callout } from "./callout-node";
+import { WORKSPACE_EDITOR_CSS } from "./editor-css";
+
+/** Inject the shared note styling once, so every surface renders notes alike. */
+function useWorkspaceEditorCss() {
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("ws-editor-css")) return;
+    const tag = document.createElement("style");
+    tag.id = "ws-editor-css";
+    tag.textContent = WORKSPACE_EDITOR_CSS;
+    document.head.appendChild(tag);
+  }, []);
+}
 
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
