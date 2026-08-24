@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 
@@ -629,6 +630,7 @@ function NoteBody({
   const inFlightRef = useRef(false);
   const accessTokenRef = useRef<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setTitle(item.title);
@@ -848,12 +850,21 @@ function NoteBody({
         <button className="ws-linkaction" onClick={async () => { if (guest) { onGuestGate?.("save"); return; } await flushSave(); close.mutate(); }}>Save &amp; file away</button>
         <button
           className="ws-linkaction del"
-          onClick={() => { if (confirm("Delete this note?")) removeItem.mutate(); }}
+          onClick={() => setConfirmDelete(true)}
         >
           Delete
         </button>
         <span className="ws-savestatus">{saving || hasPendingPatch ? "Saving…" : savedFlash ? "Saved" : ""}</span>
       </div>
+
+      <DeleteConfirmModal
+        open={confirmDelete}
+        title="Delete this note?"
+        message="This note and everything in it will be permanently removed. This can't be undone."
+        busy={removeItem.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => { removeItem.mutate(); setConfirmDelete(false); }}
+      />
     </div>
   );
 }
