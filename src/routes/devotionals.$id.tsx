@@ -711,9 +711,22 @@ function EntryPage() {
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
+  // When the active study belongs to another date (a past study the user chose to
+  // continue), only the Read section follows that study. Title / Where / Pray /
+  // To-Do stay with the day you're working on.
+  const continuingEntry: Entry | undefined =
+    currentEntry && currentEntry.entry_date !== selectedDate ? currentEntry : undefined;
+  const dayFieldsEntry: Entry | undefined = continuingEntry ? dayEntries[0] : currentEntry;
+
+  const dayEntryIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     currentEntryIdRef.current = currentEntry?.id ?? null;
   }, [currentEntry?.id]);
+
+  useEffect(() => {
+    dayEntryIdRef.current = dayFieldsEntry?.id ?? null;
+  }, [dayFieldsEntry?.id]);
 
   /* Visual balance (iPad + desktop, 3-column layout only):
      the Pray and To-Do writing areas end on the same baseline as the bottom
