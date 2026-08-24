@@ -23,7 +23,7 @@ One quiet line replaces nothing and adds nothing heavy — it sits in the existi
 ```
 
 - The title is a button. Its menu lists the studies attached to today, then "Continue a past study…" and "Start new study".
-- **+ Add study** creates a second study for the day and switches to it. Only appears once one study has content, so day one still looks like a blank slate.
+- **+ Add study** creates another study for the day and switches to it, up to three per day. Only appears once one study has content, so day one still looks like a blank slate; at three it disappears and further studies are opened from the Read page.
 - No tabs, no extra columns, no change to Read / Pray / To-Do themselves.
 
 ## 3. Two studies for one day in Read
