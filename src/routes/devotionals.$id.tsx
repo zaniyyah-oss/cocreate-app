@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/re
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteStudyOnly } from "@/lib/study-delete";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
@@ -663,13 +664,17 @@ function EntryPage() {
       }
       pendingEntryPatchRef.current = null;
       setStudyMenuOpen(false);
-      const remaining = dayEntries.filter((e) => e.id !== entryId);
-      if (remaining[0]) {
-        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: remaining[0].id } as any });
+      if (outcome === "cleared") {
+        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: entryId } as any });
       } else {
-        setPendingNewStudy(false);
-        setStartDismissed(false);
-        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
+        const remaining = dayEntries.filter((e) => e.id !== entryId);
+        if (remaining[0]) {
+          navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: remaining[0].id } as any });
+        } else {
+          setPendingNewStudy(false);
+          setStartDismissed(false);
+          navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
+        }
       }
     } catch (err) {
       console.error("could not delete study", err);
