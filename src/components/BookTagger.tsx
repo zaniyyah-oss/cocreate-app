@@ -28,13 +28,16 @@ type Props = {
   disabled?: boolean;
   onToggle: (abbr: string) => void;
   onConfirmSuggestion?: () => void;
+  /** Compact presentation: a single quiet icon button, no chips or helper rows. */
+  iconOnly?: boolean;
 };
 
-export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion }: Props) {
+export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion, iconOnly }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const booksQ = useBibleBooks();
   const books = booksQ.data ?? [];
+
 
   const byAbbr = useMemo(() => {
     const m = new Map<string, BibleBook>();
