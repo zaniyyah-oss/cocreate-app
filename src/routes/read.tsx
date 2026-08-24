@@ -7,7 +7,7 @@ import { deleteStudyOnly } from "@/lib/study-delete";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
-import { RichTextField, stripHtml } from "@/components/RichTextField";
+import { stripHtml } from "@/components/RichTextField";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { useAuth } from "@/components/saved-shared";
 import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
