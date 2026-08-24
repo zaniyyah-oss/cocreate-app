@@ -169,7 +169,7 @@ export function TopicPicker({
   };
 
   return (
-    <div className="tp-wrap" ref={wrapRef}>
+    <div className={`tp-wrap${iconOnly ? " icon" : ""}`} ref={wrapRef}>
       <style>{`
         .tp-wrap{position:relative;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
         .tp-chip{display:inline-flex;align-items:center;gap:4px;background:#0F4A42;color:#fff;font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;}
