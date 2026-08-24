@@ -728,6 +728,15 @@ function ReadLibrary() {
           onClose={() => { setOpenEntry(null); qc.invalidateQueries({ queryKey: ["read-recent-studies"] }); qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] }); }}
         />
       )}
+
+      {pendingDeleteId && (
+        <DeleteStudyModal
+          entry={pendingDeleteEntry}
+          busy={deletingId === pendingDeleteId}
+          onCancel={() => setPendingDeleteId(null)}
+          onConfirm={confirmDeleteStudy}
+        />
+      )}
     </AppShell>
   );
 }
