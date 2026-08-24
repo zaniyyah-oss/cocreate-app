@@ -1164,7 +1164,7 @@ function EntryPage() {
                               {studyLabel(e, i)}
                               <span className="sub">
                                 {formatDate(e.entry_date ?? selectedDate)}
-                                {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                {e.entry_title ? ` · ${e.entry_title}` : ""}
                               </span>
                             </button>
                           ))
@@ -1273,7 +1273,7 @@ function EntryPage() {
                                       {studyLabel(e, i)}
                                       <span className="sub">
                                         {formatDate(e.entry_date ?? selectedDate)}
-                                        {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
                                       </span>
                                     </button>
                                   ))
