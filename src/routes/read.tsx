@@ -1002,7 +1002,7 @@ function DeleteStudyModal({
         <div className="rd-del-body">
           <h2 className="rd-del-title">Delete this study?</h2>
           <div className="rd-del-studyname" title={studyName}>{studyName}</div>
-          <p className="rd-del-copy">This can't be undone. The study and its notes will be permanently removed from your library.</p>
+          <p className="rd-del-copy">Only the study is removed. That day's workspace entry — title, Where are you, Pray and To‑Do — is kept, along with any notes.</p>
         </div>
         <div className="rd-del-actions">
           <button type="button" className="rd-del-cancel" onClick={onCancel} disabled={busy}>Cancel</button>
