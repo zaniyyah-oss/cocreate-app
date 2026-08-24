@@ -920,7 +920,7 @@ function FullScreenNote({
           {bookFullName}
         </div>
         <h1 className="rd-full-title">
-          {entry.entry_title || entry.scripture_reference || "Untitled study"}
+          {entry.scripture_reference || entry.entry_title || "Untitled study"}
         </h1>
         <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
         <RichTextField
