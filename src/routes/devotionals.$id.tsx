@@ -1722,6 +1722,15 @@ function EntryPage() {
           </div>
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!pendingDeleteStudyId}
+        title="Delete this study?"
+        itemName={pendingDeleteStudyName}
+        message="Only the study is removed. That day's workspace entry — title, Where are you, Pray and To‑Do — is kept, along with any notes."
+        busy={deletingStudy}
+        onCancel={() => setPendingDeleteStudyId(null)}
+        onConfirm={confirmDeleteStudy}
+      />
     </div>
     </AppShell>
   );
