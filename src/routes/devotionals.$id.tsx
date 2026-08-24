@@ -814,49 +814,39 @@ function EntryPage() {
     };
   }, [colsEl, focusSection, currentEntry?.id]);
 
-  // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
-  // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
-  // For topical/temporary devotionals (non-default) with no existing entry for the day,
-  // pre-fill Read/Pray/To-Do from the template's configured content.
+  // Template prefill for a brand-new study on a non-default (topical) devotional.
+  const templatePrefill = useMemo(() => {
+    const t = templateQ.data;
+    const empty = { scrRef: "", scrText: "", pray: "", todo: "" };
+    if (!t || (t as any).is_default) return empty;
+    const scr = Array.isArray((t as any).scripture_items) ? (t as any).scripture_items as Array<{ reference?: string; note?: string }> : [];
+    const pray = Array.isArray((t as any).pray_items) ? (t as any).pray_items as string[] : [];
+    const todo = Array.isArray((t as any).todo_items_pool) ? (t as any).todo_items_pool as string[] : [];
+    const mode = (t as any).fill_mode === "sequence" ? "sequence" : "pool";
+    const pastCount = (pastQ.data ?? []).length; // 0-based day index for today
+    const pick = <T,>(arr: T[]): T | undefined => {
+      if (arr.length === 0) return undefined;
+      if (mode === "sequence") return arr[Math.min(pastCount, arr.length - 1)];
+      return arr[pastCount % arr.length];
+    };
+    const s = pick(scr);
+    return {
+      scrRef: s?.reference ?? "",
+      scrText: s?.note ?? "",
+      pray: pick(pray) ?? "",
+      todo: pick(todo) ?? "",
+    };
+  }, [templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Read section: follows the active study, including a past study being continued.
   useEffect(() => {
     if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
-    const key = `${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
+    const key = `read:${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
     const e = currentEntry;
-    const t = templateQ.data;
-
-    // Compute prefill values for a brand-new entry on a non-default template.
-    let prefillScrRef = "";
-    let prefillScrText = "";
-    let prefillPray = "";
-    let prefillTodo = "";
-    if (!e && t && !(t as any).is_default) {
-      const scr = Array.isArray((t as any).scripture_items) ? (t as any).scripture_items as Array<{ reference?: string; note?: string }> : [];
-      const pray = Array.isArray((t as any).pray_items) ? (t as any).pray_items as string[] : [];
-      const todo = Array.isArray((t as any).todo_items_pool) ? (t as any).todo_items_pool as string[] : [];
-      const mode = (t as any).fill_mode === "sequence" ? "sequence" : "pool";
-      const pastCount = (pastQ.data ?? []).length; // 0-based day index for today
-      const pick = <T,>(arr: T[]): T | undefined => {
-        if (arr.length === 0) return undefined;
-        if (mode === "sequence") return arr[Math.min(pastCount, arr.length - 1)];
-        return arr[pastCount % arr.length];
-      };
-      const s = pick(scr);
-      if (s) { prefillScrRef = s.reference ?? ""; prefillScrText = s.note ?? ""; }
-      prefillPray = pick(pray) ?? "";
-      prefillTodo = pick(todo) ?? "";
-    }
-
-    setEntryTitle(e?.entry_title ?? "");
-    setEntrySubtitle(e?.entry_subtitle ?? "");
-    setWhereText(e?.where_text ?? e?.reflect_text ?? "");
-    setScriptureRef(e?.scripture_reference ?? prefillScrRef);
-    setScriptureText(e?.scripture_text ?? prefillScrText);
-    setPrayText(e?.pray_text ?? prefillPray);
-    setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
-    const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
-    setTodoItems(items);
+    setScriptureRef(e?.scripture_reference ?? (e ? "" : templatePrefill.scrRef));
+    setScriptureText(e?.scripture_text ?? (e ? "" : templatePrefill.scrText));
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
@@ -865,6 +855,23 @@ function EntryPage() {
     setBooksOfBible(arr.length > 0 ? arr : fallback);
     setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Title / Where / Pray / To-Do stay with the day being worked on — continuing a
+  // past study never overwrites them. Legacy reflect/apply fields fill in when the
+  // newer fields are empty.
+  useEffect(() => {
+    if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
+    const key = `day:${selectedDate}:${dayFieldsEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
+    if (dayHydratedRef.current === key) return;
+    dayHydratedRef.current = key;
+    const e = dayFieldsEntry;
+    setEntryTitle(e?.entry_title ?? "");
+    setEntrySubtitle(e?.entry_subtitle ?? "");
+    setWhereText(e?.where_text ?? e?.reflect_text ?? "");
+    setPrayText(e?.pray_text ?? (e ? "" : templatePrefill.pray));
+    setTodoText(e?.todo_text ?? e?.apply_text ?? (e ? "" : templatePrefill.todo));
+    setTodoItems(Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : []);
+  }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
