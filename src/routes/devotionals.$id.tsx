@@ -2199,6 +2199,7 @@ export function AddEventDialog({
   const [endTime, setEndTime] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -2262,11 +2263,16 @@ export function AddEventDialog({
 
   const remove = async () => {
     if (!event) return;
-    if (!confirm("Delete this event?")) return;
+    setConfirmDelete(true);
+  };
+
+  const confirmRemove = async () => {
+    if (!event) return;
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("user_events" as any).delete().eq("id", event.id);
     setDeleting(false);
     if (error) { setErr(error.message); return; }
+    setConfirmDelete(false);
     onSaved();
     onOpenChange(false);
   };
