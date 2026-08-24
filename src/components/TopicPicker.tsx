@@ -185,33 +185,57 @@ export function TopicPicker({
         .tp-create{display:flex;align-items:center;gap:6px;width:100%;padding:8px 10px;border-radius:8px;border:none;background:#F2FBF4;color:#0F4A42;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;margin-top:4px;}
         .tp-create:hover{background:#E1F5E7;}
         .tp-empty{padding:8px 10px;color:#8a8879;font-size:12px;}
+        .tp-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:transparent;border-radius:8px;color:rgba(24,26,77,0.45);cursor:pointer;padding:0;}
+        .tp-icon svg{width:17px;height:17px;}
+        .tp-icon:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
+        .tp-icon.on{color:#181A4D;}
+        .tp-icon[disabled]{opacity:.4;cursor:not-allowed;}
+        .tp-wrap.icon .tp-menu{right:0;left:auto;}
       `}</style>
-      {value.map((id) => {
-        const t = byId.get(id);
-        if (!t) return null;
-        return (
-          <span key={id} className="tp-chip">
-            {t.display_name ?? t.name}
-            {!disabled && (
-              <button
-                type="button"
-                aria-label={`Remove ${t.display_name ?? t.name}`}
-                onClick={() => toggle(id)}
-              >
-                ×
-              </button>
-            )}
-          </span>
-        );
-      })}
-      <button
-        type="button"
-        className="tp-add"
-        disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {placeholder}
-      </button>
+      {!iconOnly &&
+        value.map((id) => {
+          const t = byId.get(id);
+          if (!t) return null;
+          return (
+            <span key={id} className="tp-chip">
+              {t.display_name ?? t.name}
+              {!disabled && (
+                <button
+                  type="button"
+                  aria-label={`Remove ${t.display_name ?? t.name}`}
+                  onClick={() => toggle(id)}
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          );
+        })}
+      {iconOnly ? (
+        <button
+          type="button"
+          className={`tp-icon${value.length > 0 ? " on" : ""}`}
+          disabled={disabled}
+          title="Add a topic"
+          aria-label="Add a topic"
+          onClick={() => setOpen((o) => !o)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V4a2 2 0 0 1 2-2h8l8.59 8.59a2 2 0 0 1 0 2.82z" />
+            <circle cx="7.5" cy="7.5" r="1.2" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="tp-add"
+          disabled={disabled}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {placeholder}
+        </button>
+      )}
+
       {open && (
         <div className="tp-menu" onClick={(e) => e.stopPropagation()}>
           <input
