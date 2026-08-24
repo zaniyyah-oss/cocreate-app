@@ -54,13 +54,17 @@ export function TopicPicker({
   disabled,
   compact,
   placeholder = "+ Add topic",
+  iconOnly,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   disabled?: boolean;
   compact?: boolean;
   placeholder?: string;
+  /** Compact presentation: a single quiet icon button, no chips. */
+  iconOnly?: boolean;
 }) {
+
   const qc = useQueryClient();
   const topicsQ = useAllTopics();
   const [open, setOpen] = useState(false);
