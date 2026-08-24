@@ -82,7 +82,10 @@ function useConfirmedCounts() {
       }
       return counts;
     },
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    placeholderData: (prev: any) => prev,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -95,15 +98,21 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,pray_text,todo_text,todo_items,book_of_bible,books_of_bible,book_confirmed,topic_ids")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
+        .not("scripture_text", "is", null)
+        .neq("scripture_text", "")
         .order("entry_date", { ascending: false })
         .limit(120);
       if (error) throw error;
       return ((data ?? []) as RecentEntry[]).filter(hasSubstance);
     },
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    placeholderData: (prev: any) => prev,
+    refetchOnWindowFocus: false,
   });
+}
 }
 
 function ReadLibrary() {
