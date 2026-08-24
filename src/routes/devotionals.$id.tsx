@@ -584,6 +584,61 @@ function EntryPage() {
       : (dayEntries[0]?.id ?? null);
   const currentEntry: Entry | undefined = dayEntries.find((e) => e.id === activeEntryId);
 
+  // --- Study switching: start new, or continue an existing study ---------------
+  const [studyMenuOpen, setStudyMenuOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [studyQuery, setStudyQuery] = useState("");
+  const [startDismissed, setStartDismissed] = useState(false);
+  const [addingStudy, setAddingStudy] = useState(false);
+
+  const goToEntry = (e: { id: string; entry_date: string | null }) => {
+    const d = e.entry_date ?? selectedDate;
+    setSelectedDate(d);
+    setStudyMenuOpen(false);
+    setPickerOpen(false);
+    setStudyQuery("");
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: d, entry: e.id } as any });
+  };
+
+  const addStudyForDay = async () => {
+    if (!userId || addingStudy) return;
+    if (dayEntries.length >= MAX_STUDIES_PER_DAY) return;
+    setAddingStudy(true);
+    try {
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
+        .select("*")
+        .single();
+      if (error) throw error;
+      qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => [data as Entry, ...(cur ?? [])]);
+      trackEvent("devotional_entry_created", { template_id: id });
+      goToEntry(data as Entry);
+    } catch (err) {
+      console.error("could not add study", err);
+    } finally {
+      setAddingStudy(false);
+    }
+  };
+
+  const studyLabel = (e: Entry | undefined, idx: number) =>
+    (e?.entry_title && e.entry_title.trim()) ||
+    (e?.scripture_reference && e.scripture_reference.trim()) ||
+    `Study ${idx + 1}`;
+
+  // Past studies (any date) available to continue, most recent first.
+  const continuable = useMemo(() => {
+    const q = studyQuery.trim().toLowerCase();
+    return (pastQ.data ?? [])
+      .filter((e) => e.entry_date !== selectedDate)
+      .filter((e) => {
+        if (!q) return true;
+        return `${e.entry_title ?? ""} ${e.scripture_reference ?? ""}`.toLowerCase().includes(q);
+      })
+      .slice(0, 40);
+  }, [pastQ.data, selectedDate, studyQuery]);
+
+
   // 5-section state
   const [entryTitle, setEntryTitle] = useState("");
   const [entrySubtitle, setEntrySubtitle] = useState("");
