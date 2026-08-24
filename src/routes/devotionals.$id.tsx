@@ -652,9 +652,16 @@ function EntryPage() {
 
   // Delete only the study (Read column). The rest of the day — title, Where,
   // Pray, To-Do — is never removed; the row goes away only if it's otherwise empty.
-  const deleteStudy = async (entryId: string) => {
+  // Deleting a study is destructive — always confirm with the branded modal first.
+  const requestDeleteStudy = (entryId: string) => {
     if (!userId || deletingStudy) return;
-    if (typeof window !== "undefined" && !window.confirm("Delete this study? The rest of the day's entry is kept.")) return;
+    setStudyMenuOpen(false);
+    setPendingDeleteStudyId(entryId);
+  };
+
+  const confirmDeleteStudy = async () => {
+    const entryId = pendingDeleteStudyId;
+    if (!entryId || !userId || deletingStudy) return;
     setDeletingStudy(true);
     try {
       const outcome = await deleteStudyOnly(entryId);
@@ -665,7 +672,7 @@ function EntryPage() {
         await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
       }
       pendingEntryPatchRef.current = null;
-      setStudyMenuOpen(false);
+      setPendingDeleteStudyId(null);
       if (outcome === "cleared") {
         navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: entryId } as any });
       } else {
@@ -684,6 +691,11 @@ function EntryPage() {
       setDeletingStudy(false);
     }
   };
+
+  const pendingDeleteStudyName = useMemo(() => {
+    const e = pendingDeleteStudyId ? dayEntries.find((d) => d.id === pendingDeleteStudyId) : null;
+    return (e?.scripture_reference && e.scripture_reference.trim()) || e?.entry_title || "Untitled study";
+  }, [pendingDeleteStudyId, dayEntries]);
 
 
 
