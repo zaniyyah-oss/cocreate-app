@@ -59,48 +59,8 @@ const formatLong = (iso: string) =>
 // ─── Layout / styles ────────────────────────────────────────────────
 const NOTES_CSS = `
 .nt-frame{width:100%;height:100%;background:#FBF8ED;display:flex;overflow:hidden;font-family:'Poppins',sans-serif;}
-.nt-panel-body .ws-editor-content, .nt-panel-body .ProseMirror{font-family:'Poppins',sans-serif;font-size:13.5px;line-height:1.55;color:#20201C;outline:none;padding:0;}
-.nt-panel-body .ws-editor-content p, .nt-panel-body .ProseMirror p{margin:0 0 8px;}
-.nt-panel-body .ws-editor-content p:last-child, .nt-panel-body .ProseMirror p:last-child{margin-bottom:0;}
-.nt-panel-body .ws-editor-content strong, .nt-panel-body .ProseMirror strong{font-weight:700;color:#181A4D;}
-.nt-panel-body .ws-editor-content em, .nt-panel-body .ProseMirror em{font-style:italic;}
-.nt-panel-body .ws-editor-content h1, .nt-panel-body .ProseMirror h1{font-size:20px;font-weight:700;color:#181A4D;margin:12px 0 6px;letter-spacing:-0.005em;}
-.nt-panel-body .ws-editor-content h2, .nt-panel-body .ProseMirror h2{font-size:17px;font-weight:700;color:#181A4D;margin:12px 0 6px;letter-spacing:-0.005em;}
-.nt-panel-body .ws-editor-content h3, .nt-panel-body .ProseMirror h3{font-size:15px;font-weight:700;color:#181A4D;margin:10px 0 5px;}
-.nt-panel-body .ws-editor-content ul, .nt-panel-body .ProseMirror ul{list-style:disc outside;padding-left:18px;margin:0 0 6px;}
-.nt-panel-body .ws-editor-content ol, .nt-panel-body .ProseMirror ol{list-style:decimal outside;padding-left:20px;margin:0 0 6px;}
-.nt-panel-body .ws-editor-content ul ul, .nt-panel-body .ws-editor-content ol ul, .nt-panel-body .ws-editor-content ul ol, .nt-panel-body .ws-editor-content ol ol,
-.nt-panel-body .ProseMirror ul ul, .nt-panel-body .ProseMirror ol ul, .nt-panel-body .ProseMirror ul ol, .nt-panel-body .ProseMirror ol ol{padding-left:18px;margin:2px 0;}
-.nt-panel-body .ws-editor-content li, .nt-panel-body .ProseMirror li{margin-bottom:2px;padding-left:2px;}
-.nt-panel-body .ws-editor-content li::marker, .nt-panel-body .ProseMirror li::marker{color:#181A4D;}
-.nt-panel-body .ws-editor-content li > p, .nt-panel-body .ProseMirror li > p{margin:0;}
-.nt-panel-body .ws-editor-content blockquote, .nt-panel-body .ProseMirror blockquote{border-left:3px solid #DCE07A;padding:2px 0 2px 12px;margin:8px 0;color:#5c5847;font-style:italic;}
-.nt-panel-body .ws-editor-content mark, .nt-panel-body .ProseMirror mark{padding:0 2px;border-radius:3px;}
-.nt-panel-body .ws-editor-content a, .nt-panel-body .ws-editor-content a.ws-link, .nt-panel-body .ProseMirror a{color:#181A4D;text-decoration:underline;}
-.nt-panel-body .ws-editor-content img, .nt-panel-body .ws-editor-content img.ws-img, .nt-panel-body .ProseMirror img{max-width:100%;height:auto;border-radius:8px;margin:8px 0;display:block;}
-.nt-panel-body .ws-editor-content code, .nt-panel-body .ProseMirror code{background:rgba(24,26,77,0.06);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;color:#181A4D;}
-.nt-panel-body .ws-editor-content pre, .nt-panel-body .ProseMirror pre{background:#181A4D;color:#DCE07A;border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;line-height:1.55;}
-.nt-panel-body .ws-editor-content pre code, .nt-panel-body .ProseMirror pre code{background:transparent;padding:0;color:inherit;}
-.nt-panel-body .ws-editor-content hr, .nt-panel-body .ProseMirror hr{border:none;border-top:1px solid rgba(24,26,77,0.14);margin:14px 0;}
-.nt-panel-body .ws-editor-content .ws-table, .nt-panel-body .ProseMirror table{border-collapse:collapse;margin:10px 0;width:100%;table-layout:fixed;overflow:hidden;}
-.nt-panel-body .ws-editor-content .ws-table td, .nt-panel-body .ws-editor-content .ws-table th,
-.nt-panel-body .ProseMirror table td, .nt-panel-body .ProseMirror table th{border:1px solid rgba(24,26,77,0.18);padding:6px 8px;vertical-align:top;min-width:60px;position:relative;}
-.nt-panel-body .ws-editor-content .ws-table th, .nt-panel-body .ProseMirror table th{background:#F1EDDD;font-weight:700;color:#181A4D;text-align:left;}
-.nt-panel-body .ws-editor-content .ws-callout{display:flex;gap:10px;background:#FFF4D6;border:1px solid rgba(255,174,0,0.35);border-left:4px solid #FFAE00;border-radius:8px;padding:10px 12px;margin:10px 0;}
-.nt-panel-body .ws-editor-content .ws-callout[data-tone="teal"]{background:#E4F1EE;border-color:rgba(15,74,66,0.25);border-left-color:#0F4A42;}
-.nt-panel-body .ws-editor-content .ws-callout[data-tone="blush"]{background:#FBE3E9;border-color:rgba(233,144,162,0.35);border-left-color:#E990A2;}
-.nt-panel-body .ws-editor-content .ws-callout[data-tone="lime"]{background:#F2F4C7;border-color:rgba(202,195,7,0.4);border-left-color:#CAC307;}
-.nt-panel-body .ws-editor-content .ws-callout-emoji{font-size:18px;line-height:1.4;user-select:none;flex-shrink:0;}
-.nt-panel-body .ws-editor-content .ws-callout-body{flex:1;min-width:0;}
-.nt-panel-body .ws-editor-content .ws-callout-body > *:last-child{margin-bottom:0;}
-.nt-panel-body .ws-editor-content .ws-linkcard{display:flex;gap:12px;border:1px solid rgba(24,26,77,0.1);background:#FBF8ED;border-radius:10px;overflow:hidden;text-decoration:none;color:inherit;margin:8px 0;max-width:520px;}
-.nt-panel-body .ws-editor-content .ws-linkcard-img{flex:0 0 96px;background-size:cover;background-position:center;background-color:#DCE07A;}
-.nt-panel-body .ws-editor-content .ws-linkcard-body{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0;}
-.nt-panel-body .ws-editor-content .ws-linkcard-domain{font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#181A4D;}
-.nt-panel-body .ws-editor-content .ws-linkcard-title{font-size:13px;font-weight:700;color:#181A4D;line-height:1.35;}
-.nt-panel-body .ws-editor-content .ws-linkcard-desc{font-size:12px;color:#8a8678;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 /* ── Page frame ─────────────────────────────────────────────── */
-.nt-wrap{width:100%;min-height:100%;background:#FBF8ED;font-family:'Poppins',sans-serif;display:flex;flex-direction:column;padding:40px 44px 28px;overflow:hidden;}
+.nt-wrap{width:100%;min-height:100%;background:#FBF8ED;font-family:'Poppins',sans-serif;display:flex;flex-direction:column;padding:40px 44px 28px;overflow:visible;}
 .nt-eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#0F4A42;margin:0 0 8px;}
 .nt-h1{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:46px;line-height:1;letter-spacing:-.02em;margin:0 0 10px;color:#20201C;}
 .nt-desc{color:#6B6862;font-size:15px;line-height:1.55;max-width:640px;margin:0 0 22px;}
@@ -143,8 +103,8 @@ const NOTES_CSS = `
 .nt-railempty{font-size:12.5px;color:#8a8678;padding:8px 0 18px;border-bottom:1px solid #E7E1CF;margin-bottom:6px;}
 
 /* ── Split body ─────────────────────────────────────────────── */
-.nt-split{display:flex;gap:24px;flex:1;min-height:0;margin-top:18px;}
-.nt-listcol{width:390px;flex-shrink:0;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:10px;}
+.nt-split{display:flex;gap:24px;align-items:flex-start;margin-top:18px;}
+.nt-listcol{width:390px;flex-shrink:0;padding-right:6px;display:flex;flex-direction:column;gap:10px;}
 .nt-card{background:#fff;border:1px solid #E7E1CF;border-radius:14px;padding:16px 18px;cursor:pointer;border-left:4px solid transparent;text-align:left;font-family:inherit;width:100%;transition:border-color .15s ease;}
 .nt-card:hover{border-color:#d8d2bd;}
 .nt-card.open{border-left-color:#DCE07A;background:#F3F6DC;border-color:#EAEECB;}
@@ -156,8 +116,8 @@ const NOTES_CSS = `
 .nt-doc-preview{font-size:12.5px;color:#6B6862;line-height:1.45;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .nt-doc-empty{padding:26px 4px;color:#8a8678;font-size:12.5px;line-height:1.55;}
 
-.nt-detailcol{flex:1;min-width:0;overflow-y:auto;}
-.nt-detailcard{background:#fff;border:1px solid #E7E1CF;border-radius:18px;min-height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.nt-detailcol{flex:1;min-width:0;}
+.nt-detailcard{background:#fff;border:1px solid #E7E1CF;border-radius:18px;display:flex;flex-direction:column;overflow:visible;}
 .nt-backbtn{display:none;}
 
 
@@ -166,15 +126,15 @@ const NOTES_CSS = `
 .nt-edit-btn{background:#FBF8ED;border:1px solid rgba(24,26,77,0.15);color:#181A4D;border-radius:999px;padding:6px 16px;font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;cursor:pointer;margin-right:4px;}
 .nt-edit-btn:hover{background:#DCE07A;border-color:#CAC307;}
 .nt-edit-btn.active{background:#181A4D;color:#DCE07A;border-color:#181A4D;}
-.nt-panel{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#fff;}
-.nt-panel-header{padding:22px 30px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #F0EBDC;background:#fff;flex-shrink:0;}
+.nt-panel{flex:1;display:flex;flex-direction:column;min-width:0;background:#fff;border-radius:18px;}
+.nt-panel-header{padding:22px 30px 14px;border-radius:18px 18px 0 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #F0EBDC;background:#fff;flex-shrink:0;}
 .nt-panel-header-info{min-width:0;flex:1;}
 .nt-tag-pill{display:inline-block;font-size:10px;font-weight:700;padding:4px 10px;border-radius:999px;background:#DCE07A;color:#181A4D;margin-bottom:6px;letter-spacing:.02em;}
 .nt-p-title{font-weight:800;font-size:20px;color:#20201C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .nt-p-date{font-size:12px;color:#8a8678;font-weight:500;margin-top:3px;}
 .nt-panel-close{background:none;border:none;cursor:pointer;color:#8a8678;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;flex-shrink:0;}
 .nt-panel-close:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
-.nt-panel-body{flex:1;overflow-y:auto;padding:24px 30px 30px;}
+.nt-panel-body{flex:1;padding:24px 34px 34px;}
 
 .nt-panel-title-input{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;color:#20201C;margin-bottom:8px;padding:0;outline:none;letter-spacing:-0.01em;}
 .nt-panel-title-input::placeholder{color:#181A4D;opacity:0.3;}
@@ -756,7 +716,7 @@ function DocPanel({
           ✕
         </button>
       </header>
-      <div className="nt-panel-body">
+      <div className="nt-panel-body ws-doc">
         {editing ? (
           <input
             className="nt-panel-title-input"
