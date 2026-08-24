@@ -417,7 +417,7 @@ function NotesLibrary({ userId }: { userId: string }) {
               className={`nt-chip all ${tagFilter === "" ? "active" : ""} ${allTagsOpen ? "open" : ""}`}
               onClick={() => setAllTagsOpen((v) => !v)}
             >
-              All tags ({docs.length}) <span className="nt-alltags-caret" aria-hidden>▾</span>
+              All tags <span className="nt-alltags-caret" aria-hidden>▾</span>
             </button>
             {allTagsOpen && (
               <div className="nt-alltags-menu">
