@@ -326,17 +326,43 @@ function MobileBubble({ editor }: { editor: Editor }) {
   );
 }
 
+/* ── Toolbar icons ─────────────────────────────────────────────────── */
+const I = {
+  bold: <svg viewBox="0 0 24 24"><path d="M7 5h6.5a4 4 0 0 1 0 8H7z" /><path d="M7 13h7a4 4 0 0 1 0 8H7z" /></svg>,
+  italic: <svg viewBox="0 0 24 24"><line x1="14" y1="4" x2="9" y2="20" /><line x1="6" y1="20" x2="10" y2="20" /><line x1="13" y1="4" x2="17" y2="4" /></svg>,
+  underline: <svg viewBox="0 0 24 24"><path d="M6 4v7a6 6 0 0 0 12 0V4" /><line x1="5" y1="20" x2="19" y2="20" /></svg>,
+  bullet: <svg viewBox="0 0 24 24"><circle cx="4.5" cy="6" r="1" /><circle cx="4.5" cy="12" r="1" /><circle cx="4.5" cy="18" r="1" /><line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" /></svg>,
+  ordered: <svg viewBox="0 0 24 24"><text x="1.5" y="8" fontSize="7" stroke="none" fill="currentColor">1</text><text x="1.5" y="14" fontSize="7" stroke="none" fill="currentColor">2</text><text x="1.5" y="20" fontSize="7" stroke="none" fill="currentColor">3</text><line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" /></svg>,
+  quote: <svg viewBox="0 0 24 24"><path d="M7 8a3 3 0 0 0-3 3v2a2 2 0 0 0 2 2h2v-4H6a1 1 0 0 1 1-1z" /><path d="M16 8a3 3 0 0 0-3 3v2a2 2 0 0 0 2 2h2v-4h-2a1 1 0 0 1 1-1z" /></svg>,
+  indent: <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6" /><line x1="10" y1="12" x2="20" y2="12" /><line x1="10" y1="18" x2="20" y2="18" /><polyline points="4 10 8 12 4 14" /></svg>,
+  outdent: <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6" /><line x1="10" y1="12" x2="20" y2="12" /><line x1="10" y1="18" x2="20" y2="18" /><polyline points="8 10 4 12 8 14" /></svg>,
+  divider: <svg viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" strokeDasharray="3 3" /></svg>,
+  highlight: <svg viewBox="0 0 24 24"><path d="M9 11 15 5l4 4-6 6" /><path d="M9 11 5 15v4h4l4-4" /></svg>,
+  textColor: <svg viewBox="0 0 24 24"><path d="M5 20 11 4h2l6 16" /><path d="M8 14h8" /></svg>,
+  plus: <svg viewBox="0 0 24 24" style={{ width: 15, height: 15 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
+  chevron: <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>,
+  callout: <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" /><line x1="4" y1="10" x2="20" y2="10" /></svg>,
+  table: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="9" y1="10" x2="9" y2="20" /></svg>,
+  image: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="M4 17l5-5 4 4 3-3 4 4" /></svg>,
+  link: <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></svg>,
+};
+
 function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const [colorOpen, setColorOpen] = useState(false);
-  const [hlOpen, setHlOpen] = useState(false);
-  const [tableOpen, setTableOpen] = useState(false);
-  const [toneOpen, setToneOpen] = useState(false);
+  const [menu, setMenu] = useState<null | "heading" | "hl" | "color" | "insert">(null);
 
   // Toolbar sticks via CSS — no scroll-driven transforms (they caused
   // shimmering as the visual viewport updated).
 
+  useEffect(() => {
+    if (!menu) return;
+    const onDown = (e: MouseEvent) => {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) setMenu(null);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menu]);
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -346,7 +372,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const btn = (label: React.ReactNode, onClick: () => void, active = false, title?: string) => (
+  const btn = (label: React.ReactNode, onClick: () => void, active = false, title?: string, extra?: React.ReactNode) => (
     <button
       type="button"
       className={`ws-tb-btn ${active ? "on" : ""}`}
@@ -357,6 +383,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       aria-label={title}
     >
       {label}
+      {extra}
     </button>
   );
 
@@ -371,165 +398,206 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   };
 
   const inTable = editor.isActive("table");
+  const inCallout = editor.isActive("callout");
+  const headingLevel = ([1, 2, 3] as const).find((l) => editor.isActive("heading", { level: l }));
+  const headingLabel = headingLevel ? `Heading ${headingLevel}` : "Paragraph";
+  const hlColor = (editor.getAttributes("highlight")?.color as string) || "transparent";
+  const txColor = (editor.getAttributes("textStyle")?.color as string) || "#20201C";
+  const toggle = (name: typeof menu) => setMenu((m) => (m === name ? null : name));
 
   return (
     <div className="ws-toolbar" ref={barRef}>
-      {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
-      {btn(<i>I</i>, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
-      {btn(<span style={{ textDecoration: "underline" }}>U</span>, () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"), `Underline (${mod}+U)`)}
-      {btn("H1", () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }), `Heading 1 (${mod}+${alt}+1)`)}
-      {btn("H2", () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }), `Heading 2 (${mod}+${alt}+2)`)}
-      {btn("H3", () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive("heading", { level: 3 }), `Heading 3 (${mod}+${alt}+3)`)}
-      {btn("• List", () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
-      {btn("1. List", () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
-      {btn("“ Quote", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
-      {btn("→|", () => {
-        if (editor.isActive("listItem")) {
-          if (editor.chain().focus().sinkListItem("listItem").run()) return;
-        }
-        (editor.chain().focus() as any).indent().run();
-      }, false, "Indent (Tab)")}
-      {btn("|←", () => {
-        if (editor.isActive("listItem")) {
-          if (editor.chain().focus().liftListItem("listItem").run()) return;
-        }
-        (editor.chain().focus() as any).outdent().run();
-      }, false, "Outdent (Shift+Tab)")}
-
-      {btn("— Divider", () => editor.chain().focus().setHorizontalRule().run(), false, "Insert horizontal line")}
-
-      {/* Highlight picker */}
-      <div style={{ position: "relative" }}>
-        {btn(
-          <span style={{ background: "#FDE68A", padding: "0 4px", borderRadius: 3 }}>H</span>,
-          () => { setHlOpen((v) => !v); setColorOpen(false); setTableOpen(false); },
-          editor.isActive("highlight"),
-          `Highlight (${mod}+${shift}+H)`
-        )}
-        {hlOpen && (
-          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
-            {HIGHLIGHT_COLORS.map((c) => (
-              <button
-                key={c.name}
-                className="ws-swatch"
-                title={c.name}
-                style={{ background: c.value || "transparent", border: c.value ? "1px solid rgba(0,0,0,0.08)" : "1px dashed rgba(0,0,0,0.25)" }}
-                onClick={() => {
-                  // With no text selected, highlight the whole current line/block.
-                  const { empty, $from } = editor.state.selection;
-                  let chain = editor.chain().focus();
-                  if (empty) chain = chain.setTextSelection({ from: $from.start(), to: $from.end() });
-                  if (!c.value) chain.unsetHighlight().run();
-                  else chain.setHighlight({ color: c.value }).run();
-                  setHlOpen(false);
-                }}
-              >
-                {c.value ? "" : "×"}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="ws-tbgroup">
+        {btn(I.bold, () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
+        {btn(I.italic, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
+        {btn(I.underline, () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"), `Underline (${mod}+U)`)}
       </div>
 
-      {/* Text color picker */}
-      <div style={{ position: "relative" }}>
-        {btn(
-          <span style={{ color: "#FF340C", fontWeight: 700 }}>A</span>,
-          () => { setColorOpen((v) => !v); setHlOpen(false); setTableOpen(false); },
-          false,
-          "Text color"
-        )}
-        {colorOpen && (
-          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
-            {TEXT_COLORS.map((c) => (
-              <button
-                key={c.name}
-                className="ws-swatch"
-                title={c.name}
-                style={{ background: c.value || "transparent", border: c.value ? "1px solid rgba(0,0,0,0.08)" : "1px dashed rgba(0,0,0,0.25)", color: c.value ? "#fff" : "#20201C" }}
-                onClick={() => {
-                  if (!c.value) editor.chain().focus().unsetColor().run();
-                  else editor.chain().focus().setColor(c.value).run();
-                  setColorOpen(false);
-                }}
-              >
-                {c.value ? "" : "×"}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <div className="ws-tbdiv" />
 
-      {/* Callout with tone picker */}
-      <div style={{ position: "relative" }}>
-        {btn(
-          "Callout",
-          () => {
-            const active = editor.isActive("callout");
-            if (active) { setToneOpen((v) => !v); setHlOpen(false); setColorOpen(false); setTableOpen(false); }
-            else { editor.chain().focus().toggleCallout().run(); }
-          },
-          editor.isActive("callout"),
-          editor.isActive("callout") ? "Callout tone" : `Callout (${mod}+${shift}+C)`
-        )}
-        {toneOpen && editor.isActive("callout") && (
+      <div className="ws-tbgroup">
+        <button
+          type="button"
+          className={`ws-tb-dd ${menu === "heading" ? "on" : ""}`}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => toggle("heading")}
+          title="Text style"
+        >
+          <span>{headingLabel}</span>
+          {I.chevron}
+        </button>
+        {menu === "heading" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
-            {[
-              { tone: "amber", label: "Amber", swatch: "#FFF4D6" },
-              { tone: "teal", label: "Teal", swatch: "#E4F1EE" },
-              { tone: "blush", label: "Blush", swatch: "#FBE3E9" },
-              { tone: "lime", label: "Lime", swatch: "#F2F4C7" },
-            ].map((t) => (
+            {([1, 2, 3] as const).map((lvl) => (
               <button
-                key={t.tone}
+                key={lvl}
                 className="ws-popbtn"
-                onClick={() => {
-                  editor.chain().focus().updateAttributes("callout", { tone: t.tone }).run();
-                  setToneOpen(false);
-                }}
+                onClick={() => { editor.chain().focus().setHeading({ level: lvl }).run(); setMenu(null); }}
               >
-                <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 3, background: t.swatch, border: "1px solid rgba(0,0,0,0.1)", marginRight: 8, verticalAlign: "middle" }} />
-                {t.label}
+                <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 900, fontSize: lvl === 1 ? 16 : lvl === 2 ? 14 : 12 }}>Heading {lvl}</span>
+                <span className="ws-poptag">H{lvl}</span>
               </button>
             ))}
-            <button
-              className="ws-popbtn"
-              onClick={() => { editor.chain().focus().unsetCallout().run(); setToneOpen(false); }}
-            >
-              Remove callout
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().setParagraph().run(); setMenu(null); }}>
+              Paragraph<span className="ws-poptag">TXT</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Table */}
-      <div style={{ position: "relative" }}>
-        {btn("▦ Table", () => setTableOpen((v) => !v), inTable, "Table")}
-        {tableOpen && (
-          <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
-            {!inTable && (
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setTableOpen(false); }}>Insert 3×3 table</button>
-            )}
-            {inTable && <>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>Row above</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>Row below</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>Column left</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>Column right</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>Delete row</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>Delete column</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Toggle header row</button>
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setTableOpen(false); }}>Delete table</button>
-            </>}
+      <div className="ws-tbdiv" />
+
+      <div className="ws-tbgroup">
+        {btn(I.bullet, () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
+        {btn(I.ordered, () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
+        {btn(I.quote, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
+      </div>
+
+      <div className="ws-tbdiv" />
+
+      <div className="ws-tbgroup">
+        {btn(I.indent, () => {
+          if (editor.isActive("listItem") && editor.chain().focus().sinkListItem("listItem").run()) return;
+          (editor.chain().focus() as any).indent().run();
+        }, false, "Indent (Tab)")}
+        {btn(I.outdent, () => {
+          if (editor.isActive("listItem") && editor.chain().focus().liftListItem("listItem").run()) return;
+          (editor.chain().focus() as any).outdent().run();
+        }, false, "Outdent (Shift+Tab)")}
+        {btn(I.divider, () => editor.chain().focus().setHorizontalRule().run(), false, "Divider")}
+      </div>
+
+      <div className="ws-tbdiv" />
+
+      {/* Highlight */}
+      <div className="ws-tbgroup">
+        {btn(
+          I.highlight,
+          () => toggle("hl"),
+          editor.isActive("highlight"),
+          `Highlight (${mod}+${shift}+H)`,
+          <span className="ws-tb-swatchbar" style={{ background: hlColor }} />
+        )}
+        {menu === "hl" && (
+          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
+            <p className="ws-popover-label">Highlight</p>
+            {HIGHLIGHT_COLORS.map((c) => (
+              <button
+                key={c.name}
+                className="ws-swatch"
+                title={c.name}
+                style={{ background: c.value || "#fff", borderColor: c.value ? "transparent" : "rgba(32,32,28,0.35)", borderStyle: c.value ? "solid" : "dashed" }}
+                onClick={() => {
+                  const { empty, $from } = editor.state.selection;
+                  let chain = editor.chain().focus();
+                  if (empty) chain = chain.setTextSelection({ from: $from.start(), to: $from.end() });
+                  if (!c.value) chain.unsetHighlight().run();
+                  else chain.setHighlight({ color: c.value }).run();
+                  setMenu(null);
+                }}
+              >
+                {c.value ? "" : "✕"}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()} title="Insert image">Image</button>
+      {/* Text color */}
+      <div className="ws-tbgroup">
+        {btn(
+          I.textColor,
+          () => toggle("color"),
+          false,
+          "Text color",
+          <span className="ws-tb-swatchbar" style={{ background: txColor }} />
+        )}
+        {menu === "color" && (
+          <div className="ws-popover" onMouseDown={(e) => e.preventDefault()}>
+            <p className="ws-popover-label">Text color</p>
+            {TEXT_COLORS.map((c) => (
+              <button
+                key={c.name}
+                className="ws-swatch"
+                title={c.name}
+                style={{ background: c.value || "#fff", borderColor: c.value ? "transparent" : "rgba(32,32,28,0.35)", borderStyle: c.value ? "solid" : "dashed", color: "#20201C" }}
+                onClick={() => {
+                  if (!c.value) editor.chain().focus().unsetColor().run();
+                  else editor.chain().focus().setColor(c.value).run();
+                  setMenu(null);
+                }}
+              >
+                {c.value ? "" : "✕"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="ws-tbdiv" />
+
+      {/* Insert */}
+      <div className="ws-tbgroup">
+        <button
+          type="button"
+          className={`ws-tb-dd ${menu === "insert" ? "on" : ""}`}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => toggle("insert")}
+          title="Insert"
+        >
+          {I.plus}
+          <span>Insert</span>
+          {I.chevron}
+        </button>
+        {menu === "insert" && (
+          <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+            {!inCallout && (
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout</button>
+            )}
+            {inCallout && <>
+              {[
+                { tone: "amber", label: "Amber callout", swatch: "#FFF4D6" },
+                { tone: "teal", label: "Teal callout", swatch: "#E4F1EE" },
+                { tone: "blush", label: "Blush callout", swatch: "#FBE3E9" },
+                { tone: "lime", label: "Lime callout", swatch: "#F2F4C7" },
+              ].map((t) => (
+                <button
+                  key={t.tone}
+                  className="ws-popbtn"
+                  onClick={() => { editor.chain().focus().updateAttributes("callout", { tone: t.tone }).run(); setMenu(null); }}
+                >
+                  <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 3, background: t.swatch, border: "1px solid rgba(0,0,0,0.1)" }} />
+                  {t.label}
+                </button>
+              ))}
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().unsetCallout().run(); setMenu(null); }}>Remove callout</button>
+            </>}
+
+            {!inTable && (
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
+            )}
+            {inTable && <>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>{I.table}Row below</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>{I.table}Row above</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>{I.table}Column right</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>{I.table}Column left</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>{I.table}Delete row</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>{I.table}Delete column</button>
+              <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>{I.table}Toggle header row</button>
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setMenu(null); }}>{I.table}Delete table</button>
+            </>}
+
+            <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image</button>
+            <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkCard(); }}>{I.link}Link card</button>
+          </div>
+        )}
+      </div>
+
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
-      <button type="button" className="ws-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={addLinkCard} title="Add link card">Link card</button>
     </div>
   );
 }
+
 
 async function uploadImage(file: File, userId: string): Promise<string | null> {
   try {
