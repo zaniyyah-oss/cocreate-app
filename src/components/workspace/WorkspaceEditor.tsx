@@ -582,6 +582,39 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         )}
       </div>
 
+      {inTable && (
+        <>
+          <div className="ws-tbdiv" />
+          <div className="ws-tbgroup">
+            <button
+              type="button"
+              className={`ws-tb-dd ${menu === "table" ? "on" : ""}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => toggle("table")}
+              title="Table"
+            >
+              {I.table}
+              <span>Table</span>
+              {I.chevron}
+            </button>
+            {menu === "table" && (
+              <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>Row below</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>Row above</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>Column right</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>Column left</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Toggle header row</button>
+                <div className="ws-popdiv" />
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>Delete this row</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>Delete this column</button>
+                <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setMenu(null); }}>Delete entire table</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      </div>
+
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
     </div>
   );
