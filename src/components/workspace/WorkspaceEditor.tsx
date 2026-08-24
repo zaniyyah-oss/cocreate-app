@@ -350,7 +350,7 @@ const I = {
 function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const [menu, setMenu] = useState<null | "heading" | "hl" | "color" | "insert">(null);
+  const [menu, setMenu] = useState<null | "heading" | "hl" | "color" | "insert" | "table">(null);
 
   // Toolbar sticks via CSS — no scroll-driven transforms (they caused
   // shimmering as the visual viewport updated).
@@ -573,25 +573,46 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().unsetCallout().run(); setMenu(null); }}>Remove callout</button>
             </>}
 
-            {!inTable && (
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
-            )}
-            {inTable && <>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>{I.table}Row below</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>{I.table}Row above</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>{I.table}Column right</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>{I.table}Column left</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>{I.table}Delete row</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>{I.table}Delete column</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>{I.table}Toggle header row</button>
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setMenu(null); }}>{I.table}Delete table</button>
-            </>}
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
+
 
             <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image</button>
             <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkCard(); }}>{I.link}Link card</button>
           </div>
         )}
       </div>
+
+      {inTable && (
+        <>
+          <div className="ws-tbdiv" />
+          <div className="ws-tbgroup">
+            <button
+              type="button"
+              className={`ws-tb-dd ${menu === "table" ? "on" : ""}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => toggle("table")}
+              title="Table"
+            >
+              {I.table}
+              <span>Table</span>
+              {I.chevron}
+            </button>
+            {menu === "table" && (
+              <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>Row below</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>Row above</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>Column right</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>Column left</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Toggle header row</button>
+                <div className="ws-popdiv" />
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>Delete this row</button>
+                <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>Delete this column</button>
+                <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setMenu(null); }}>Delete entire table</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
     </div>
