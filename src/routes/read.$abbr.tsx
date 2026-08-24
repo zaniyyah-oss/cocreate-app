@@ -266,12 +266,66 @@ function BookDetail() {
             </div>
           )}
 
+          {chapters.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Chapter</span>
+              <div className="rb-filter-chips">
+                {chapters.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`rb-fchip ${chapter === c ? "on" : ""}`}
+                    onClick={() => {
+                      setVerse(null);
+                      setChapter((cur) => (cur === c ? null : c));
+                    }}
+                  >
+                    {abbr} {c}
+                  </button>
+                ))}
+                {chapter != null && (
+                  <button
+                    type="button"
+                    className="rb-fchip clear"
+                    onClick={() => { setChapter(null); setVerse(null); }}
+                  >
+                    All chapters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {chapter != null && verses.length > 0 && (
+            <div className="rb-filter">
+              <span className="rb-filter-lbl">Verse</span>
+              <div className="rb-filter-chips">
+                {verses.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`rb-fchip ${verse === v ? "on" : ""}`}
+                    onClick={() => setVerse((cur) => (cur === v ? null : v))}
+                  >
+                    v{v}
+                  </button>
+                ))}
+                {verse != null && (
+                  <button type="button" className="rb-fchip clear" onClick={() => setVerse(null)}>
+                    All verses
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {entries.length === 0 ? (
             <div className="rb-empty">
               No studies yet in {fullName} — entries you tag will show up here.
             </div>
           ) : visibleEntries.length === 0 ? (
-            <div className="rb-empty">No studies match the selected topics.</div>
+            <div className="rb-empty">No studies match the selected filters.</div>
+
           ) : (
             <div className="rb-list">
               {visibleEntries.map((e) => (
