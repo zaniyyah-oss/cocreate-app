@@ -573,19 +573,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().unsetCallout().run(); setMenu(null); }}>Remove callout</button>
             </>}
 
-            {!inTable && (
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
-            )}
-            {inTable && <>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowAfter().run()}>{I.table}Row below</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addRowBefore().run()}>{I.table}Row above</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>{I.table}Column right</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>{I.table}Column left</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>{I.table}Delete row</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>{I.table}Delete column</button>
-              <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>{I.table}Toggle header row</button>
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().deleteTable().run(); setMenu(null); }}>{I.table}Delete table</button>
-            </>}
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
+
 
             <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image</button>
             <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkCard(); }}>{I.link}Link card</button>
