@@ -6,6 +6,7 @@ import { SAVED_CSS, SignGate, useAuth } from "@/components/saved-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 export const Route = createFileRoute("/notes")({
   validateSearch: (s: Record<string, unknown>): { doc?: string } =>

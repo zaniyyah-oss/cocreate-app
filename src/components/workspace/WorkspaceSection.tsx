@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 
