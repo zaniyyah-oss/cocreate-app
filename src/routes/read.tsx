@@ -965,6 +965,57 @@ function FullScreenNote({
   );
 }
 
+function DeleteStudyModal({
+  entry,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  entry: RecentEntry | null;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel, busy]);
+
+  const studyName = entry
+    ? entry.scripture_reference || entry.entry_title || "Untitled study"
+    : "this study";
+
+  return (
+    <div className="rd-del-overlay" role="dialog" aria-modal="true" aria-label="Delete study" onClick={() => { if (!busy) onCancel(); }}>
+      <div className="rd-del-card" onClick={(e) => e.stopPropagation()}>
+        <div className="rd-del-iconwrap">
+          <span className="rd-del-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M6 6l1 14h10l1-14" />
+            </svg>
+          </span>
+        </div>
+        <div className="rd-del-body">
+          <h2 className="rd-del-title">Delete this study?</h2>
+          <div className="rd-del-studyname" title={studyName}>{studyName}</div>
+          <p className="rd-del-copy">This can't be undone. The study and its notes will be permanently removed from your library.</p>
+        </div>
+        <div className="rd-del-actions">
+          <button type="button" className="rd-del-cancel" onClick={onCancel} disabled={busy}>Cancel</button>
+          <button type="button" className="rd-del-confirm" onClick={onConfirm} disabled={busy}>
+            {busy ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TopicsSection({
   topics,
   entries,
