@@ -8,6 +8,8 @@ import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
 import { RichTextField, stripHtml } from "@/components/RichTextField";
+import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
+import { useAuth } from "@/components/saved-shared";
 import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
 import { SavedContentPanel } from "@/components/SavedContentPanel";
 
@@ -969,20 +971,23 @@ function FullScreenNote({
           {entry.scripture_reference || entry.entry_title || "Untitled study"}
         </h1>
         <div className="rd-full-sub">{fmt(entry.entry_date)}</div>
-        <RichTextField
-          className="rd-full-textarea"
-          value={note}
-          placeholder="Continue your study…"
-          allowImages
-          onChange={(html) => schedule(html)}
-          onBlur={() => {
-            if (timer.current) {
-              window.clearTimeout(timer.current);
-              timer.current = null;
-            }
-            if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
-          }}
-        />
+        <div className="rd-full-doc ws-doc">
+          <WorkspaceEditor
+            key={entry.id}
+            userId={userId ?? ""}
+            initialJSON={initialContent as unknown as any}
+            ignoreExternalUpdates
+            placeholder="Continue your study…"
+            onChange={(_json, _text, html) => schedule(html)}
+            onBlur={() => {
+              if (timer.current) {
+                window.clearTimeout(timer.current);
+                timer.current = null;
+              }
+              if ((entry.scripture_text ?? "") !== noteRef.current) save(noteRef.current);
+            }}
+          />
+        </div>
 
       </div>
     </div>
