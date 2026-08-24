@@ -350,7 +350,7 @@ const I = {
 function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const [menu, setMenu] = useState<null | "heading" | "hl" | "color" | "insert">(null);
+  const [menu, setMenu] = useState<null | "heading" | "hl" | "color" | "insert" | "table">(null);
 
   // Toolbar sticks via CSS — no scroll-driven transforms (they caused
   // shimmering as the visual viewport updated).
