@@ -79,6 +79,7 @@ export const Route = createFileRoute("/devotionals/$id")({
     date: typeof s.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
     view: s.view === "week" || s.view === "month" ? (s.view as "week" | "month") : ("today" as const),
     ws: typeof s.ws === "string" ? s.ws : undefined,
+    entry: typeof s.entry === "string" ? s.entry : undefined,
   }),
 
   errorComponent: ({ error }) => (
