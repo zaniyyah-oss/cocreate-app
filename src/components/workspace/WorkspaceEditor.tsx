@@ -17,6 +17,19 @@ import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
 import { Indent } from "./indent-extension";
 import { Callout } from "./callout-node";
+import { WORKSPACE_EDITOR_CSS } from "./editor-css";
+
+/** Inject the shared note styling once, so every surface renders notes alike. */
+function useWorkspaceEditorCss() {
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("ws-editor-css")) return;
+    const tag = document.createElement("style");
+    tag.id = "ws-editor-css";
+    tag.textContent = WORKSPACE_EDITOR_CSS;
+    document.head.appendChild(tag);
+  }, []);
+}
 
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
@@ -62,12 +75,14 @@ export function WorkspaceEditor({
 }: {
   userId: string;
   initialJSON: any;
-  onChange: (json: any, text: string) => void;
+  onChange: (json: any, text: string, html: string) => void;
   onBlur?: () => void;
   ignoreExternalUpdates?: boolean;
   placeholder?: string;
   editable?: boolean;
 }) {
+  useWorkspaceEditorCss();
+
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const onBlurRef = useRef(onBlur);
@@ -189,13 +204,13 @@ export function WorkspaceEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      onChangeRef.current(editor.getJSON(), editor.getText());
+      onChangeRef.current(editor.getJSON(), editor.getText(), editor.getHTML());
     },
     onBlur: ({ editor }) => {
       // iOS home-screen Safari can commit the final autocorrect/composition
       // transaction at blur time. Capture the editor one last time, then ask
       // the parent to flush immediately instead of waiting on a debounce timer.
-      onChangeRef.current(editor.getJSON(), editor.getText());
+      onChangeRef.current(editor.getJSON(), editor.getText(), editor.getHTML());
       onBlurRef.current?.();
     },
   });
