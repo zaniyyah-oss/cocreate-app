@@ -34,6 +34,7 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-popbtn:hover{background:rgba(138,150,224,0.12);}
 .ws-popbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .ws-popbtn .ws-poptag{font-family:'Poppins',sans-serif;font-weight:700;font-size:11px;color:rgba(32,32,28,0.35);margin-left:auto;}
+.ws-popdiv{height:1px;background:rgba(32,32,28,0.10);margin:5px 2px;}
 
 .ws-bubble{display:flex;gap:2px;background:#181A4D;color:#fff;border-radius:8px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
 .ws-bb-btn{background:transparent;border:none;color:#fff;font-family:'Poppins',sans-serif;font-weight:600;font-size:12.5px;padding:6px 9px;border-radius:5px;cursor:pointer;}
