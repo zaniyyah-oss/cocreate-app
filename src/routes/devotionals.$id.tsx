@@ -590,11 +590,13 @@ function EntryPage() {
         .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""))),
     [pastQ.data, selectedDate]
   );
+  // The active study can be one from another date that the user chose to continue —
+  // in that case we keep the selected date and just load that study's content.
   const activeEntryId =
-    search.entry && dayEntries.some((e) => e.id === search.entry)
+    search.entry && (pastQ.data ?? []).some((e) => e.id === search.entry)
       ? search.entry
       : (dayEntries[0]?.id ?? null);
-  const currentEntry: Entry | undefined = dayEntries.find((e) => e.id === activeEntryId);
+  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.id === activeEntryId);
 
   // --- Study switching: start new, or continue an existing study ---------------
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
@@ -604,13 +606,13 @@ function EntryPage() {
   const [addingStudy, setAddingStudy] = useState(false);
 
   const goToEntry = (e: { id: string; entry_date: string | null }) => {
-    const d = e.entry_date ?? selectedDate;
-    setSelectedDate(d);
     setStudyMenuOpen(false);
     setPickerOpen(false);
     setStudyQuery("");
-    navigate({ to: "/devotionals/$id", params: { id }, search: { date: d, entry: e.id } as any });
+    // Stay on the currently selected date; only swap which study is loaded.
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: e.id } as any });
   };
+
 
   const addStudyForDay = async () => {
     if (!userId || addingStudy) return;
