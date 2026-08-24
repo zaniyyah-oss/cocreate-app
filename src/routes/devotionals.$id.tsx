@@ -1234,7 +1234,17 @@ function EntryPage() {
                             </button>
                             {studyMenuOpen && (
                               <div className="de-studymenu" role="menu">
-                                <div className="grp">Today's studies</div>
+                                {currentEntry && !dayEntries.some((e) => e.id === currentEntry.id) && (
+                                  <>
+                                    <div className="grp">Continuing</div>
+                                    <button type="button" className="de-studyopt on">
+                                      {studyLabel(currentEntry, 0)}
+                                      <span className="sub">{formatDate(currentEntry.entry_date ?? selectedDate)}</span>
+                                    </button>
+                                    <div className="de-studysep" />
+                                  </>
+                                )}
+                                {dayEntries.length > 0 && <div className="grp">Today's studies</div>}
                                 {dayEntries.map((e, i) => (
                                   <button
                                     key={e.id}
@@ -1243,9 +1253,10 @@ function EntryPage() {
                                     onClick={() => goToEntry(e)}
                                   >
                                     {studyLabel(e, i)}
-                                    {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                    {e.entry_title ? <span className="sub">{e.entry_title}</span> : null}
                                   </button>
                                 ))}
+
                                 <div className="de-studysep" />
                                 <div className="grp">Continue a past study</div>
                                 <input
