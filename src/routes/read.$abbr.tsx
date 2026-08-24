@@ -80,7 +80,7 @@ function BookDetail() {
   const entries = entriesQ.data ?? [];
   const fullName = book?.full_name ?? abbr;
 
-  const visibleEntries = useMemo(() => {
+  const topicMatched = useMemo(() => {
     if (filterTopicIds.length === 0) return entries;
     return entries.filter((e) => {
       const ids = e.topic_ids ?? [];
@@ -88,12 +88,47 @@ function BookDetail() {
     });
   }, [entries, filterTopicIds]);
 
+  // Chapters present in the (topic-filtered) entries.
+  const chapters = useMemo(() => {
+    const s = new Set<number>();
+    for (const e of topicMatched) {
+      const c = parseScriptureRef(e.scripture_reference).chapter;
+      if (c != null) s.add(c);
+    }
+    return [...s].sort((a, b) => a - b);
+  }, [topicMatched]);
+
+  const chapterMatched = useMemo(() => {
+    if (chapter == null) return topicMatched;
+    return topicMatched.filter(
+      (e) => parseScriptureRef(e.scripture_reference).chapter === chapter
+    );
+  }, [topicMatched, chapter]);
+
+  // Verses present within the selected chapter.
+  const verses = useMemo(() => {
+    if (chapter == null) return [] as number[];
+    const s = new Set<number>();
+    for (const e of chapterMatched) {
+      for (const v of parseScriptureRef(e.scripture_reference).verseNumbers) s.add(v);
+    }
+    return [...s].sort((a, b) => a - b);
+  }, [chapterMatched, chapter]);
+
+  const visibleEntries = useMemo(() => {
+    if (verse == null) return chapterMatched;
+    return chapterMatched.filter((e) =>
+      parseScriptureRef(e.scripture_reference).verseNumbers.includes(verse)
+    );
+  }, [chapterMatched, verse]);
+
   // Only show topics that at least one entry in this book uses.
   const availableTopics = useMemo(() => {
     const used = new Set<string>();
     entries.forEach((e) => (e.topic_ids ?? []).forEach((id) => used.add(id)));
     return (topicsQ.data ?? []).filter((t) => used.has(t.id));
   }, [entries, topicsQ.data]);
+
 
 
   return (
