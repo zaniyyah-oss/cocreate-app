@@ -510,6 +510,24 @@ function ReadLibrary() {
 
         .rd-full-status{font-size:12px;color:#8a8879;margin-top:10px;}
 
+        /* Branded delete modal */
+        .rd-del-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;animation:rdFade .16s ease;}
+        .rd-del-card{background:#FBF8ED;border:1.5px solid #ECE4CE;border-radius:20px;width:100%;max-width:440px;padding:0;overflow:hidden;box-shadow:0 24px 60px -16px rgba(16,16,24,0.4);animation:rdPop .18s cubic-bezier(.2,.8,.2,1);}
+        @keyframes rdPop{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:none;}}
+        .rd-del-iconwrap{display:flex;align-items:center;justify-content:center;padding:30px 24px 18px;}
+        .rd-del-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:rgba(179,34,12,0.1);color:#B3220C;}
+        .rd-del-body{padding:0 28px 8px;text-align:center;}
+        .rd-del-title{font-family:'Archivo Black','Poppins',sans-serif;font-size:22px;font-weight:900;color:#20201C;margin:0 0 6px;line-height:1.2;}
+        .rd-del-studyname{font-size:14px;font-weight:700;color:#20201C;background:#fff;border:1px solid #ECE4CE;border-radius:10px;padding:8px 14px;margin:10px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .rd-del-copy{font-size:13px;line-height:1.5;color:#6b6a60;margin:8px 0 0;}
+        .rd-del-actions{display:flex;gap:10px;padding:20px 28px 28px;}
+        .rd-del-cancel{flex:1;background:#fff;border:1.5px solid #ECE4CE;color:#20201C;font-family:inherit;font-size:14px;font-weight:800;padding:13px 18px;border-radius:999px;cursor:pointer;transition:border-color .15s ease, background .15s ease;}
+        .rd-del-cancel:hover{border-color:#8a8879;background:#fff;}
+        .rd-del-confirm{flex:1;background:#B3220C;border:1.5px solid #B3220C;color:#fff;font-family:inherit;font-size:14px;font-weight:800;padding:13px 18px;border-radius:999px;cursor:pointer;transition:background .15s ease, border-color .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+        .rd-del-confirm:hover{background:#8a1A08;border-color:#8a1A08;}
+        .rd-del-confirm:disabled{opacity:.6;cursor:default;}
+        @media (max-width:480px){.rd-del-card{max-width:none;border-radius:0;}}
+
         /* Studies table */
         .rd-table-wrap{background:#fff;border:1.5px solid #ECE4CE;border-radius:16px;overflow:hidden;}
         .rd-table{width:100%;border-collapse:collapse;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;table-layout:fixed;}
