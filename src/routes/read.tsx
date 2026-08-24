@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteStudyOnly } from "@/lib/study-delete";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useAllTopics, type TopicRow } from "@/components/TopicPicker";
 import { BRAND_PALETTE, brandColor, type BrandColorKey } from "@/lib/brand-palette";
@@ -215,9 +216,7 @@ function ReadLibrary() {
     setPendingDeleteId(null);
     setDeletingId(entryId);
     try {
-      await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
-      const { error } = await supabase.from("devotional_entries").delete().eq("id", entryId);
-      if (error) throw error;
+      await deleteStudyOnly(entryId);
       await qc.invalidateQueries({ queryKey: ["read-recent-studies"] });
       await qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] });
     } catch (err) {
@@ -1003,7 +1002,7 @@ function DeleteStudyModal({
         <div className="rd-del-body">
           <h2 className="rd-del-title">Delete this study?</h2>
           <div className="rd-del-studyname" title={studyName}>{studyName}</div>
-          <p className="rd-del-copy">This can't be undone. The study and its notes will be permanently removed from your library.</p>
+          <p className="rd-del-copy">Only the study is removed. That day's workspace entry — title, Where are you, Pray and To‑Do — is kept, along with any notes.</p>
         </div>
         <div className="rd-del-actions">
           <button type="button" className="rd-del-cancel" onClick={onCancel} disabled={busy}>Cancel</button>
