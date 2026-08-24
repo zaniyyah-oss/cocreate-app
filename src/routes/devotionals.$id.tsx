@@ -157,12 +157,12 @@ const CSS = `
 
 /* Study switcher + start-of-day chooser */
 .de-studyline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;}
-.de-studybtn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#181A4D;cursor:pointer;max-width:280px;}
+.de-studybtn{display:inline-flex;align-items:center;justify-content:space-between;gap:6px;background:transparent;border:1px solid rgba(24,26,77,0.14);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#181A4D;cursor:pointer;width:216px;max-width:100%;flex:0 0 auto;}
 .de-studybtn:hover{border-color:#181A4D;}
 .de-studybtn .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .de-studyadd{background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:999px;padding:5px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:rgba(24,26,77,0.7);cursor:pointer;}
 .de-studyadd:hover{border-color:#181A4D;color:#181A4D;}
-.de-studywrap{position:relative;}
+.de-studywrap{position:relative;display:inline-flex;flex:0 0 auto;}
 /* Read box toolbar: study switcher + add study + quiet tag icons */
 .de-readbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 8px;}
 .de-readbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
@@ -175,7 +175,7 @@ const CSS = `
 .de-readchip.suggest:hover{border-color:#181A4D;color:#181A4D;}
 .de-readchip button{background:transparent;border:none;color:inherit;font-size:13px;line-height:1;cursor:pointer;padding:0;}
 
-.de-studymenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:280px;max-width:340px;padding:6px;max-height:340px;overflow:auto;}
+.de-studymenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;background:#fff;border:1px solid rgba(24,26,77,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.12);width:320px;max-width:calc(100vw - 48px);padding:6px;max-height:340px;overflow:auto;}
 .de-studymenu .grp{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,26,77,0.4);padding:8px 10px 4px;}
 .de-studyopt{display:block;width:100%;text-align:left;border:none;background:transparent;border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#20201C;cursor:pointer;}
 .de-studyopt:hover{background:#FBF8ED;}
@@ -463,6 +463,17 @@ type SaveField =
   | "books_of_bible"
   | "topic_ids";
 
+/** Fields that belong to the Read section, i.e. to the study itself. */
+const READ_FIELDS = new Set<SaveField>([
+  "scripture_reference",
+  "scripture_text",
+  "book_of_bible",
+  "book_source",
+  "book_confirmed",
+  "books_of_bible",
+  "topic_ids",
+]);
+
 
 function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -705,15 +716,34 @@ function EntryPage() {
   const [savingField, setSavingField] = useState<string | null>(null);
   const [savedField, setSavedField] = useState<string | null>(null);
   const hydratedRef = useRef<string>("");
+  const dayHydratedRef = useRef<string>("");
   const entrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
   const entrySaveInFlightRef = useRef(false);
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
+  // When the active study belongs to another date (a past study the user chose to
+  // continue), only the Read section follows that study. Title / Where / Pray /
+  // To-Do stay with the day you're working on.
+  const continuingEntry: Entry | undefined =
+    currentEntry && currentEntry.entry_date !== selectedDate ? currentEntry : undefined;
+  const dayFieldsEntry: Entry | undefined = continuingEntry ? dayEntries[0] : currentEntry;
+
+  const dayEntryIdRef = useRef<string | null>(null);
+  const continuingRef = useRef(false);
+
   useEffect(() => {
     currentEntryIdRef.current = currentEntry?.id ?? null;
   }, [currentEntry?.id]);
+
+  useEffect(() => {
+    dayEntryIdRef.current = dayFieldsEntry?.id ?? null;
+  }, [dayFieldsEntry?.id]);
+
+  useEffect(() => {
+    continuingRef.current = Boolean(continuingEntry);
+  }, [continuingEntry?.id]);
 
   /* Visual balance (iPad + desktop, 3-column layout only):
      the Pray and To-Do writing areas end on the same baseline as the bottom
@@ -801,49 +831,39 @@ function EntryPage() {
     };
   }, [colsEl, focusSection, currentEntry?.id]);
 
-  // Rehydrate texts when switching date or when entries load. Legacy reflect/apply
-  // fields are surfaced into the new Where/To-Do sections if the new ones are empty.
-  // For topical/temporary devotionals (non-default) with no existing entry for the day,
-  // pre-fill Read/Pray/To-Do from the template's configured content.
+  // Template prefill for a brand-new study on a non-default (topical) devotional.
+  const templatePrefill = useMemo(() => {
+    const t = templateQ.data;
+    const empty = { scrRef: "", scrText: "", pray: "", todo: "" };
+    if (!t || (t as any).is_default) return empty;
+    const scr = Array.isArray((t as any).scripture_items) ? (t as any).scripture_items as Array<{ reference?: string; note?: string }> : [];
+    const pray = Array.isArray((t as any).pray_items) ? (t as any).pray_items as string[] : [];
+    const todo = Array.isArray((t as any).todo_items_pool) ? (t as any).todo_items_pool as string[] : [];
+    const mode = (t as any).fill_mode === "sequence" ? "sequence" : "pool";
+    const pastCount = (pastQ.data ?? []).length; // 0-based day index for today
+    const pick = <T,>(arr: T[]): T | undefined => {
+      if (arr.length === 0) return undefined;
+      if (mode === "sequence") return arr[Math.min(pastCount, arr.length - 1)];
+      return arr[pastCount % arr.length];
+    };
+    const s = pick(scr);
+    return {
+      scrRef: s?.reference ?? "",
+      scrText: s?.note ?? "",
+      pray: pick(pray) ?? "",
+      todo: pick(todo) ?? "",
+    };
+  }, [templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Read section: follows the active study, including a past study being continued.
   useEffect(() => {
     if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
-    const key = `${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
+    const key = `read:${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
     const e = currentEntry;
-    const t = templateQ.data;
-
-    // Compute prefill values for a brand-new entry on a non-default template.
-    let prefillScrRef = "";
-    let prefillScrText = "";
-    let prefillPray = "";
-    let prefillTodo = "";
-    if (!e && t && !(t as any).is_default) {
-      const scr = Array.isArray((t as any).scripture_items) ? (t as any).scripture_items as Array<{ reference?: string; note?: string }> : [];
-      const pray = Array.isArray((t as any).pray_items) ? (t as any).pray_items as string[] : [];
-      const todo = Array.isArray((t as any).todo_items_pool) ? (t as any).todo_items_pool as string[] : [];
-      const mode = (t as any).fill_mode === "sequence" ? "sequence" : "pool";
-      const pastCount = (pastQ.data ?? []).length; // 0-based day index for today
-      const pick = <T,>(arr: T[]): T | undefined => {
-        if (arr.length === 0) return undefined;
-        if (mode === "sequence") return arr[Math.min(pastCount, arr.length - 1)];
-        return arr[pastCount % arr.length];
-      };
-      const s = pick(scr);
-      if (s) { prefillScrRef = s.reference ?? ""; prefillScrText = s.note ?? ""; }
-      prefillPray = pick(pray) ?? "";
-      prefillTodo = pick(todo) ?? "";
-    }
-
-    setEntryTitle(e?.entry_title ?? "");
-    setEntrySubtitle(e?.entry_subtitle ?? "");
-    setWhereText(e?.where_text ?? e?.reflect_text ?? "");
-    setScriptureRef(e?.scripture_reference ?? prefillScrRef);
-    setScriptureText(e?.scripture_text ?? prefillScrText);
-    setPrayText(e?.pray_text ?? prefillPray);
-    setTodoText(e?.todo_text ?? e?.apply_text ?? prefillTodo);
-    const items = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
-    setTodoItems(items);
+    setScriptureRef(e?.scripture_reference ?? (e ? "" : templatePrefill.scrRef));
+    setScriptureText(e?.scripture_text ?? (e ? "" : templatePrefill.scrText));
     setBookOfBible((e as any)?.book_of_bible ?? null);
     setBookSource(((e as any)?.book_source as "manual" | "auto" | null) ?? null);
     setBookConfirmed(Boolean((e as any)?.book_confirmed));
@@ -852,6 +872,23 @@ function EntryPage() {
     setBooksOfBible(arr.length > 0 ? arr : fallback);
     setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
   }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Title / Where / Pray / To-Do stay with the day being worked on — continuing a
+  // past study never overwrites them. Legacy reflect/apply fields fill in when the
+  // newer fields are empty.
+  useEffect(() => {
+    if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
+    const key = `day:${selectedDate}:${dayFieldsEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
+    if (dayHydratedRef.current === key) return;
+    dayHydratedRef.current = key;
+    const e = dayFieldsEntry;
+    setEntryTitle(e?.entry_title ?? "");
+    setEntrySubtitle(e?.entry_subtitle ?? "");
+    setWhereText(e?.where_text ?? e?.reflect_text ?? "");
+    setPrayText(e?.pray_text ?? (e ? "" : templatePrefill.pray));
+    setTodoText(e?.todo_text ?? e?.apply_text ?? (e ? "" : templatePrefill.todo));
+    setTodoItems(Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : []);
+  }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
@@ -882,26 +919,48 @@ function EntryPage() {
     const patch = pendingEntryPatchRef.current;
     pendingEntryPatchRef.current = null;
     entrySaveInFlightRef.current = true;
-    try {
-      const entryId = currentEntryIdRef.current;
-      if (entryId) {
-        const { error } = await supabase.from("devotional_entries").update(patch as any).eq("id", entryId);
+
+    // While continuing a past study, Read edits go to that study and the rest of
+    // the page goes to the day's own study.
+    const continuing = continuingRef.current;
+    const readPatch: Record<string, unknown> = {};
+    const dayPatch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (continuing && READ_FIELDS.has(k as SaveField)) readPatch[k] = v;
+      else dayPatch[k] = v;
+    }
+
+    const writeTo = async (targetId: string | null, p: Record<string, unknown>, isDayRow: boolean) => {
+      if (Object.keys(p).length === 0) return;
+      if (targetId) {
+        const { error } = await supabase.from("devotional_entries").update(p as any).eq("id", targetId);
         if (error) throw error;
-        applyEntryPatchToCache(entryId, patch);
-      } else {
-        const { data, error } = await supabase.from("devotional_entries").insert({
-          user_id: userId, template_id: id, entry_date: selectedDate, ...patch,
-        } as any).select("*").single();
-        if (error) throw error;
-        currentEntryIdRef.current = data.id;
-        trackEvent("devotional_entry_created", { template_id: id });
-        applyEntryPatchToCache(data.id, patch, data as Entry);
+        applyEntryPatchToCache(targetId, p);
+        return;
+      }
+      const { data, error } = await supabase.from("devotional_entries").insert({
+        user_id: userId, template_id: id, entry_date: selectedDate, ...p,
+      } as any).select("*").single();
+      if (error) throw error;
+      dayEntryIdRef.current = data.id;
+      if (!continuing) currentEntryIdRef.current = data.id;
+      trackEvent("devotional_entry_created", { template_id: id });
+      applyEntryPatchToCache(data.id, p, data as Entry);
+      const count = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length;
+      dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
+      if (!continuing) {
         // The pending blank study just became real: keep the current in-progress
         // text and point the URL at the new row so autosave keeps updating it.
-        hydratedRef.current = `${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${((qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length)}`;
+        hydratedRef.current = `read:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
         setPendingNewStudy(false);
         navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: data.id } as any, replace: true });
       }
+      void isDayRow;
+    };
+
+    try {
+      await writeTo(currentEntryIdRef.current, readPatch, false);
+      await writeTo(dayEntryIdRef.current, dayPatch, true);
       const key = Object.keys(patch)[0];
       setSavingField(null);
       setSavedField(key);
