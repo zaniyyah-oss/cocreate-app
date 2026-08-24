@@ -1,6 +1,6 @@
 # Continue an existing study instead of starting fresh
 
-Today the workspace always addresses "the study for this date", so every day starts blank and there is no way to reopen a study you already began. This adds a choice at the start of the day, keeps the three-column layout feeling like a blank slate, and allows a second work-in-progress study per day.
+Today the workspace always addresses "the study for this date", so every day starts blank and there is no way to reopen a study you already began. This adds a choice at the start of the day, keeps the three-column layout feeling like a blank slate, and lists up to three work-in-progress studies per day on the workspace. Anything beyond those three is managed from the Read page.
 
 ## 1. The empty-day choice
 
@@ -23,7 +23,7 @@ One quiet line replaces nothing and adds nothing heavy — it sits in the existi
 ```
 
 - The title is a button. Its menu lists the studies attached to today, then "Continue a past study…" and "Start new study".
-- **+ Add study** creates a second study for the day and switches to it. Only appears once one study has content, so day one still looks like a blank slate.
+- **+ Add study** creates another study for the day and switches to it, up to three per day. Only appears once one study has content, so day one still looks like a blank slate; at three it disappears and further studies are opened from the Read page.
 - No tabs, no extra columns, no change to Read / Pray / To-Do themselves.
 
 ## 3. Two studies for one day in Read
