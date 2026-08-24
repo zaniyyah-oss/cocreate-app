@@ -676,7 +676,7 @@ function ReadLibrary() {
                   bookFullName={bookFullName}
                   topicById={topicById}
                   onOpen={(e) => setOpenEntry(e)}
-                  onDelete={handleDeleteStudy}
+                  onDelete={(id) => setPendingDeleteId(id)}
                   deletingId={deletingId}
                 />
               </>
