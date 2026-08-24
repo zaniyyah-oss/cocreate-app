@@ -69,7 +69,21 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
     </svg>
   );
 
-  const trigger = (
+  const trigger = iconOnly ? (
+    <button
+      type="button"
+      className={`bt-icon${values.length > 0 ? " on" : ""}`}
+      disabled={disabled}
+      title="Add a book of the Bible"
+      aria-label="Add a book of the Bible"
+      onClick={() => setOpen((v) => !v)}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    </button>
+  ) : (
     <button
       type="button"
       className={`bt-select bt-${state}`}
@@ -88,9 +102,16 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
   );
 
   return (
-    <div className={`book-tagger bt-${state}`}>
+    <div className={`book-tagger bt-${state}${iconOnly ? " bt-iconmode" : ""}`}>
       <style>{`
         .book-tagger{margin-bottom:12px;font-family:'Poppins',sans-serif;}
+        .book-tagger.bt-iconmode{margin-bottom:0;display:inline-flex;}
+        .bt-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:transparent;border-radius:8px;color:rgba(24,26,77,0.45);cursor:pointer;padding:0;}
+        .bt-icon svg{width:17px;height:17px;}
+        .bt-icon:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
+        .bt-icon.on{color:#181A4D;}
+        .bt-icon:disabled{opacity:.4;cursor:not-allowed;}
+
         .bt-select{
           width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
           background:#fff;border:1.5px dashed #cfc9b4;border-radius:10px;
