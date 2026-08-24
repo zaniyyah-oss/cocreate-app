@@ -246,7 +246,7 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
         </PopoverContent>
       </Popover>
 
-      {hasValues && (
+      {hasValues && !iconOnly && (
         <div className="bt-chips">
           {values.map((abbr) => (
             <span key={abbr} className="bt-chip">
@@ -263,7 +263,8 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
         </div>
       )}
 
-      {state === "suggested" && (
+      {state === "suggested" && !iconOnly && (
+
         <div className="bt-suggest-row">
           <span className="txt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/></svg>
