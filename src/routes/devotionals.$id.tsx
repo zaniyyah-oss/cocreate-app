@@ -6,6 +6,7 @@ import { deleteStudyOnly } from "@/lib/study-delete";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 import { RichTextField } from "@/components/RichTextField";
 import { AppShell } from "@/components/AppShell";
@@ -615,6 +616,7 @@ function EntryPage() {
   // accumulate in Read.
   const [pendingNewStudy, setPendingNewStudy] = useState(false);
   const [deletingStudy, setDeletingStudy] = useState(false);
+  const [pendingDeleteStudyId, setPendingDeleteStudyId] = useState<string | null>(null);
 
   // The active study can be one from another date that the user chose to continue —
   // in that case we keep the selected date and just load that study's content.
@@ -650,9 +652,16 @@ function EntryPage() {
 
   // Delete only the study (Read column). The rest of the day — title, Where,
   // Pray, To-Do — is never removed; the row goes away only if it's otherwise empty.
-  const deleteStudy = async (entryId: string) => {
+  // Deleting a study is destructive — always confirm with the branded modal first.
+  const requestDeleteStudy = (entryId: string) => {
     if (!userId || deletingStudy) return;
-    if (typeof window !== "undefined" && !window.confirm("Delete this study? The rest of the day's entry is kept.")) return;
+    setStudyMenuOpen(false);
+    setPendingDeleteStudyId(entryId);
+  };
+
+  const confirmDeleteStudy = async () => {
+    const entryId = pendingDeleteStudyId;
+    if (!entryId || !userId || deletingStudy) return;
     setDeletingStudy(true);
     try {
       const outcome = await deleteStudyOnly(entryId);
@@ -663,7 +672,7 @@ function EntryPage() {
         await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
       }
       pendingEntryPatchRef.current = null;
-      setStudyMenuOpen(false);
+      setPendingDeleteStudyId(null);
       if (outcome === "cleared") {
         navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: entryId } as any });
       } else {
@@ -682,6 +691,11 @@ function EntryPage() {
       setDeletingStudy(false);
     }
   };
+
+  const pendingDeleteStudyName = useMemo(() => {
+    const e = pendingDeleteStudyId ? dayEntries.find((d) => d.id === pendingDeleteStudyId) : null;
+    return (e?.scripture_reference && e.scripture_reference.trim()) || e?.entry_title || "Untitled study";
+  }, [pendingDeleteStudyId, dayEntries]);
 
 
 
@@ -1394,7 +1408,7 @@ function EntryPage() {
                                       type="button"
                                       className="de-studyopt danger"
                                       disabled={deletingStudy}
-                                      onClick={() => deleteStudy(currentEntry.id)}
+                                      onClick={() => requestDeleteStudy(currentEntry.id)}
                                     >
                                       Delete this study
                                       <span className="sub">This can't be undone</span>
@@ -1708,6 +1722,15 @@ function EntryPage() {
           </div>
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!pendingDeleteStudyId}
+        title="Delete this study?"
+        itemName={pendingDeleteStudyName}
+        message="Only the study is removed. That day's workspace entry — title, Where are you, Pray and To‑Do — is kept, along with any notes."
+        busy={deletingStudy}
+        onCancel={() => setPendingDeleteStudyId(null)}
+        onConfirm={confirmDeleteStudy}
+      />
     </div>
     </AppShell>
   );
@@ -2176,6 +2199,7 @@ export function AddEventDialog({
   const [endTime, setEndTime] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -2239,11 +2263,16 @@ export function AddEventDialog({
 
   const remove = async () => {
     if (!event) return;
-    if (!confirm("Delete this event?")) return;
+    setConfirmDelete(true);
+  };
+
+  const confirmRemove = async () => {
+    if (!event) return;
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("user_events" as any).delete().eq("id", event.id);
     setDeleting(false);
     if (error) { setErr(error.message); return; }
+    setConfirmDelete(false);
     onSaved();
     onOpenChange(false);
   };
@@ -2383,6 +2412,15 @@ export function AddEventDialog({
           </div>
         </div>
       </DialogContent>
+      <DeleteConfirmModal
+        open={confirmDelete}
+        title="Delete this event?"
+        itemName={event?.title || (isFocus ? "this focus item" : "this event")}
+        message="This event will be permanently removed from your calendar."
+        busy={deleting}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={confirmRemove}
+      />
     </Dialog>
   );
 }
