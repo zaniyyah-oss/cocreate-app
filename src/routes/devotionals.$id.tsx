@@ -1408,7 +1408,7 @@ function EntryPage() {
                                       type="button"
                                       className="de-studyopt danger"
                                       disabled={deletingStudy}
-                                      onClick={() => deleteStudy(currentEntry.id)}
+                                      onClick={() => requestDeleteStudy(currentEntry.id)}
                                     >
                                       Delete this study
                                       <span className="sub">This can't be undone</span>
