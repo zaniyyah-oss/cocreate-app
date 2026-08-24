@@ -181,6 +181,9 @@ const CSS = `
 .de-studyopt:hover{background:#FBF8ED;}
 .de-studyopt.on{background:#FBF8ED;font-weight:700;}
 .de-studyopt .sub{display:block;font-size:11px;color:rgba(24,26,77,0.5);font-weight:400;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.de-studyopt.danger{color:#B3220C;}
+.de-studyopt.danger:hover{background:rgba(255,52,12,0.08);}
+.de-studyopt.danger .sub{color:rgba(179,34,12,0.6);}
 .de-studysep{height:1px;background:rgba(24,26,77,0.08);margin:6px 4px;}
 .de-startcard{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid rgba(24,26,77,0.10);border-radius:14px;padding:12px 16px;margin:0 0 14px;}
 .de-startcard .txt{font-size:13px;font-weight:700;color:#181A4D;}
@@ -590,56 +593,84 @@ function EntryPage() {
         .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""))),
     [pastQ.data, selectedDate]
   );
-  // The active study can be one from another date that the user chose to continue —
-  // in that case we keep the selected date and just load that study's content.
-  const activeEntryId =
-    search.entry && (pastQ.data ?? []).some((e) => e.id === search.entry)
-      ? search.entry
-      : (dayEntries[0]?.id ?? null);
-  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.id === activeEntryId);
-
   // --- Study switching: start new, or continue an existing study ---------------
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [studyQuery, setStudyQuery] = useState("");
   const [startDismissed, setStartDismissed] = useState(false);
-  const [addingStudy, setAddingStudy] = useState(false);
+  // A brand-new study the user opened but hasn't written in yet: nothing is
+  // written to the database until the first keystroke, so blank studies never
+  // accumulate in Read.
+  const [pendingNewStudy, setPendingNewStudy] = useState(false);
+  const [deletingStudy, setDeletingStudy] = useState(false);
+
+  // The active study can be one from another date that the user chose to continue —
+  // in that case we keep the selected date and just load that study's content.
+  const activeEntryId = pendingNewStudy
+    ? null
+    : search.entry && (pastQ.data ?? []).some((e) => e.id === search.entry)
+      ? search.entry
+      : (dayEntries[0]?.id ?? null);
+  const currentEntry: Entry | undefined = (pastQ.data ?? []).find((e) => e.id === activeEntryId);
 
   const goToEntry = (e: { id: string; entry_date: string | null }) => {
     setStudyMenuOpen(false);
     setPickerOpen(false);
     setStudyQuery("");
+    setPendingNewStudy(false);
     // Stay on the currently selected date; only swap which study is loaded.
     navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: e.id } as any });
   };
 
+  const studiesForDayCount = dayEntries.length + (pendingNewStudy ? 1 : 0);
 
-  const addStudyForDay = async () => {
-    if (!userId || addingStudy) return;
-    if (dayEntries.length >= MAX_STUDIES_PER_DAY) return;
-    setAddingStudy(true);
+  // Opens a blank study for the day. No row is created until something is typed.
+  const addStudyForDay = () => {
+    if (!userId) return;
+    if (studiesForDayCount >= MAX_STUDIES_PER_DAY) return;
+    setStudyMenuOpen(false);
+    setPickerOpen(false);
+    setStudyQuery("");
+    setStartDismissed(true);
+    setPendingNewStudy(true);
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
+  };
+
+  // Delete a study. Workspace notes created inside it are detached, not deleted.
+  const deleteStudy = async (entryId: string) => {
+    if (!userId || deletingStudy) return;
+    if (typeof window !== "undefined" && !window.confirm("Delete this study? This can't be undone.")) return;
+    setDeletingStudy(true);
     try {
-      const { data, error } = await supabase
-        .from("devotional_entries")
-        .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
-        .select("*")
-        .single();
+      await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
+      const { error } = await supabase.from("devotional_entries").delete().eq("id", entryId);
       if (error) throw error;
-      qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => [data as Entry, ...(cur ?? [])]);
-      trackEvent("devotional_entry_created", { template_id: id });
-      goToEntry(data as Entry);
+      qc.setQueryData<Entry[]>(["dev-entries", id, userId], (cur) => (cur ?? []).filter((e) => e.id !== entryId));
+      if (currentEntryIdRef.current === entryId) currentEntryIdRef.current = null;
+      pendingEntryPatchRef.current = null;
+      setStudyMenuOpen(false);
+      const remaining = dayEntries.filter((e) => e.id !== entryId);
+      if (remaining[0]) {
+        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: remaining[0].id } as any });
+      } else {
+        setPendingNewStudy(false);
+        setStartDismissed(false);
+        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
+      }
     } catch (err) {
-      console.error("could not add study", err);
+      console.error("could not delete study", err);
     } finally {
-      setAddingStudy(false);
+      setDeletingStudy(false);
     }
   };
+
+
 
   // Name studies by what they're reading (the Read scripture field) first.
   const studyLabel = (e: Entry | undefined, idx: number) =>
     (e?.scripture_reference && e.scripture_reference.trim()) ||
     (e?.entry_title && e.entry_title.trim()) ||
-    `Study ${Math.max(1, idx + 1)}`;
+    (e ? `Study ${Math.max(1, idx + 1)}` : "New study");
 
 
   // Past studies (any date) available to continue, most recent first.
@@ -865,6 +896,11 @@ function EntryPage() {
         currentEntryIdRef.current = data.id;
         trackEvent("devotional_entry_created", { template_id: id });
         applyEntryPatchToCache(data.id, patch, data as Entry);
+        // The pending blank study just became real: keep the current in-progress
+        // text and point the URL at the new row so autosave keeps updating it.
+        hydratedRef.current = `${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${((qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length)}`;
+        setPendingNewStudy(false);
+        navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: data.id } as any, replace: true });
       }
       const key = Object.keys(patch)[0];
       setSavingField(null);
@@ -1218,7 +1254,7 @@ function EntryPage() {
                     </div>
                     <div className="de-readbar">
                       <div className="de-readbar-left">
-                        {!isGuest && (dayEntries.length > 0 || !!currentEntry) && (
+                        {!isGuest && (dayEntries.length > 0 || !!currentEntry || pendingNewStudy) && (
                           <span className="de-studywrap">
                             <button
                               type="button"
@@ -1256,6 +1292,12 @@ function EntryPage() {
                                     {e.entry_title ? <span className="sub">{e.entry_title}</span> : null}
                                   </button>
                                 ))}
+                                {pendingNewStudy && (
+                                  <button type="button" className="de-studyopt on">
+                                    New study
+                                    <span className="sub">Not saved yet</span>
+                                  </button>
+                                )}
 
                                 <div className="de-studysep" />
                                 <div className="grp">Continue a past study</div>
@@ -1278,16 +1320,30 @@ function EntryPage() {
                                     </button>
                                   ))
                                 )}
+                                {currentEntry && (
+                                  <>
+                                    <div className="de-studysep" />
+                                    <button
+                                      type="button"
+                                      className="de-studyopt danger"
+                                      disabled={deletingStudy}
+                                      onClick={() => deleteStudy(currentEntry.id)}
+                                    >
+                                      Delete this study
+                                      <span className="sub">This can't be undone</span>
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             )}
                           </span>
                         )}
-                        {!isGuest && dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
-                          <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
+                        {!isGuest && studiesForDayCount > 0 && studiesForDayCount < MAX_STUDIES_PER_DAY && !pendingNewStudy && (
+                          <button type="button" className="de-studyadd" onClick={addStudyForDay}>
                             + Add study
                           </button>
                         )}
-                        {!isGuest && dayEntries.length >= MAX_STUDIES_PER_DAY && (
+                        {!isGuest && studiesForDayCount >= MAX_STUDIES_PER_DAY && (
                           <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
                             More in Read →
                           </Link>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
@@ -30,10 +30,27 @@ type RecentEntry = {
   entry_title: string | null;
   scripture_reference: string | null;
   scripture_text: string | null;
+  pray_text?: string | null;
+  todo_text?: string | null;
+  todo_items?: unknown;
   book_of_bible: string | null;
   books_of_bible: string[] | null;
   topic_ids: string[] | null;
 };
+
+/** A study only belongs in Read once something has actually been written in it. */
+function hasSubstance(e: RecentEntry): boolean {
+  const txt = (v?: string | null) => stripHtml(v ?? "").trim().length > 0;
+  const todos = Array.isArray(e.todo_items) ? e.todo_items.length > 0 : false;
+  return (
+    txt(e.entry_title) ||
+    txt(e.scripture_reference) ||
+    txt(e.scripture_text) ||
+    txt(e.pray_text) ||
+    txt(e.todo_text) ||
+    todos
+  );
+}
 
 function entryBooks(e: {
   book_of_bible: string | null;
@@ -77,13 +94,12 @@ function useRecentStudies() {
       if (!uid) return [] as RecentEntry[];
       const { data, error } = await supabase
         .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,book_confirmed,topic_ids")
+        .select("id,entry_date,entry_title,scripture_reference,scripture_text,pray_text,todo_text,todo_items,book_of_bible,books_of_bible,book_confirmed,topic_ids")
         .eq("user_id", uid)
-        .eq("book_confirmed", true)
         .order("entry_date", { ascending: false })
-        .limit(60);
+        .limit(120);
       if (error) throw error;
-      return ((data ?? []) as RecentEntry[]).filter((e) => entryBooks(e).length > 0);
+      return ((data ?? []) as RecentEntry[]).filter(hasSubstance);
     },
     staleTime: 30_000,
   });
@@ -91,6 +107,7 @@ function useRecentStudies() {
 
 function ReadLibrary() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const booksQ = useBibleBooks();
   const countsQ = useConfirmedCounts();
   const recentQ = useRecentStudies();
@@ -162,32 +179,45 @@ function ReadLibrary() {
     d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
 
+  // Opens a blank study in the workspace. Nothing is written until the user types,
+  // so pressing this never leaves an empty study behind.
   const [newStudyBusy, setNewStudyBusy] = useState(false);
   const handleNewStudy = async () => {
     if (newStudyBusy) return;
     setNewStudyBusy(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const uid = userRes?.user?.id;
-      if (!uid) return;
       const { data: tpl } = await supabase
         .from("devotional_templates")
         .select("id")
         .eq("is_default", true)
         .maybeSingle();
-      const templateId = (tpl as any)?.id ?? null;
+      const templateId = (tpl as any)?.id as string | undefined;
       const today = new Date().toISOString().slice(0, 10);
-      const { data, error } = await supabase
-        .from("devotional_entries")
-        .insert({ user_id: uid, template_id: templateId, entry_date: today } as any)
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,book_of_bible,books_of_bible,topic_ids")
-        .single();
-      if (error) throw error;
-      setOpenEntry(data as RecentEntry);
+      if (templateId) {
+        navigate({ to: "/devotionals/$id", params: { id: templateId }, search: { date: today } as any });
+      }
     } catch {
       // ignore — user may be offline or not signed in
     } finally {
       setNewStudyBusy(false);
+    }
+  };
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const handleDeleteStudy = async (entryId: string) => {
+    if (deletingId) return;
+    if (typeof window !== "undefined" && !window.confirm("Delete this study? This can't be undone.")) return;
+    setDeletingId(entryId);
+    try {
+      await supabase.from("workspace_items").update({ devotional_entry_id: null } as any).eq("devotional_entry_id", entryId);
+      const { error } = await supabase.from("devotional_entries").delete().eq("id", entryId);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["read-recent-studies"] });
+      await qc.invalidateQueries({ queryKey: ["read-confirmed-counts"] });
+    } catch (err) {
+      console.error("could not delete study", err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -485,6 +515,10 @@ function ReadLibrary() {
         .rd-th-title{width:auto;}
         .rd-th-preview{width:34%;}
         .rd-th-open{width:44px;}
+        .rd-th-del{width:38px;}
+        .rd-del-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:none;background:transparent;color:rgba(24,26,77,0.32);cursor:pointer;padding:0;}
+        .rd-del-btn:hover{background:rgba(255,52,12,0.1);color:#B3220C;}
+        .rd-del-btn:disabled{opacity:.4;cursor:not-allowed;}
         .rd-tr{border-bottom:1px solid rgba(24,26,77,.06);cursor:pointer;transition:background .12s ease;outline:none;}
         .rd-tr:last-child{border-bottom:none;}
         .rd-tr:hover,.rd-tr:focus-visible{background:#FBF8ED;}
@@ -503,7 +537,7 @@ function ReadLibrary() {
           .rd-table thead{display:none;}
           .rd-table,.rd-table tbody,.rd-table tr,.rd-table td{display:block;width:100%;}
           .rd-table,.rd-table tbody{border:none;}
-          .rd-tr{border:1.5px solid #ECE4CE;border-radius:14px;margin-bottom:10px;padding:6px 4px;background:#fff;}
+          .rd-tr{position:relative;border:1.5px solid #ECE4CE;border-radius:14px;margin-bottom:10px;padding:6px 4px;background:#fff;}
           .rd-tr:hover,.rd-tr:focus-visible{background:#fff;}
           .rd-tr:hover .rd-open-btn{background:#fff;color:#181A4D;border-color:#ECE4CE;}
           .rd-td{padding:6px 14px;border:none;display:flex;gap:8px;align-items:baseline;}
@@ -514,6 +548,7 @@ function ReadLibrary() {
           .rd-td-title::before{content:"Title";}
           .rd-td-preview::before{content:"Preview";}
           .rd-td-open{display:none;}
+          .rd-td-del{display:block;position:absolute;top:10px;right:10px;padding:0;border:none;}
           .rd-cell-preview{-webkit-line-clamp:3;}
         }
       `}</style>
@@ -638,6 +673,8 @@ function ReadLibrary() {
                   bookFullName={bookFullName}
                   topicById={topicById}
                   onOpen={(e) => setOpenEntry(e)}
+                  onDelete={handleDeleteStudy}
+                  deletingId={deletingId}
                 />
               </>
             )}
@@ -698,12 +735,16 @@ function StudiesTable({
   bookFullName,
   topicById,
   onOpen,
+  onDelete,
+  deletingId,
 }: {
   items: RecentEntry[];
   fmtDate: (d: string | null) => string;
   bookFullName: Map<string, string>;
   topicById: Map<string, { id: string; name: string; display_name: string | null }>;
   onOpen: (e: RecentEntry) => void;
+  onDelete: (id: string) => void;
+  deletingId: string | null;
 }) {
   return (
     <div className="rd-table-wrap">
@@ -716,6 +757,7 @@ function StudiesTable({
             <th className="rd-th rd-th-title">Title</th>
             <th className="rd-th rd-th-preview">Preview</th>
             <th className="rd-th rd-th-open" aria-label="Open study"></th>
+            <th className="rd-th rd-th-del" aria-label="Delete study"></th>
           </tr>
         </thead>
         <tbody>
@@ -768,6 +810,22 @@ function StudiesTable({
                   ) : (
                     <span className="rd-cell-muted">No notes yet</span>
                   )}
+                </td>
+                <td className="rd-td rd-td-del">
+                  <button
+                    type="button"
+                    className="rd-del-btn"
+                    title="Delete this study"
+                    aria-label="Delete this study"
+                    disabled={deletingId === e.id}
+                    onClick={(ev) => { ev.stopPropagation(); onDelete(e.id); }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M6 6l1 14h10l1-14" />
+                    </svg>
+                  </button>
                 </td>
                 <td className="rd-td rd-td-open">
                   <span className="rd-open-btn" aria-hidden="true">
