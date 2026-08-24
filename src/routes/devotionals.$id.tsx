@@ -1200,28 +1200,126 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
-                    <BookTagger
-                      values={booksOfBible}
+                    <div className="de-readbar">
+                      <div className="de-readbar-left">
+                        {!isGuest && dayEntries.length > 0 && (
+                          <span className="de-studywrap">
+                            <button
+                              type="button"
+                              className="de-studybtn"
+                              onClick={() => setStudyMenuOpen((v) => !v)}
+                              aria-haspopup="menu"
+                              aria-expanded={studyMenuOpen}
+                            >
+                              <span className="lbl">
+                                {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
+                              </span>
+                              <span aria-hidden="true">▾</span>
+                            </button>
+                            {studyMenuOpen && (
+                              <div className="de-studymenu" role="menu">
+                                <div className="grp">Today's studies</div>
+                                {dayEntries.map((e, i) => (
+                                  <button
+                                    key={e.id}
+                                    type="button"
+                                    className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
+                                    onClick={() => goToEntry(e)}
+                                  >
+                                    {studyLabel(e, i)}
+                                    {e.scripture_reference ? <span className="sub">{e.scripture_reference}</span> : null}
+                                  </button>
+                                ))}
+                                <div className="de-studysep" />
+                                <div className="grp">Continue a past study</div>
+                                <input
+                                  className="de-studysearch"
+                                  placeholder="Search your studies…"
+                                  value={studyQuery}
+                                  onChange={(ev) => setStudyQuery(ev.target.value)}
+                                />
+                                {continuable.length === 0 ? (
+                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
+                                ) : (
+                                  continuable.map((e, i) => (
+                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                                      {studyLabel(e, i)}
+                                      <span className="sub">
+                                        {formatDate(e.entry_date ?? selectedDate)}
+                                        {e.scripture_reference ? ` · ${e.scripture_reference}` : ""}
+                                      </span>
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </span>
+                        )}
+                        {!isGuest && dayEntries.length > 0 && dayEntries.length < MAX_STUDIES_PER_DAY && (
+                          <button type="button" className="de-studyadd" onClick={addStudyForDay} disabled={addingStudy}>
+                            + Add study
+                          </button>
+                        )}
+                        {!isGuest && dayEntries.length >= MAX_STUDIES_PER_DAY && (
+                          <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
+                            More in Read →
+                          </Link>
+                        )}
+                      </div>
+                      <div className="de-readbar-right">
+                        <BookTagger
+                          iconOnly
+                          values={booksOfBible}
+                          suggestion={
+                            booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
+                              ? bookOfBible
+                              : null
+                          }
+                          disabled={!userId}
+                          onToggle={(abbr: string) => {
+                            const next = booksOfBible.includes(abbr)
+                              ? booksOfBible.filter((b) => b !== abbr)
+                              : [...booksOfBible, abbr];
+                            setBooksOfBible(next);
+                            const primary = next[0] ?? null;
+                            setBookOfBible(primary);
+                            setBookSource("manual");
+                            setBookConfirmed(next.length > 0);
+                            scheduleSave("books_of_bible", next);
+                            scheduleSave("book_of_bible", primary);
+                            scheduleSave("book_source", "manual");
+                            scheduleSave("book_confirmed", next.length > 0);
+                          }}
+                          onConfirmSuggestion={() => {
+                            if (!bookOfBible) return;
+                            const next = booksOfBible.includes(bookOfBible)
+                              ? booksOfBible
+                              : [...booksOfBible, bookOfBible];
+                            setBooksOfBible(next);
+                            setBookConfirmed(true);
+                            scheduleSave("books_of_bible", next);
+                            scheduleSave("book_confirmed", true);
+                          }}
+                        />
+                        <TopicPicker
+                          iconOnly
+                          value={topicIds}
+                          disabled={!userId}
+                          onChange={(next) => {
+                            setTopicIds(next);
+                            scheduleSave("topic_ids", next);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <ReadTagChips
+                      books={booksOfBible}
+                      topicIds={topicIds}
                       suggestion={
                         booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
                           ? bookOfBible
                           : null
                       }
-                      disabled={!userId}
-                      onToggle={(abbr: string) => {
-                        const next = booksOfBible.includes(abbr)
-                          ? booksOfBible.filter((b) => b !== abbr)
-                          : [...booksOfBible, abbr];
-                        setBooksOfBible(next);
-                        const primary = next[0] ?? null;
-                        setBookOfBible(primary);
-                        setBookSource("manual");
-                        setBookConfirmed(next.length > 0);
-                        scheduleSave("books_of_bible", next);
-                        scheduleSave("book_of_bible", primary);
-                        scheduleSave("book_source", "manual");
-                        scheduleSave("book_confirmed", next.length > 0);
-                      }}
                       onConfirmSuggestion={() => {
                         if (!bookOfBible) return;
                         const next = booksOfBible.includes(bookOfBible)
@@ -1232,18 +1330,23 @@ function EntryPage() {
                         scheduleSave("books_of_bible", next);
                         scheduleSave("book_confirmed", true);
                       }}
+                      onRemoveBook={(abbr) => {
+                        const next = booksOfBible.filter((b) => b !== abbr);
+                        setBooksOfBible(next);
+                        const primary = next[0] ?? null;
+                        setBookOfBible(primary);
+                        setBookConfirmed(next.length > 0);
+                        scheduleSave("books_of_bible", next);
+                        scheduleSave("book_of_bible", primary);
+                        scheduleSave("book_confirmed", next.length > 0);
+                      }}
+                      onRemoveTopic={(id) => {
+                        const next = topicIds.filter((t) => t !== id);
+                        setTopicIds(next);
+                        scheduleSave("topic_ids", next);
+                      }}
                     />
-                    <div className="de-read-part" style={{ paddingTop: 0, paddingBottom: 4 }}>
-                      <TopicPicker
-                        value={topicIds}
-                        disabled={!userId}
-                        placeholder="+ Add topic"
-                        onChange={(next) => {
-                          setTopicIds(next);
-                          scheduleSave("topic_ids", next);
-                        }}
-                      />
-                    </div>
+
                     <div className="de-read-part">
                       {/* preserve original wrapper start */}
                       <input
