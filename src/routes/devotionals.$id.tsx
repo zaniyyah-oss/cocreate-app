@@ -2412,6 +2412,15 @@ export function AddEventDialog({
           </div>
         </div>
       </DialogContent>
+      <DeleteConfirmModal
+        open={confirmDelete}
+        title="Delete this event?"
+        itemName={event?.title || (isFocus ? "this focus item" : "this event")}
+        message="This event will be permanently removed from your calendar."
+        busy={deleting}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={confirmRemove}
+      />
     </Dialog>
   );
 }
