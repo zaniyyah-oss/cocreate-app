@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS idx_devotional_entries_user_date ON public.devotional_entries (user_id, entry_date DESC);
+CREATE INDEX IF NOT EXISTS idx_devotional_entries_user_confirmed ON public.devotional_entries (user_id) WHERE book_confirmed = true;
