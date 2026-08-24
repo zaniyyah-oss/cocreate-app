@@ -538,7 +538,6 @@ function ReadLibrary() {
           .rd-table,.rd-table tbody{border:none;}
           .rd-tr{position:relative;border:1.5px solid #ECE4CE;border-radius:14px;margin-bottom:10px;padding:6px 4px;background:#fff;}
           .rd-tr:hover,.rd-tr:focus-visible{background:#fff;}
-          .rd-tr:hover .rd-open-btn{background:#fff;color:#181A4D;border-color:#ECE4CE;}
           .rd-td{padding:6px 14px;border:none;display:flex;gap:8px;align-items:baseline;}
           .rd-td::before{content:attr(data-lbl);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a968a;min-width:64px;}
           .rd-td-date::before{content:"Date";}
