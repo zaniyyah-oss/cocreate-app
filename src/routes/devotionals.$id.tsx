@@ -705,6 +705,7 @@ function EntryPage() {
   const [savingField, setSavingField] = useState<string | null>(null);
   const [savedField, setSavedField] = useState<string | null>(null);
   const hydratedRef = useRef<string>("");
+  const dayHydratedRef = useRef<string>("");
   const entrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
   const entrySaveInFlightRef = useRef(false);
