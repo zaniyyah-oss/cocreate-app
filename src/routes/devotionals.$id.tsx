@@ -1290,7 +1290,6 @@ function EntryPage() {
                     <div className="de-readbar">
                       <div className="de-readbar-left">
                         {!isGuest && (
-
                           <span className="de-studywrap">
                             <button
                               type="button"
@@ -1298,6 +1297,7 @@ function EntryPage() {
                               onClick={() => setStudyMenuOpen((v) => !v)}
                               aria-haspopup="menu"
                               aria-expanded={studyMenuOpen}
+                              title="Switch studies or continue a past study"
                             >
                               <span className="lbl">
                                 {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
