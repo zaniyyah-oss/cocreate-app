@@ -624,7 +624,7 @@ function EntryPage() {
 
   const goToEntry = (e: { id: string; entry_date: string | null }) => {
     setStudyMenuOpen(false);
-    setPickerOpen(false);
+    setStudyQuery("");
     setStudyQuery("");
     setPendingNewStudy(false);
     // Stay on the currently selected date; only swap which study is loaded.
