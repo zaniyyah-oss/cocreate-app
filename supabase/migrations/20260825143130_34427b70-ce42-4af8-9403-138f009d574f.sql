@@ -1,0 +1,1 @@
+ALTER VIEW public.content_items_public SET (security_invoker = true);
