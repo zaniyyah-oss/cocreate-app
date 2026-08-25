@@ -1375,8 +1375,18 @@ function EntryPage() {
                           </span>
                         )}
                         {!isGuest && studiesForDayCount > 0 && studiesForDayCount < MAX_STUDIES_PER_DAY && !pendingNewStudy && (
-                          <button type="button" className="de-studyadd" onClick={addStudyForDay}>
-                            + Add study
+                          <button
+                            type="button"
+                            className="de-studyicon"
+                            onClick={addStudyForDay}
+                            title="New study for today"
+                            aria-label="New study for today"
+                          >
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
+                              <path d="M14 3l5 5" />
+                              <path d="M18 13v6M15 16h6" />
+                            </svg>
                           </button>
                         )}
                         {!isGuest && studiesForDayCount >= MAX_STUDIES_PER_DAY && (
