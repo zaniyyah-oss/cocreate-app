@@ -1316,7 +1316,7 @@ function EntryPage() {
                                     <div className="de-studysep" />
                                   </>
                                 )}
-                                {dayEntries.length > 0 && <div className="grp">Today's studies</div>}
+                                {dayEntries.length > 0 && <div className="grp">Today</div>}
                                 {dayEntries.map((e, i) => (
                                   <button
                                     key={e.id}
