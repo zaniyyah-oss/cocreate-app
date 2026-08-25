@@ -1287,47 +1287,10 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
-                    {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
-                      <div className="de-startcard">
-                        <span className="txt">Start today's study</span>
-                        <span className="acts">
-                          <button type="button" className="de-startprimary" onClick={() => { setStartDismissed(true); setPickerOpen(false); }}>
-                            Start new study
-                          </button>
-                          <span className="de-studywrap">
-                            <button type="button" className="de-startghost" onClick={() => setPickerOpen((v) => !v)}>
-                              Continue a study ▾
-                            </button>
-                            {pickerOpen && (
-                              <div className="de-studymenu" role="menu">
-                                <input
-                                  className="de-studysearch"
-                                  placeholder="Search your studies…"
-                                  value={studyQuery}
-                                  onChange={(ev) => setStudyQuery(ev.target.value)}
-                                />
-                                {continuable.length === 0 ? (
-                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No studies to continue yet</div>
-                                ) : (
-                                  continuable.map((e, i) => (
-                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
-                                      {studyLabel(e, i)}
-                                      <span className="sub">
-                                        {formatDate(e.entry_date ?? selectedDate)}
-                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
-                                      </span>
-                                    </button>
-                                  ))
-                                )}
-                              </div>
-                            )}
-                          </span>
-                        </span>
-                      </div>
-                    )}
                     <div className="de-readbar">
                       <div className="de-readbar-left">
-                        {!isGuest && (dayEntries.length > 0 || !!currentEntry || pendingNewStudy) && (
+                        {!isGuest && (
+
                           <span className="de-studywrap">
                             <button
                               type="button"
