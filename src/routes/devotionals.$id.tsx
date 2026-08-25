@@ -188,13 +188,8 @@ const CSS = `
 .de-studyopt.danger:hover{background:rgba(255,52,12,0.08);}
 .de-studyopt.danger .sub{color:rgba(179,34,12,0.6);}
 .de-studysep{height:1px;background:rgba(24,26,77,0.08);margin:6px 4px;}
-.de-startcard{margin:0 0 14px;}
-.de-startcard .txt{display:block;font-size:13px;font-weight:800;color:#181A4D;margin:0 0 10px;letter-spacing:.02em;}
-.de-startcard .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.de-startprimary{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:background .15s ease;}
-.de-startprimary:hover{background:#0f1140;}
-.de-startghost{background:#fff;color:#181A4D;border:1.5px solid rgba(24,26,77,0.22);border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:border-color .15s ease;}
-.de-startghost:hover{border-color:#181A4D;}
+.de-studyicon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;border-radius:8px;color:rgba(24,26,77,0.6);cursor:pointer;flex:0 0 auto;}
+.de-studyicon:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
 .de-studysearch{width:100%;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;margin:4px 0 6px;outline:none;}
 .de-studysearch:focus{border-color:#181A4D;}
 .de-headquote,.de-headref{display:none;}
@@ -610,9 +605,7 @@ function EntryPage() {
   );
   // --- Study switching: start new, or continue an existing study ---------------
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [studyQuery, setStudyQuery] = useState("");
-  const [startDismissed, setStartDismissed] = useState(false);
   // A brand-new study the user opened but hasn't written in yet: nothing is
   // written to the database until the first keystroke, so blank studies never
   // accumulate in Read.
@@ -631,7 +624,7 @@ function EntryPage() {
 
   const goToEntry = (e: { id: string; entry_date: string | null }) => {
     setStudyMenuOpen(false);
-    setPickerOpen(false);
+    setStudyQuery("");
     setStudyQuery("");
     setPendingNewStudy(false);
     // Stay on the currently selected date; only swap which study is loaded.
@@ -645,9 +638,7 @@ function EntryPage() {
     if (!userId) return;
     if (studiesForDayCount >= MAX_STUDIES_PER_DAY) return;
     setStudyMenuOpen(false);
-    setPickerOpen(false);
     setStudyQuery("");
-    setStartDismissed(true);
     setPendingNewStudy(true);
     navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
   };
@@ -683,7 +674,6 @@ function EntryPage() {
           navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: remaining[0].id } as any });
         } else {
           setPendingNewStudy(false);
-          setStartDismissed(false);
           navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
         }
       }
@@ -705,7 +695,7 @@ function EntryPage() {
   const studyLabel = (e: Entry | undefined, idx: number) =>
     (e?.scripture_reference && e.scripture_reference.trim()) ||
     (e?.entry_title && e.entry_title.trim()) ||
-    (e ? `Study ${Math.max(1, idx + 1)}` : "New study");
+    (e ? `Study ${Math.max(1, idx + 1)}` : "Untitled study");
 
 
   // Past studies (any date) available to continue, most recent first.
@@ -1297,47 +1287,9 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
-                    {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
-                      <div className="de-startcard">
-                        <span className="txt">Start today's study</span>
-                        <span className="acts">
-                          <button type="button" className="de-startprimary" onClick={() => { setStartDismissed(true); setPickerOpen(false); }}>
-                            Start new study
-                          </button>
-                          <span className="de-studywrap">
-                            <button type="button" className="de-startghost" onClick={() => setPickerOpen((v) => !v)}>
-                              Continue a study ▾
-                            </button>
-                            {pickerOpen && (
-                              <div className="de-studymenu" role="menu">
-                                <input
-                                  className="de-studysearch"
-                                  placeholder="Search your studies…"
-                                  value={studyQuery}
-                                  onChange={(ev) => setStudyQuery(ev.target.value)}
-                                />
-                                {continuable.length === 0 ? (
-                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No studies to continue yet</div>
-                                ) : (
-                                  continuable.map((e, i) => (
-                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
-                                      {studyLabel(e, i)}
-                                      <span className="sub">
-                                        {formatDate(e.entry_date ?? selectedDate)}
-                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
-                                      </span>
-                                    </button>
-                                  ))
-                                )}
-                              </div>
-                            )}
-                          </span>
-                        </span>
-                      </div>
-                    )}
                     <div className="de-readbar">
                       <div className="de-readbar-left">
-                        {!isGuest && (dayEntries.length > 0 || !!currentEntry || pendingNewStudy) && (
+                        {!isGuest && (
                           <span className="de-studywrap">
                             <button
                               type="button"
@@ -1345,6 +1297,7 @@ function EntryPage() {
                               onClick={() => setStudyMenuOpen((v) => !v)}
                               aria-haspopup="menu"
                               aria-expanded={studyMenuOpen}
+                              title="Switch studies or continue a past study"
                             >
                               <span className="lbl">
                                 {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
@@ -1363,7 +1316,7 @@ function EntryPage() {
                                     <div className="de-studysep" />
                                   </>
                                 )}
-                                {dayEntries.length > 0 && <div className="grp">Today's studies</div>}
+                                {dayEntries.length > 0 && <div className="grp">Today</div>}
                                 {dayEntries.map((e, i) => (
                                   <button
                                     key={e.id}
@@ -1422,8 +1375,18 @@ function EntryPage() {
                           </span>
                         )}
                         {!isGuest && studiesForDayCount > 0 && studiesForDayCount < MAX_STUDIES_PER_DAY && !pendingNewStudy && (
-                          <button type="button" className="de-studyadd" onClick={addStudyForDay}>
-                            + Add study
+                          <button
+                            type="button"
+                            className="de-studyicon"
+                            onClick={addStudyForDay}
+                            title="New study for today"
+                            aria-label="New study for today"
+                          >
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
+                              <path d="M14 3l5 5" />
+                              <path d="M18 13v6M15 16h6" />
+                            </svg>
                           </button>
                         )}
                         {!isGuest && studiesForDayCount >= MAX_STUDIES_PER_DAY && (
@@ -1532,7 +1495,7 @@ function EntryPage() {
                         <RichTextField
                           storageKey="scripture"
                           className="de-textarea"
-                          placeholder="What did you notice? What is God saying?"
+                          placeholder="Start writing — your study saves as you go."
                           value={scriptureText}
                           onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                         />
