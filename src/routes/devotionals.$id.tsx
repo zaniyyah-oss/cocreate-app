@@ -1495,7 +1495,7 @@ function EntryPage() {
                         <RichTextField
                           storageKey="scripture"
                           className="de-textarea"
-                          placeholder="What did you notice? What is God saying?"
+                          placeholder="Start writing — your study saves as you go."
                           value={scriptureText}
                           onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                         />
