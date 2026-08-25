@@ -605,9 +605,7 @@ function EntryPage() {
   );
   // --- Study switching: start new, or continue an existing study ---------------
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [studyQuery, setStudyQuery] = useState("");
-  const [startDismissed, setStartDismissed] = useState(false);
   // A brand-new study the user opened but hasn't written in yet: nothing is
   // written to the database until the first keystroke, so blank studies never
   // accumulate in Read.
