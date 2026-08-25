@@ -188,13 +188,8 @@ const CSS = `
 .de-studyopt.danger:hover{background:rgba(255,52,12,0.08);}
 .de-studyopt.danger .sub{color:rgba(179,34,12,0.6);}
 .de-studysep{height:1px;background:rgba(24,26,77,0.08);margin:6px 4px;}
-.de-startcard{margin:0 0 14px;}
-.de-startcard .txt{display:block;font-size:13px;font-weight:800;color:#181A4D;margin:0 0 10px;letter-spacing:.02em;}
-.de-startcard .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.de-startprimary{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:background .15s ease;}
-.de-startprimary:hover{background:#0f1140;}
-.de-startghost{background:#fff;color:#181A4D;border:1.5px solid rgba(24,26,77,0.22);border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:border-color .15s ease;}
-.de-startghost:hover{border-color:#181A4D;}
+.de-studyicon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;border-radius:8px;color:rgba(24,26,77,0.6);cursor:pointer;flex:0 0 auto;}
+.de-studyicon:hover{background:rgba(24,26,77,0.06);color:#181A4D;}
 .de-studysearch{width:100%;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;margin:4px 0 6px;outline:none;}
 .de-studysearch:focus{border-color:#181A4D;}
 .de-headquote,.de-headref{display:none;}
