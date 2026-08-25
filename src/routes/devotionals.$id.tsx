@@ -638,9 +638,7 @@ function EntryPage() {
     if (!userId) return;
     if (studiesForDayCount >= MAX_STUDIES_PER_DAY) return;
     setStudyMenuOpen(false);
-    setPickerOpen(false);
     setStudyQuery("");
-    setStartDismissed(true);
     setPendingNewStudy(true);
     navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
   };
