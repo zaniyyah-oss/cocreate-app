@@ -188,11 +188,12 @@ const CSS = `
 .de-studyopt.danger:hover{background:rgba(255,52,12,0.08);}
 .de-studyopt.danger .sub{color:rgba(179,34,12,0.6);}
 .de-studysep{height:1px;background:rgba(24,26,77,0.08);margin:6px 4px;}
-.de-startcard{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid rgba(24,26,77,0.10);border-radius:14px;padding:12px 16px;margin:0 0 14px;}
-.de-startcard .txt{font-size:13px;font-weight:700;color:#181A4D;}
+.de-startcard{margin:0 0 14px;}
+.de-startcard .txt{display:block;font-size:13px;font-weight:800;color:#181A4D;margin:0 0 10px;letter-spacing:.02em;}
 .de-startcard .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.de-startprimary{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;}
-.de-startghost{background:transparent;color:#181A4D;border:1px solid rgba(24,26,77,0.18);border-radius:999px;padding:8px 16px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;}
+.de-startprimary{background:#181A4D;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:background .15s ease;}
+.de-startprimary:hover{background:#0f1140;}
+.de-startghost{background:#fff;color:#181A4D;border:1.5px solid rgba(24,26,77,0.22);border-radius:999px;padding:9px 18px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:border-color .15s ease;}
 .de-startghost:hover{border-color:#181A4D;}
 .de-studysearch{width:100%;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:8px 10px;font-family:'Poppins',sans-serif;font-size:13px;margin:4px 0 6px;outline:none;}
 .de-studysearch:focus{border-color:#181A4D;}
@@ -1255,44 +1256,6 @@ function EntryPage() {
               </div>
             </div>
 
-            {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
-              <div className="de-startcard">
-                <span className="txt">Start today's study</span>
-                <span className="acts">
-                  <button type="button" className="de-startprimary" onClick={() => { setStartDismissed(true); setPickerOpen(false); }}>
-                    Start new study
-                  </button>
-                  <span className="de-studywrap">
-                    <button type="button" className="de-startghost" onClick={() => setPickerOpen((v) => !v)}>
-                      Continue a study ▾
-                    </button>
-                    {pickerOpen && (
-                      <div className="de-studymenu" role="menu">
-                        <input
-                          className="de-studysearch"
-                          placeholder="Search your studies…"
-                          value={studyQuery}
-                          onChange={(ev) => setStudyQuery(ev.target.value)}
-                        />
-                        {continuable.length === 0 ? (
-                          <div className="de-studyopt" style={{ opacity: 0.5 }}>No studies to continue yet</div>
-                        ) : (
-                          continuable.map((e, i) => (
-                            <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
-                              {studyLabel(e, i)}
-                              <span className="sub">
-                                {formatDate(e.entry_date ?? selectedDate)}
-                                {e.entry_title ? ` · ${e.entry_title}` : ""}
-                              </span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </span>
-                </span>
-              </div>
-            )}
 
             <PlanDayBanner userId={userId} dateISO={selectedDate} />
 
@@ -1334,6 +1297,44 @@ function EntryPage() {
                       <span className="de-badge read">read</span>
                       {focusBtn("read")}
                     </div>
+                    {!isGuest && dayEntries.length === 0 && !activeEntryId && !startDismissed && (
+                      <div className="de-startcard">
+                        <span className="txt">Start today's study</span>
+                        <span className="acts">
+                          <button type="button" className="de-startprimary" onClick={() => { setStartDismissed(true); setPickerOpen(false); }}>
+                            Start new study
+                          </button>
+                          <span className="de-studywrap">
+                            <button type="button" className="de-startghost" onClick={() => setPickerOpen((v) => !v)}>
+                              Continue a study ▾
+                            </button>
+                            {pickerOpen && (
+                              <div className="de-studymenu" role="menu">
+                                <input
+                                  className="de-studysearch"
+                                  placeholder="Search your studies…"
+                                  value={studyQuery}
+                                  onChange={(ev) => setStudyQuery(ev.target.value)}
+                                />
+                                {continuable.length === 0 ? (
+                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No studies to continue yet</div>
+                                ) : (
+                                  continuable.map((e, i) => (
+                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
+                                      {studyLabel(e, i)}
+                                      <span className="sub">
+                                        {formatDate(e.entry_date ?? selectedDate)}
+                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
+                                      </span>
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </span>
+                        </span>
+                      </div>
+                    )}
                     <div className="de-readbar">
                       <div className="de-readbar-left">
                         {!isGuest && (dayEntries.length > 0 || !!currentEntry || pendingNewStudy) && (
