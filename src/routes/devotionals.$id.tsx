@@ -695,7 +695,7 @@ function EntryPage() {
   const studyLabel = (e: Entry | undefined, idx: number) =>
     (e?.scripture_reference && e.scripture_reference.trim()) ||
     (e?.entry_title && e.entry_title.trim()) ||
-    (e ? `Study ${Math.max(1, idx + 1)}` : "New study");
+    (e ? `Study ${Math.max(1, idx + 1)}` : "Untitled study");
 
 
   // Past studies (any date) available to continue, most recent first.
