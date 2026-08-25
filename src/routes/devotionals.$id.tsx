@@ -674,7 +674,6 @@ function EntryPage() {
           navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: remaining[0].id } as any });
         } else {
           setPendingNewStudy(false);
-          setPendingNewStudy(false);
           navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate } as any });
         }
       }
