@@ -3116,7 +3116,9 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
           const dayNum = d.getDate();
           const hasDevo = devoDates.has(isoDate(d));
           const topicalName = topicalMap.get(isoDate(d));
-          const note = isCurrentRealMonth ? SAMPLE_WEEK_NOTES[dayNum] : undefined;
+          const dISO = isoDate(d);
+          const note = noteDrafts[dISO] ?? dayNotes.get(dISO) ?? "";
+
           const isPast = d.getTime() < todayD.getTime();
           const today = isToday(d);
           const cls = [
