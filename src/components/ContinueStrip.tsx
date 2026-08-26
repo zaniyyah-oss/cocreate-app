@@ -14,6 +14,9 @@ const CSS = `
 .cs-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 18px 6px;scrollbar-width:none;}
 .cs-scroll::-webkit-scrollbar{display:none;}
 .cs-card{flex-shrink:0;width:150px;background:#FBF8ED;border:1px solid #E7E0D0;border-radius:12px;padding:12px;text-align:left;cursor:pointer;font-family:inherit;transition:transform .15s ease, box-shadow .15s ease;}
+@media (min-width:900px){
+  .cs-card{flex:1 1 150px;width:auto;min-width:150px;max-width:210px;}
+}
 .cs-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.05);}
 .cs-tag{display:inline-flex;align-items:center;gap:5px;font-family:'Poppins',sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px;}
 .cs-dot{width:7px;height:7px;border-radius:50%;flex:none;}
@@ -74,16 +77,16 @@ export function ContinueStrip() {
       const [entries, notes, assignments, plans] = await Promise.all([
         supabase.from("devotional_entries" as any)
           .select("id, entry_title, entry_date, template_id, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(8),
         supabase.from("workspace_items" as any)
           .select("id, title, body_text, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(10),
         supabase.from("plan_assignments" as any)
           .select("id, plan_id, start_date, current_day, status, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(5),
         supabase.from("plans" as any)
           .select("id, name, color, length_days, created_at, updated_at")
-          .order("updated_at", { ascending: false }).limit(6),
+          .order("updated_at", { ascending: false }).limit(8),
       ]);
       return {
         entries: (entries.data ?? []) as any[],
@@ -99,6 +102,7 @@ export function ContinueStrip() {
   const planById = new Map<string, any>(q.data.plans.map((p) => [p.id, p]));
   const assignedPlanIds = new Set(q.data.assignments.map((a) => a.plan_id));
   const items: Item[] = [];
+  const noteItems: Item[] = [];
 
   for (const e of q.data.entries) {
     items.push({
@@ -116,8 +120,11 @@ export function ContinueStrip() {
   }
 
   for (const n of q.data.notes) {
-    const t = (n.title || "").trim() || (n.body_text || "").trim().split("\n")[0]?.slice(0, 60) || "Untitled note";
-    items.push({
+    const rawTitle = (n.title || "").trim();
+    const firstLine = (n.body_text || "").split("\n").map((l: string) => l.trim()).find((l: string) => l.length > 0) ?? "";
+    if (!rawTitle && !firstLine) continue;
+    const t = rawTitle || firstLine.slice(0, 60);
+    noteItems.push({
       key: `note-${n.id}`,
       label: "Note",
       color: BROWN,
@@ -159,7 +166,13 @@ export function ContinueStrip() {
     });
   }
 
-  const cards = items.sort((a, b) => b.at - a.at).slice(0, 6);
+  const MAX = 12;
+  const byRecent = (a: Item, b: Item) => b.at - a.at;
+  const sortedNotes = [...noteItems].sort(byRecent);
+  const reservedNotes = sortedNotes.slice(0, 5);
+  const reservedKeys = new Set(reservedNotes.map((n) => n.key));
+  const rest = [...items, ...sortedNotes.filter((n) => !reservedKeys.has(n.key))].sort(byRecent);
+  const cards = [...reservedNotes, ...rest.slice(0, Math.max(0, MAX - reservedNotes.length))].sort(byRecent);
   if (cards.length === 0) return null;
 
   return (
