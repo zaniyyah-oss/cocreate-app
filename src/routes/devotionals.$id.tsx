@@ -324,15 +324,13 @@ ${TodoStatusSelectStyles}
   }
   .de-pray-card .de-pray-textarea{min-height:180px;}
   .de-cols .de-block .rtf-editor{min-height:120px;}
-  .de-cols .de-block .de-todos-list{max-height:42vh;overflow-y:auto;}
 }
 @media (min-width:900px) and (max-width:1199px){
   .de-cols .de-block{padding:16px 16px;}
 }
 @media (min-width:1200px){
   .de-cols .de-block .rtf-editor,
-  .de-cols .de-block textarea.de-textarea,
-  .de-cols .de-block .de-todos-list{max-height:56vh;}
+  .de-cols .de-block textarea.de-textarea{max-height:56vh;}
 }
 
 
