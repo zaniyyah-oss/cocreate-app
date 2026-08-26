@@ -737,12 +737,18 @@ function EntryPage() {
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
-  // When the active study belongs to another date (a past study the user chose to
-  // continue), only the Read section follows that study. Title / Where / Pray /
-  // To-Do stay with the day you're working on.
+  // Title / Where / Pray / To-Do always belong to the day, not to a study. The
+  // day's own first entry owns them, so switching studies (or continuing a past
+  // one) never swaps the Pray / To-Do content.
   const continuingEntry: Entry | undefined =
     currentEntry && currentEntry.entry_date !== selectedDate ? currentEntry : undefined;
-  const dayFieldsEntry: Entry | undefined = continuingEntry ? dayEntries[0] : currentEntry;
+  const dayFieldsEntry: Entry | undefined = dayEntries[0] ?? (continuingEntry ? undefined : currentEntry);
+  // True when Read and the day fields live in different rows.
+  const splitRows = Boolean(
+    (currentEntry && dayFieldsEntry && currentEntry.id !== dayFieldsEntry.id) ||
+    ((pendingNewStudy || continuingEntry) && dayEntries.length > 0)
+  );
+
 
   const dayEntryIdRef = useRef<string | null>(null);
   const continuingRef = useRef(false);
@@ -756,8 +762,9 @@ function EntryPage() {
   }, [dayFieldsEntry?.id]);
 
   useEffect(() => {
-    continuingRef.current = Boolean(continuingEntry);
-  }, [continuingEntry?.id]);
+    continuingRef.current = splitRows;
+  }, [splitRows]);
+
 
   /* Visual balance (iPad + desktop, 3-column layout only):
      the Pray and To-Do writing areas end on the same baseline as the bottom
@@ -934,8 +941,9 @@ function EntryPage() {
     pendingEntryPatchRef.current = null;
     entrySaveInFlightRef.current = true;
 
-    // While continuing a past study, Read edits go to that study and the rest of
-    // the page goes to the day's own study.
+    // When the active study isn't the row that owns the day (a second study for
+    // the day, or a past study being continued), Read edits go to that study and
+    // Pray / To-Do / Where / title go to the day's own row.
     const continuing = continuingRef.current;
     const readPatch: Record<string, unknown> = {};
     const dayPatch: Record<string, unknown> = {};
@@ -956,25 +964,31 @@ function EntryPage() {
         user_id: userId, template_id: id, entry_date: selectedDate, ...p,
       } as any).select("*").single();
       if (error) throw error;
-      dayEntryIdRef.current = data.id;
-      if (!continuing) currentEntryIdRef.current = data.id;
       trackEvent("devotional_entry_created", { template_id: id });
       applyEntryPatchToCache(data.id, p, data as Entry);
       const count = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length;
-      dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
-      if (!continuing) {
+      if (isDayRow || !continuing) {
+        dayEntryIdRef.current = data.id;
+        dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
+      }
+      if (!isDayRow) {
         // The pending blank study just became real: keep the current in-progress
         // text and point the URL at the new row so autosave keeps updating it.
+        currentEntryIdRef.current = data.id;
         hydratedRef.current = `read:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
         setPendingNewStudy(false);
         navigate({ to: "/devotionals/$id", params: { id }, search: { date: selectedDate, entry: data.id } as any, replace: true });
       }
-      void isDayRow;
     };
 
     try {
-      await writeTo(currentEntryIdRef.current, readPatch, false);
-      await writeTo(dayEntryIdRef.current, dayPatch, true);
+      if (!continuing) {
+        await writeTo(currentEntryIdRef.current, patch, false);
+      } else {
+        await writeTo(currentEntryIdRef.current, readPatch, false);
+        await writeTo(dayEntryIdRef.current, dayPatch, true);
+      }
+
       const key = Object.keys(patch)[0];
       setSavingField(null);
       setSavedField(key);
