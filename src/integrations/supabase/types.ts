@@ -416,6 +416,33 @@ export type Database = {
         }
         Relationships: []
       }
+      day_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          note_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          note_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          note_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       devotional_days: {
         Row: {
           apply_prompt: string | null

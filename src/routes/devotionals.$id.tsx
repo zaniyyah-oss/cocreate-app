@@ -3006,6 +3006,41 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
   const todoDueQ = useTodoDueDates(userId, isoDate(anchor), isoDate(endD));
   const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
+
+  // Per-day free-form notes for this week (persisted).
+  const dayNotesQ = useQuery({
+    queryKey: ["day-notes", userId, isoDate(anchor), isoDate(endD)],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("day_notes")
+        .select("note_date, body")
+        .eq("user_id", userId!)
+        .gte("note_date", isoDate(anchor))
+        .lte("note_date", isoDate(endD));
+      if (error) throw error;
+      const m = new Map<string, string>();
+      (data ?? []).forEach((r: any) => m.set(r.note_date as string, (r.body as string) ?? ""));
+      return m;
+    },
+  });
+  const dayNotes = dayNotesQ.data ?? new Map<string, string>();
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const noteTimers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+
+  const saveDayNote = async (dateISO: string, body: string) => {
+    if (!userId) return;
+    const { error } = await supabase
+      .from("day_notes")
+      .upsert({ user_id: userId, note_date: dateISO, body }, { onConflict: "user_id,note_date" });
+    if (!error) qc.invalidateQueries({ queryKey: ["day-notes", userId] });
+  };
+  const onNoteChange = (dateISO: string, body: string) => {
+    setNoteDrafts(p => ({ ...p, [dateISO]: body }));
+    if (noteTimers.current[dateISO]) clearTimeout(noteTimers.current[dateISO]!);
+    noteTimers.current[dateISO] = setTimeout(() => { void saveDayNote(dateISO, body); }, 700);
+  };
+
   const [addOpen, setAddOpen] = useState(false);
   const [addDate, setAddDate] = useState<string>(isoDate(todayD));
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
@@ -3081,7 +3116,9 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
           const dayNum = d.getDate();
           const hasDevo = devoDates.has(isoDate(d));
           const topicalName = topicalMap.get(isoDate(d));
-          const note = isCurrentRealMonth ? SAMPLE_WEEK_NOTES[dayNum] : undefined;
+          const dISO = isoDate(d);
+          const note = noteDrafts[dISO] ?? dayNotes.get(dISO) ?? "";
+
           const isPast = d.getTime() < todayD.getTime();
           const today = isToday(d);
           const cls = [
@@ -3138,10 +3175,14 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
                 </div>
                 <textarea
                   className="wl-note"
-                  defaultValue={note ?? ""}
-                  placeholder={isPast ? "No note added" : "Add a note for this day…"}
+                  value={note}
+                  onChange={(e) => onNoteChange(dISO, e.target.value)}
+                  onBlur={(e) => { if (noteTimers.current[dISO]) clearTimeout(noteTimers.current[dISO]!); void saveDayNote(dISO, e.target.value); }}
+                  placeholder={!userId ? "Sign in to add a note" : isPast ? "No note added" : "Add a note for this day…"}
+                  disabled={!userId}
                   rows={1}
                 />
+
               </div>
               <div className="wl-actions">
                 {hasDevo ? (
