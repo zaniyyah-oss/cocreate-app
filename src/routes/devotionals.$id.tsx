@@ -315,16 +315,22 @@ ${TodoStatusSelectStyles}
   .de-cols .de-block + .de-block{border-top:none;}
   .de-pray-card .de-pray-textarea{height:100%;min-height:0;}
 }
-/* Tablet (iPad): keep the three columns proportionate — a long Pray entry
-   scrolls inside its own column instead of stretching the whole card. */
-@media (min-width:900px) and (max-width:1199px){
-  .de-cols .de-block{padding:16px 16px;}
+/* Tablet & desktop: keep the three columns proportionate — long entries
+   scroll inside their own box instead of stretching the whole card. */
+@media (min-width:900px){
   .de-cols .de-block .rtf-editor,
   .de-cols .de-block textarea.de-textarea{
     max-height:42vh;overflow-y:auto;
   }
   .de-pray-card .de-pray-textarea{min-height:180px;}
   .de-cols .de-block .rtf-editor{min-height:120px;}
+}
+@media (min-width:900px) and (max-width:1199px){
+  .de-cols .de-block{padding:16px 16px;}
+}
+@media (min-width:1200px){
+  .de-cols .de-block .rtf-editor,
+  .de-cols .de-block textarea.de-textarea{max-height:56vh;}
 }
 
 
