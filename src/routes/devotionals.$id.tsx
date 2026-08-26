@@ -3175,10 +3175,14 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
                 </div>
                 <textarea
                   className="wl-note"
-                  defaultValue={note ?? ""}
-                  placeholder={isPast ? "No note added" : "Add a note for this day…"}
+                  value={note}
+                  onChange={(e) => onNoteChange(dISO, e.target.value)}
+                  onBlur={(e) => { if (noteTimers.current[dISO]) clearTimeout(noteTimers.current[dISO]!); void saveDayNote(dISO, e.target.value); }}
+                  placeholder={!userId ? "Sign in to add a note" : isPast ? "No note added" : "Add a note for this day…"}
+                  disabled={!userId}
                   rows={1}
                 />
+
               </div>
               <div className="wl-actions">
                 {hasDevo ? (
