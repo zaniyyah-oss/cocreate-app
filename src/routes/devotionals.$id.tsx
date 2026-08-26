@@ -762,8 +762,9 @@ function EntryPage() {
   }, [dayFieldsEntry?.id]);
 
   useEffect(() => {
-    continuingRef.current = Boolean(continuingEntry);
-  }, [continuingEntry?.id]);
+    continuingRef.current = splitRows;
+  }, [splitRows]);
+
 
   /* Visual balance (iPad + desktop, 3-column layout only):
      the Pray and To-Do writing areas end on the same baseline as the bottom
