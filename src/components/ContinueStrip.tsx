@@ -77,16 +77,16 @@ export function ContinueStrip() {
       const [entries, notes, assignments, plans] = await Promise.all([
         supabase.from("devotional_entries" as any)
           .select("id, entry_title, entry_date, template_id, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(8),
         supabase.from("workspace_items" as any)
           .select("id, title, body_text, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(10),
         supabase.from("plan_assignments" as any)
           .select("id, plan_id, start_date, current_day, status, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(3),
+          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(5),
         supabase.from("plans" as any)
           .select("id, name, color, length_days, created_at, updated_at")
-          .order("updated_at", { ascending: false }).limit(6),
+          .order("updated_at", { ascending: false }).limit(8),
       ]);
       return {
         entries: (entries.data ?? []) as any[],
