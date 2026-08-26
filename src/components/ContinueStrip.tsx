@@ -120,8 +120,11 @@ export function ContinueStrip() {
   }
 
   for (const n of q.data.notes) {
-    const t = (n.title || "").trim() || (n.body_text || "").trim().split("\n")[0]?.slice(0, 60) || "Untitled note";
-    items.push({
+    const rawTitle = (n.title || "").trim();
+    const firstLine = (n.body_text || "").split("\n").map((l: string) => l.trim()).find((l: string) => l.length > 0) ?? "";
+    if (!rawTitle && !firstLine) continue;
+    const t = rawTitle || firstLine.slice(0, 60);
+    noteItems.push({
       key: `note-${n.id}`,
       label: "Note",
       color: BROWN,
