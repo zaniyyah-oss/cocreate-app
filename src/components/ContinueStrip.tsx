@@ -166,7 +166,13 @@ export function ContinueStrip() {
     });
   }
 
-  const cards = items.sort((a, b) => b.at - a.at).slice(0, 6);
+  const MAX = 12;
+  const byRecent = (a: Item, b: Item) => b.at - a.at;
+  const sortedNotes = [...noteItems].sort(byRecent);
+  const reservedNotes = sortedNotes.slice(0, 5);
+  const reservedKeys = new Set(reservedNotes.map((n) => n.key));
+  const rest = [...items, ...sortedNotes.filter((n) => !reservedKeys.has(n.key))].sort(byRecent);
+  const cards = [...reservedNotes, ...rest.slice(0, Math.max(0, MAX - reservedNotes.length))].sort(byRecent);
   if (cards.length === 0) return null;
 
   return (
