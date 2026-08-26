@@ -737,12 +737,18 @@ function EntryPage() {
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
-  // When the active study belongs to another date (a past study the user chose to
-  // continue), only the Read section follows that study. Title / Where / Pray /
-  // To-Do stay with the day you're working on.
+  // Title / Where / Pray / To-Do always belong to the day, not to a study. The
+  // day's own first entry owns them, so switching studies (or continuing a past
+  // one) never swaps the Pray / To-Do content.
   const continuingEntry: Entry | undefined =
     currentEntry && currentEntry.entry_date !== selectedDate ? currentEntry : undefined;
-  const dayFieldsEntry: Entry | undefined = continuingEntry ? dayEntries[0] : currentEntry;
+  const dayFieldsEntry: Entry | undefined = dayEntries[0] ?? (continuingEntry ? undefined : currentEntry);
+  // True when Read and the day fields live in different rows.
+  const splitRows = Boolean(
+    (currentEntry && dayFieldsEntry && currentEntry.id !== dayFieldsEntry.id) ||
+    ((pendingNewStudy || continuingEntry) && dayEntries.length > 0)
+  );
+
 
   const dayEntryIdRef = useRef<string | null>(null);
   const continuingRef = useRef(false);
