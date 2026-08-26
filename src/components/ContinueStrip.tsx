@@ -14,6 +14,9 @@ const CSS = `
 .cs-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 18px 6px;scrollbar-width:none;}
 .cs-scroll::-webkit-scrollbar{display:none;}
 .cs-card{flex-shrink:0;width:150px;background:#FBF8ED;border:1px solid #E7E0D0;border-radius:12px;padding:12px;text-align:left;cursor:pointer;font-family:inherit;transition:transform .15s ease, box-shadow .15s ease;}
+@media (min-width:900px){
+  .cs-card{flex:1 1 150px;width:auto;min-width:150px;max-width:210px;}
+}
 .cs-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.05);}
 .cs-tag{display:inline-flex;align-items:center;gap:5px;font-family:'Poppins',sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px;}
 .cs-dot{width:7px;height:7px;border-radius:50%;flex:none;}
