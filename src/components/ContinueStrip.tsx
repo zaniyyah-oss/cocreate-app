@@ -102,6 +102,7 @@ export function ContinueStrip() {
   const planById = new Map<string, any>(q.data.plans.map((p) => [p.id, p]));
   const assignedPlanIds = new Set(q.data.assignments.map((a) => a.plan_id));
   const items: Item[] = [];
+  const noteItems: Item[] = [];
 
   for (const e of q.data.entries) {
     items.push({
