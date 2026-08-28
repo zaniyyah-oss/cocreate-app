@@ -120,6 +120,48 @@ const DEMO_TITLES: Record<string, string[]> = {
     "Podcast: raising kids who love the church",
     "Teaching: what marriage teaches us about God",
   ],
+  watch: [
+    "Teaching: on the wilderness season",
+    "The Room: episode 12 — Rest as resistance",
+    "Teaching: what marriage teaches us about God",
+    "A conversation about calling and cost",
+    "Teaching: the God who stays",
+  ],
+  shorts: [
+    "Clip: 'You were not made to hustle for love'",
+    "Clip: two minutes on rest",
+    "Clip: the prayer you keep avoiding",
+    "Clip: what grace does to shame",
+    "Clip: a word for the waiting",
+  ],
+  read: [
+    "The quiet work of becoming",
+    "What we mean when we say 'called'",
+    "A liturgy for Monday mornings",
+    "On the friendships that stay",
+    "Rebuilding after the plan fell through",
+  ],
+  listen: [
+    "Podcast: raising kids who love the church",
+    "Podcast: rest as resistance",
+    "Podcast: money, meaning and ministry",
+    "Podcast: the long obedience",
+    "Podcast: friendship in your thirties",
+  ],
+  devotionals: [
+    "Five days in the Psalms",
+    "Three days on rest",
+    "Ten days through Philippians",
+    "A week of gratitude",
+    "Three days on forgiveness",
+  ],
+  guides: [
+    "A guide to praying with your spouse",
+    "How to start a Bible study habit",
+    "A guide to sabbath for busy families",
+    "How to lead a small group well",
+    "A guide to journaling scripture",
+  ],
   spotlight: [
     "The essay that started it all",
     "A letter to my younger self in ministry",
@@ -453,6 +495,45 @@ function useByTopic(topicId: string | undefined, limit = 3) {
       if (error) throw error;
       return (data ?? []) as ContentPreview[];
     },
+  });
+}
+
+type ShelfKey = "watch" | "shorts" | "read" | "listen" | "devotionals" | "guides";
+
+const SHELF_TYPE_FALLBACK: Record<ShelfKey, ContentType[]> = {
+  watch: ["teaching"],
+  shorts: ["clip"],
+  read: ["essay", "blog"],
+  listen: ["podcast"],
+  devotionals: [],
+  guides: [],
+};
+
+function useShelf(shelf: ShelfKey, limit = 5) {
+  return useQuery({
+    queryKey: ["hp-shelf", shelf, limit],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("content_items_public")
+        .select("*")
+        .eq("shelf", shelf)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      let rows = (data ?? []) as ContentPreview[];
+      const fallbackTypes = SHELF_TYPE_FALLBACK[shelf];
+      if (rows.length < limit && fallbackTypes.length) {
+        const { data: extra } = await (supabase.from as any)("content_items_public")
+          .select("*")
+          .in("type", fallbackTypes)
+          .is("shelf", null)
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(limit);
+        const seen = new Set(rows.map((r) => r.id));
+        rows = [...rows, ...(((extra ?? []) as ContentPreview[]).filter((r) => !seen.has(r.id)))].slice(0, limit);
+      }
+      return rows;
+    },
+    staleTime: 60_000,
   });
 }
 
@@ -799,6 +880,76 @@ function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow |
 }
 
 
+/* Shelf grid section */
+function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
+  const q = useShelf(shelf, 3);
+  const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
+  return (
+    <div className="wrap hp-section" id={shelf} style={style}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>{label}</h2>
+        {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+      </div>
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Media shelf (navy feature + mini grid) */
+function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
+  const q = useShelf(shelf, 5);
+  const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
+  const feature = items[0];
+  const grid = items.slice(1, 5);
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow">
+          <div className="bar" />
+          <h2>{label}</h2>
+          {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+        </div>
+        <div className="hp-stream-row">
+          {feature ? (
+            <Link
+              to={routeForType(feature.type) as any}
+              params={{ id: feature.id! } as any}
+              className="hp-stream-feature"
+              style={{ backgroundImage: `url(${coverOf(feature)})` }}
+            >
+              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
+              <span className="label">{feature.title}</span>
+            </Link>
+          ) : <div className="hp-skel" style={{ height: 320 }} />}
+          <div className="hp-stream-mini-grid">
+            {grid.map((c) => (
+              <Link
+                key={c.id ?? ""}
+                to={routeForType(c.type) as any}
+                params={{ id: c.id! } as any}
+                className="hp-stream-mini"
+                style={{ backgroundImage: `url(${coverOf(c)})` }}
+              >
+                <span>{c.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* Featured Collection */
 type CollectionRow = {
   id: string;
@@ -865,7 +1016,7 @@ function FeaturedCollectionSection() {
   return (
     <div className="hp-collection">
       <div className="wrap">
-        <h2 className="hp-collection-heading">Collections</h2>
+        <h2 className="hp-collection-heading">Featured Collection</h2>
         <p className="hp-collection-sub">
           A handful of pieces released together, circling one question from a few different angles. No order to follow, nothing to finish.
         </p>
@@ -924,134 +1075,6 @@ function FeaturedCollectionSection() {
           <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-collection-btn">
             See all pieces from this collection →
           </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Streaming (navy) */
-function StreamingSection() {
-  const q = useQuery({
-    queryKey: ["hp-streaming"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("content_items_public")
-        .select("*")
-        .in("type", ["podcast", "teaching", "clip"])
-        .order("published_at", { ascending: false, nullsFirst: false })
-        .limit(5);
-      return (data ?? []) as ContentPreview[];
-    },
-  });
-  const real = q.data ?? [];
-  const items = padDemo(real, "streaming", 5, "podcast");
-  const feature = items[0];
-  const grid = items.slice(1, 5);
-
-
-  return (
-    <div className="hp-navy">
-      <div className="wrap">
-        <div className="hp-eyebrow">
-          <div className="bar" />
-          <h2>Now Streaming in The Room</h2>
-          <Link to="/explore" className="see-all">See all →</Link>
-        </div>
-        <div className="hp-stream-row">
-          {feature ? (
-            <Link
-              to={routeForType(feature.type) as any}
-              params={{ id: feature.id! } as any}
-              className="hp-stream-feature"
-              style={{ backgroundImage: `url(${coverOf(feature)})` }}
-            >
-              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
-              <span className="label">{feature.title}</span>
-            </Link>
-          ) : <div className="hp-skel" style={{ height: 320 }} />}
-          <div className="hp-stream-mini-grid">
-            {grid.map((c) => (
-              <Link
-                key={c.id ?? ""}
-                to={routeForType(c.type) as any}
-                params={{ id: c.id! } as any}
-                className="hp-stream-mini"
-                style={{ backgroundImage: `url(${coverOf(c)})` }}
-              >
-                <span>{c.title}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Spotlight (navy, rotating) */
-function SpotlightSection() {
-  const q = useLatest(6);
-  const real = q.data ?? [];
-  const items = padDemo(real, "spotlight", 4);
-  const [idx, setIdx] = useState(0);
-  const feats = items.slice(0, 4);
-  const list = items.slice(0, 4);
-  useEffect(() => {
-    if (feats.length < 2) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % feats.length), 6000);
-    return () => clearInterval(t);
-  }, [feats.length]);
-  const featureItems = feats;
-  const feature = featureItems[Math.min(idx, Math.max(0, featureItems.length - 1))];
-  const topicsQ = useTopics();
-  const topicById = useMemo(() => {
-    const m = new Map<string, TopicRow>();
-    (topicsQ.data ?? []).forEach((t) => m.set(t.id, t));
-    return m;
-  }, [topicsQ.data]);
-
-
-
-  return (
-    <div className="hp-navy">
-      <div className="wrap">
-        <div className="hp-eyebrow">
-          <div className="bar" />
-          <h2>In Case You Missed It</h2>
-        </div>
-        <div className="hp-spot-row">
-          {feature ? (
-            <Link
-              to={routeForType(feature.type) as any}
-              params={{ id: feature.id! } as any}
-              className="hp-spot-feature"
-              style={{ backgroundImage: `url(${coverOf(feature)})` }}
-            >
-              <div className="dots">
-                {featureItems.map((_, i) => (
-                  <span
-                    key={i}
-                    className={i === idx ? "active" : ""}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIdx(i); }}
-                  />
-                ))}
-              </div>
-              <h3>{feature.title}</h3>
-              <div className="meta-light">{feature.excerpt ?? feature.author_name ?? ""}</div>
-            </Link>
-          ) : <div className="hp-skel" style={{ height: 320 }} />}
-          <div className="hp-spot-list">
-            {list.map((c) => {
-              const t = c.topic_id ? topicById.get(c.topic_id) : undefined;
-              return (
-                <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any}>
-                  {t && <span className="tag">{t.display_name || t.name}</span>}
-                  <h5>{c.title}</h5>
-                </Link>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>
@@ -1189,13 +1212,13 @@ function HomePage() {
         {signedIn && <ContinueStrip />}
         <LatestSection />
 
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
+        <MediaShelfSection shelf="watch" label="Watch" seeAll="/watch" />
         <FeaturedCollectionSection />
-        <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
-        <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 44 }} />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 44, paddingBottom: 80 }} />
+        <MediaShelfSection shelf="shorts" label="Shorts" seeAll="/watch" />
+        <ShelfSection shelf="read" label="Read" seeAll="/explore" style={{ paddingTop: 80, paddingBottom: 44 }} />
+        <ShelfSection shelf="listen" label="Listen" seeAll="/listen" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        <ShelfSection shelf="guides" label="Guides" seeAll="/explore" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>

@@ -35,6 +35,15 @@ const FORM_CSS = `
 .cf-note{font-size:11.5px;color:#8a8678;margin-top:6px;}
 `;
 
+export const SHELF_OPTIONS = [
+  { value: "watch", label: "Watch" },
+  { value: "shorts", label: "Shorts" },
+  { value: "read", label: "Read" },
+  { value: "listen", label: "Listen" },
+  { value: "devotionals", label: "Devotionals" },
+  { value: "guides", label: "Guides" },
+] as const;
+
 type ScriptureItem = { reference: string; note: string };
 
 // Convert an ISO timestamp to the local "YYYY-MM-DDTHH:mm" string an
@@ -52,6 +61,7 @@ type FormState = {
   body: string;
   description: string;
   topic_id: string;
+  shelf: string;
   scripture_reference: string;
   scripture_focus: string;
   author_name: string;
@@ -80,7 +90,7 @@ type FormState = {
 
 
 const emptyState = (): FormState => ({
-  title: "", excerpt: "", body: "", description: "", topic_id: "",
+  title: "", excerpt: "", body: "", description: "", topic_id: "", shelf: "",
   scripture_reference: "", scripture_focus: "", author_name: "",
   media_url: "", thumbnail_url: "", published_at: "", scheduled_at: "",
   reflect_prompt: "", pray_prompt: "", apply_prompt: "",
@@ -100,6 +110,7 @@ const stateFromContent = (r: Content): FormState => ({
   excerpt: r.excerpt ?? "",
   body: r.body ?? "",
   topic_id: r.topic_id ?? "",
+  shelf: ((r as any).shelf ?? "") as string,
   scripture_reference: r.scripture_reference ?? "",
   author_name: r.author_name ?? "",
   media_url: r.media_url ?? "",
@@ -368,6 +379,7 @@ export function ContentForm({
           published_at: publishedAt,
           status: targetStatus,
         };
+        (payload as any).shelf = state.shelf || null;
         (payload as any).scheduled_at = scheduledIso;
         if (existingContent) {
           const { error } = await supabase.from("content_items").update(payload).eq("id", existingContent.id);
@@ -445,6 +457,16 @@ export function ContentForm({
               {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
+          {kind !== "devotional" && (
+            <div>
+              <label>Homepage shelf</label>
+              <select value={state.shelf} onChange={(e) => set("shelf", e.target.value)}>
+                <option value="">— None (Latest only) —</option>
+                {SHELF_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <div className="cf-note">Where this shows up on the homepage. Independent of the topic tag used for category pages.</div>
+            </div>
+          )}
           {showAuthor && (
             <div>
               <label>{kind === "podcast" ? "Guest / speaker" : "Author / speaker"}</label>
