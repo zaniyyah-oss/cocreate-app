@@ -120,6 +120,48 @@ const DEMO_TITLES: Record<string, string[]> = {
     "Podcast: raising kids who love the church",
     "Teaching: what marriage teaches us about God",
   ],
+  watch: [
+    "Teaching: on the wilderness season",
+    "The Room: episode 12 — Rest as resistance",
+    "Teaching: what marriage teaches us about God",
+    "A conversation about calling and cost",
+    "Teaching: the God who stays",
+  ],
+  shorts: [
+    "Clip: 'You were not made to hustle for love'",
+    "Clip: two minutes on rest",
+    "Clip: the prayer you keep avoiding",
+    "Clip: what grace does to shame",
+    "Clip: a word for the waiting",
+  ],
+  read: [
+    "The quiet work of becoming",
+    "What we mean when we say 'called'",
+    "A liturgy for Monday mornings",
+    "On the friendships that stay",
+    "Rebuilding after the plan fell through",
+  ],
+  listen: [
+    "Podcast: raising kids who love the church",
+    "Podcast: rest as resistance",
+    "Podcast: money, meaning and ministry",
+    "Podcast: the long obedience",
+    "Podcast: friendship in your thirties",
+  ],
+  devotionals: [
+    "Five days in the Psalms",
+    "Three days on rest",
+    "Ten days through Philippians",
+    "A week of gratitude",
+    "Three days on forgiveness",
+  ],
+  guides: [
+    "A guide to praying with your spouse",
+    "How to start a Bible study habit",
+    "A guide to sabbath for busy families",
+    "How to lead a small group well",
+    "A guide to journaling scripture",
+  ],
   spotlight: [
     "The essay that started it all",
     "A letter to my younger self in ministry",
@@ -453,6 +495,45 @@ function useByTopic(topicId: string | undefined, limit = 3) {
       if (error) throw error;
       return (data ?? []) as ContentPreview[];
     },
+  });
+}
+
+type ShelfKey = "watch" | "shorts" | "read" | "listen" | "devotionals" | "guides";
+
+const SHELF_TYPE_FALLBACK: Record<ShelfKey, ContentType[]> = {
+  watch: ["teaching"],
+  shorts: ["clip"],
+  read: ["essay", "blog"],
+  listen: ["podcast"],
+  devotionals: [],
+  guides: [],
+};
+
+function useShelf(shelf: ShelfKey, limit = 5) {
+  return useQuery({
+    queryKey: ["hp-shelf", shelf, limit],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("content_items_public")
+        .select("*")
+        .eq("shelf", shelf)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      let rows = (data ?? []) as ContentPreview[];
+      const fallbackTypes = SHELF_TYPE_FALLBACK[shelf];
+      if (rows.length < limit && fallbackTypes.length) {
+        const { data: extra } = await (supabase.from as any)("content_items_public")
+          .select("*")
+          .in("type", fallbackTypes)
+          .is("shelf", null)
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(limit);
+        const seen = new Set(rows.map((r) => r.id));
+        rows = [...rows, ...(((extra ?? []) as ContentPreview[]).filter((r) => !seen.has(r.id)))].slice(0, limit);
+      }
+      return rows;
+    },
+    staleTime: 60_000,
   });
 }
 
