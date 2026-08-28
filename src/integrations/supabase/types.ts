@@ -323,6 +323,7 @@ export type Database = {
           read_time_minutes: number | null
           scheduled_at: string | null
           scripture_reference: string | null
+          shelf: Database["public"]["Enums"]["content_shelf"] | null
           slug: string | null
           status: Database["public"]["Enums"]["content_status"]
           thumbnail_url: string | null
@@ -348,6 +349,7 @@ export type Database = {
           read_time_minutes?: number | null
           scheduled_at?: string | null
           scripture_reference?: string | null
+          shelf?: Database["public"]["Enums"]["content_shelf"] | null
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
@@ -373,6 +375,7 @@ export type Database = {
           read_time_minutes?: number | null
           scheduled_at?: string | null
           scripture_reference?: string | null
+          shelf?: Database["public"]["Enums"]["content_shelf"] | null
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           thumbnail_url?: string | null
@@ -1909,6 +1912,7 @@ export type Database = {
           id: string | null
           published_at: string | null
           scripture_reference: string | null
+          shelf: Database["public"]["Enums"]["content_shelf"] | null
           thumbnail_url: string | null
           title: string | null
           topic_id: string | null
@@ -1925,6 +1929,7 @@ export type Database = {
           id?: string | null
           published_at?: string | null
           scripture_reference?: string | null
+          shelf?: Database["public"]["Enums"]["content_shelf"] | null
           thumbnail_url?: string | null
           title?: string | null
           topic_id?: string | null
@@ -1941,6 +1946,7 @@ export type Database = {
           id?: string | null
           published_at?: string | null
           scripture_reference?: string | null
+          shelf?: Database["public"]["Enums"]["content_shelf"] | null
           thumbnail_url?: string | null
           title?: string | null
           topic_id?: string | null
@@ -2018,6 +2024,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       book_tag_source: "manual" | "auto"
+      content_shelf:
+        | "watch"
+        | "shorts"
+        | "read"
+        | "listen"
+        | "devotionals"
+        | "guides"
       content_status: "draft" | "published"
       content_type:
         | "teaching"
@@ -2158,6 +2171,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       book_tag_source: ["manual", "auto"],
+      content_shelf: [
+        "watch",
+        "shorts",
+        "read",
+        "listen",
+        "devotionals",
+        "guides",
+      ],
       content_status: ["draft", "published"],
       content_type: [
         "teaching",
