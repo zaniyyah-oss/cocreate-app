@@ -880,6 +880,76 @@ function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow |
 }
 
 
+/* Shelf sections */
+function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
+  const q = useShelf(shelf, 3);
+  const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
+  return (
+    <div className="wrap hp-section" id={shelf} style={style}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>{label}</h2>
+        {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+      </div>
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Media shelf (navy, feature + mini grid) */
+function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
+  const q = useShelf(shelf, 5);
+  const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
+  const feature = items[0];
+  const grid = items.slice(1, 5);
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow">
+          <div className="bar" />
+          <h2>{label}</h2>
+          {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+        </div>
+        <div className="hp-stream-row">
+          {feature ? (
+            <Link
+              to={routeForType(feature.type) as any}
+              params={{ id: feature.id! } as any}
+              className="hp-stream-feature"
+              style={{ backgroundImage: `url(${coverOf(feature)})` }}
+            >
+              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
+              <span className="label">{feature.title}</span>
+            </Link>
+          ) : <div className="hp-skel" style={{ height: 320 }} />}
+          <div className="hp-stream-mini-grid">
+            {grid.map((c) => (
+              <Link
+                key={c.id ?? ""}
+                to={routeForType(c.type) as any}
+                params={{ id: c.id! } as any}
+                className="hp-stream-mini"
+                style={{ backgroundImage: `url(${coverOf(c)})` }}
+              >
+                <span>{c.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* Featured Collection */
 type CollectionRow = {
   id: string;
@@ -946,7 +1016,771 @@ function FeaturedCollectionSection() {
   return (
     <div className="hp-collection">
       <div className="wrap">
-        <h2 className="hp-collection-heading">Collections</h2>
+        <h2 className="hp-collection-heading">Featured Collection</h2>
+        <p className="hp-collection-sub">
+          A handful of pieces released together, circling one question from a few different angles. No order to follow, nothing to finish.
+        </p>
+
+        <div className="hp-col-header">
+          <div>
+            <div className="hp-col-eyebrow">Featured Now</div>
+            <h3>{collection.title}</h3>
+            {(collection.description || collection.description_md) && (
+              <p>{collection.description || collection.description_md}</p>
+            )}
+          </div>
+          <div className="hp-col-actions">
+            <button className="hp-add-btn" type="button">+ Add to my Abide</button>
+            <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-inside">
+              See what's inside →
+            </Link>
+          </div>
+        </div>
+
+        <div className="hp-col-grid">
+          <div className="hp-col-left">
+            {lead && (
+              <Link to={routeForType(lead.type) as any} params={{ id: lead.id! } as any} className="hp-col-lead">
+                <div className="art" style={{ backgroundImage: `url(${coverOf(lead) || (cover ?? "")})` }} />
+                <div className="body">
+                  <h4>{lead.title}</h4>
+                  {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
+                </div>
+              </Link>
+            )}
+            {paired && (
+              <Link to={routeForType(paired.type) as any} params={{ id: paired.id! } as any} className="hp-col-hcard">
+                <div className="thumb" style={{ backgroundImage: `url(${coverOf(paired)})` }} />
+                <div className="body">
+                  <h5>{paired.title}</h5>
+                  <div className="byline">{paired.author_name ?? ""}</div>
+                </div>
+              </Link>
+            )}
+          </div>
+          <div className="hp-col-right">
+            {rest.map((c) => (
+              <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-col-hcard">
+                <div className="thumb" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+                <div className="body">
+                  <h5>{c.title}</h5>
+                  <div className="byline">{c.author_name ?? ""}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="hp-see-collection-wrap">
+          <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-collection-btn">
+            See all pieces from this collection →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Footer */
+.hp-footer{background:var(--navy);color:var(--cream);padding-top:44px;}
+.hp-footer-search{display:flex;align-items:center;background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:40px;gap:10px;}
+.hp-footer-search input{border:none;outline:none;flex:1;font-family:'Poppins';font-size:14px;color:var(--ink);background:transparent;}
+.hp-footer-search svg{width:18px;height:18px;color:#9a9484;flex-shrink:0;}
+.hp-footer-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:26px 20px;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,0.12);}
+@media(min-width:640px){.hp-footer-cols{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:1024px){.hp-footer-cols{grid-template-columns:repeat(6,1fr);}}
+.hp-footer-cols h6{font-size:13px;font-weight:700;color:#fff;margin:0 0 14px;}
+.hp-footer-cols a{display:block;font-size:13px;color:rgba(251,248,237,0.65);margin-bottom:10px;}
+.hp-footer-cols a:hover{color:var(--limelight);}
+.hp-footer-brand-row{display:flex;align-items:center;justify-content:space-between;padding:26px 0;gap:20px;flex-wrap:wrap;}
+.hp-brand{display:flex;align-items:center;gap:10px;}
+.hp-brand .badge{width:34px;height:34px;border-radius:9px;background:var(--limelight);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;}
+.hp-brand .word{font-weight:900;font-size:19px;color:#fff;}
+.hp-footer-social{display:flex;gap:14px;align-items:center;}
+.hp-footer-social .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(251,248,237,0.55);margin-right:4px;}
+.hp-icon-circle{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;}
+.hp-icon-circle svg{width:14px;height:14px;fill:#fff;}
+.hp-app-badges{display:flex;gap:10px;flex-wrap:wrap;}
+.hp-app-pill{display:flex;align-items:center;gap:6px;border:1px dashed rgba(255,255,255,0.3);border-radius:8px;padding:7px 12px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.7);}
+.hp-footer-legal{display:flex;justify-content:space-between;align-items:center;padding:18px 0 28px;font-size:12px;color:rgba(251,248,237,0.5);flex-wrap:wrap;gap:10px;}
+.hp-footer-legal .links{display:flex;gap:18px;flex-wrap:wrap;}
+.hp-footer-legal a:hover{color:var(--limelight);}
+
+/* skeletons */
+.hp-skel{background:#fff;border-radius:12px;height:120px;position:relative;overflow:hidden;}
+.hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.04),transparent);animation:hp-shim 1.4s infinite;}
+@keyframes hp-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+/* Full-width masthead (signed-out) */
+.hp-masthead{background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);}
+.hp-masthead .wrap{display:flex;align-items:center;gap:20px;padding-top:18px;padding-bottom:18px;}
+.hp-mast-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.hp-mast-brand .mark{width:32px;height:32px;background:var(--limelight);color:var(--navy);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;}
+.hp-mast-brand .word{font-weight:900;font-size:20px;color:var(--navy);letter-spacing:-0.02em;}
+.hp-mast-links{display:flex;flex:1;align-items:center;gap:14px;min-width:0;flex-wrap:nowrap;overflow:hidden;}
+@media(min-width:900px){.hp-mast-links{gap:22px;}}
+.hp-mast-links a{font-size:13px;font-weight:600;color:#514c3d;white-space:nowrap;}
+@media(min-width:900px){.hp-mast-links a{font-size:13.5px;}}
+.hp-mast-links a:hover{color:var(--navy);}
+.hp-mast-links a.mast-link-hide-sm{display:none;}
+@media(min-width:640px){.hp-mast-links a.mast-link-hide-sm{display:inline;}}
+.hp-mast-links a.mast-link-hide-md{display:none;}
+@media(min-width:900px){.hp-mast-links a.mast-link-hide-md{display:inline;}}
+.hp-mast-more{position:relative;flex-shrink:0;}
+.hp-mast-more-btn{background:transparent;border:none;font-family:'Poppins';font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;padding:6px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;}
+.hp-mast-more-btn:hover{background:#FBF8ED;}
+.hp-mast-more-mobile{display:none;}
+@media(max-width:767px){.hp-mast-links{display:none;}.hp-mast-more-desktop{display:none;}.hp-mast-more-mobile{display:inline;}}
+@media(min-width:1100px){.hp-mast-more{display:none;}}
+.hp-mast-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:8px;min-width:200px;z-index:50;display:flex;flex-direction:column;}
+.hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
+.hp-mast-more-menu a:hover{background:#FBF8ED;}
+.hp-mast-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
+.hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
+.hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
+/* Signed-in masthead: hide the auth CTAs (icon bar handles nav) but ALWAYS keep the brand */
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
+.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
+
+.hp-mast-media{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
+.hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
+.hp-mast-media-link:hover{background:#FBF8ED;}
+.hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-media-link--listen svg{color:#3B82F6;}
+.hp-mast-media-dot{width:10px;height:10px;border-radius:50%;background:#FF340C;display:inline-block;}
+.hp-mast-search-form{display:flex;align-items:center;gap:6px;}
+.hp-mast-search-form input{width:160px;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#181A4D;outline:none;transition:border-color .15s;}
+.hp-mast-search-form input:focus{border-color:#181A4D;}
+.hp-mast-search-form button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#181A4D;color:#fff;border:none;border-radius:8px;cursor:pointer;}
+.hp-mast-search-form button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+@media(max-width:820px){.hp-mast-media-link > span:not(.hp-mast-media-dot){display:none;}.hp-mast-media-link{padding:6px 6px;gap:0;}.hp-mast-search-form input{width:110px;}.hp-masthead .wrap{gap:10px;}.hp-mast-media{gap:2px;}}
+@media(max-width:640px){.hp-mast-subscribe{display:none;}.hp-mast-signin{padding:6px 8px;font-size:12.5px;}.hp-mast-actions{gap:4px;}.hp-mast-more-btn{padding:6px 6px;}.hp-mast-search-form input{width:88px;}.hp-masthead .wrap{padding-left:12px;padding-right:12px;gap:6px;}}
+
+/* Signed-in home: horizontal navy icon bar (replaces the left rail) */
+.hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
+.hp-tourbar .wrap{display:flex;align-items:center;}
+.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight) !important;font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
+.hp-tourbar-pill:hover{color:#fff !important;border-color:#fff !important;}
+.hp-tourbar-pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-iconbar{background:var(--navy);padding:14px 0;}
+
+.hp-iconbar .wrap{display:flex;align-items:center;justify-content:center;}
+.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:10px;}
+.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;transition:background .15s,color .15s;}
+.hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
+.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-iconbar-avatar{color:#fff !important;}
+.hp-iconbar-avatar:hover{background:rgba(255,255,255,0.08);color:#fff !important;}
+.hp-iconbar-bell{display:inline-flex;align-items:center;justify-content:center;}
+.hp-iconbar-bell .nb-btn{color:#fff !important;width:40px;height:40px;background:transparent !important;border-radius:10px;}
+.hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.08) !important;}
+.hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
+.hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
+.hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
+/* Blue icon bar is mobile-only now; desktop uses the hamburger side menu */
+@media (min-width:1024px){.hp-iconbar{display:none;}}
+
+/* Hamburger + slide-in side menu (home page) */
+.hp-mast-burger{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--navy);flex-shrink:0;transition:background .15s;}
+.hp-mast-burger:hover{background:#FBF8ED;}
+.hp-mast-burger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-scrim{position:fixed;inset:0;background:rgba(20,20,20,0.32);z-index:80;}
+.hp-drawer{position:fixed;top:0;left:0;bottom:0;width:250px;background:#fff;border-right:1px solid rgba(20,20,20,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.16);z-index:81;display:flex;flex-direction:column;padding:18px 12px;font-family:'Poppins',sans-serif;}
+.hp-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;margin-bottom:20px;gap:8px;}
+.hp-drawer-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.hp-drawer-logo .mark{width:30px;height:30px;background:var(--limelight);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:900;}
+.hp-drawer-logo .word{font-weight:900;font-size:19px;color:var(--navy);letter-spacing:-0.02em;}
+.hp-drawer-close{background:transparent;border:none;cursor:pointer;color:#8a8678;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;}
+.hp-drawer-close:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hp-drawer-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:#8a8678;text-decoration:none;margin-bottom:2px;transition:background .15s,color .15s;}
+.hp-drawer-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.hp-drawer-item:hover{background:#FBF8ED;color:var(--navy);}
+.hp-drawer-item.active{background:var(--limelight);color:var(--navy);}
+.hp-drawer-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hp-drawer-signin{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;}
+
+
+/* Photo-overlay cards must stay white even though they are <a> tags. */
+.hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
+
+
+`;
+
+/* ============================================================ */
+/*  Data                                                         */
+/* ============================================================ */
+
+type TopicRow = Database["public"]["Tables"]["topics"]["Row"] & {
+  display_name?: string | null;
+  sort_order?: number | null;
+};
+
+function useTopics() {
+  return useQuery({
+    queryKey: ["hp-topics"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("topics").select("*").order("sort_order").order("name");
+      if (error) throw error;
+      return (data ?? []) as TopicRow[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+function useLatest(limit = 5) {
+  return useQuery({
+    queryKey: ["hp-latest", limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("content_items_public")
+        .select("*")
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []) as ContentPreview[];
+    },
+  });
+}
+
+function useByTopic(topicId: string | undefined, limit = 3) {
+  return useQuery({
+    queryKey: ["hp-topic", topicId, limit],
+    enabled: !!topicId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("content_items_public")
+        .select("*")
+        .eq("topic_id", topicId!)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []) as ContentPreview[];
+    },
+  });
+}
+
+type ShelfKey = "watch" | "shorts" | "read" | "listen" | "devotionals" | "guides";
+
+const SHELF_TYPE_FALLBACK: Record<ShelfKey, ContentType[]> = {
+  watch: ["teaching"],
+  shorts: ["clip"],
+  read: ["essay", "blog"],
+  listen: ["podcast"],
+  devotionals: [],
+  guides: [],
+};
+
+function useShelf(shelf: ShelfKey, limit = 5) {
+  return useQuery({
+    queryKey: ["hp-shelf", shelf, limit],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("content_items_public")
+        .select("*")
+        .eq("shelf", shelf)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      let rows = (data ?? []) as ContentPreview[];
+      const fallbackTypes = SHELF_TYPE_FALLBACK[shelf];
+      if (rows.length < limit && fallbackTypes.length) {
+        const { data: extra } = await (supabase.from as any)("content_items_public")
+          .select("*")
+          .in("type", fallbackTypes)
+          .is("shelf", null)
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(limit);
+        const seen = new Set(rows.map((r) => r.id));
+        rows = [...rows, ...(((extra ?? []) as ContentPreview[]).filter((r) => !seen.has(r.id)))].slice(0, limit);
+      }
+      return rows;
+    },
+    staleTime: 60_000,
+  });
+}
+
+/* ============================================================ */
+/*  Sections                                                     */
+/* ============================================================ */
+
+function TopicsNav() {
+  const topicsQ = useTopics();
+  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
+  const list = (topicsQ.data ?? [])
+    .filter((t) => primary.includes(t.slug))
+    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
+  return (
+    <div className="hp-topics">
+      <div className="wrap">
+        {list.map((t) => (
+          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
+            {t.display_name || t.name}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HomeIconBar() {
+  const items = [
+    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
+    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
+  ];
+  return (
+    <div className="hp-iconbar">
+      <div className="wrap">
+        <div className="hp-iconbar-nav">
+          {items.map((it) => (
+            <Fragment key={it.to}>
+              {(it as any).prepend}
+              <Link to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
+                {it.icon}
+              </Link>
+            </Fragment>
+          ))}
+          <span className="hp-iconbar-bell"><NotificationBell /></span>
+          <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomeTourBar() {
+  return (
+    <div className="hp-tourbar">
+      <div className="wrap">
+        <Link to="/tour" className="hp-tourbar-pill">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span>Tour the Workspace</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
+function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () => void }) {
+  const items = [
+    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
+    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
+    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
+    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
+  ];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <>
+      <div className="hp-drawer-scrim" onClick={onClose} />
+      <aside className="hp-drawer" aria-label="Primary">
+        <div className="hp-drawer-head">
+          <Link to="/" className="hp-drawer-logo" onClick={onClose}>
+            <div className="mark">C</div><div className="word">CoCreate</div>
+          </Link>
+          <button type="button" className="hp-drawer-close" onClick={onClose} aria-label="Close menu">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.to === "/" ? " active" : ""}`} onClick={onClose}>
+            {it.icon}<span>{it.label}</span>
+          </Link>
+        ))}
+        <div className="hp-drawer-foot">
+          {signedIn ? (
+            <>
+              <Link to="/profile" className="hp-drawer-item" onClick={onClose} style={{ marginBottom: 0 }}>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+                <span>Profile</span>
+              </Link>
+              <button
+                type="button"
+                onClick={async () => { await supabase.auth.signOut(); onClose(); }}
+                style={{ background: "transparent", border: "1.5px solid rgba(20,20,20,0.12)", color: "#20201c", fontWeight: 700, fontSize: 12, padding: "7px 13px", borderRadius: 16, fontFamily: "'Poppins',sans-serif", cursor: "pointer" }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="hp-drawer-signin" onClick={onClose}>Sign in</Link>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+
+  const topicsQ = useTopics();
+  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
+  const list = (topicsQ.data ?? [])
+    .filter((t) => primary.includes(t.slug))
+    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = () => setMoreOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [moreOpen]);
+  return (
+    <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
+      <div className="wrap">
+        <Link to="/" className="hp-mast-brand">
+          <div className="mark">C</div>
+          <div className="word">CoCreate</div>
+        </Link>
+        <button
+          type="button"
+          className="hp-mast-burger"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
+        <nav className="hp-mast-links">
+
+          {list.map((t, i) => (
+            <Link
+              key={t.id}
+              to="/topics/$slug"
+              params={{ slug: t.slug }}
+              className={i >= 4 ? "mast-link-hide-md" : i >= 2 ? "mast-link-hide-sm" : ""}
+            >
+              {t.display_name || t.name}
+            </Link>
+          ))}
+        </nav>
+        <div className="hp-mast-more">
+          <button
+            type="button"
+            className="hp-mast-more-btn"
+            onClick={(e) => { e.stopPropagation(); setMoreOpen((v) => !v); }}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
+          >
+            <span className="hp-mast-more-desktop">More</span>
+            <span className="hp-mast-more-mobile">Topics</span>
+            <span aria-hidden>▾</span>
+          </button>
+          {moreOpen && (
+            <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+              {(topicsQ.data ?? []).map((t) => (
+                <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
+                  {t.display_name || t.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="hp-mast-actions">
+          {!signedIn && (
+            <>
+              <Link to="/auth" className="hp-mast-signin">Sign in</Link>
+              <Link to="/auth" search={{ mode: "signup" } as any} className="hp-mast-subscribe">Subscribe</Link>
+            </>
+          )}
+        </div>
+        <MediaNav />
+      </div>
+    </div>
+  );
+}
+
+function MediaNav() {
+  const navigate = useNavigate({ from: "/" });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const s = query.trim();
+    if (!s) return;
+    navigate({ to: "/search", search: { q: s } as any });
+    setSearchOpen(false);
+    setQuery("");
+  };
+  return (
+    <div className="hp-mast-media">
+      <Link to="/watch" className="hp-mast-media-link" aria-label="Watch">
+        <span className="hp-mast-media-dot" />
+        <span>Watch</span>
+      </Link>
+      <Link to="/listen" className="hp-mast-media-link hp-mast-media-link--listen" aria-label="Listen">
+        <Headphones size={18} />
+        <span>Listen</span>
+      </Link>
+      {searchOpen ? (
+        <form className="hp-mast-search-form" onSubmit={submit} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && !query.trim()) setSearchOpen(false); }}>
+          <input
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          <button type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          className="hp-mast-media-link"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search"
+        >
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Search</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+
+function LatestSection() {
+  const q = useLatest(5);
+  const real = q.data ?? [];
+  const items = padDemo(real, "latest", 5);
+  const lead = items[0];
+  const sides = items.slice(1, 5);
+
+  return (
+    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 40 }}>
+
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>Latest</h2>
+      </div>
+      {q.isLoading ? (
+        <div className="hp-latest-grid">
+          <div className="hp-skel" style={{ height: 340 }} />
+          <div className="hp-side">
+            {[0, 1, 2, 3].map((i) => <div key={i} className="hp-skel" style={{ height: 72 }} />)}
+          </div>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="hp-meta">No articles yet.</div>
+      ) : (
+        <div className="hp-latest-grid">
+          {lead && (
+            <Link
+              to={routeForType(lead.type) as any}
+              params={{ id: lead.id! } as any}
+              className="hp-lead"
+            >
+              <div className="art" style={{ backgroundImage: `url(${coverOf(lead)})` }} />
+              <h3>{lead.title}</h3>
+              {(() => {
+                const text = openingLines((lead as any).body as string | undefined, 160);
+                return text ? <p>{text}</p> : null;
+              })()}
+              <span className="readmore">Read more →</span>
+              <div className="hp-meta">
+                {(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}
+              </div>
+            </Link>
+          )}
+          <div className="hp-side">
+            {sides.map((s) => {
+              const preview = openingLines(((s as any).body as string | undefined) ?? s.excerpt, 120);
+              return (
+                <Link key={s.id ?? ""} to={routeForType(s.type) as any} params={{ id: s.id! } as any} className="hp-side-item">
+                  <div className="thumb" style={{ backgroundImage: `url(${coverOf(s)})` }} />
+                  <div className="body">
+                    <h4>{s.title}</h4>
+                    {preview && <p>{preview}</p>}
+                    <div className="hp-meta">{relTime(s.published_at)}</div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES; style?: React.CSSProperties }) {
+  const q = useByTopic(topic?.id, 3);
+  const real = q.data ?? [];
+  const items = padDemo(real, demoKind, 3);
+  return (
+    <div className="wrap hp-section" id={id} style={style}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>{label}</h2>
+        {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>}
+      </div>
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+/* Shelf sections */
+function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
+  const q = useShelf(shelf, 3);
+  const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
+  return (
+    <div className="wrap hp-section" id={shelf} style={style}>
+      <div className="hp-eyebrow">
+        <div className="bar" />
+        <h2>{label}</h2>
+        {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+      </div>
+      <div className="hp-topic-grid">
+        {items.map((c) => (
+          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
+            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+            <h4>{c.title}</h4>
+            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
+            <div className="hp-meta">{readTimeOf(c)}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Media shelf (navy, feature + mini grid) */
+function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
+  const q = useShelf(shelf, 5);
+  const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
+  const feature = items[0];
+  const grid = items.slice(1, 5);
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow">
+          <div className="bar" />
+          <h2>{label}</h2>
+          {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
+        </div>
+        <div className="hp-stream-row">
+          {feature ? (
+            <Link
+              to={routeForType(feature.type) as any}
+              params={{ id: feature.id! } as any}
+              className="hp-stream-feature"
+              style={{ backgroundImage: `url(${coverOf(feature)})` }}
+            >
+              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
+              <span className="label">{feature.title}</span>
+            </Link>
+          ) : <div className="hp-skel" style={{ height: 320 }} />}
+          <div className="hp-stream-mini-grid">
+            {grid.map((c) => (
+              <Link
+                key={c.id ?? ""}
+                to={routeForType(c.type) as any}
+                params={{ id: c.id! } as any}
+                className="hp-stream-mini"
+                style={{ backgroundImage: `url(${coverOf(c)})` }}
+              >
+                <span>{c.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Featured Collection */
+type CollectionRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  description_md: string | null;
+  cover_image_url: string | null;
+  banner_url: string | null;
+  is_featured?: boolean | null;
+};
+
+function FeaturedCollectionSection() {
+  const q = useQuery({
+    queryKey: ["hp-featured-collection"],
+    queryFn: async () => {
+      // Prefer is_featured; fall back to most recent published.
+      const { data: featData } = await (supabase.from as any)("collections")
+        .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
+        .eq("status", "published")
+        .eq("is_featured", true)
+        .limit(1);
+      let col = (featData ?? [])[0] as CollectionRow | undefined;
+      if (!col) {
+        const { data: recent } = await (supabase.from as any)("collections")
+          .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
+          .eq("status", "published")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(1);
+        col = (recent ?? [])[0];
+      }
+      if (!col) return null;
+      const { data: itemsData } = await (supabase.from as any)("collection_items")
+        .select("position, layout_slot, content:content_items_public(*)")
+        .eq("collection_id", col.id)
+        .order("position", { ascending: true })
+        .limit(6);
+      const items = ((itemsData ?? []) as Array<{ position: number; layout_slot: string; content: ContentPreview | null }>)
+        .map((r) => r.content)
+        .filter((c): c is ContentPreview => !!c);
+      return { collection: col, items };
+    },
+  });
+
+  const demoCollection: CollectionRow = {
+    id: "demo-collection",
+    slug: "abide-in-the-ordinary",
+    title: "Abide in the Ordinary",
+    description: "Six pieces on finding God in the middle of a regular Tuesday — the commute, the laundry, the quiet after the kids finally sleep.",
+    description_md: null,
+    cover_image_url: IMG_FALLBACK("collection-cover", 1200, 700),
+    banner_url: null,
+    is_featured: true,
+  };
+  const demoItems = makeDemo("latest", 5, 20);
+  const collection = q.data?.collection ?? demoCollection;
+  const items = q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
+  const lead = items[0];
+  const paired = items[1];
+  const rest = items.slice(2, 5);
+  const cover = collection.cover_image_url || collection.banner_url;
+
+
+  return (
+    <div className="hp-collection">
+      <div className="wrap">
+        <h2 className="hp-collection-heading">Featured Collection</h2>
         <p className="hp-collection-sub">
           A handful of pieces released together, circling one question from a few different angles. No order to follow, nothing to finish.
         </p>
@@ -1270,13 +2104,13 @@ function HomePage() {
         {signedIn && <ContinueStrip />}
         <LatestSection />
 
-        <TopicSection topic={bySlug("identity")} label="Identity — Daughterhood, Sonhood, Becoming" id="identity" demoKind="identity" style={{ paddingTop: 32, paddingBottom: 88 }} />
+        <MediaShelfSection shelf="watch" label="Watch" seeAll="/watch" />
         <FeaturedCollectionSection />
-        <StreamingSection />
-        <TopicSection topic={bySlug("marriage")} label="Marriage & Partnership" id="marriage" demoKind="marriage" style={{ paddingTop: 80, paddingBottom: 80 }} />
-        <SpotlightSection />
-        <TopicSection topic={bySlug("parenting")} label="Parenting" id="parenting" demoKind="parenting" style={{ paddingTop: 80, paddingBottom: 44 }} />
-        <TopicSection topic={bySlug("ministry")} label="Ministry & Calling" id="ministry" demoKind="ministry" style={{ paddingTop: 44, paddingBottom: 80 }} />
+        <MediaShelfSection shelf="shorts" label="Shorts" seeAll="/watch" />
+        <ShelfSection shelf="read" label="Read" seeAll="/explore" style={{ paddingTop: 80, paddingBottom: 44 }} />
+        <ShelfSection shelf="listen" label="Listen" seeAll="/listen" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        <ShelfSection shelf="guides" label="Guides" seeAll="/explore" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
