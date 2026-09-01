@@ -72,7 +72,61 @@ export function SavedDevotionalsSection({
   const fetchPlans = useServerFn(listPlans);
   const startAssignment = useServerFn(startPlanAssignment);
 
+  const qc = useQueryClient();
+
   const plans = useQuery({ queryKey: ["plans"], queryFn: () => fetchPlans() });
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data?.user?.id ?? null);
+      setAuthReady(true);
+    });
+  }, []);
+
+  /** Devotionals saved from CoCreate (saved_items → devotional_templates). */
+  const savedTemplates = useQuery({
+    queryKey: ["saved-devotional-templates", userId],
+    enabled: authReady && !!userId,
+    queryFn: async (): Promise<SavedTemplate[]> => {
+      const { data, error } = await supabase
+        .from("saved_items")
+        .select(
+          "id, saved_at, devotional_template_id, devotional_templates(id, title, slug, duration_days, accent_color)"
+        )
+        .eq("user_id", userId!)
+        .not("devotional_template_id", "is", null)
+        .order("saved_at", { ascending: false });
+      if (error) throw error;
+      return ((data ?? []) as any[])
+        .filter((r) => r.devotional_templates)
+        .map((r) => ({
+          savedId: r.id,
+          saved_at: r.saved_at,
+          id: r.devotional_templates.id,
+          title: r.devotional_templates.title,
+          slug: r.devotional_templates.slug ?? null,
+          duration_days: r.devotional_templates.duration_days ?? null,
+          accent_color: r.devotional_templates.accent_color ?? null,
+        }));
+    },
+  });
+
+  async function unsaveTemplate(savedId: string) {
+    setBusy(savedId);
+    try {
+      const { error } = await supabase.from("saved_items").delete().eq("id", savedId);
+      if (error) throw error;
+      toast.success("Removed from saved.");
+      qc.invalidateQueries({ queryKey: ["saved-devotional-templates"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not remove this devotional.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const [busy, setBusy] = useState<string | null>(null);
   const [assignFor, setAssignFor] = useState<PlanRow | null>(null);
   const [span, setSpan] = useState("");
