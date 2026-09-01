@@ -73,6 +73,7 @@ export function SavedDevotionalsSection({
   const startAssignment = useServerFn(startPlanAssignment);
 
   const qc = useQueryClient();
+  const [busy, setBusy] = useState<string | null>(null);
 
   const plans = useQuery({ queryKey: ["plans"], queryFn: () => fetchPlans() });
 
@@ -127,7 +128,6 @@ export function SavedDevotionalsSection({
     }
   }
 
-  const [busy, setBusy] = useState<string | null>(null);
   const [assignFor, setAssignFor] = useState<PlanRow | null>(null);
   const [span, setSpan] = useState("");
 
