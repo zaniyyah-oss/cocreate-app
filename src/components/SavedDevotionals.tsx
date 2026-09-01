@@ -130,6 +130,7 @@ export function SavedDevotionalsSection({
 
   const [assignFor, setAssignFor] = useState<PlanRow | null>(null);
   const [span, setSpan] = useState("");
+  const [startDate, setStartDate] = useState(todayISO());
 
   async function start(plan: PlanRow) {
     setBusy(plan.id);
@@ -146,6 +147,10 @@ export function SavedDevotionalsSection({
 
   async function confirmAssign() {
     if (!assignFor) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      toast.error("Pick a start date.");
+      return;
+    }
     const n = Number(span);
     if (!Number.isFinite(n) || n < assignFor.length_days) {
       toast.error(`Span at least ${assignFor.length_days} day${assignFor.length_days === 1 ? "" : "s"}.`);
@@ -153,8 +158,11 @@ export function SavedDevotionalsSection({
     }
     setBusy(assignFor.id);
     try {
-      await startAssignment({ data: { plan_id: assignFor.id, start_date: todayISO() } });
-      toast.success(`"${assignFor.name}" assigned across the next ${n} days.`);
+      await startAssignment({ data: { plan_id: assignFor.id, start_date: startDate } });
+      const when = new Date(`${startDate}T00:00:00`).toLocaleDateString(undefined, {
+        month: "long", day: "numeric",
+      });
+      toast.success(`"${assignFor.name}" starts ${startDate === todayISO() ? "today" : `on ${when}`}.`);
       setAssignFor(null);
       navigate({ to: "/devotionals" });
     } catch (e: any) {
@@ -241,9 +249,9 @@ export function SavedDevotionalsSection({
                     type="button"
                     className="sd-btn ghost"
                     disabled={busy === p.id}
-                    onClick={() => { setAssignFor(p); setSpan(String(p.length_days)); }}
+                    onClick={() => { setAssignFor(p); setSpan(String(p.length_days)); setStartDate(todayISO()); }}
                   >
-                    Assign days
+                    Schedule
                   </button>
                   <button
                     type="button"
@@ -262,11 +270,20 @@ export function SavedDevotionalsSection({
       {assignFor && (
         <div className="sd-scrim" role="dialog" aria-modal="true" onClick={() => setAssignFor(null)}>
           <div className="sd-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Assign days</h3>
+            <h3>Schedule this devotional</h3>
             <p>
-              How many upcoming days should “{assignFor.name}” span? It has {assignFor.length_days}{" "}
-              {assignFor.length_days === 1 ? "day" : "days"} of content, starting today.
+              Choose the day “{assignFor.name}” should begin. It has {assignFor.length_days}{" "}
+              {assignFor.length_days === 1 ? "day" : "days"} of content, and can start today or any day ahead.
             </p>
+            <label htmlFor="sd-start">Start date</label>
+            <input
+              id="sd-start"
+              type="date"
+              value={startDate}
+              min={todayISO()}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{ marginBottom: 14 }}
+            />
             <label htmlFor="sd-span">Days to span</label>
             <input
               id="sd-span"
@@ -278,7 +295,7 @@ export function SavedDevotionalsSection({
             <div className="row">
               <button type="button" className="sd-btn ghost" onClick={() => setAssignFor(null)}>Cancel</button>
               <button type="button" className="sd-btn" disabled={busy === assignFor.id} onClick={confirmAssign}>
-                {busy === assignFor.id ? "Assigning…" : "Assign"}
+                {busy === assignFor.id ? "Scheduling…" : "Schedule"}
               </button>
             </div>
           </div>
