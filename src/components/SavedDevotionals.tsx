@@ -165,6 +165,7 @@ export function SavedDevotionalsSection({
   }
 
   const rows = plans.data ?? [];
+  const savedRows = savedTemplates.data ?? [];
 
   return (
     <section>
@@ -174,10 +175,48 @@ export function SavedDevotionalsSection({
         <span className="sd-note">{note}</span>
       </div>
 
-      {plans.isLoading ? (
+      {savedRows.length > 0 && (
+        <div className="sd-grid">
+          {savedRows.map((t) => {
+            const hex = t.accent_color || "#0F4A42";
+            return (
+              <article key={t.savedId} className="sd-card" style={{ borderLeftColor: hex }}>
+                <div className="sd-info">
+                  <h3 className="sd-name">{t.title}</h3>
+                  <div className="sd-meta">
+                    {t.duration_days ? `${t.duration_days}-Day Devotional · Saved` : "Saved from CoCreate"}
+                  </div>
+                </div>
+                <div className="sd-actions">
+                  <button
+                    type="button"
+                    className="sd-btn"
+                    style={{ background: hex, borderColor: hex, color: "#fff" }}
+                    onClick={() =>
+                      navigate({ to: "/devotionals/$slug/overview", params: { slug: t.slug || t.id } })
+                    }
+                  >
+                    Open
+                  </button>
+                  <button
+                    type="button"
+                    className="sd-btn ghost"
+                    disabled={busy === t.savedId}
+                    onClick={() => unsaveTemplate(t.savedId)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {plans.isLoading || savedTemplates.isLoading ? (
         <div className="sd-empty">Loading your devotionals…</div>
       ) : rows.length === 0 ? (
-        <div className="sd-empty">{emptyText}</div>
+        savedRows.length === 0 ? <div className="sd-empty">{emptyText}</div> : null
       ) : (
         <div className="sd-grid">
           {rows.map((p) => {
