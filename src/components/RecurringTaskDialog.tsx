@@ -138,6 +138,28 @@ export function RecurringTaskDialog({
               placeholder="e.g. Call my discipler" style={FIELD} />
           </label>
 
+          {categories.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={LABEL}>Use one of your categories</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {categories.map(c => (
+                  <button key={c.id} type="button"
+                    onClick={() => { setTitle(c.label); setColor(c.color); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "6px 10px", borderRadius: 999,
+                      border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer",
+                      fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: "#181A4D",
+                    }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 999, background: c.color }} />
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={LABEL}>Repeats</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
