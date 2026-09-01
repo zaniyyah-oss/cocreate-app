@@ -2,6 +2,14 @@ import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/re
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CATEGORY_COLORS,
+  createEventCategory,
+  deleteEventCategory,
+  updateEventCategory,
+  useEventCategories,
+  type EventCategory,
+} from "@/lib/event-categories";
 import { deleteStudyOnly } from "@/lib/study-delete";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
@@ -2196,10 +2204,26 @@ export function AddEventDialog({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [manageCats, setManageCats] = useState(false);
+  const [catId, setCatId] = useState<string | null>(null);
+  const [confirmCatDelete, setConfirmCatDelete] = useState<string | null>(null);
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[0].value);
+  const catsQuery = useEventCategories(userId);
+  const categories: EventCategory[] = catsQuery.data ?? [];
+  const refreshCats = () => { void catsQuery.refetch(); };
 
   useEffect(() => {
     if (!open) return;
+    setManageCats(false);
+    setConfirmCatDelete(null);
+    setNewCatLabel("");
     if (event) {
+      setCatId(
+        event.event_type === "other"
+          ? (categories.find(c => c.label === (event.title ?? "").trim())?.id ?? null)
+          : null,
+      );
       setDate(event.event_date);
       setItemType(event.item_type ?? "event");
       setType(event.event_type);
@@ -2209,6 +2233,7 @@ export function AddEventDialog({
       setStartTime((event.start_time ?? "").slice(0, 5));
       setEndTime((event.end_time ?? "").slice(0, 5));
     } else {
+      setCatId(null);
       setDate(defaultDate);
       setItemType(defaultItemType ?? "event");
       // Focus items are always custom (no fixed subtype)
