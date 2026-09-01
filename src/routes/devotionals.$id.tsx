@@ -2,6 +2,14 @@ import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/re
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CATEGORY_COLORS,
+  createEventCategory,
+  deleteEventCategory,
+  updateEventCategory,
+  useEventCategories,
+  type EventCategory,
+} from "@/lib/event-categories";
 import { deleteStudyOnly } from "@/lib/study-delete";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
@@ -2196,10 +2204,26 @@ export function AddEventDialog({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [manageCats, setManageCats] = useState(false);
+  const [catId, setCatId] = useState<string | null>(null);
+  const [confirmCatDelete, setConfirmCatDelete] = useState<string | null>(null);
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[0].value);
+  const catsQuery = useEventCategories(userId);
+  const categories: EventCategory[] = catsQuery.data ?? [];
+  const refreshCats = () => { void catsQuery.refetch(); };
 
   useEffect(() => {
     if (!open) return;
+    setManageCats(false);
+    setConfirmCatDelete(null);
+    setNewCatLabel("");
     if (event) {
+      setCatId(
+        event.event_type === "other"
+          ? (categories.find(c => c.label === (event.title ?? "").trim())?.id ?? null)
+          : null,
+      );
       setDate(event.event_date);
       setItemType(event.item_type ?? "event");
       setType(event.event_type);
@@ -2209,6 +2233,7 @@ export function AddEventDialog({
       setStartTime((event.start_time ?? "").slice(0, 5));
       setEndTime((event.end_time ?? "").slice(0, 5));
     } else {
+      setCatId(null);
       setDate(defaultDate);
       setItemType(defaultItemType ?? "event");
       // Focus items are always custom (no fixed subtype)
@@ -2319,17 +2344,22 @@ export function AddEventDialog({
 
           {!isFocus && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#181A4D" }}>Event type</div>
+                <button type="button" onClick={() => setManageCats(v => !v)}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, color: "#181A4D", textDecoration: "underline" }}>
+                  {manageCats ? "Done" : "Edit categories"}
+                </button>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {([
                   ["prayer_meeting", "Prayer meeting", "#E990A2"],
                   ["bible_study", "Bible study", "#FFAE00"],
                   ["mentor_meeting", "Mentor meeting", "#8A96E0"],
-                  ["other", "Other", "#9B9B93"],
                 ] as const).map(([val, label, sw]) => {
                   const active = type === val;
                   return (
-                    <button key={val} type="button" onClick={() => setType(val)}
+                    <button key={val} type="button" onClick={() => { setType(val); setCatId(null); }}
                       style={{
                         display: "flex", alignItems: "center", gap: 8,
                         padding: "10px 12px", borderRadius: 10,
@@ -2343,9 +2373,94 @@ export function AddEventDialog({
                     </button>
                   );
                 })}
+                {categories.map((c) => {
+                  const active = type === "other" && catId === c.id;
+                  return (
+                    <button key={c.id} type="button"
+                      onClick={() => { setType("other"); setCatId(c.id); setTitle(c.label); setColor(c.color); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "10px 12px", borderRadius: 10,
+                        border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                        background: "#fff", cursor: "pointer",
+                        fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                        textAlign: "left",
+                      }}>
+                      <span style={{ width: 12, height: 12, borderRadius: 999, background: c.color, flex: "none" }} />
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</span>
+                    </button>
+                  );
+                })}
+                <button type="button" onClick={() => { setType("other"); setCatId(null); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "10px 12px", borderRadius: 10,
+                    border: (type === "other" && !catId) ? `2px solid #181A4D` : "1px solid #E4DFCF",
+                    background: "#fff", cursor: "pointer",
+                    fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                    textAlign: "left",
+                  }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 999, background: "#9B9B93", flex: "none" }} />
+                  One-off
+                </button>
               </div>
+
+              {manageCats && (
+                <div style={{ border: "1px solid #E4DFCF", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10, background: "#FBF8ED" }}>
+                  {categories.map((c) => (
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input
+                        type="text"
+                        defaultValue={c.label}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          if (v && v !== c.label) updateEventCategory(c.id, { label: v }).then(refreshCats);
+                        }}
+                        style={{ flex: 1, minWidth: 0, padding: "8px 10px", border: "1px solid #E4DFCF", borderRadius: 8, fontFamily: "inherit", fontSize: 13 }}
+                      />
+                      <select
+                        value={c.color}
+                        onChange={(e) => updateEventCategory(c.id, { color: e.target.value }).then(refreshCats)}
+                        style={{ padding: "8px 6px", border: "1px solid #E4DFCF", borderRadius: 8, fontFamily: "inherit", fontSize: 12, background: "#fff" }}
+                      >
+                        {CATEGORY_COLORS.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}
+                      </select>
+                      <button type="button" aria-label={`Delete ${c.label}`}
+                        onClick={() => { if (confirmCatDelete === c.id) { deleteEventCategory(c.id).then(() => { setConfirmCatDelete(null); if (catId === c.id) setCatId(null); refreshCats(); }); } else setConfirmCatDelete(c.id); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, color: "#FF3B30" }}>
+                        {confirmCatDelete === c.id ? "Sure?" : "Delete"}
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="text"
+                      value={newCatLabel}
+                      onChange={(e) => setNewCatLabel(e.target.value)}
+                      placeholder="New category (e.g. Girls night)"
+                      style={{ flex: 1, minWidth: 0, padding: "8px 10px", border: "1px solid #E4DFCF", borderRadius: 8, fontFamily: "inherit", fontSize: 13 }}
+                    />
+                    <select value={newCatColor} onChange={(e) => setNewCatColor(e.target.value)}
+                      style={{ padding: "8px 6px", border: "1px solid #E4DFCF", borderRadius: 8, fontFamily: "inherit", fontSize: 12, background: "#fff" }}>
+                      {CATEGORY_COLORS.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}
+                    </select>
+                    <button type="button"
+                      onClick={() => {
+                        const v = newCatLabel.trim();
+                        if (!userId || !v) return;
+                        createEventCategory(userId, v, newCatColor, categories.length)
+                          .then((c) => { setNewCatLabel(""); refreshCats(); setType("other"); setCatId(c.id); setTitle(c.label); setColor(c.color); })
+                          .catch((e) => setErr(e?.message ?? "Could not add that category."));
+                      }}
+                      style={{ padding: "8px 12px", borderRadius: 999, border: "none", background: "#181A4D", color: "#DCE07A", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700 }}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
 
           {isOther && (
             <>

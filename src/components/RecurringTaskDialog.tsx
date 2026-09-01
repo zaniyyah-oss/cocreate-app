@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useEventCategories, type EventCategory } from "@/lib/event-categories";
 import {
   RECURRENCE_LABEL,
   RECURRING_COLORS,
@@ -43,6 +44,7 @@ export function RecurringTaskDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const categories: EventCategory[] = useEventCategories(userId).data ?? [];
 
   useEffect(() => {
     if (!open) return;
@@ -137,6 +139,28 @@ export function RecurringTaskDialog({
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Call my discipler" style={FIELD} />
           </label>
+
+          {categories.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={LABEL}>Use one of your categories</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {categories.map(c => (
+                  <button key={c.id} type="button"
+                    onClick={() => { setTitle(c.label); setColor(c.color); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "6px 10px", borderRadius: 999,
+                      border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer",
+                      fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: "#181A4D",
+                    }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 999, background: c.color }} />
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={LABEL}>Repeats</div>
