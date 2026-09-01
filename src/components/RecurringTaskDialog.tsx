@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useEventCategories, type EventCategory } from "@/lib/event-categories";
 import {
   RECURRENCE_LABEL,
   RECURRING_COLORS,
@@ -43,6 +44,7 @@ export function RecurringTaskDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const categories: EventCategory[] = useEventCategories(userId).data ?? [];
 
   useEffect(() => {
     if (!open) return;
