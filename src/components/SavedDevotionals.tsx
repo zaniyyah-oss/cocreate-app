@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { planColor } from "@/lib/plan-palette";
+import { supabase } from "@/integrations/supabase/client";
 import { listPlans, startPlanAssignment } from "@/lib/plans.functions";
 import type { PlanRow } from "@/lib/plans.schemas";
+
+type SavedTemplate = {
+  savedId: string;
+  saved_at: string;
+  id: string;
+  title: string;
+  slug: string | null;
+  duration_days: number | null;
+  accent_color: string | null;
+};
 
 const CSS = `
 .sd-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px;}
