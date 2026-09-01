@@ -211,6 +211,37 @@ export const startPlanAssignment = createServerFn({ method: "POST" })
     return row as PlanAssignmentRow;
   });
 
+/**
+ * Remove a scheduled devotional from the calendar: deletes the assignment
+ * (and the day responses/completions attached to it) for the signed-in user.
+ */
+export const cancelPlanAssignment = createServerFn({ method: "POST" })
+  .inputValidator((d) => ({ assignment_id: String((d as any).assignment_id) }))
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const db = context.supabase as any;
+
+    const { data: owned, error: oErr } = await db
+      .from("plan_assignments")
+      .select("id")
+      .eq("id", data.assignment_id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (oErr) throw oErr;
+    if (!owned) throw new Error("That scheduled devotional could not be found.");
+
+    await db.from("plan_day_responses").delete().eq("assignment_id", data.assignment_id);
+    await db.from("plan_day_completions").delete().eq("assignment_id", data.assignment_id);
+
+    const { error } = await db
+      .from("plan_assignments")
+      .delete()
+      .eq("id", data.assignment_id)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 /** List the user's assignments (optionally for one plan). */
 export const listPlanAssignments = createServerFn({ method: "GET" })
   .inputValidator((d) => ({ plan_id: (d as any)?.plan_id ? String((d as any).plan_id) : null }))

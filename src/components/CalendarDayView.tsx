@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEventDialog, type UserEvent } from "@/routes/devotionals.$id";
 import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import { PlanDayBanner } from "@/components/PlanDayBanner";
 import {
   occursOn,
   toggleRecurringCompletion,
@@ -342,6 +343,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             );
           })}
         </div>
+
+        <PlanDayBanner userId={userId} dateISO={selectedISO} />
 
         {defaultTemplateId && (
           <Link
