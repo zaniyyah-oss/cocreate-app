@@ -459,13 +459,20 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
           return (
             <>
+              {untimed.length > 0 && (
+                <div className="cald-untimed" style={{ marginTop: 0, marginBottom: 12 }}>
+                  <div className="cald-items-label">Anytime today</div>
+                  {untimed.map(renderUntimed)}
+                </div>
+              )}
+
               <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
                 {HOUR_SLOTS.map(slot => (
                   <div
                     key={slot.hour}
                     className="cald-hour"
                     style={{ height: HOUR_HEIGHT }}
-                    onClick={() => clickHour(slot.hour)}
+                    onClick={(e) => clickHour(slot.hour, e)}
                   >
                     <div className="cald-hour-label">{slot.label}</div>
                     <div className="cald-hour-track" />
@@ -481,13 +488,6 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 )}
               </div>
 
-
-              {untimed.length > 0 && (
-                <div className="cald-untimed">
-                  <div className="cald-items-label">Anytime today</div>
-                  {untimed.map(renderUntimed)}
-                </div>
-              )}
 
               {recurToday.length > 0 && (
                 <div className="cald-untimed">
