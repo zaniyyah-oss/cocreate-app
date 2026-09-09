@@ -1655,8 +1655,7 @@ function EntryPage() {
                       <div className="de-todos-head">Tasks</div>
                       {todoItems.map((it, idx) => {
                         const status = todoStatusOf(it);
-                        const focused = focusSection === "todo";
-                        const open = focused && openTodoId === it.id;
+                        const open = openTodoId === it.id;
                         return (
                         <div key={it.id} className="de-todo" data-status={status}>
                           <TodoStatusSelect
