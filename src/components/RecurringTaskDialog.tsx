@@ -31,6 +31,7 @@ export function RecurringTaskDialog({
   const isEdit = !!task;
   const today = defaultDate ?? isoDate(new Date());
 
+  const [kind, setKind] = useState<RecurringKind>("task");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState("#8A96E0");
@@ -51,6 +52,7 @@ export function RecurringTaskDialog({
     if (!open) return;
     setErr(null);
     if (task) {
+      setKind(task.item_kind === "event" ? "event" : "task");
       setTitle(task.title);
       setNotes(task.notes ?? "");
       setColor(task.color || "#8A96E0");
@@ -64,6 +66,7 @@ export function RecurringTaskDialog({
       setIsActive(task.is_active);
     } else {
       const d = new Date(today + "T00:00:00");
+      setKind("task");
       setTitle("");
       setNotes("");
       setColor("#8A96E0");
