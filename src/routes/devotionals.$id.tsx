@@ -2446,6 +2446,7 @@ export function AddEventDialog({
                   {manageCats ? "Done" : "Edit categories"}
                 </button>
               </div>
+              {/* Built-in types — fixed, not editable */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {([
                   ["prayer_meeting", "Prayer meeting", "#E990A2"],
@@ -2468,24 +2469,6 @@ export function AddEventDialog({
                     </button>
                   );
                 })}
-                {categories.map((c) => {
-                  const active = type === "other" && catId === c.id;
-                  return (
-                    <button key={c.id} type="button"
-                      onClick={() => { setType("other"); setCatId(c.id); setTitle(c.label); setColor(c.color); }}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        padding: "10px 12px", borderRadius: 10,
-                        border: active ? `2px solid #181A4D` : "1px solid #E4DFCF",
-                        background: "#fff", cursor: "pointer",
-                        fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
-                        textAlign: "left",
-                      }}>
-                      <span style={{ width: 12, height: 12, borderRadius: 999, background: c.color, flex: "none" }} />
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</span>
-                    </button>
-                  );
-                })}
                 <button type="button" onClick={() => { setType("other"); setCatId(null); }}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
@@ -2499,6 +2482,41 @@ export function AddEventDialog({
                   One-off
                 </button>
               </div>
+
+              {/* Your own categories — editable, marked with a dotted outline */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8A8570", whiteSpace: "nowrap" }}>
+                  Your categories
+                </span>
+                <span style={{ flex: 1, borderTop: "1px dashed #C9C2AB" }} />
+              </div>
+              {categories.length === 0 ? (
+                <div style={{ fontSize: 12, color: "#8A8570" }}>
+                  None yet — use “Edit categories” to add your own (e.g. Girls night).
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {categories.map((c) => {
+                    const active = type === "other" && catId === c.id;
+                    return (
+                      <button key={c.id} type="button"
+                        onClick={() => { setType("other"); setCatId(c.id); setTitle(c.label); setColor(c.color); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8,
+                          padding: "10px 12px", borderRadius: 10,
+                          border: active ? `2px dashed #181A4D` : "1px dashed #C9C2AB",
+                          background: "#FBF8ED", cursor: "pointer",
+                          fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D",
+                          textAlign: "left",
+                        }}>
+                        <span style={{ width: 12, height: 12, borderRadius: 999, background: c.color, flex: "none" }} />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
 
               {manageCats && (
                 <div style={{ border: "1px solid #E4DFCF", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10, background: "#FBF8ED" }}>
