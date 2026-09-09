@@ -435,8 +435,9 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             const hh = ((h + 11) % 12) + 1;
             return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
           };
-          const positioned = layoutTimedEvents(dayItems);
-          const untimed = dayItems.filter(e => !e.start_time);
+          const allItems = [...dayItems, ...recurEventItems];
+          const positioned = layoutTimedEvents(allItems);
+          const untimed = allItems.filter(e => !e.start_time);
 
           const renderBlock = (ev: PositionedEvent) => {
             const light = LIGHT_BG.has((ev.color || "").toUpperCase());
@@ -451,7 +452,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               <button
                 key={ev.id}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                onClick={(e) => { e.stopPropagation(); openEventEditor(ev); }}
                 className="cald-block"
                 style={{
                   top: ev._top,
@@ -483,7 +484,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               <button
                 key={ev.id}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                onClick={(e) => { e.stopPropagation(); openEventEditor(ev); }}
                 className="cald-event"
                 style={{ background: tint, borderColor: ev.color }}
               >
@@ -575,7 +576,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 </div>
               )}
 
-              {!itemsQ.isLoading && dayItems.length === 0 && recurToday.length === 0 && (
+              {!itemsQ.isLoading && allItems.length === 0 && recurToday.length === 0 && (
                 <div className="cald-empty">
                   <strong>Nothing scheduled.</strong>
                   <div>Tap a time slot or the Add button to add an event, focus item, or recurring task.</div>
