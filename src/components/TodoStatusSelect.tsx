@@ -68,7 +68,7 @@ export function TodoStatusSelect({
         onClick={() => setOpen((o) => !o)}
       >
         <span className="de-todo-select-dot" style={{ background: active.swatch }} />
-        {active.label}
+        <span className="de-todo-select-label">{active.label}</span>
         <svg className="de-todo-select-caret" width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
           <path d="M1.5 3 L4.5 6 L7.5 3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -113,6 +113,12 @@ export const TodoStatusSelectStyles = `
 .de-todo-select[data-s="done"]{background:${STATUS_BG.done};color:${STATUS_FG.done};border-color:${STATUS_BORDER.done};}
 .de-todo-select-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .de-todo-select-caret{flex-shrink:0;opacity:0.7;}
+.de-todo-select-label{white-space:nowrap;}
+/* Phones: shrink the status control to a dot so the task text gets the room. */
+@media (max-width: 640px){
+  .de-todo-select{padding:4px 7px;gap:4px;font-size:9.5px;}
+  .de-todo-select-label{display:none;}
+}
 .de-todo-select-menu{position:absolute;z-index:60;top:calc(100% + 4px);left:0;min-width:148px;margin:0;padding:4px;list-style:none;background:#fff;border:1px solid rgba(24,26,77,0.14);border-radius:10px;box-shadow:0 8px 24px rgba(24,26,77,0.16);overflow:hidden;}
 .de-todo-select-opt{display:flex;align-items:center;gap:8px;width:100%;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:#20201c;background:none;border:none;padding:8px 10px;border-radius:7px;cursor:pointer;text-align:left;}
 .de-todo-select-opt:hover{background:rgba(24,26,77,0.05);}

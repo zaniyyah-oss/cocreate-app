@@ -69,6 +69,15 @@ function TodoTextArea({
     el.style.height = `${el.scrollHeight}px`;
   };
   useEffect(fit, [value]);
+  // Width changes (rotation, sidebar, focus mode) change how many rows the text
+  // needs, so re-measure whenever the field is resized — not just when typing.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => fit());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <textarea
       ref={ref}
@@ -279,11 +288,15 @@ ${TodoStatusSelectStyles}
 .de-todo-details-btn:hover{color:#181A4D;}
 .de-todo-details{grid-column:2 / -1;margin:2px 0 6px;}
 .de-todo-details .rtf-editor{min-height:90px;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:10px 12px;background:#FBF8ED;}
-/* Compact (non-focus) view: status + task name only; due date is implied by the day */
+/* Compact (non-focus) view: status + task name + details; due date is implied by the day */
 .de-block:not(.is-full) .de-todo{grid-template-columns:auto minmax(0,1fr) auto;}
-.de-block:not(.is-full) .de-todo-date,
-.de-block:not(.is-full) .de-todo-more,
-.de-block:not(.is-full) .de-todo-details{display:none;}
+.de-block:not(.is-full) .de-todo-date{display:none;}
+/* Phones: the due date crowds out the task on every view, including focus */
+@media (max-width: 640px){
+  .de-todo{grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;}
+  .de-todo-date{display:none;}
+  .de-todo-text{font-size:13.5px;}
+}
 
 
 
@@ -945,7 +958,27 @@ function EntryPage() {
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
     setPrayText(e?.pray_text ?? (e ? "" : templatePrefill.pray));
     setTodoText(e?.todo_text ?? e?.apply_text ?? (e ? "" : templatePrefill.todo));
-    setTodoItems(Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : []);
+    const own = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
+    if (own.length > 0) { setTodoItems(own); return; }
+    // Fresh day with no tasks yet: carry forward anything left unfinished on the
+    // most recent earlier day, keeping its details. Completed tasks stay behind.
+    const prior = (pastQ.data ?? [])
+      .filter((row) => (row.entry_date ?? "") < selectedDate)
+      .sort((a, b) => String(b.entry_date ?? "").localeCompare(String(a.entry_date ?? "")));
+    let carried: TodoItem[] = [];
+    for (const row of prior) {
+      const items = Array.isArray((row as any).todo_items) ? ((row as any).todo_items as TodoItem[]) : [];
+      if (items.length === 0) continue;
+      carried = items
+        .filter((it) => todoStatusOf(it) !== "done")
+        .map((it) => ({
+          ...it,
+          id: crypto.randomUUID(),
+          due_date: it.due_date ? selectedDate : it.due_date ?? null,
+        }));
+      break;
+    }
+    setTodoItems(carried);
   }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
@@ -1631,8 +1664,7 @@ function EntryPage() {
                       <div className="de-todos-head">Tasks</div>
                       {todoItems.map((it, idx) => {
                         const status = todoStatusOf(it);
-                        const focused = focusSection === "todo";
-                        const open = focused && openTodoId === it.id;
+                        const open = openTodoId === it.id;
                         return (
                         <div key={it.id} className="de-todo" data-status={status}>
                           <TodoStatusSelect
