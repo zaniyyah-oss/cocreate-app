@@ -2298,11 +2298,11 @@ export function AddEventDialog({
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
-      setStartTime("");
-      setEndTime("");
+      setStartTime(defaultStartTime ?? "");
+      setEndTime(defaultEndTime ?? "");
     }
     setErr(null);
-  }, [open, defaultDate, event, defaultItemType]);
+  }, [open, defaultDate, event, defaultItemType, defaultStartTime, defaultEndTime]);
 
   const isFocus = itemType === "focus";
   // Focus items force custom (title + color)
