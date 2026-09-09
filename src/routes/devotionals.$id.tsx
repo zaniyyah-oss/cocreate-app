@@ -1253,7 +1253,7 @@ function EntryPage() {
               {/* Right-side controls stacked vertically: compact ‹ Today › stepper
                   (Entry view only) above a Full calendar link. Day view shows its
                   own arrows next to its big date, so no stepper here in Day mode. */}
-              <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+              <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                 {workspaceMode !== "day" && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <button
