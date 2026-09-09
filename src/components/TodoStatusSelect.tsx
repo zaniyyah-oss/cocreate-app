@@ -4,7 +4,7 @@ export type TodoStatus = "not_started" | "in_progress" | "done";
 
 const OPTIONS: { value: TodoStatus; label: string; swatch: string }[] = [
   { value: "not_started", label: "Not started", swatch: "#181A4D" },
-  { value: "in_progress", label: "In progress", swatch: "#FFE9A8" },
+  { value: "in_progress", label: "In progress", swatch: "#7a5b00" },
   { value: "done", label: "Complete", swatch: "#0F4A42" },
 ];
 
