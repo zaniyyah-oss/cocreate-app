@@ -460,6 +460,19 @@ const todayISO = () => {
 
 const formatDate = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
+const shiftISODate = (iso: string, delta: number) => {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + delta);
+  const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+};
+
+const stepBtnStyle: React.CSSProperties = {
+  width: 30, height: 30, borderRadius: 999, border: "1px solid #E4DFCF",
+  background: "#fff", color: "#181A4D", fontSize: 17, lineHeight: 1,
+  cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+};
+
 // Saveable field types
 type SaveField =
   | "where_text"
