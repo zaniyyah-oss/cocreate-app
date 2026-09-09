@@ -2599,18 +2599,18 @@ export function AddEventDialog({
             <div>
               {isEdit && (
                 <button type="button" onClick={remove} disabled={deleting || saving}
-                  style={{ padding: "10px 16px", borderRadius: 999, border: "1.5px solid #FF3B30", background: "#fff", color: "#FF3B30", cursor: deleting ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                  style={{ padding: "7px 14px", borderRadius: 999, border: "1.5px solid #FF3B30", background: "#fff", color: "#FF3B30", cursor: deleting ? "wait" : "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>
                   {deleting ? "Deleting…" : "Delete"}
                 </button>
               )}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button type="button" onClick={() => onOpenChange(false)}
-                style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+                style={{ padding: "7px 14px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D" }}>
                 Cancel
               </button>
               <button type="button" onClick={save} disabled={saving || deleting}
-                style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                style={{ padding: "7px 16px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>
                 {saving ? "Saving…" : isEdit ? "Save changes" : "Add event"}
               </button>
             </div>
@@ -2844,11 +2844,11 @@ function PlanDayDialog({
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
               <button type="button" onClick={() => onOpenChange(false)}
-                style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+                style={{ padding: "7px 14px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D" }}>
                 Cancel
               </button>
               <button type="button" onClick={save} disabled={saving}
-                style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                style={{ padding: "7px 16px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>
                 {saving ? "Saving…" : "Save plan"}
               </button>
             </div>
@@ -2929,11 +2929,11 @@ function NewTodoDialog({
           {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
             <button type="button" onClick={() => onOpenChange(false)}
-              style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
+              style={{ padding: "7px 14px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#181A4D" }}>
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
-              style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+              style={{ padding: "7px 16px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>
               {saving ? "Saving…" : "Add to-do"}
             </button>
           </div>
