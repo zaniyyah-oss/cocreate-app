@@ -42,7 +42,20 @@ export function DeleteConfirmModal({
   // dialogs set pointer-events:none on <body> while open, so the overlay
   // re-enables them explicitly or the buttons would look clickable but do nothing.
   return createPortal((
-    <div className="dcm-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={() => { if (!busy) onCancel(); }}>
+    <div
+      className="dcm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      // Radix dialogs listen on the document for pointerdown/focus outside their
+      // content and dismiss (which would unmount this portal mid-click). Stop
+      // those events at the overlay so our buttons actually receive their click.
+      onPointerDownCapture={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onTouchStartCapture={(e) => e.stopPropagation()}
+      onFocusCapture={(e) => e.stopPropagation()}
+      onClick={() => { if (!busy) onCancel(); }}
+    >
       <div className="dcm-card" onClick={(e) => e.stopPropagation()}>
         <div className="dcm-iconwrap">
           <span className="dcm-icon" aria-hidden="true">
