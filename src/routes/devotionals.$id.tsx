@@ -279,11 +279,15 @@ ${TodoStatusSelectStyles}
 .de-todo-details-btn:hover{color:#181A4D;}
 .de-todo-details{grid-column:2 / -1;margin:2px 0 6px;}
 .de-todo-details .rtf-editor{min-height:90px;border:1px solid rgba(24,26,77,0.12);border-radius:10px;padding:10px 12px;background:#FBF8ED;}
-/* Compact (non-focus) view: status + task name only; due date is implied by the day */
+/* Compact (non-focus) view: status + task name + details; due date is implied by the day */
 .de-block:not(.is-full) .de-todo{grid-template-columns:auto minmax(0,1fr) auto;}
-.de-block:not(.is-full) .de-todo-date,
-.de-block:not(.is-full) .de-todo-more,
-.de-block:not(.is-full) .de-todo-details{display:none;}
+.de-block:not(.is-full) .de-todo-date{display:none;}
+/* Phones: the due date crowds out the task on every view, including focus */
+@media (max-width: 640px){
+  .de-todo{grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;}
+  .de-todo-date{display:none;}
+  .de-todo-text{font-size:13.5px;}
+}
 
 
 
