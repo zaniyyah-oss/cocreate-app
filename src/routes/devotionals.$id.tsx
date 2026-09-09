@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORY_COLORS,
@@ -459,6 +459,19 @@ const todayISO = () => {
 };
 
 const formatDate = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+const shiftISODate = (iso: string, delta: number) => {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + delta);
+  const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+};
+
+const stepBtnStyle: CSSProperties = {
+  width: 30, height: 30, borderRadius: 999, border: "1px solid #E4DFCF",
+  background: "#fff", color: "#181A4D", fontSize: 17, lineHeight: 1,
+  cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+};
 
 // Saveable field types
 type SaveField =
@@ -1225,6 +1238,47 @@ function EntryPage() {
                   </svg>
                   Day
                 </button>
+              </div>
+
+              {/* Day stepper — works in both Entry and Day view */}
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  aria-label="Previous day"
+                  onClick={() => setSelectedDate(shiftISODate(selectedDate, -1))}
+                  style={stepBtnStyle}
+                >
+                  ‹
+                </button>
+                <span
+                  style={{
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12.5,
+                    color: "#181A4D", minWidth: 118, textAlign: "center",
+                  }}
+                >
+                  {formatDate(selectedDate)}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next day"
+                  onClick={() => setSelectedDate(shiftISODate(selectedDate, 1))}
+                  style={stepBtnStyle}
+                >
+                  ›
+                </button>
+                {selectedDate !== todayISO() && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(todayISO())}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: 0,
+                      fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
+                      color: "#0F4A42", textDecoration: "underline",
+                    }}
+                  >
+                    Today
+                  </button>
+                )}
               </div>
               <Link
                 to="/calendar"
