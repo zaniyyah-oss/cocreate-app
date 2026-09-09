@@ -9,21 +9,23 @@ export type EventCategory = {
   sort_order: number;
 };
 
-/** Colors offered when naming a new category. */
+/** Colors offered when naming a new category. Plain, obvious names. */
 export const CATEGORY_COLORS: { name: string; value: string }[] = [
   { name: "Navy", value: "#181A4D" },
-  { name: "Teal", value: "#0F9B8E" },
-  { name: "Sky", value: "#2E9BE6" },
-  { name: "Violet", value: "#7A5AF8" },
-  { name: "Periwinkle", value: "#8A96E0" },
-  { name: "Blush", value: "#E990A2" },
-  { name: "Magenta", value: "#D64191" },
+  { name: "Blue", value: "#2E9BE6" },
+  { name: "Light blue", value: "#8A96E0" },
+  { name: "Dark green", value: "#0F4A42" },
+  { name: "Green", value: "#4FA92B" },
+  { name: "Lime", value: "#DCE07A" },
+  { name: "Yellow", value: "#F5F740" },
+  { name: "Orange", value: "#FFAE00" },
+  { name: "Red", value: "#FF340C" },
   { name: "Coral", value: "#FF6B4A" },
-  { name: "Amber", value: "#FFAE00" },
-  { name: "Limelight", value: "#DCE07A" },
-  { name: "Grass", value: "#4FA92B" },
+  { name: "Pink", value: "#E990A2" },
+  { name: "Brown", value: "#441B07" },
   { name: "Gray", value: "#9B9B93" },
 ];
+
 
 export function useEventCategories(userId: string | null) {
   return useQuery({
