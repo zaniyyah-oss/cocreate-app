@@ -335,7 +335,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           onClick={() => setRecurAddOpen(true)}
           disabled={!userId}
         >
-          + Recurring task
+          + Recurring item
         </button>
 
 
