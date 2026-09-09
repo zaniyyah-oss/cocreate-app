@@ -1226,6 +1226,47 @@ function EntryPage() {
                   Day
                 </button>
               </div>
+
+              {/* Day stepper — works in both Entry and Day view */}
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  aria-label="Previous day"
+                  onClick={() => setSelectedDate(shiftISODate(selectedDate, -1))}
+                  style={stepBtnStyle}
+                >
+                  ‹
+                </button>
+                <span
+                  style={{
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12.5,
+                    color: "#181A4D", minWidth: 118, textAlign: "center",
+                  }}
+                >
+                  {formatDate(selectedDate)}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next day"
+                  onClick={() => setSelectedDate(shiftISODate(selectedDate, 1))}
+                  style={stepBtnStyle}
+                >
+                  ›
+                </button>
+                {selectedDate !== todayISO() && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(todayISO())}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: 0,
+                      fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
+                      color: "#0F4A42", textDecoration: "underline",
+                    }}
+                  >
+                    Today
+                  </button>
+                )}
+              </div>
               <Link
                 to="/calendar"
                 style={{
