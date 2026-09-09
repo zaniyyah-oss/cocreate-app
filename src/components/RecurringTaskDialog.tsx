@@ -134,15 +134,43 @@ export function RecurringTaskDialog({
       <DialogContent className="sm:max-w-[480px] max-h-[88vh] overflow-y-auto" style={{ fontFamily: "'Poppins',sans-serif" }}>
         <DialogHeader>
           <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>
-            {isEdit ? "Edit recurring task" : "New recurring task"}
+            {isEdit
+              ? kind === "event" ? "Edit recurring event" : "Edit recurring task"
+              : "New recurring item"}
           </DialogTitle>
         </DialogHeader>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={LABEL}>This is a</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {([["task", "Task"], ["event", "Event"]] as const).map(([k, lbl]) => {
+                const active = kind === k;
+                return (
+                  <button key={k} type="button" onClick={() => setKind(k)}
+                    style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      border: active ? "2px solid #181A4D" : "1px solid #E4DFCF",
+                      background: active ? "#181A4D" : "#fff",
+                      color: active ? "#DCE07A" : "#181A4D",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700,
+                    }}>
+                    {lbl}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11.5, color: "#8a8678" }}>
+              {kind === "event"
+                ? "Events show on the calendar timeline at their scheduled time."
+                : "Tasks show in your repeating list with a checkbox to tick off."}
+            </div>
+          </div>
+
           <label style={{ display: "flex", flexDirection: "column", gap: 6, ...LABEL }}>
-            Task name
+            {kind === "event" ? "Event name" : "Task name"}
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Call my discipler" style={FIELD} />
+              placeholder={kind === "event" ? "e.g. Small group" : "e.g. Call my discipler"} style={FIELD} />
           </label>
 
           {categories.length > 0 && (
