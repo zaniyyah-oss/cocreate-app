@@ -1504,6 +1504,7 @@ export type Database = {
           frequency: string
           id: string
           is_active: boolean
+          item_kind: string
           month_days: number[]
           notes: string | null
           start_date: string
@@ -1521,6 +1522,7 @@ export type Database = {
           frequency: string
           id?: string
           is_active?: boolean
+          item_kind?: string
           month_days?: number[]
           notes?: string | null
           start_date?: string
@@ -1538,6 +1540,7 @@ export type Database = {
           frequency?: string
           id?: string
           is_active?: boolean
+          item_kind?: string
           month_days?: number[]
           notes?: string | null
           start_date?: string
