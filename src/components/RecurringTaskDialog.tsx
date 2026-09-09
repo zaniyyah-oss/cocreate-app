@@ -88,7 +88,7 @@ export function RecurringTaskDialog({
 
   const save = async () => {
     if (!userId) { setErr("Please sign in to save."); return; }
-    if (!title.trim()) { setErr("Give this task a name."); return; }
+    if (!title.trim()) { setErr(kind === "event" ? "Give this event a name." : "Give this task a name."); return; }
     if (byWeekday && weekdays.length === 0) { setErr("Pick at least one day of the week."); return; }
     if (!byWeekday && monthDays.length === 0) { setErr("Pick at least one day of the month."); return; }
     if (startTime && endTime && endTime <= startTime) { setErr("End time must be after start time."); return; }
@@ -96,6 +96,7 @@ export function RecurringTaskDialog({
 
     setSaving(true); setErr(null);
     const payload = {
+      item_kind: kind,
       title: title.trim(),
       notes: notes.trim() || null,
       color,
@@ -119,7 +120,7 @@ export function RecurringTaskDialog({
 
   const remove = async () => {
     if (!task) return;
-    if (!confirm("Delete this recurring task and all of its occurrences?")) return;
+    if (!confirm(`Delete this recurring ${kind} and all of its occurrences?`)) return;
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("recurring_tasks" as any).delete().eq("id", task.id);
     setDeleting(false);
