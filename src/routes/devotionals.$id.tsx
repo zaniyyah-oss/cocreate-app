@@ -467,7 +467,7 @@ const shiftISODate = (iso: string, delta: number) => {
   return `${y}-${m}-${dd}`;
 };
 
-const stepBtnStyle: React.CSSProperties = {
+const stepBtnStyle: CSSProperties = {
   width: 30, height: 30, borderRadius: 999, border: "1px solid #E4DFCF",
   background: "#fff", color: "#181A4D", fontSize: 17, lineHeight: 1,
   cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
