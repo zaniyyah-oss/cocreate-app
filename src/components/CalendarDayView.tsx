@@ -339,9 +339,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
       <section className="cald-main">
         <div className="cald-head">
-          <div>
-            <div className="cald-dayname">{dayName}</div>
-            <div className="cald-daydate">{dateLine}</div>
+          <div className="cald-head-date">
+            <button type="button" aria-label="Previous day" className="cald-step" onClick={() => stepDay(-1)}>‹</button>
+            <div>
+              <div className="cald-dayname">{dayName}</div>
+              <div className="cald-daydate">{dateLine}</div>
+            </div>
+            <button type="button" aria-label="Next day" className="cald-step" onClick={() => stepDay(1)}>›</button>
+            {!isToday && (
+              <button type="button" className="cald-today" onClick={goToday}>Today</button>
+            )}
           </div>
           <button
             type="button"
