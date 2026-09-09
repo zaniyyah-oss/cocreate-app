@@ -945,7 +945,27 @@ function EntryPage() {
     setWhereText(e?.where_text ?? e?.reflect_text ?? "");
     setPrayText(e?.pray_text ?? (e ? "" : templatePrefill.pray));
     setTodoText(e?.todo_text ?? e?.apply_text ?? (e ? "" : templatePrefill.todo));
-    setTodoItems(Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : []);
+    const own = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
+    if (own.length > 0) { setTodoItems(own); return; }
+    // Fresh day with no tasks yet: carry forward anything left unfinished on the
+    // most recent earlier day, keeping its details. Completed tasks stay behind.
+    const prior = (pastQ.data ?? [])
+      .filter((row) => (row.entry_date ?? "") < selectedDate)
+      .sort((a, b) => String(b.entry_date ?? "").localeCompare(String(a.entry_date ?? "")));
+    let carried: TodoItem[] = [];
+    for (const row of prior) {
+      const items = Array.isArray((row as any).todo_items) ? ((row as any).todo_items as TodoItem[]) : [];
+      if (items.length === 0) continue;
+      carried = items
+        .filter((it) => todoStatusOf(it) !== "done")
+        .map((it) => ({
+          ...it,
+          id: crypto.randomUUID(),
+          due_date: it.due_date ? selectedDate : it.due_date ?? null,
+        }));
+      break;
+    }
+    setTodoItems(carried);
   }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
