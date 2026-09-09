@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Branded, in-app delete confirmation. Replaces native window.confirm so every
@@ -32,9 +33,15 @@ export function DeleteConfirmModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onCancel, busy]);
 
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  return (
+  if (!open || !mounted || typeof document === "undefined") return null;
+
+  // Portalled to <body> so it sits above any dialog it is opened from. Radix
+  // dialogs set pointer-events:none on <body> while open, so the overlay
+  // re-enables them explicitly or the buttons would look clickable but do nothing.
+  return createPortal((
     <div className="dcm-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={() => { if (!busy) onCancel(); }}>
       <div className="dcm-card" onClick={(e) => e.stopPropagation()}>
         <div className="dcm-iconwrap">
@@ -61,7 +68,7 @@ export function DeleteConfirmModal({
         </div>
       </div>
       <style>{`
-        .dcm-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;animation:dcmFade .16s ease;}
+        .dcm-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;animation:dcmFade .16s ease;pointer-events:auto;}
         .dcm-card{background:#FBF8ED;border:1.5px solid #ECE4CE;border-radius:20px;width:100%;max-width:440px;padding:0;overflow:hidden;box-shadow:0 24px 60px -16px rgba(16,16,24,0.4);animation:dcmPop .18s cubic-bezier(.2,.8,.2,1);}
         @keyframes dcmFade{from{opacity:0;}to{opacity:1;}}
         @keyframes dcmPop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
@@ -80,7 +87,7 @@ export function DeleteConfirmModal({
         @media (max-width:480px){.dcm-card{max-width:none;border-radius:0;}}
       `}</style>
     </div>
-  );
+  ), document.body);
 }
 
 export default DeleteConfirmModal;
