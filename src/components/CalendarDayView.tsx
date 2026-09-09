@@ -146,11 +146,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
+  const [addTimes, setAddTimes] = useState<{ start: string; end: string } | null>(null);
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const [recurAddOpen, setRecurAddOpen] = useState(false);
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
 
-  const openAdd = (kind: "event" | "focus") => { setAddItemType(kind); setAddOpen(true); };
+  const openAdd = (kind: "event" | "focus", times?: { start: string; end: string }) => {
+    setAddItemType(kind);
+    setAddTimes(times ?? null);
+    setAddOpen(true);
+  };
   const onSaved = () => qc.invalidateQueries({ queryKey: ["cal-day"] });
   const onRecurSaved = () => {
     qc.invalidateQueries({ queryKey: ["recurring-tasks"] });
@@ -245,10 +250,18 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   const dateLine = selected.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const clickHour = (hour: number) => {
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const clickHour = (hour: number, e: React.MouseEvent<HTMLDivElement>) => {
     if (!userId) return;
-    openAdd("event");
-    void hour;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0;
+    const snapped = Math.max(0, Math.min(3, Math.floor(ratio * 4))) * 15;
+    const startMin = hour * 60 + snapped;
+    const endMin = Math.min(23 * 60 + 59, startMin + 60);
+    openAdd("event", {
+      start: `${pad2(Math.floor(startMin / 60))}:${pad2(startMin % 60)}`,
+      end: `${pad2(Math.floor(endMin / 60))}:${pad2(endMin % 60)}`,
+    });
   };
 
   return (
@@ -446,13 +459,20 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
           return (
             <>
+              {untimed.length > 0 && (
+                <div className="cald-untimed" style={{ marginTop: 0, marginBottom: 12 }}>
+                  <div className="cald-items-label">Anytime today</div>
+                  {untimed.map(renderUntimed)}
+                </div>
+              )}
+
               <div className="cald-timeline" style={{ height: HOUR_SLOTS.length * HOUR_HEIGHT }}>
                 {HOUR_SLOTS.map(slot => (
                   <div
                     key={slot.hour}
                     className="cald-hour"
                     style={{ height: HOUR_HEIGHT }}
-                    onClick={() => clickHour(slot.hour)}
+                    onClick={(e) => clickHour(slot.hour, e)}
                   >
                     <div className="cald-hour-label">{slot.label}</div>
                     <div className="cald-hour-track" />
@@ -468,13 +488,6 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 )}
               </div>
 
-
-              {untimed.length > 0 && (
-                <div className="cald-untimed">
-                  <div className="cald-items-label">Anytime today</div>
-                  {untimed.map(renderUntimed)}
-                </div>
-              )}
 
               {recurToday.length > 0 && (
                 <div className="cald-untimed">
@@ -532,6 +545,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         userId={userId}
         defaultDate={selectedISO}
         defaultItemType={addItemType}
+        defaultStartTime={addTimes?.start}
+        defaultEndTime={addTimes?.end}
         onSaved={onSaved}
       />
       <AddEventDialog

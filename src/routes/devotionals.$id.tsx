@@ -2236,6 +2236,7 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
 
 export function AddEventDialog({
   open, onOpenChange, userId, defaultDate, event, onSaved, defaultItemType,
+  defaultStartTime, defaultEndTime,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -2244,6 +2245,8 @@ export function AddEventDialog({
   event?: UserEvent | null;
   onSaved: () => void;
   defaultItemType?: UserEventItemType;
+  defaultStartTime?: string;
+  defaultEndTime?: string;
 }) {
   const isEdit = !!event;
   const [date, setDate] = useState(defaultDate);
@@ -2295,11 +2298,11 @@ export function AddEventDialog({
       setTitle("");
       setColor(OTHER_DEFAULT_COLOR);
       setNotes("");
-      setStartTime("");
-      setEndTime("");
+      setStartTime(defaultStartTime ?? "");
+      setEndTime(defaultEndTime ?? "");
     }
     setErr(null);
-  }, [open, defaultDate, event, defaultItemType]);
+  }, [open, defaultDate, event, defaultItemType, defaultStartTime, defaultEndTime]);
 
   const isFocus = itemType === "focus";
   // Focus items force custom (title + color)
