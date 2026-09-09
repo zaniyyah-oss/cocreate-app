@@ -2175,7 +2175,7 @@ function useTopicalDates(userId: string | null, startISO: string, endISO: string
 }
 
 // ============================================================================
-// User events (Prayer meeting, Bible study, Mentor meeting, Other)
+// User events (Prayer meeting, Bible study, Discipleship Sync, Other)
 // ============================================================================
 
 export type UserEventType = "prayer_meeting" | "bible_study" | "mentor_meeting" | "other";
@@ -2195,7 +2195,7 @@ export type UserEvent = {
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
   prayer_meeting: { label: "Prayer meeting", color: "#E990A2" },
   bible_study: { label: "Bible study", color: "#FFAE00" },
-  mentor_meeting: { label: "Mentor meeting", color: "#8A96E0" },
+  mentor_meeting: { label: "Discipleship Sync", color: "#8A96E0" },
 };
 
 const OTHER_COLOR_SWATCHES: { name: string; value: string }[] = [
@@ -2451,7 +2451,7 @@ export function AddEventDialog({
                 {([
                   ["prayer_meeting", "Prayer meeting", "#E990A2"],
                   ["bible_study", "Bible study", "#FFAE00"],
-                  ["mentor_meeting", "Mentor meeting", "#8A96E0"],
+                  ["mentor_meeting", "Discipleship Sync", "#8A96E0"],
                 ] as const).map(([val, label, sw]) => {
                   const active = type === val;
                   return (

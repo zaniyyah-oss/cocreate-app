@@ -23,7 +23,7 @@ function isoDate(d: Date): string {
 const EVENT_LABEL: Record<string, string> = {
   prayer_meeting: "Prayer meeting",
   bible_study: "Bible study",
-  mentor_meeting: "Mentor meeting",
+  mentor_meeting: "Discipleship Sync",
   other: "Event",
 };
 
@@ -331,7 +331,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           <div className="cald-legend-title">Event key</div>
           <div className="cald-legend-item"><span className="sw" style={{ background: "#E990A2" }} />Prayer</div>
           <div className="cald-legend-item"><span className="sw" style={{ background: "#FFAE00" }} />Bible study</div>
-          <div className="cald-legend-item"><span className="sw" style={{ background: "#8A96E0" }} />Mentor meeting</div>
+          <div className="cald-legend-item"><span className="sw" style={{ background: "#8A96E0" }} />Discipleship Sync</div>
           <div className="cald-legend-item"><span className="sw" style={{ background: "#DCE07A" }} />Daily devotional</div>
           <div className="cald-legend-item"><span className="sw" style={{ background: "#0F4A42" }} />Topical devotional</div>
         </div>
