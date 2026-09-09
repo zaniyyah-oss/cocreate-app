@@ -545,6 +545,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
         userId={userId}
         defaultDate={selectedISO}
         defaultItemType={addItemType}
+        defaultStartTime={addTimes?.start}
+        defaultEndTime={addTimes?.end}
         onSaved={onSaved}
       />
       <AddEventDialog
