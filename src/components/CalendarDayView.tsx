@@ -142,6 +142,17 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     setSelected(d);
     onDateChange?.(isoDate(d));
   };
+  const stepDay = (delta: number) => {
+    const d = new Date(selected);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + delta);
+    pickDate(d);
+  };
+  const goToday = () => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    pickDate(d);
+  };
+  const isToday = isoDate(selected) === isoDate(new Date());
 
 
   const [addOpen, setAddOpen] = useState(false);
@@ -328,9 +339,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
       <section className="cald-main">
         <div className="cald-head">
-          <div>
-            <div className="cald-dayname">{dayName}</div>
-            <div className="cald-daydate">{dateLine}</div>
+          <div className="cald-head-date">
+            <button type="button" aria-label="Previous day" className="cald-step" onClick={() => stepDay(-1)}>‹</button>
+            <div>
+              <div className="cald-dayname">{dayName}</div>
+              <div className="cald-daydate">{dateLine}</div>
+            </div>
+            <button type="button" aria-label="Next day" className="cald-step" onClick={() => stepDay(1)}>›</button>
+            {!isToday && (
+              <button type="button" className="cald-today" onClick={goToday}>Today</button>
+            )}
           </div>
           <button
             type="button"
@@ -581,8 +599,12 @@ const CSS = `
 .cald-side{display:none;}
 .cald-main{min-width:0;}
 .cald-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:12px;}
+.cald-head-date{display:flex;align-items:center;gap:10px;}
 .cald-dayname{font-weight:900;font-size:26px;color:#181A4D;letter-spacing:-0.3px;}
 .cald-daydate{font-size:13px;color:#181A4D;opacity:0.55;font-weight:500;}
+.cald-step{width:32px;height:32px;border-radius:999px;border:1px solid rgba(24,26,77,0.15);background:#fff;color:#181A4D;font-size:18px;font-weight:700;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none;transition:background .15s ease;}
+.cald-step:hover{background:#FBF8ED;}
+.cald-today{border:none;background:none;cursor:pointer;padding:0 4px;font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:#0F4A42;text-decoration:underline;}
 .cald-sub{font-size:13px;color:#8a8678;margin:6px 0 18px;}
 
 .cald-addbtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:#181A4D;border:none;border-radius:14px;padding:12px 0;font-family:'Poppins',sans-serif;font-weight:700;font-size:13.5px;color:#DCE07A;cursor:pointer;margin-bottom:10px;}
