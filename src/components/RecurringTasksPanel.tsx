@@ -26,10 +26,10 @@ export function RecurringTasksPanel({ userId, defaultDate }: { userId: string | 
       <div className="rt-head">
         <div>
           <div className="rt-eyebrow">Recurring</div>
-          <h2 className="rt-title">Repeating tasks</h2>
+          <h2 className="rt-title">Repeating tasks & events</h2>
         </div>
         <button type="button" className="rt-add" onClick={() => setAddOpen(true)} disabled={!userId}>
-          + New recurring task
+          + New recurring item
         </button>
       </div>
 
@@ -48,6 +48,7 @@ export function RecurringTasksPanel({ userId, defaultDate }: { userId: string | 
               <span className="rt-body">
                 <span className="rt-name">
                   {t.title}
+                  {t.item_kind === "event" && <span className="rt-paused">event</span>}
                   {!t.is_active && <span className="rt-paused">paused</span>}
                 </span>
                 <span className="rt-meta">

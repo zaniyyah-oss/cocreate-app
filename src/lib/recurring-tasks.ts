@@ -3,8 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type RecurrenceFrequency = "weekly" | "biweekly" | "monthly" | "quarterly";
 
+export type RecurringKind = "task" | "event";
+
 export type RecurringTask = {
   id: string;
+  item_kind: RecurringKind;
   title: string;
   notes: string | null;
   color: string;
@@ -128,12 +131,13 @@ export function useRecurringTasks(userId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("recurring_tasks" as any)
-        .select("id,title,notes,color,frequency,weekdays,month_days,start_date,end_date,start_time,end_time,is_active")
+        .select("id,item_kind,title,notes,color,frequency,weekdays,month_days,start_date,end_date,start_time,end_time,is_active")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return ((data ?? []) as unknown as RecurringTask[]).map(t => ({
         ...t,
+        item_kind: (t.item_kind === "event" ? "event" : "task") as RecurringKind,
         weekdays: (t.weekdays ?? []).map(Number),
         month_days: (t.month_days ?? []).map(Number),
       }));

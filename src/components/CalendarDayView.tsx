@@ -213,10 +213,45 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
   const recurQ = useRecurringTasks(userId);
   const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
-  const recurToday = useMemo(
+  const recurAllToday = useMemo(
     () => (recurQ.data ?? []).filter(t => occursOn(t, selected)),
     [recurQ.data, selectedISO],
   );
+  const recurToday = useMemo(
+    () => recurAllToday.filter(t => t.item_kind !== "event"),
+    [recurAllToday],
+  );
+  const recurEventsToday = useMemo(
+    () => recurAllToday.filter(t => t.item_kind === "event"),
+    [recurAllToday],
+  );
+  const recurById = useMemo(() => {
+    const m = new Map<string, RecurringTask>();
+    for (const t of recurEventsToday) m.set(t.id, t);
+    return m;
+  }, [recurEventsToday]);
+  const recurEventItems: UserEvent[] = useMemo(
+    () => recurEventsToday.map(t => ({
+      id: `recur:${t.id}`,
+      event_date: selectedISO,
+      event_type: "other",
+      title: t.title,
+      color: t.color,
+      notes: t.notes,
+      item_type: "event",
+      start_time: t.start_time,
+      end_time: t.end_time,
+    } as unknown as UserEvent)),
+    [recurEventsToday, selectedISO],
+  );
+  const openEventEditor = (ev: UserEvent) => {
+    if (typeof ev.id === "string" && ev.id.startsWith("recur:")) {
+      const t = recurById.get(ev.id.slice(6));
+      if (t) setRecurEdit(t);
+      return;
+    }
+    setEditEvent(ev);
+  };
   const toggleRecur = async (t: RecurringTask, done: boolean) => {
     if (!userId) return;
     await toggleRecurringCompletion(userId, t.id, selectedISO, done);
@@ -300,7 +335,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           onClick={() => setRecurAddOpen(true)}
           disabled={!userId}
         >
-          + Recurring task
+          + Recurring item
         </button>
 
 
@@ -400,8 +435,9 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             const hh = ((h + 11) % 12) + 1;
             return m ? `${hh}:${String(m).padStart(2, "0")} ${ampm}` : `${hh} ${ampm}`;
           };
-          const positioned = layoutTimedEvents(dayItems);
-          const untimed = dayItems.filter(e => !e.start_time);
+          const allItems = [...dayItems, ...recurEventItems];
+          const positioned = layoutTimedEvents(allItems);
+          const untimed = allItems.filter(e => !e.start_time);
 
           const renderBlock = (ev: PositionedEvent) => {
             const light = LIGHT_BG.has((ev.color || "").toUpperCase());
@@ -416,7 +452,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               <button
                 key={ev.id}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                onClick={(e) => { e.stopPropagation(); openEventEditor(ev); }}
                 className="cald-block"
                 style={{
                   top: ev._top,
@@ -448,7 +484,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
               <button
                 key={ev.id}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
+                onClick={(e) => { e.stopPropagation(); openEventEditor(ev); }}
                 className="cald-event"
                 style={{ background: tint, borderColor: ev.color }}
               >
@@ -540,7 +576,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 </div>
               )}
 
-              {!itemsQ.isLoading && dayItems.length === 0 && recurToday.length === 0 && (
+              {!itemsQ.isLoading && allItems.length === 0 && recurToday.length === 0 && (
                 <div className="cald-empty">
                   <strong>Nothing scheduled.</strong>
                   <div>Tap a time slot or the Add button to add an event, focus item, or recurring task.</div>

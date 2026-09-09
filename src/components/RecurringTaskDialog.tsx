@@ -8,6 +8,7 @@ import {
   WEEKDAY_LABELS,
   isoDate,
   type RecurrenceFrequency,
+  type RecurringKind,
   type RecurringTask,
 } from "@/lib/recurring-tasks";
 
@@ -30,6 +31,7 @@ export function RecurringTaskDialog({
   const isEdit = !!task;
   const today = defaultDate ?? isoDate(new Date());
 
+  const [kind, setKind] = useState<RecurringKind>("task");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState("#8A96E0");
@@ -50,6 +52,7 @@ export function RecurringTaskDialog({
     if (!open) return;
     setErr(null);
     if (task) {
+      setKind(task.item_kind === "event" ? "event" : "task");
       setTitle(task.title);
       setNotes(task.notes ?? "");
       setColor(task.color || "#8A96E0");
@@ -63,6 +66,7 @@ export function RecurringTaskDialog({
       setIsActive(task.is_active);
     } else {
       const d = new Date(today + "T00:00:00");
+      setKind("task");
       setTitle("");
       setNotes("");
       setColor("#8A96E0");
@@ -84,7 +88,7 @@ export function RecurringTaskDialog({
 
   const save = async () => {
     if (!userId) { setErr("Please sign in to save."); return; }
-    if (!title.trim()) { setErr("Give this task a name."); return; }
+    if (!title.trim()) { setErr(kind === "event" ? "Give this event a name." : "Give this task a name."); return; }
     if (byWeekday && weekdays.length === 0) { setErr("Pick at least one day of the week."); return; }
     if (!byWeekday && monthDays.length === 0) { setErr("Pick at least one day of the month."); return; }
     if (startTime && endTime && endTime <= startTime) { setErr("End time must be after start time."); return; }
@@ -92,6 +96,7 @@ export function RecurringTaskDialog({
 
     setSaving(true); setErr(null);
     const payload = {
+      item_kind: kind,
       title: title.trim(),
       notes: notes.trim() || null,
       color,
@@ -115,7 +120,7 @@ export function RecurringTaskDialog({
 
   const remove = async () => {
     if (!task) return;
-    if (!confirm("Delete this recurring task and all of its occurrences?")) return;
+    if (!confirm(`Delete this recurring ${kind} and all of its occurrences?`)) return;
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("recurring_tasks" as any).delete().eq("id", task.id);
     setDeleting(false);
@@ -129,15 +134,43 @@ export function RecurringTaskDialog({
       <DialogContent className="sm:max-w-[480px] max-h-[88vh] overflow-y-auto" style={{ fontFamily: "'Poppins',sans-serif" }}>
         <DialogHeader>
           <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>
-            {isEdit ? "Edit recurring task" : "New recurring task"}
+            {isEdit
+              ? kind === "event" ? "Edit recurring event" : "Edit recurring task"
+              : "New recurring item"}
           </DialogTitle>
         </DialogHeader>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={LABEL}>This is a</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {([["task", "Task"], ["event", "Event"]] as const).map(([k, lbl]) => {
+                const active = kind === k;
+                return (
+                  <button key={k} type="button" onClick={() => setKind(k)}
+                    style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      border: active ? "2px solid #181A4D" : "1px solid #E4DFCF",
+                      background: active ? "#181A4D" : "#fff",
+                      color: active ? "#DCE07A" : "#181A4D",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700,
+                    }}>
+                    {lbl}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11.5, color: "#8a8678" }}>
+              {kind === "event"
+                ? "Events show on the calendar timeline at their scheduled time."
+                : "Tasks show in your repeating list with a checkbox to tick off."}
+            </div>
+          </div>
+
           <label style={{ display: "flex", flexDirection: "column", gap: 6, ...LABEL }}>
-            Task name
+            {kind === "event" ? "Event name" : "Task name"}
             <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Call my discipler" style={FIELD} />
+              placeholder={kind === "event" ? "e.g. Small group" : "e.g. Call my discipler"} style={FIELD} />
           </label>
 
           {categories.length > 0 && (
