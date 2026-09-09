@@ -467,6 +467,16 @@ const shiftISODate = (iso: string, delta: number) => {
   return `${y}-${m}-${dd}`;
 };
 
+/** Compact label for the ‹ Today › stepper center: "Today", "Yesterday",
+ *  "Tomorrow", or a short "Sep 8" style date for dates further out. */
+const shortDateLabel = (iso: string) => {
+  const today = todayISO();
+  if (iso === today) return "Today";
+  if (iso === shiftISODate(today, -1)) return "Yesterday";
+  if (iso === shiftISODate(today, 1)) return "Tomorrow";
+  return new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
 const stepBtnStyle: CSSProperties = {
   width: 30, height: 30, borderRadius: 999, border: "1px solid #E4DFCF",
   background: "#fff", color: "#181A4D", fontSize: 17, lineHeight: 1,
