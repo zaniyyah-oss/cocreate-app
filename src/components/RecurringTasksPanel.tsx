@@ -48,6 +48,7 @@ export function RecurringTasksPanel({ userId, defaultDate }: { userId: string | 
               <span className="rt-body">
                 <span className="rt-name">
                   {t.title}
+                  {t.item_kind === "event" && <span className="rt-paused">event</span>}
                   {!t.is_active && <span className="rt-paused">paused</span>}
                 </span>
                 <span className="rt-meta">
