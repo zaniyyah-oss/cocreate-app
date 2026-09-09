@@ -8,6 +8,7 @@ import {
   WEEKDAY_LABELS,
   isoDate,
   type RecurrenceFrequency,
+  type RecurringKind,
   type RecurringTask,
 } from "@/lib/recurring-tasks";
 
