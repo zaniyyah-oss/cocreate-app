@@ -2394,7 +2394,7 @@ export function AddEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
+      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif", maxHeight: "90vh", overflowY: "auto" }}>
         <DialogHeader>
           <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>{isEdit ? (isFocus ? "Edit focus item" : "Edit event") : (isFocus ? "Add focus item" : "Add new event")}</DialogTitle>
         </DialogHeader>
@@ -2930,7 +2930,7 @@ function NewTodoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif" }}>
+      <DialogContent className="sm:max-w-[440px]" style={{ fontFamily: "'Poppins',sans-serif", maxHeight: "90vh", overflowY: "auto" }}>
         <DialogHeader>
           <DialogTitle style={{ color: "#181A4D", fontWeight: 700 }}>New to-do</DialogTitle>
         </DialogHeader>
