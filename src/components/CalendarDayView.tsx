@@ -250,10 +250,18 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   const dateLine = selected.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
   const monthTitle = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const clickHour = (hour: number) => {
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const clickHour = (hour: number, e: React.MouseEvent<HTMLDivElement>) => {
     if (!userId) return;
-    openAdd("event");
-    void hour;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0;
+    const snapped = Math.max(0, Math.min(3, Math.floor(ratio * 4))) * 15;
+    const startMin = hour * 60 + snapped;
+    const endMin = Math.min(23 * 60 + 59, startMin + 60);
+    openAdd("event", {
+      start: `${pad2(Math.floor(startMin / 60))}:${pad2(startMin % 60)}`,
+      end: `${pad2(Math.floor(endMin / 60))}:${pad2(endMin % 60)}`,
+    });
   };
 
   return (
