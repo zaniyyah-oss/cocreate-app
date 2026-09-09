@@ -146,11 +146,16 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
   const [addOpen, setAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState<"event" | "focus">("event");
+  const [addTimes, setAddTimes] = useState<{ start: string; end: string } | null>(null);
   const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
   const [recurAddOpen, setRecurAddOpen] = useState(false);
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
 
-  const openAdd = (kind: "event" | "focus") => { setAddItemType(kind); setAddOpen(true); };
+  const openAdd = (kind: "event" | "focus", times?: { start: string; end: string }) => {
+    setAddItemType(kind);
+    setAddTimes(times ?? null);
+    setAddOpen(true);
+  };
   const onSaved = () => qc.invalidateQueries({ queryKey: ["cal-day"] });
   const onRecurSaved = () => {
     qc.invalidateQueries({ queryKey: ["recurring-tasks"] });
