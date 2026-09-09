@@ -68,7 +68,7 @@ export function TodoStatusSelect({
         onClick={() => setOpen((o) => !o)}
       >
         <span className="de-todo-select-dot" style={{ background: active.swatch }} />
-        {active.label}
+        <span className="de-todo-select-label">{active.label}</span>
         <svg className="de-todo-select-caret" width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
           <path d="M1.5 3 L4.5 6 L7.5 3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
