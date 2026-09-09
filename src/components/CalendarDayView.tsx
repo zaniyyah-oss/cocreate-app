@@ -142,6 +142,17 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     setSelected(d);
     onDateChange?.(isoDate(d));
   };
+  const stepDay = (delta: number) => {
+    const d = new Date(selected);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + delta);
+    pickDate(d);
+  };
+  const goToday = () => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    pickDate(d);
+  };
+  const isToday = isoDate(selected) === isoDate(new Date());
 
 
   const [addOpen, setAddOpen] = useState(false);
