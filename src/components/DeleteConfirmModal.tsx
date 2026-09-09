@@ -68,7 +68,7 @@ export function DeleteConfirmModal({
         </div>
       </div>
       <style>{`
-        .dcm-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;animation:dcmFade .16s ease;}
+        .dcm-overlay{position:fixed;inset:0;background:rgba(16,16,24,0.42);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;animation:dcmFade .16s ease;pointer-events:auto;}
         .dcm-card{background:#FBF8ED;border:1.5px solid #ECE4CE;border-radius:20px;width:100%;max-width:440px;padding:0;overflow:hidden;box-shadow:0 24px 60px -16px rgba(16,16,24,0.4);animation:dcmPop .18s cubic-bezier(.2,.8,.2,1);}
         @keyframes dcmFade{from{opacity:0;}to{opacity:1;}}
         @keyframes dcmPop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
