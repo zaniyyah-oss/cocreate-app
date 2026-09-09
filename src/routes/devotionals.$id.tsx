@@ -69,6 +69,15 @@ function TodoTextArea({
     el.style.height = `${el.scrollHeight}px`;
   };
   useEffect(fit, [value]);
+  // Width changes (rotation, sidebar, focus mode) change how many rows the text
+  // needs, so re-measure whenever the field is resized — not just when typing.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => fit());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <textarea
       ref={ref}
