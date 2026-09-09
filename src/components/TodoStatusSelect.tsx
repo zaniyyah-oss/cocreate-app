@@ -107,7 +107,7 @@ export function TodoStatusSelect({
 /* styles consumed via class names above; component-scoped CSS lives in the route */
 export const TodoStatusSelectStyles = `
 .de-todo-select-wrap{position:relative;grid-column:1;}
-.de-todo-select{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid ${STATUS_BORDER.not_started};border-radius:999px;padding:4px 10px;margin-top:1px;cursor:pointer;background:${STATUS_BG.not_started};color:${STATUS_FG.not_started};outline:none;transition:box-shadow .15s ease;}
+.de-todo-select{display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid ${STATUS_BORDER.not_started};border-radius:999px;padding:4px 10px;margin-top:3px;cursor:pointer;background:${STATUS_BG.not_started};color:${STATUS_FG.not_started};outline:none;transition:box-shadow .15s ease;}
 .de-todo-select:focus-visible{box-shadow:0 0 0 2px rgba(138,150,224,0.45);}
 .de-todo-select[data-s="in_progress"]{background:${STATUS_BG.in_progress};color:${STATUS_FG.in_progress};border-color:${STATUS_BORDER.in_progress};}
 .de-todo-select[data-s="done"]{background:${STATUS_BG.done};color:${STATUS_FG.done};border-color:${STATUS_BORDER.done};}
