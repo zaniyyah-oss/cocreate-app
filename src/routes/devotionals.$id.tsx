@@ -1240,7 +1240,8 @@ function EntryPage() {
                 </button>
               </div>
 
-              {/* Day stepper — works in both Entry and Day view */}
+              {/* Day stepper — Entry view only. Day view shows arrows next to its big date. */}
+              {workspaceMode !== "day" && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <button
                   type="button"
@@ -1280,6 +1281,7 @@ function EntryPage() {
                   </button>
                 )}
               </div>
+              )}
               <Link
                 to="/calendar"
                 style={{
