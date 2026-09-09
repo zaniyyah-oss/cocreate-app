@@ -87,7 +87,7 @@ export function DeleteConfirmModal({
         @media (max-width:480px){.dcm-card{max-width:none;border-radius:0;}}
       `}</style>
     </div>
-  );
+  ), document.body);
 }
 
 export default DeleteConfirmModal;
