@@ -33,9 +33,15 @@ export function DeleteConfirmModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onCancel, busy]);
 
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  return (
+  if (!open || !mounted || typeof document === "undefined") return null;
+
+  // Portalled to <body> so it sits above any dialog it is opened from. Radix
+  // dialogs set pointer-events:none on <body> while open, so the overlay
+  // re-enables them explicitly or the buttons would look clickable but do nothing.
+  return createPortal((
     <div className="dcm-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={() => { if (!busy) onCancel(); }}>
       <div className="dcm-card" onClick={(e) => e.stopPropagation()}>
         <div className="dcm-iconwrap">
