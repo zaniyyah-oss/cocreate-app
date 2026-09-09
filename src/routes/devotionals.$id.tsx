@@ -1250,10 +1250,10 @@ function EntryPage() {
                 </button>
               </div>
 
-              {/* Right-side controls: compact ‹ Today › stepper (Entry view only)
-                  + See calendar link. Day view shows its own arrows next to its
-                  big date, so no stepper here in Day mode. */}
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              {/* Right-side controls stacked vertically: compact ‹ Today › stepper
+                  (Entry view only) above a Full calendar link. Day view shows its
+                  own arrows next to its big date, so no stepper here in Day mode. */}
+              <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                 {workspaceMode !== "day" && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <button
@@ -1297,7 +1297,7 @@ function EntryPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
                   </svg>
-                  See calendar
+                  Full calendar
                 </Link>
               </div>
             </div>
