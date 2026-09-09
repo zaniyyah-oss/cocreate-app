@@ -213,10 +213,45 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
 
   const recurQ = useRecurringTasks(userId);
   const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
-  const recurToday = useMemo(
+  const recurAllToday = useMemo(
     () => (recurQ.data ?? []).filter(t => occursOn(t, selected)),
     [recurQ.data, selectedISO],
   );
+  const recurToday = useMemo(
+    () => recurAllToday.filter(t => t.item_kind !== "event"),
+    [recurAllToday],
+  );
+  const recurEventsToday = useMemo(
+    () => recurAllToday.filter(t => t.item_kind === "event"),
+    [recurAllToday],
+  );
+  const recurById = useMemo(() => {
+    const m = new Map<string, RecurringTask>();
+    for (const t of recurEventsToday) m.set(t.id, t);
+    return m;
+  }, [recurEventsToday]);
+  const recurEventItems: UserEvent[] = useMemo(
+    () => recurEventsToday.map(t => ({
+      id: `recur:${t.id}`,
+      event_date: selectedISO,
+      event_type: "other",
+      title: t.title,
+      color: t.color,
+      notes: t.notes,
+      item_type: "event",
+      start_time: t.start_time,
+      end_time: t.end_time,
+    } as unknown as UserEvent)),
+    [recurEventsToday, selectedISO],
+  );
+  const openEventEditor = (ev: UserEvent) => {
+    if (typeof ev.id === "string" && ev.id.startsWith("recur:")) {
+      const t = recurById.get(ev.id.slice(6));
+      if (t) setRecurEdit(t);
+      return;
+    }
+    setEditEvent(ev);
+  };
   const toggleRecur = async (t: RecurringTask, done: boolean) => {
     if (!userId) return;
     await toggleRecurringCompletion(userId, t.id, selectedISO, done);
