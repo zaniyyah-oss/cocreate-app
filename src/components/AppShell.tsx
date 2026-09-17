@@ -240,8 +240,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
         <aside
           className="app-side"
           aria-label="Primary"
-          onMouseEnter={() => focusActive && setSideRevealed(true)}
-          onMouseLeave={() => focusActive && setSideRevealed(false)}
         >
           <div className="app-side-head">
             <Link to="/" className="app-side-logo">
@@ -249,16 +247,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
             </Link>
             <div className="app-side-head-actions" />
           </div>
-          <button
-            type="button"
-            className="app-side-focus-btn"
-            onClick={() => { setFocusMode((f) => !f); setSideRevealed(false); }}
-            title={focusActive ? "Exit focus mode" : "Enter focus mode"}
-            aria-label={focusActive ? "Exit focus mode" : "Enter focus mode"}
-          >
-            <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-            <span className="lbl">{focusActive ? "Exit focus" : "Focus mode"}</span>
-          </button>
 
           {desktopNav.map((n) => {
             return (
@@ -299,17 +287,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
           {!hideSide && (
             <header className="app-topbar">
               <div className="app-topbar-brand-wrap">
-                {focusActive && (
-                  <button
-                    type="button"
-                    className="app-topbar-menu"
-                    onClick={() => setFocusMode(false)}
-                    aria-label="Exit focus mode"
-                    title="Exit focus mode"
-                  >
-                    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                  </button>
-                )}
                 <Link to="/" className="app-brand">
                   <div className="mark">C</div><div className="word">CoCreate</div>
                 </Link>
