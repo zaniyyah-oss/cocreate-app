@@ -215,18 +215,8 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
 
   const isWorkspace = pathname === "/devotionals" || pathname.startsWith("/devotionals/");
   const isNotes = pathname === "/notes";
-  const focusActive = focusMode;
-  const [sideRevealed, setSideRevealed] = useState(false);
-  const [showFocusHint, setShowFocusHint] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!focusActive) { setShowFocusHint(false); return; }
-    setShowFocusHint(true);
-    const t = window.setTimeout(() => setShowFocusHint(false), 4800);
-    return () => window.clearTimeout(t);
-  }, [focusActive]);
 
   // Close the mobile hamburger menu on route change
   useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -242,22 +232,9 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
   }, [menuOpen]);
 
   return (
-    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${focusActive ? " is-focus" : ""}${focusActive && sideRevealed ? " side-revealed" : ""}${(hideSide || (hideSideWhenSignedOut && !userId)) ? " no-side" : ""}`}>
+    <div className={`app-shell${collapsed ? " collapsed" : ""}${isWorkspace ? " is-workspace" : ""}${isNotes ? " is-notes" : ""}${(hideSide || (hideSideWhenSignedOut && !userId)) ? " no-side" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
-      {focusActive && (
-        <>
-          {showFocusHint && (
-            <div className="app-focus-hint" role="status" aria-live="polite">
-              <svg viewBox="0 0 24 24"><path d="M4 12h10M10 6l-6 6 6 6"/></svg>
-              <span>Focus mode on — hover the left edge to bring the menu back.</span>
-            </div>
-          )}
-          <div
-            className="app-focus-hover-zone"
-            onMouseEnter={() => setSideRevealed(true)}
-          />
-        </>
-      )}
+
       <div className="app-layout">
         {/* Desktop sidebar */}
         <aside
