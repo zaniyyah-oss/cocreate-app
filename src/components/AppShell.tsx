@@ -182,10 +182,6 @@ const STORAGE_KEY = "cocreate:sidebar-collapsed";
 export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed] = useState<boolean>(true);
-  const [focusMode, setFocusMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(FOCUS_KEY) === "1";
-  });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navLabelsQ = usePageContent("site_nav");
   const desktopNav = useMemo(() => buildDesktopNav(navLabelsQ.data ?? {}), [navLabelsQ.data]);
@@ -207,12 +203,6 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
     };
   }, [pathname]);
 
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(FOCUS_KEY, focusMode ? "1" : "0");
-    }
-  }, [focusMode]);
 
   const signOut = async () => { await supabase.auth.signOut(); };
 
