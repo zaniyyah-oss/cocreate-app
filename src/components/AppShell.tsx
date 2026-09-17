@@ -120,52 +120,8 @@ const SHELL_CSS = `
   .app-shell.collapsed .app-side-foot .app-side-foot-actions{flex-direction:column;}
   .app-shell.collapsed .app-side-foot .app-signout,
   .app-shell.collapsed .app-side-foot .app-signin{display:none;}
-
-  /* Focus mode tile in the sidebar (always present to avoid layout jank) */
-  .app-side-focus-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:#0F4A42;border:none;padding:10px 12px;border-radius:10px;margin:0 4px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.02em;transition:background .15s;}
-  .app-side-focus-btn:hover{background:#FBF8ED;}
-  .app-side-focus-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-  .app-shell.collapsed .app-side-focus-btn{padding:10px 0;margin:0 0 14px;}
-  .app-shell.collapsed .app-side-focus-btn .lbl{display:none;}
-
-  /* Focus mode (desktop): sidebar becomes a hidden overlay, revealed on hover of left edge */
-  .app-shell.is-focus .app-layout{grid-template-columns:1fr;}
-  .app-shell.is-focus .app-side{
-    position:fixed;top:0;left:0;height:100vh;width:236px;z-index:60;
-    transform:translateX(-100%);transition:transform .2s ease;
-    box-shadow:0 12px 40px rgba(0,0,0,0.12);
-  }
-  .app-shell.is-focus.collapsed .app-side{width:68px;}
-  .app-shell.is-focus.side-revealed .app-side{transform:translateX(0);}
 }
 
-/* Focus mode: hide chrome so the page fills the screen */
-.app-shell.is-focus .app-topbar{display:none;}
-.app-shell.is-focus .app-bottomnav{display:none;}
-.app-shell.is-focus .app-main{padding-bottom:0;}
-
-/* Hover trigger strip on the far left in focus mode (desktop only, hover-capable) */
-.app-focus-hover-zone{display:none;}
-@media (min-width:1024px) and (hover:hover){
-  .app-shell.is-focus .app-focus-hover-zone{
-    display:block;position:fixed;top:0;left:0;width:14px;height:100vh;z-index:59;
-  }
-}
-
-/* Focus mode hint bubble — shows briefly when entering focus mode */
-.app-focus-hint{
-  position:fixed;top:calc(16px + env(safe-area-inset-top,0));left:50%;transform:translateX(-50%);z-index:70;
-  display:inline-flex;align-items:center;gap:8px;background:#181A4D;color:#fff;
-  border-radius:999px;padding:10px 16px;font-family:'Poppins',sans-serif;
-  font-weight:600;font-size:12.5px;letter-spacing:0.01em;
-  box-shadow:0 8px 24px rgba(0,0,0,0.18);
-  animation:focusHintIn .25s ease-out, focusHintOut .35s ease-in 4.2s forwards;
-  pointer-events:none;max-width:calc(100vw - 32px);text-align:center;
-}
-.app-focus-hint svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-@keyframes focusHintIn{from{opacity:0;transform:translate(-50%,-8px);}to{opacity:1;transform:translate(-50%,0);}}
-@keyframes focusHintOut{to{opacity:0;transform:translate(-50%,-8px);}}
-@media (max-width:1023px){.app-focus-hint{font-size:11.5px;padding:9px 14px;}}
 
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 
