@@ -367,6 +367,32 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     return () => document.removeEventListener("mousedown", onDown);
   }, [menu]);
 
+  // Keep the open popover inside the viewport. The dropdowns are anchored to
+  // their toolbar group with `left:0`; when a group sits near the right edge
+  // (Insert/Table on wide toolbars) or wraps to an odd spot on narrow screens,
+  // the 220px menu can spill past the screen edge and clip its labels. Shift
+  // it horizontally so both edges stay on-screen.
+  useEffect(() => {
+    if (!menu) return;
+    const clamp = () => {
+      const el = document.querySelector<HTMLElement>(".ws-popover");
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vw = window.innerWidth;
+      let dx = 0;
+      if (r.right > vw - 8) dx = vw - 8 - r.right;
+      if (r.left + dx < 8) dx = 8 - r.left;
+      el.style.transform = dx ? `translateX(${dx}px)` : "";
+    };
+    // run after the popover paints
+    const id = requestAnimationFrame(clamp);
+    window.addEventListener("resize", clamp);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("resize", clamp);
+    };
+  }, [menu]);
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
