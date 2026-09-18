@@ -17,6 +17,7 @@ import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
 import { Indent } from "./indent-extension";
 import { Callout } from "./callout-node";
+import { ToggleBlock } from "./toggle-node";
 import { WORKSPACE_EDITOR_CSS } from "./editor-css";
 
 /** Inject the shared note styling once, so every surface renders notes alike. */
@@ -107,6 +108,7 @@ export function WorkspaceEditor({
       TextStyle,
       Color,
       Callout,
+      ToggleBlock,
     ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
@@ -342,6 +344,7 @@ const I = {
   plus: <svg viewBox="0 0 24 24" style={{ width: 15, height: 15 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
   chevron: <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>,
   callout: <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" /><line x1="4" y1="10" x2="20" y2="10" /></svg>,
+  toggle: <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /><line x1="17" y1="6" x2="21" y2="6" /><line x1="17" y1="12" x2="21" y2="12" /><line x1="17" y1="18" x2="21" y2="18" /></svg>,
   table: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="9" y1="10" x2="9" y2="20" /></svg>,
   image: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="M4 17l5-5 4 4 3-3 4 4" /></svg>,
   link: <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></svg>,
@@ -551,6 +554,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         </button>
         {menu === "insert" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertToggle().run(); setMenu(null); }}>{I.toggle}Toggle</button>
             {!inCallout && (
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout</button>
             )}

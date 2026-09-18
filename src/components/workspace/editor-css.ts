@@ -84,6 +84,17 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-editor-content .ws-callout-emoji{font-size:18px;line-height:1.4;user-select:none;flex-shrink:0;}
 .ws-editor-content .ws-callout-body{flex:1;min-width:0;}
 .ws-editor-content .ws-callout-body > *:last-child{margin-bottom:0;}
+.ws-editor-content .ws-toggle{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:start;margin:8px 0;padding:2px 0;}
+.ws-editor-content .ws-toggle-trigger{grid-column:1;width:24px;height:28px;display:flex;align-items:center;justify-content:center;border:0;border-radius:5px;background:transparent;color:#181A4D;cursor:pointer;padding:0;}
+.ws-editor-content .ws-toggle-trigger:hover{background:rgba(24,26,77,0.07);}
+.ws-editor-content .ws-toggle-chevron{font-family:Arial,sans-serif;font-size:23px;line-height:1;transform:rotate(90deg);transition:transform .14s ease;transform-origin:center;}
+.ws-editor-content .ws-toggle[data-open="false"] .ws-toggle-chevron{transform:rotate(0deg);}
+.ws-editor-content .ws-toggle-content{grid-column:2;min-width:0;}
+.ws-editor-content .ws-toggle-content > :first-child{min-height:28px;margin-bottom:4px;font-weight:600;}
+.ws-editor-content .ws-toggle-content > :first-child:empty::before{content:'Toggle';color:#20201C;opacity:.35;}
+.ws-editor-content .ws-toggle[data-open="false"] .ws-toggle-content > :not(:first-child){display:none;}
+.ws-editor-content .ws-toggle-content > :not(:first-child){margin-left:0;}
+.ws-editor-content .ws-toggle .ws-toggle{margin-left:0;}
 
 /* ── Document mode ────────────────────────────────────────────────────
    The reading/writing surface used whenever a note gets the whole screen:
