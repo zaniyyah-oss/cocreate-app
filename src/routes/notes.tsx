@@ -138,8 +138,9 @@ const NOTES_CSS = `
 .nt-panel-body{flex:1;padding:24px 34px 34px;}
 /* Focus mode: the open note takes the whole screen, nothing else visible. */
 .nt-panel.is-focus{position:fixed;inset:0;z-index:120;background:#fff;overflow-y:auto;border-radius:0;display:block;}
-.nt-panel.is-focus .nt-panel-header{position:sticky;top:0;z-index:10;border-radius:0;padding:18px max(24px,4vw) 14px;}
+.nt-panel.is-focus .nt-panel-header{position:relative;border-radius:0;padding:18px max(24px,4vw) 14px;}
 .nt-panel.is-focus .nt-panel-body{max-width:1100px;margin:0 auto;padding:28px max(20px,3vw) 96px;}
+.nt-panel.is-focus .ws-toolbar{position:sticky;top:0;z-index:60;border-radius:0;margin-top:0;}
 
 .nt-panel-title-input{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;color:#20201C;margin-bottom:8px;padding:0;outline:none;letter-spacing:-0.01em;}
 .nt-panel-title-input::placeholder{color:#181A4D;opacity:0.3;}
