@@ -1638,7 +1638,7 @@ function EntryPage() {
                     
                     {focusSection === "pray" ? (
                       <SectionFocusEditor
-                        entryKey={`${dayEntry?.id ?? selectedDate}:pray`}
+                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
                         userId={userId ?? ""}
                         value={prayText}
                         className="de-pray-doc"
@@ -1666,7 +1666,7 @@ function EntryPage() {
                     
                     {focusSection === "todo" ? (
                       <SectionFocusEditor
-                        entryKey={`${dayEntry?.id ?? selectedDate}:todo`}
+                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
                         userId={userId ?? ""}
                         value={todoText}
                         className="de-todo-doc"
