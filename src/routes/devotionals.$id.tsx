@@ -1606,10 +1606,12 @@ function EntryPage() {
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
                       {focusSection === "read" ? (
-                        <ReadFocusEditor
+                        <SectionFocusEditor
                           entryKey={activeEntryId ?? "new"}
                           userId={userId ?? ""}
                           value={scriptureText}
+                          className="de-read-doc"
+                          placeholder="What did you notice? What is God saying?"
                           onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
                         />
                       ) : (
@@ -1634,13 +1636,24 @@ function EntryPage() {
                       {focusBtn("pray")}
                     </div>
                     
-                    <RichTextField
-                      storageKey="pray"
-                      className="de-textarea de-pray-textarea"
-                      placeholder="Speak plainly to God…"
-                      value={prayText}
-                      onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
-                    />
+                    {focusSection === "pray" ? (
+                      <SectionFocusEditor
+                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
+                        userId={userId ?? ""}
+                        value={prayText}
+                        className="de-pray-doc"
+                        placeholder="Speak plainly to God…"
+                        onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
+                      />
+                    ) : (
+                      <RichTextField
+                        storageKey="pray"
+                        className="de-textarea de-pray-textarea"
+                        placeholder="Speak plainly to God…"
+                        value={prayText}
+                        onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
+                      />
+                    )}
                     {statusRow("pray_text")}
                   </div>
 
@@ -1651,13 +1664,24 @@ function EntryPage() {
                       {focusBtn("todo")}
                     </div>
                     
-                    <RichTextField
-                      storageKey="todo"
-                      className="de-textarea short de-todo-textarea"
-                      placeholder="What is God asking you to do today?"
-                      value={todoText}
-                      onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
-                    />
+                    {focusSection === "todo" ? (
+                      <SectionFocusEditor
+                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
+                        userId={userId ?? ""}
+                        value={todoText}
+                        className="de-todo-doc"
+                        placeholder="What is God asking you to do today?"
+                        onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
+                      />
+                    ) : (
+                      <RichTextField
+                        storageKey="todo"
+                        className="de-textarea short de-todo-textarea"
+                        placeholder="What is God asking you to do today?"
+                        value={todoText}
+                        onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
+                      />
+                    )}
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
@@ -3506,16 +3530,20 @@ function ReadTagChips({
   );
 }
 
-/* ---------- Focus-mode Read editor (full rich text bar, like Notes) ---------- */
-function ReadFocusEditor({
+/* ---------- Focus-mode section editor (full rich text bar, like Notes) ---------- */
+function SectionFocusEditor({
   entryKey,
   userId,
   value,
+  className,
+  placeholder,
   onChange,
 }: {
   entryKey: string;
   userId: string;
   value: string;
+  className?: string;
+  placeholder: string;
   onChange: (html: string) => void;
 }) {
   // Mount once per study: older entries may be plain text, so wrap them into
@@ -3535,17 +3563,17 @@ function ReadFocusEditor({
   }, [entryKey]);
 
   return (
-    <div className="de-read-doc ws-doc">
+    <div className={`${className ?? ""} de-focus-doc ws-doc`}>
       <style>{`
-        .de-read-doc{min-height:min(60vh,560px);}
-        .de-read-doc .ProseMirror{min-height:min(56vh,520px);outline:none;}
+        .de-focus-doc{min-height:min(60vh,560px);}
+        .de-focus-doc .ProseMirror{min-height:min(56vh,520px);outline:none;}
       `}</style>
       <WorkspaceEditor
         key={entryKey}
         userId={userId}
         initialJSON={initial as unknown as any}
         ignoreExternalUpdates
-        placeholder="What did you notice? What is God saying?"
+        placeholder={placeholder}
         onChange={(_json, _text, html) => onChange(html)}
       />
     </div>
