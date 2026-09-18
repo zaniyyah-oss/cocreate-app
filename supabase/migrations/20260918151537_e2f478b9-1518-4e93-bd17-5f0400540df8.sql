@@ -1,0 +1,1 @@
+GRANT SELECT ON TABLE public.devotional_templates TO anon, authenticated;
