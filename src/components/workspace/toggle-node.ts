@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -55,15 +56,19 @@ export const ToggleBlock = Node.create({
     return {
       insertToggle:
         () =>
-        ({ commands }) =>
-          commands.insertContent({
-            type: this.name,
-            attrs: { open: true },
-            content: [
-              { type: "paragraph", content: [{ type: "text", text: "Toggle" }] },
-              { type: "paragraph" },
-            ],
-          }),
+        ({ state, dispatch }) => {
+          const paragraph = state.schema.nodes.paragraph;
+          if (!paragraph) return false;
+          const summary = paragraph.create(null, state.schema.text("Toggle"));
+          const body = paragraph.create();
+          const toggle = this.type.create({ open: true }, [summary, body]);
+          const tr = state.tr.replaceSelectionWith(toggle, false);
+          const toggleStart = tr.selection.from - toggle.nodeSize;
+          const summaryStart = toggleStart + 2;
+          tr.setSelection(TextSelection.create(tr.doc, summaryStart, summaryStart + 6));
+          if (dispatch) dispatch(tr.scrollIntoView());
+          return true;
+        },
     };
   },
 
