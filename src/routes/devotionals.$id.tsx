@@ -1605,24 +1605,14 @@ function EntryPage() {
                         value={scriptureRef}
                         onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
                       />
-                      {focusSection === "read" ? (
-                        <SectionFocusEditor
-                          entryKey={activeEntryId ?? "new"}
-                          userId={userId ?? ""}
-                          value={scriptureText}
-                          className="de-read-doc"
-                          placeholder="What did you notice? What is God saying?"
-                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
-                        />
-                      ) : (
-                        <RichTextField
-                          storageKey="scripture"
-                          className="de-textarea"
-                          placeholder="Start writing — your study saves as you go."
-                          value={scriptureText}
-                          onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
-                        />
-                      )}
+                      <SectionRichEditor
+                        entryKey={activeEntryId ?? "new"}
+                        userId={userId ?? ""}
+                        value={scriptureText}
+                        className={`de-read-doc${focusSection === "read" ? " is-focus" : " is-inline"}`}
+                        placeholder="What did you notice? What is God saying?"
+                        onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
+                      />
 
                       {statusRow("scripture_text")}
                     </div>
@@ -1636,24 +1626,14 @@ function EntryPage() {
                       {focusBtn("pray")}
                     </div>
                     
-                    {focusSection === "pray" ? (
-                      <SectionFocusEditor
-                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
-                        userId={userId ?? ""}
-                        value={prayText}
-                        className="de-pray-doc"
-                        placeholder="Speak plainly to God…"
-                        onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
-                      />
-                    ) : (
-                      <RichTextField
-                        storageKey="pray"
-                        className="de-textarea de-pray-textarea"
-                        placeholder="Speak plainly to God…"
-                        value={prayText}
-                        onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
-                      />
-                    )}
+                    <SectionRichEditor
+                      entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
+                      userId={userId ?? ""}
+                      value={prayText}
+                      className={`de-pray-doc${focusSection === "pray" ? " is-focus" : " is-inline"}`}
+                      placeholder="Speak plainly to God…"
+                      onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
+                    />
                     {statusRow("pray_text")}
                   </div>
 
@@ -1664,24 +1644,14 @@ function EntryPage() {
                       {focusBtn("todo")}
                     </div>
                     
-                    {focusSection === "todo" ? (
-                      <SectionFocusEditor
-                        entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
-                        userId={userId ?? ""}
-                        value={todoText}
-                        className="de-todo-doc"
-                        placeholder="What is God asking you to do today?"
-                        onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
-                      />
-                    ) : (
-                      <RichTextField
-                        storageKey="todo"
-                        className="de-textarea short de-todo-textarea"
-                        placeholder="What is God asking you to do today?"
-                        value={todoText}
-                        onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
-                      />
-                    )}
+                    <SectionRichEditor
+                      entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
+                      userId={userId ?? ""}
+                      value={todoText}
+                      className={`de-todo-doc${focusSection === "todo" ? " is-focus" : " is-inline"}`}
+                      placeholder="What is God asking you to do today?"
+                      onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
+                    />
                     {statusRow("todo_text")}
 
                     <div className="de-todos">
@@ -3530,8 +3500,8 @@ function ReadTagChips({
   );
 }
 
-/* ---------- Focus-mode section editor (full rich text bar, like Notes) ---------- */
-function SectionFocusEditor({
+/* ---------- Shared section editor: identical content and interactions inline or focused ---------- */
+function SectionRichEditor({
   entryKey,
   userId,
   value,
@@ -3563,10 +3533,14 @@ function SectionFocusEditor({
   }, [entryKey]);
 
   return (
-    <div className={`${className ?? ""} de-focus-doc ws-doc`}>
+    <div className={`${className ?? ""} de-section-doc ws-doc`}>
       <style>{`
-        .de-focus-doc{min-height:min(60vh,560px);}
-        .de-focus-doc .ProseMirror{min-height:min(56vh,520px);outline:none;}
+        .de-section-doc.is-focus{min-height:min(60vh,560px);}
+        .de-section-doc.is-focus .ProseMirror{min-height:min(56vh,520px);outline:none;}
+        .de-section-doc.is-inline{min-width:0;}
+        .de-section-doc.is-inline .ws-toolbar{position:relative;top:auto;z-index:20;margin-bottom:8px;}
+        .de-section-doc.is-inline .ws-editor-content{min-height:120px;max-height:42vh;overflow-y:auto;padding-top:8px;}
+        @media (min-width:1200px){.de-section-doc.is-inline .ws-editor-content{max-height:56vh;}}
       `}</style>
       <WorkspaceEditor
         key={entryKey}
