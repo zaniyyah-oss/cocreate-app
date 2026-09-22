@@ -11,6 +11,7 @@ import {
   type EventCategory,
 } from "@/lib/event-categories";
 import { deleteStudyOnly } from "@/lib/study-delete";
+import { useRecurringOccurrences } from "@/lib/recurring-tasks";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
