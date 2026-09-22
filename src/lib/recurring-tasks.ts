@@ -145,6 +145,16 @@ export function useRecurringTasks(userId: string | null) {
   });
 }
 
+/** Recurring items expanded across a date range: ISO date -> items that day. */
+export function useRecurringOccurrences(userId: string | null, startISO: string, endISO: string) {
+  const tasksQ = useRecurringTasks(userId);
+  const tasks = tasksQ.data ?? [];
+  return useMemo(
+    () => expandOccurrences(tasks, startISO, endISO),
+    [tasks, startISO, endISO],
+  );
+}
+
 export function useRecurringCompletions(userId: string | null, startISO: string, endISO: string) {
   return useQuery({
     queryKey: ["recurring-task-completions", userId, startISO, endISO],
