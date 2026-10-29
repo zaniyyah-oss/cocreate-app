@@ -9,11 +9,11 @@ export type NavKey = "home" | "read" | "explore" | "devotionals" | "calendar" | 
 // Calendar: grid + today dot. Notes: pencil.
 const ICON = {
   home:        <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>,
-  devotionals: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>,
+  devotionals: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>,
   read:        <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg>,
   calendar:    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg>,
   notes:       <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg>,
-  explore:     <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
+  explore:     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/></svg>,
   saved:       <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
   library:     <svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 15-4-1z"/></svg>,
   messages:    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
@@ -22,9 +22,9 @@ const ICON = {
 
 function buildMobileNav(labels: Record<string, string>) {
   return [
-    { key: "home" as const,        label: labels.home_label        || "Home",      to: "/" },
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals" },
     { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read" },
+    { key: "explore" as const,     label: labels.home_label        || "Explore",   to: "/" },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar" },
     { key: "notes" as const,       label: labels.notes_label       || "Notes",     to: "/notes" },
   ];
@@ -44,7 +44,7 @@ export function MobileBottomNav() {
   return (
     <nav className="app-bottomnav" aria-label="Primary mobile">
       {nav.map((n) => (
-        <Link key={n.key} to={n.to} className={isActive(n) ? "active" : ""} aria-label={n.label} title={n.label}>
+        <Link key={n.key} to={n.to} search={n.to === "/" ? { feed: 1 } : undefined} className={isActive(n) ? "active" : ""} aria-label={n.label} title={n.label}>
           {ICON[n.key]}
         </Link>
       ))}

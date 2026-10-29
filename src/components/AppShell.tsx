@@ -198,7 +198,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
           aria-label="Primary"
         >
           <div className="app-side-head">
-            <Link to="/" className="app-side-logo">
+            <Link to={userId ? "/devotionals" : "/"} className="app-side-logo">
               <div className="mark">C</div><div className="word">CoCreate</div>
             </Link>
             <div className="app-side-head-actions" />
@@ -243,7 +243,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
           {!hideSide && (
             <header className="app-topbar">
               <div className="app-topbar-brand-wrap">
-                <Link to="/" className="app-brand">
+                <Link to={userId ? "/devotionals" : "/"} className="app-brand">
                   <div className="mark">C</div><div className="word">CoCreate</div>
                 </Link>
               </div>
