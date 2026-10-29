@@ -12,6 +12,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { feed?: number } =>
+    search.feed ? { feed: 1 } : {},
   component: HomePage,
   head: () => ({
     meta: [
@@ -1192,9 +1194,18 @@ function SiteFooter() {
 function HomePage() {
   const topicsQ = useTopics();
   const [signedIn, setSignedIn] = useState(false);
+  const { feed } = Route.useSearch();
+  const homeNavigate = useNavigate();
+  // Signed-in users land on the daily workspace unless they explicitly opened the feed.
+  const [redirecting, setRedirecting] = useState(!feed);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session?.user.id));
+    supabase.auth.getSession().then(({ data }) => {
+      const has = !!data.session?.user.id;
+      setSignedIn(has);
+      if (has && !feed) homeNavigate({ to: "/devotionals", replace: true });
+      else setRedirecting(false);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s?.user.id));
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -1202,6 +1213,8 @@ function HomePage() {
 
   const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
 
+
+  if (redirecting) return null;
 
   return (
     <AppShell current="home" hideSide>
