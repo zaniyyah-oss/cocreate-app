@@ -9,7 +9,7 @@ export const Route = createFileRoute("/collections/$slug")({
   component: CollectionPage,
   errorComponent: ({ error }) => (
     <AppShell current="explore">
-      <div style={{ padding: 40 }}>Something went wrong: {error.message}</div>
+      <div style={{ padding: 40 }}>Something went wrong: {error instanceof Error ? error.message : String(error)}</div>
     </AppShell>
   ),
   notFoundComponent: () => (

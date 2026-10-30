@@ -106,7 +106,7 @@ export const Route = createFileRoute("/devotionals/$id")({
   errorComponent: ({ error }) => (
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins,sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This devotional didn't load</h1>
-      <p style={{ color: "#8a8678" }}>{error.message}</p>
+      <p style={{ color: "#8a8678" }}>{error instanceof Error ? error.message : String(error)}</p>
       <Link to="/devotionals" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Devotionals</Link>
     </div>
   ),
@@ -1371,10 +1371,10 @@ function EntryPage() {
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
                 </div>
-                <RichTextField
-                  storageKey="where"
-                  className="de-textarea"
-                  allowImages
+                <SectionRichEditor
+                  entryKey={`${dayFieldsEntry?.id ?? selectedDate}:where`}
+                  userId={userId ?? ""}
+                  className={`de-where-doc${focusSection === "where" ? " is-focus" : " is-inline"}`}
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
                   onChange={(html) => { setWhereText(html); scheduleSave("where_text", html); }}

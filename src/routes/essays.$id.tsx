@@ -11,7 +11,7 @@ export const Route = createFileRoute("/essays/$id")({
     <div style={pageWrap}>
       <div style={{ maxWidth: 640, margin: "80px auto", textAlign: "center" }}>
         <h1 style={{ fontSize: 22, color: "#181A4D", fontWeight: 900 }}>This essay didn't load</h1>
-        <p style={{ color: "#8a8678", marginTop: 8 }}>{error.message}</p>
+        <p style={{ color: "#8a8678", marginTop: 8 }}>{error instanceof Error ? error.message : String(error)}</p>
         <Link to="/" style={backLink}>Back to Home</Link>
       </div>
     </div>

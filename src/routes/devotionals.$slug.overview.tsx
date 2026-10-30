@@ -8,7 +8,7 @@ export const Route = createFileRoute("/devotionals/$slug/overview")({
   component: OverviewPage,
   errorComponent: ({ error }) => (
     <AppShell current="devotionals">
-      <div style={{ padding: 40 }}>Something went wrong: {error.message}</div>
+      <div style={{ padding: 40 }}>Something went wrong: {error instanceof Error ? error.message : String(error)}</div>
     </AppShell>
   ),
   notFoundComponent: () => (
