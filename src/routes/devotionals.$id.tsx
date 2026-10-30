@@ -1371,10 +1371,10 @@ function EntryPage() {
                   <span className="de-badge where">where are you</span>
                   {focusBtn("where")}
                 </div>
-                <RichTextField
-                  storageKey="where"
-                  className="de-textarea"
-                  allowImages
+                <SectionRichEditor
+                  entryKey={`${dayFieldsEntry?.id ?? selectedDate}:where`}
+                  userId={userId ?? ""}
+                  className={`de-where-doc${focusSection === "where" ? " is-focus" : " is-inline"}`}
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
                   onChange={(html) => { setWhereText(html); scheduleSave("where_text", html); }}
