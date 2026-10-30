@@ -14,7 +14,7 @@ export const Route = createFileRoute("/topics/$slug")({
   errorComponent: ({ error }) => (
     <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins,sans-serif", padding: 80, textAlign: "center" }}>
       <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This topic didn't load</h1>
-      <p style={{ color: "#8a8678" }}>{error.message}</p>
+      <p style={{ color: "#8a8678" }}>{error instanceof Error ? error.message : String(error)}</p>
       <Link to="/explore" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Explore</Link>
     </div>
   ),
