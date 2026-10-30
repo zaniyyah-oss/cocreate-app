@@ -9,133 +9,53 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WatchRouteImport } from './routes/watch'
-import { Route as TourRouteImport } from './routes/tour'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as SavedRouteImport } from './routes/saved'
-import { Route as ReadRouteImport } from './routes/read'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as NotesRouteImport } from './routes/notes'
-import { Route as MessagesRouteImport } from './routes/messages'
-import { Route as ListenRouteImport } from './routes/listen'
-import { Route as GroupsRouteImport } from './routes/groups'
-import { Route as FriendsRouteImport } from './routes/friends'
-import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as DevotionalsRouteImport } from './routes/devotionals'
-import { Route as CalendarRouteImport } from './routes/calendar'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DevotionalsIndexRouteImport } from './routes/devotionals.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as DevotionalsRouteImport } from './routes/devotionals'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as FriendsRouteImport } from './routes/friends'
+import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as ListenRouteImport } from './routes/listen'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as NotesRouteImport } from './routes/notes'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ReadRouteImport } from './routes/read'
+import { Route as SavedRouteImport } from './routes/saved'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as TourRouteImport } from './routes/tour'
+import { Route as WatchRouteImport } from './routes/watch'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
-import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
-import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
-import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
-import { Route as PlansNewRouteImport } from './routes/plans.new'
-import { Route as EssaysIdRouteImport } from './routes/essays.$id'
-import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
-import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
-import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
-import { Route as AdminPageContentRouteImport } from './routes/admin.page-content'
-import { Route as AdminNewRouteImport } from './routes/admin.new'
-import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
-import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
+import { Route as AdminContentRouteImport } from './routes/admin.content'
+import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
+import { Route as AdminNewRouteImport } from './routes/admin.new'
+import { Route as AdminPageContentRouteImport } from './routes/admin.page-content'
+import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
+import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
+import { Route as DevotionalsIndexRouteImport } from './routes/devotionals.index'
+import { Route as DevotionalsIdRouteImport } from './routes/devotionals.$id'
+import { Route as EssaysIdRouteImport } from './routes/essays.$id'
+import { Route as PlansNewRouteImport } from './routes/plans.new'
+import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
+import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
+import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
+import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
-import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
-import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
-import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
-import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
-import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
-import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
 import { Route as AdminCollectionsIdRouteImport } from './routes/admin.collections.$id'
+import { Route as AdminCollectionsNewRouteImport } from './routes/admin.collections.new'
+import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
+import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotionals.$slug.overview'
+import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
+import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
+import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
 
-const WatchRoute = WatchRouteImport.update({
-  id: '/watch',
-  path: '/watch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TourRoute = TourRouteImport.update({
-  id: '/tour',
-  path: '/tour',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SavedRoute = SavedRouteImport.update({
-  id: '/saved',
-  path: '/saved',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReadRoute = ReadRouteImport.update({
-  id: '/read',
-  path: '/read',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotesRoute = NotesRouteImport.update({
-  id: '/notes',
-  path: '/notes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MessagesRoute = MessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ListenRoute = ListenRouteImport.update({
-  id: '/listen',
-  path: '/listen',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GroupsRoute = GroupsRouteImport.update({
-  id: '/groups',
-  path: '/groups',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FriendsRoute = FriendsRouteImport.update({
-  id: '/friends',
-  path: '/friends',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevotionalsRoute = DevotionalsRouteImport.update({
-  id: '/devotionals',
-  path: '/devotionals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarRoute = CalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -143,84 +63,94 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevotionalsIndexRoute = DevotionalsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DevotionalsRoute,
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevotionalsRoute = DevotionalsRouteImport.update({
+  id: '/devotionals',
+  path: '/devotionals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FriendsRoute = FriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListenRoute = ListenRouteImport.update({
+  id: '/listen',
+  path: '/listen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadRoute = ReadRouteImport.update({
+  id: '/read',
+  path: '/read',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TourRoute = TourRouteImport.update({
+  id: '/tour',
+  path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchRoute = WatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const TopicsSlugRoute = TopicsSlugRouteImport.update({
-  id: '/topics/$slug',
-  path: '/topics/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeachingsIdRoute = TeachingsIdRouteImport.update({
-  id: '/teachings/$id',
-  path: '/teachings/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReadAbbrRoute = ReadAbbrRouteImport.update({
-  id: '/$abbr',
-  path: '/$abbr',
-  getParentRoute: () => ReadRoute,
-} as any)
-const PodcastsIdRoute = PodcastsIdRouteImport.update({
-  id: '/podcasts/$id',
-  path: '/podcasts/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlansNewRoute = PlansNewRouteImport.update({
-  id: '/plans/new',
-  path: '/plans/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EssaysIdRoute = EssaysIdRouteImport.update({
-  id: '/essays/$id',
-  path: '/essays/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DevotionalsRoute,
-} as any)
-const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
-  id: '/collections/$slug',
-  path: '/collections/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth_/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminPageContentRoute = AdminPageContentRouteImport.update({
-  id: '/page-content',
-  path: '/page-content',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNewRoute = AdminNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminInvitesRoute = AdminInvitesRouteImport.update({
-  id: '/invites',
-  path: '/invites',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminContentRoute = AdminContentRouteImport.update({
-  id: '/content',
-  path: '/content',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCollectionsRoute = AdminCollectionsRouteImport.update({
@@ -228,45 +158,115 @@ const AdminCollectionsRoute = AdminCollectionsRouteImport.update({
   path: '/collections',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInvitesRoute = AdminInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNewRoute = AdminNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPageContentRoute = AdminPageContentRouteImport.update({
+  id: '/page-content',
+  path: '/page-content',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth_/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevotionalsIndexRoute = DevotionalsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
+const DevotionalsIdRoute = DevotionalsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
+const EssaysIdRoute = EssaysIdRouteImport.update({
+  id: '/essays/$id',
+  path: '/essays/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansNewRoute = PlansNewRouteImport.update({
+  id: '/plans/new',
+  path: '/plans/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PodcastsIdRoute = PodcastsIdRouteImport.update({
+  id: '/podcasts/$id',
+  path: '/podcasts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadAbbrRoute = ReadAbbrRouteImport.update({
+  id: '/$abbr',
+  path: '/$abbr',
+  getParentRoute: () => ReadRoute,
+} as any)
+const TeachingsIdRoute = TeachingsIdRouteImport.update({
+  id: '/teachings/$id',
+  path: '/teachings/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TopicsSlugRoute = TopicsSlugRouteImport.update({
+  id: '/topics/$slug',
+  path: '/topics/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminCollectionsRoute,
-} as any)
-const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
-  id: '/plans/focus/$date',
-  path: '/plans/focus/$date',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlansIdEditRoute = PlansIdEditRouteImport.update({
-  id: '/plans/$id/edit',
-  path: '/plans/$id/edit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
-  id: '/focus/$id',
-  path: '/focus/$id',
-  getParentRoute: () => DevotionalsRoute,
-} as any)
-const DevotionalsSlugOverviewRoute = DevotionalsSlugOverviewRouteImport.update({
-  id: '/$slug/overview',
-  path: '/$slug/overview',
-  getParentRoute: () => DevotionalsRoute,
-} as any)
-const AdminEditIdRoute = AdminEditIdRouteImport.update({
-  id: '/edit/$id',
-  path: '/edit/$id',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCollectionsNewRoute = AdminCollectionsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
   getParentRoute: () => AdminCollectionsRoute,
 } as any)
 const AdminCollectionsIdRoute = AdminCollectionsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminCollectionsRoute,
+} as any)
+const AdminCollectionsNewRoute = AdminCollectionsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminCollectionsRoute,
+} as any)
+const AdminEditIdRoute = AdminEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const DevotionalsSlugOverviewRoute = DevotionalsSlugOverviewRouteImport.update({
+  id: '/$slug/overview',
+  path: '/$slug/overview',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
+const DevotionalsFocusIdRoute = DevotionalsFocusIdRouteImport.update({
+  id: '/focus/$id',
+  path: '/focus/$id',
+  getParentRoute: () => DevotionalsRoute,
+} as any)
+const PlansIdEditRoute = PlansIdEditRouteImport.update({
+  id: '/plans/$id/edit',
+  path: '/plans/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
+  id: '/plans/focus/$date',
+  path: '/plans/focus/$date',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -570,123 +570,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/watch': {
-      id: '/watch'
-      path: '/watch'
-      fullPath: '/watch'
-      preLoaderRoute: typeof WatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tour': {
-      id: '/tour'
-      path: '/tour'
-      fullPath: '/tour'
-      preLoaderRoute: typeof TourRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saved': {
-      id: '/saved'
-      path: '/saved'
-      fullPath: '/saved'
-      preLoaderRoute: typeof SavedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/read': {
-      id: '/read'
-      path: '/read'
-      fullPath: '/read'
-      preLoaderRoute: typeof ReadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notes': {
-      id: '/notes'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof NotesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/messages': {
-      id: '/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof MessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/listen': {
-      id: '/listen'
-      path: '/listen'
-      fullPath: '/listen'
-      preLoaderRoute: typeof ListenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/groups': {
-      id: '/groups'
-      path: '/groups'
-      fullPath: '/groups'
-      preLoaderRoute: typeof GroupsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/friends': {
-      id: '/friends'
-      path: '/friends'
-      fullPath: '/friends'
-      preLoaderRoute: typeof FriendsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/devotionals': {
-      id: '/devotionals'
-      path: '/devotionals'
-      fullPath: '/devotionals'
-      preLoaderRoute: typeof DevotionalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar': {
-      id: '/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof CalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -696,116 +584,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/devotionals/': {
-      id: '/devotionals/'
-      path: '/'
-      fullPath: '/devotionals/'
-      preLoaderRoute: typeof DevotionalsIndexRouteImport
-      parentRoute: typeof DevotionalsRoute
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devotionals': {
+      id: '/devotionals'
+      path: '/devotionals'
+      fullPath: '/devotionals'
+      preLoaderRoute: typeof DevotionalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/friends': {
+      id: '/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof FriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listen': {
+      id: '/listen'
+      path: '/listen'
+      fullPath: '/listen'
+      preLoaderRoute: typeof ListenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/read': {
+      id: '/read'
+      path: '/read'
+      fullPath: '/read'
+      preLoaderRoute: typeof ReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tour': {
+      id: '/tour'
+      path: '/tour'
+      fullPath: '/tour'
+      preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch': {
+      id: '/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof WatchRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/topics/$slug': {
-      id: '/topics/$slug'
-      path: '/topics/$slug'
-      fullPath: '/topics/$slug'
-      preLoaderRoute: typeof TopicsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/teachings/$id': {
-      id: '/teachings/$id'
-      path: '/teachings/$id'
-      fullPath: '/teachings/$id'
-      preLoaderRoute: typeof TeachingsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/read/$abbr': {
-      id: '/read/$abbr'
-      path: '/$abbr'
-      fullPath: '/read/$abbr'
-      preLoaderRoute: typeof ReadAbbrRouteImport
-      parentRoute: typeof ReadRoute
-    }
-    '/podcasts/$id': {
-      id: '/podcasts/$id'
-      path: '/podcasts/$id'
-      fullPath: '/podcasts/$id'
-      preLoaderRoute: typeof PodcastsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plans/new': {
-      id: '/plans/new'
-      path: '/plans/new'
-      fullPath: '/plans/new'
-      preLoaderRoute: typeof PlansNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/essays/$id': {
-      id: '/essays/$id'
-      path: '/essays/$id'
-      fullPath: '/essays/$id'
-      preLoaderRoute: typeof EssaysIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/devotionals/$id': {
-      id: '/devotionals/$id'
-      path: '/$id'
-      fullPath: '/devotionals/$id'
-      preLoaderRoute: typeof DevotionalsIdRouteImport
-      parentRoute: typeof DevotionalsRoute
-    }
-    '/collections/$slug': {
-      id: '/collections/$slug'
-      path: '/collections/$slug'
-      fullPath: '/collections/$slug'
-      preLoaderRoute: typeof CollectionsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth_/callback': {
-      id: '/auth_/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/page-content': {
-      id: '/admin/page-content'
-      path: '/page-content'
-      fullPath: '/admin/page-content'
-      preLoaderRoute: typeof AdminPageContentRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/new': {
-      id: '/admin/new'
-      path: '/new'
-      fullPath: '/admin/new'
-      preLoaderRoute: typeof AdminNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/invites': {
-      id: '/admin/invites'
-      path: '/invites'
-      fullPath: '/admin/invites'
-      preLoaderRoute: typeof AdminInvitesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/content': {
-      id: '/admin/content'
-      path: '/content'
-      fullPath: '/admin/content'
-      preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/collections': {
@@ -815,53 +717,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invites': {
+      id: '/admin/invites'
+      path: '/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AdminInvitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/new': {
+      id: '/admin/new'
+      path: '/new'
+      fullPath: '/admin/new'
+      preLoaderRoute: typeof AdminNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/page-content': {
+      id: '/admin/page-content'
+      path: '/page-content'
+      fullPath: '/admin/page-content'
+      preLoaderRoute: typeof AdminPageContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/auth_/callback': {
+      id: '/auth_/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/$slug': {
+      id: '/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/collections/$slug'
+      preLoaderRoute: typeof CollectionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devotionals/': {
+      id: '/devotionals/'
+      path: '/'
+      fullPath: '/devotionals/'
+      preLoaderRoute: typeof DevotionalsIndexRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
+    '/devotionals/$id': {
+      id: '/devotionals/$id'
+      path: '/$id'
+      fullPath: '/devotionals/$id'
+      preLoaderRoute: typeof DevotionalsIdRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
+    '/essays/$id': {
+      id: '/essays/$id'
+      path: '/essays/$id'
+      fullPath: '/essays/$id'
+      preLoaderRoute: typeof EssaysIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans/new': {
+      id: '/plans/new'
+      path: '/plans/new'
+      fullPath: '/plans/new'
+      preLoaderRoute: typeof PlansNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/podcasts/$id': {
+      id: '/podcasts/$id'
+      path: '/podcasts/$id'
+      fullPath: '/podcasts/$id'
+      preLoaderRoute: typeof PodcastsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/read/$abbr': {
+      id: '/read/$abbr'
+      path: '/$abbr'
+      fullPath: '/read/$abbr'
+      preLoaderRoute: typeof ReadAbbrRouteImport
+      parentRoute: typeof ReadRoute
+    }
+    '/teachings/$id': {
+      id: '/teachings/$id'
+      path: '/teachings/$id'
+      fullPath: '/teachings/$id'
+      preLoaderRoute: typeof TeachingsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/topics/$slug': {
+      id: '/topics/$slug'
+      path: '/topics/$slug'
+      fullPath: '/topics/$slug'
+      preLoaderRoute: typeof TopicsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/collections/': {
       id: '/admin/collections/'
       path: '/'
       fullPath: '/admin/collections/'
       preLoaderRoute: typeof AdminCollectionsIndexRouteImport
-      parentRoute: typeof AdminCollectionsRoute
-    }
-    '/plans/focus/$date': {
-      id: '/plans/focus/$date'
-      path: '/plans/focus/$date'
-      fullPath: '/plans/focus/$date'
-      preLoaderRoute: typeof PlansFocusDateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plans/$id/edit': {
-      id: '/plans/$id/edit'
-      path: '/plans/$id/edit'
-      fullPath: '/plans/$id/edit'
-      preLoaderRoute: typeof PlansIdEditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/devotionals/focus/$id': {
-      id: '/devotionals/focus/$id'
-      path: '/focus/$id'
-      fullPath: '/devotionals/focus/$id'
-      preLoaderRoute: typeof DevotionalsFocusIdRouteImport
-      parentRoute: typeof DevotionalsRoute
-    }
-    '/devotionals/$slug/overview': {
-      id: '/devotionals/$slug/overview'
-      path: '/$slug/overview'
-      fullPath: '/devotionals/$slug/overview'
-      preLoaderRoute: typeof DevotionalsSlugOverviewRouteImport
-      parentRoute: typeof DevotionalsRoute
-    }
-    '/admin/edit/$id': {
-      id: '/admin/edit/$id'
-      path: '/edit/$id'
-      fullPath: '/admin/edit/$id'
-      preLoaderRoute: typeof AdminEditIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/collections/new': {
-      id: '/admin/collections/new'
-      path: '/new'
-      fullPath: '/admin/collections/new'
-      preLoaderRoute: typeof AdminCollectionsNewRouteImport
       parentRoute: typeof AdminCollectionsRoute
     }
     '/admin/collections/$id': {
@@ -870,6 +828,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/collections/$id'
       preLoaderRoute: typeof AdminCollectionsIdRouteImport
       parentRoute: typeof AdminCollectionsRoute
+    }
+    '/admin/collections/new': {
+      id: '/admin/collections/new'
+      path: '/new'
+      fullPath: '/admin/collections/new'
+      preLoaderRoute: typeof AdminCollectionsNewRouteImport
+      parentRoute: typeof AdminCollectionsRoute
+    }
+    '/admin/edit/$id': {
+      id: '/admin/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/admin/edit/$id'
+      preLoaderRoute: typeof AdminEditIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/devotionals/$slug/overview': {
+      id: '/devotionals/$slug/overview'
+      path: '/$slug/overview'
+      fullPath: '/devotionals/$slug/overview'
+      preLoaderRoute: typeof DevotionalsSlugOverviewRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
+    '/devotionals/focus/$id': {
+      id: '/devotionals/focus/$id'
+      path: '/focus/$id'
+      fullPath: '/devotionals/focus/$id'
+      preLoaderRoute: typeof DevotionalsFocusIdRouteImport
+      parentRoute: typeof DevotionalsRoute
+    }
+    '/plans/$id/edit': {
+      id: '/plans/$id/edit'
+      path: '/plans/$id/edit'
+      fullPath: '/plans/$id/edit'
+      preLoaderRoute: typeof PlansIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans/focus/$date': {
+      id: '/plans/focus/$date'
+      path: '/plans/focus/$date'
+      fullPath: '/plans/focus/$date'
+      preLoaderRoute: typeof PlansFocusDateRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
