@@ -119,8 +119,18 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body suppressHydrationWarning>
+        {/* Wrapper keeps app markup isolated from nodes browser extensions inject into <body>. */}
+        <div id="app-root" suppressHydrationWarning>
+          {children}
+        </div>
+        {/* Remove known extension overlays injected before hydration so React sees the server markup. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.querySelectorAll('#app-root [data-snapjet-overlay]').forEach(function(n){n.remove()})",
+          }}
+        />
         <Scripts />
       </body>
 
