@@ -3309,13 +3309,19 @@ function SectionRichEditor({
   className,
   placeholder,
   onChange,
+  emptyAffordance,
+  forceOpen = false,
 }: {
   entryKey: string;
   userId: string;
   value: string;
   className?: string;
-  placeholder: string;
+  placeholder?: string;
   onChange: (html: string) => void;
+  /** Dashed "start here" row shown in place of an empty editor. */
+  emptyAffordance?: string;
+  /** Keep the editor open even while empty (focus mode). */
+  forceOpen?: boolean;
 }) {
   // Mount once per study: older entries may be plain text, so wrap them into
   // paragraphs so the rich editor keeps the original spacing.
