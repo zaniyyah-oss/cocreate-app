@@ -38,7 +38,7 @@ const CSS = `
 .sl-newfolder input:focus{border-color:#181A4D;}
 .sl-label{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8a8879;margin:0 0 12px;}
 .sl-rail{display:flex;gap:12px;overflow-x:auto;padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid #E7E1CF;}
-.sl-card{flex:0 0 210px;background:#fff;border:1px solid #E7E1CF;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;position:relative;}
+.sl-card{flex:0 0 210px;width:210px;min-width:0;box-sizing:border-box;background:#fff;border:1px solid #E7E1CF;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;position:relative;}
 .sl-card:hover,.sl-card.pinned{border-color:#181A4D;}
 .sl-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-block;margin-bottom:8px;background:#FFE3A3;color:#5c3d00;}
 .sl-chip.topic{background:#D6CDF0;color:#3d2a7a;}
@@ -85,7 +85,7 @@ const CSS = `
   .sl-search.show{display:flex;width:100%;min-width:0;margin-left:0;order:9;}
   .sl-searchbtn{display:inline-flex;}
   .sl-bar .rd-newstudy,.sl-outline{padding:8px 14px;font-size:12px;}
-  .sl-card{flex:0 0 165px;padding:12px 14px;}
+  .sl-card{flex:0 0 165px;width:165px;padding:12px 14px;}
 }
 `;
 
