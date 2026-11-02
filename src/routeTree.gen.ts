@@ -33,6 +33,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TourRouteImport } from './routes/tour'
+import { Route as UpNextRouteImport } from './routes/up-next'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
@@ -177,6 +178,11 @@ const TermsRoute = TermsRouteImport.update({
 const TourRoute = TourRouteImport.update({
   id: '/tour',
   path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UpNextRoute = UpNextRouteImport.update({
+  id: '/up-next',
+  path: '/up-next',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatchRoute = WatchRouteImport.update({
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
+  '/up-next': typeof UpNextRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
+  '/up-next': typeof UpNextRoute
   '/watch': typeof WatchRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/invites': typeof AdminInvitesRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
+  '/up-next': typeof UpNextRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
   '/admin/content': typeof AdminContentRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms'
     | '/tour'
+    | '/up-next'
     | '/watch'
     | '/admin/collections'
     | '/admin/content'
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms'
     | '/tour'
+    | '/up-next'
     | '/watch'
     | '/admin/content'
     | '/admin/invites'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/terms'
     | '/tour'
+    | '/up-next'
     | '/watch'
     | '/admin/collections'
     | '/admin/content'
@@ -634,6 +646,7 @@ export interface RootRouteChildren {
   ShopRoute: typeof ShopRoute
   TermsRoute: typeof TermsRoute
   TourRoute: typeof TourRoute
+  UpNextRoute: typeof UpNextRoute
   WatchRoute: typeof WatchRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -814,6 +827,13 @@ declare module '@tanstack/react-router' {
       path: '/tour'
       fullPath: '/tour'
       preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/up-next': {
+      id: '/up-next'
+      path: '/up-next'
+      fullPath: '/up-next'
+      preLoaderRoute: typeof UpNextRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watch': {
@@ -1084,6 +1104,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRoute: ShopRoute,
   TermsRoute: TermsRoute,
   TourRoute: TourRoute,
+  UpNextRoute: UpNextRoute,
   WatchRoute: WatchRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
