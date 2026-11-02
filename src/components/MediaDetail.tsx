@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { markFinished } from "@/lib/up-next";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
@@ -268,7 +269,7 @@ export function MediaDetail({ id, kind }: { id: string; kind: "teaching" | "podc
                   <div className="col">
                     <div className="lbl">Now playing</div>
                     <div className="ep">{preview.title}</div>
-                    <audio controls src={mediaUrl} preload="metadata" />
+                    <audio controls src={mediaUrl} preload="metadata" onEnded={() => { if (userId) markFinished(userId, id).then(() => qc.invalidateQueries({ queryKey: ["up-next"] })); }} />
                   </div>
                 </div>
               ) : null

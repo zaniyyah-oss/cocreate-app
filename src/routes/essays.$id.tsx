@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { markFinished } from "@/lib/up-next";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
@@ -136,6 +137,23 @@ function EssayPage() {
     document.body.style.background = "#eee9d9";
     return () => { document.body.style.background = ""; };
   }, []);
+
+  // Reaching the bottom of the article marks it finished in Up next (no-op if it isn't saved).
+  useEffect(() => {
+    if (!userId) return;
+    let done = false;
+    const check = () => {
+      const el = bodyRef.current;
+      if (done || !el) return;
+      if (el.getBoundingClientRect().bottom <= window.innerHeight + 40) {
+        done = true;
+        markFinished(userId, id).then(() => qc.invalidateQueries({ queryKey: ["up-next"] }));
+      }
+    };
+    window.addEventListener("scroll", check, { passive: true });
+    const t = window.setTimeout(check, 1500);
+    return () => { window.removeEventListener("scroll", check); window.clearTimeout(t); };
+  }, [userId, id, qc]);
 
   useEffect(() => {
     if (!toast) return;
