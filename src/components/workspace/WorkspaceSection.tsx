@@ -8,6 +8,7 @@ import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { useBibleBooks } from "@/components/BookTagger";
 import { useStudyFolders } from "./ReadStudyLog";
 import { isEmptyStudy, markStudyContinued } from "@/lib/study-log";
+import { MoveToFolderButton } from "./StudyFolders";
 
 export type WorkspaceItem = {
   id: string;
@@ -188,6 +189,13 @@ const CSS = `
 .ws-chiprow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;}
 .ws-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(15,74,66,0.08);color:#0F4A42;font-family:'Poppins',sans-serif;}
 .ws-chip.study,.ws-rc-tag.study{background:#FFE3A3;color:#5c3d00;}
+.ws-badge.study{background:#FFAE00;color:#20201C;}
+.ws-desc .d-lg{display:none;}
+@media (min-width:1024px){.ws-desc.study .d-sm{display:none;}.ws-desc.study .d-lg{display:inline;}.ws-root.studies:not(.is-full) .ws-headfocus{display:none;}}
+.ws-studyhead{display:none;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap;}
+@media (min-width:1024px){.ws-studyhead{display:flex;}.ws-root.studies .ws-chip.study.dup{display:none;}}
+.ws-studydate{font-size:12px;color:#6f6b5e;}
+.ws-studyhead .acts{margin-left:auto;display:flex;gap:6px;}
 .ws-ov-meta{font-size:11px;color:#8a8678;margin-top:14px;padding-top:12px;border-top:1px solid rgba(24,26,77,0.10);}
 `;
 
@@ -256,6 +264,7 @@ export function WorkspaceSection({
   historyEntryId = null,
   openRequest = null,
   logDate,
+  mode = "workspace",
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
@@ -271,7 +280,10 @@ export function WorkspaceSection({
   openRequest?: { id: string; n: number } | null;
   /** Date studies are logged against when edited. */
   logDate?: string;
+  /** "studies" = Read page study workspace: open studies only, no notes. */
+  mode?: "workspace" | "studies";
 }) {
+  const studiesOnly = mode === "studies";
   const isHistory = !!historyEntryId;
   const qc = useQueryClient();
   const [guestItems, setGuestItems] = useState<WorkspaceItem[]>([]);
@@ -289,7 +301,8 @@ export function WorkspaceSection({
     },
   });
 
-  const items = guest ? guestItems : (itemsQ.data ?? []);
+  const allItems = guest ? guestItems : (itemsQ.data ?? []);
+  const items = useMemo(() => (studiesOnly ? allItems.filter((i) => i.kind === "study") : allItems), [allItems, studiesOnly]);
   const { colors: parentTagColors } = useTagColors(userId, guest);
   const booksQ = useBibleBooks();
   const bookName = (abbr: string) => booksQ.data?.find((b) => b.abbreviation === abbr)?.full_name ?? abbr;
@@ -470,26 +483,38 @@ export function WorkspaceSection({
   }, [openRequest, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className={`ws-root ${isFocused ? "is-full" : ""}`}>
+    <div className={`ws-root ${isFocused ? "is-full" : ""}${studiesOnly ? " studies" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <div className="ws-head">
         <div>
-          <span className="ws-badge">workspace</span>
-          <div className="ws-desc">Where you work things out with him — quotes, links, half-formed thoughts.</div>
+          {studiesOnly ? (
+            <>
+              <span className="ws-badge study">study workspace</span>
+              <div className="ws-desc study">
+                <span className="d-sm">The studies you have open. File one away to close it.</span>
+                <span className="d-lg">{openNotes.length} open · file one away to close it</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="ws-badge">workspace</span>
+              <div className="ws-desc">Where you work things out with him — quotes, links, half-formed thoughts.</div>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {onToggleFocus && (
             <button
               type="button"
-              className="ws-focus-btn"
+              className="ws-focus-btn ws-headfocus"
               onClick={onToggleFocus}
               aria-label={isFocused ? "Exit focus mode" : "Focus this section"}
             >
               {isFocused ? "✕ Exit focus" : "⛶ Focus"}
             </button>
           )}
-          {!isHistory && (
+          {!isHistory && !studiesOnly && (
             <button className="ws-newbtn" onClick={() => createItem.mutate()} disabled={createItem.isPending}>
               {createItem.isPending ? "Opening…" : "+ New note"}
             </button>
@@ -497,7 +522,7 @@ export function WorkspaceSection({
         </div>
       </div>
 
-      {!isHistory && (
+      {!isHistory && !studiesOnly && (
         <div className="ws-recent">
           <div className="ws-recent-head">
             <div className="ws-recent-title"><span className="dot" /> Pinned &amp; recent today</div>
@@ -568,13 +593,13 @@ export function WorkspaceSection({
         <div className="ws-empty-body">Loading…</div>
       ) : !activeNote ? (
         <div className="ws-empty-body">
-          {isHistory ? "No notes were created on this day." : "No open notes. Start a new one to begin."}
+          {studiesOnly ? "No studies open. Tap any study above to open it here." : isHistory ? "No notes were created on this day." : "No open notes. Start a new one to begin."}
         </div>
       ) : (
-        <NoteBody key={activeNote.id} item={activeNote} logDate={logDate} folderName={activeNote.folder_id ? folderNames[activeNote.folder_id] : undefined} bookName={bookName} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
+        <NoteBody key={activeNote.id} item={activeNote} logDate={logDate} folderName={activeNote.folder_id ? folderNames[activeNote.folder_id] : undefined} bookName={bookName} studiesMode={studiesOnly} isFocused={isFocused} onToggleFocus={onToggleFocus} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
       )}
 
-      {!isHistory && (
+      {!isHistory && !studiesOnly && (
         <div className="ws-library-strip">
           <div className="ws-library-head">
             <span className="lbl">from your library</span>
@@ -655,7 +680,13 @@ function NoteBody({
   logDate,
   folderName,
   bookName,
+  studiesMode = false,
+  isFocused = false,
+  onToggleFocus,
 }: {
+  studiesMode?: boolean;
+  isFocused?: boolean;
+  onToggleFocus?: () => void;
   logDate?: string;
   folderName?: string;
   bookName?: (abbr: string) => string;
@@ -801,10 +832,11 @@ function NoteBody({
       const { error } = await supabase.from("workspace_items" as any).delete().eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
+    onSuccess: () => { if (!guest) { qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); qc.invalidateQueries({ queryKey: ["study-links"] }); } },
   });
 
   const isStudy = item.kind === "study";
+  const bodyRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef({ title: item.title, text: item.body_text });
   const continuedRef = useRef(false);
   const noteStudyEdit = (text: string) => {
@@ -846,7 +878,19 @@ function NoteBody({
   };
 
   return (
-    <div className="ws-note-body">
+    <div className="ws-note-body" ref={bodyRef}>
+      {studiesMode && (
+        <div className="ws-studyhead">
+          <span className="ws-chip study">Study{folderName ? ` · ${folderName}` : ""}</span>
+          <span className="ws-studydate">{new Date(item.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+          <span className="acts">
+            <button type="button" className="ws-focus-btn" onClick={() => bodyRef.current?.querySelector<HTMLElement>(".ws-editor-content")?.focus()}>✎ Edit</button>
+            {onToggleFocus && (
+              <button type="button" className="ws-focus-btn" onClick={onToggleFocus}>{isFocused ? "✕ Exit focus" : "⛶ Focus"}</button>
+            )}
+          </span>
+        </div>
+      )}
       <input
         className="ws-note-title"
         placeholder={isStudy ? "Untitled study" : "Untitled note"}
@@ -861,7 +905,7 @@ function NoteBody({
 
       {isStudy && (
         <div className="ws-chiprow">
-          <span className="ws-chip study">Study</span>
+          <span className={`ws-chip study${studiesMode ? " dup" : ""}`}>Study</span>
           {folderName && <span className="ws-chip">{folderName}</span>}
           {(item.books_of_bible ?? []).map((b) => (
             <span key={b} className="ws-chip">{bookName ? bookName(b) : b}</span>
@@ -927,6 +971,9 @@ function NoteBody({
 
       <div className="ws-note-actions">
         <button className="ws-linkaction" onClick={async () => { if (guest) { onGuestGate?.("save"); return; } await flushSave(); close.mutate(); }}>Save &amp; file away</button>
+        {isStudy && !guest && (
+          <MoveToFolderButton userId={userId} itemId={item.id} currentFolderId={item.folder_id} />
+        )}
         <button
           className="ws-linkaction del"
           onClick={() => setConfirmDelete(true)}
@@ -938,8 +985,8 @@ function NoteBody({
 
       <DeleteConfirmModal
         open={confirmDelete}
-        title="Delete this note?"
-        message="This note and everything in it will be permanently removed. This can't be undone."
+        title={isStudy ? "Delete this study?" : "Delete this note?"}
+        message={`This ${isStudy ? "study" : "note"} and everything in it will be permanently removed. This can't be undone.`}
         busy={removeItem.isPending}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => { removeItem.mutate(); setConfirmDelete(false); }}

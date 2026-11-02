@@ -35,13 +35,14 @@ export async function markStudyContinued(userId: string, date: string, itemId: s
 }
 
 /** Create a new open study and log it as 'new' for the date. */
-export async function createStudy(userId: string, date: string, entryId: string | null) {
+export async function createStudy(userId: string, date: string, entryId: string | null, folderId: string | null = null) {
   const { data, error } = await supabase
     .from("workspace_items" as any)
     .insert({
       user_id: userId,
       devotional_entry_id: entryId,
       kind: "study",
+      folder_id: folderId,
       title: UNTITLED_STUDY,
       body: {},
       body_text: "",

@@ -993,6 +993,43 @@ function EntryPage() {
     });
   };
 
+  // One shared "find or create" per date, so concurrent saves / workspace
+  // actions never insert two rows for the same day.
+  const entryPromiseRef = useRef<Map<string, Promise<string | null>>>(new Map());
+  const resolveEntryForDate = (date: string): Promise<string | null> => {
+    if (!userId) return Promise.resolve(null);
+    const key = `${userId}:${id}:${date}`;
+    const cached = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? [])
+      .filter((e) => e.entry_date === date && e.template_id === id)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
+    if (cached) return Promise.resolve(cached.id);
+    const existing = entryPromiseRef.current.get(key);
+    if (existing) return existing;
+    const find = async () => {
+      const { data } = await supabase
+        .from("devotional_entries").select("id")
+        .eq("user_id", userId).eq("template_id", id).eq("entry_date", date)
+        .order("created_at", { ascending: true }).limit(1).maybeSingle();
+      return data?.id ?? null;
+    };
+    const p = (async () => {
+      const found = await find();
+      if (found) return found;
+      const { data, error } = await supabase
+        .from("devotional_entries")
+        .insert({ user_id: userId, template_id: id, entry_date: date } as any)
+        .select("*").single();
+      if (error) return find();
+      trackEvent("devotional_entry_created", { template_id: id });
+      if (date === selectedDate) applyEntryPatchToCache(data.id, {}, data as Entry);
+      else qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+      return data.id as string;
+    })();
+    entryPromiseRef.current.set(key, p);
+    p.then((v) => { if (!v) entryPromiseRef.current.delete(key); }, () => entryPromiseRef.current.delete(key));
+    return p;
+  };
+
   const flushEntrySave = async () => {
     if (!userId) return;
     if (entrySaveTimerRef.current) { clearTimeout(entrySaveTimerRef.current); entrySaveTimerRef.current = null; }
@@ -1021,13 +1058,26 @@ function EntryPage() {
         applyEntryPatchToCache(targetId, p);
         return;
       }
-      const { data, error } = await supabase.from("devotional_entries").insert({
-        user_id: userId, template_id: id, entry_date: selectedDate, ...p,
-      } as any).select("*").single();
-      if (error) throw error;
-      trackEvent("devotional_entry_created", { template_id: id });
-      applyEntryPatchToCache(data.id, p, data as Entry);
-      const count = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).length;
+      let data: { id: string };
+      if (isDayRow || !continuing) {
+        // The day's own row: reuse an existing / in-flight entry for this date
+        // instead of inserting a duplicate.
+        const rid = await resolveEntryForDate(selectedDate);
+        if (!rid) throw new Error("Could not resolve today's entry");
+        const { error } = await supabase.from("devotional_entries").update(p as any).eq("id", rid);
+        if (error) throw error;
+        applyEntryPatchToCache(rid, p);
+        data = { id: rid };
+      } else {
+        const ins = await supabase.from("devotional_entries").insert({
+          user_id: userId, template_id: id, entry_date: selectedDate, ...p,
+        } as any).select("*").single();
+        if (ins.error) throw ins.error;
+        trackEvent("devotional_entry_created", { template_id: id });
+        applyEntryPatchToCache(ins.data.id, p, ins.data as Entry);
+        data = ins.data;
+      }
+      const count = (pastQ.data ?? []).length;
       if (isDayRow || !continuing) {
         dayEntryIdRef.current = data.id;
         dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
@@ -1070,26 +1120,7 @@ function EntryPage() {
     if (!userId) return null;
     if (currentEntryIdRef.current) return currentEntryIdRef.current;
     if (currentEntry?.id) return currentEntry.id;
-    const { data, error } = await supabase
-      .from("devotional_entries")
-      .insert({ user_id: userId, template_id: id, entry_date: selectedDate } as any)
-      .select("id")
-      .single();
-    if (error) {
-      // If a row was created concurrently, refetch and use whichever exists
-      await qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
-      const { data: existing } = await supabase
-        .from("devotional_entries")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("template_id", id)
-        .eq("entry_date", selectedDate)
-        .order("created_at", { ascending: true }).limit(1).maybeSingle();
-      return existing?.id ?? null;
-    }
-    trackEvent("devotional_entry_created", { template_id: id });
-    qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
-    return data.id;
+    return resolveEntryForDate(selectedDate);
   };
 
   const scheduleSave = (field: SaveField, value: unknown) => {
@@ -1154,15 +1185,13 @@ function EntryPage() {
     if (!it) return;
     if (!userId) { guestNote("save"); return; }
     const moved: TodoItem = { ...it, due_date: date, written_on: it.written_on ?? selectedDate };
+    const targetId = await resolveEntryForDate(date);
+    if (!targetId) return;
     const { data: existing } = await supabase
-      .from("devotional_entries").select("id, todo_items")
-      .eq("user_id", userId).eq("template_id", id).eq("entry_date", date)
-      .order("created_at", { ascending: true }).limit(1).maybeSingle();
-    const res = existing?.id
-      ? await supabase.from("devotional_entries").update({
-          todo_items: [...(Array.isArray((existing as any).todo_items) ? (existing as any).todo_items : []), moved],
-        } as any).eq("id", existing.id)
-      : await supabase.from("devotional_entries").insert({ user_id: userId, template_id: id, entry_date: date, todo_items: [moved] } as any);
+      .from("devotional_entries").select("id, todo_items").eq("id", targetId).maybeSingle();
+    const res = await supabase.from("devotional_entries").update({
+      todo_items: [...(Array.isArray((existing as any)?.todo_items) ? (existing as any).todo_items : []), moved],
+    } as any).eq("id", targetId);
     if (res.error) { console.error("move to-do failed", res.error); return; }
     removeTodoItem(idx);
     await flushEntrySave();
