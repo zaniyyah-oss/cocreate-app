@@ -7,6 +7,7 @@ import { useAllTopics } from "@/components/TopicPicker";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceSection, type WorkspaceItem } from "@/components/workspace/WorkspaceSection";
 import { createFolder, invalidateFolders, useStudyFolderList } from "@/components/workspace/StudyFolders";
+import { byManualOrder, saveReorder } from "@/lib/manual-order";
 import { createStudy, logStudyOpen, shortDate } from "@/lib/study-log";
 
 type Study = WorkspaceItem & { topic_ids?: string[] | null };
@@ -53,6 +54,8 @@ const CSS = `
 .sl-bible{font-size:13px;font-weight:700;color:#0F4A42;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;}
 .sl-bible:hover{text-decoration:underline;}
 .sl-list{display:flex;flex-direction:column;gap:8px;}
+.sl-row.dragover{border-color:#CAC307;box-shadow:0 -2px 0 #CAC307;}
+.sl-row[draggable="true"]{cursor:grab;}
 .sl-row{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;color:#20201C;}
 .sl-row:hover{border-color:#181A4D;}
 .sl-row.dashed{border-style:dashed;background:transparent;}
@@ -132,7 +135,7 @@ export function StudyLibrary({
     },
   });
   const studies = useMemo(
-    () => ((itemsQ.data ?? []) as Study[]).filter((i) => i.kind === "study"),
+    () => ((itemsQ.data ?? []) as Study[]).filter((i) => i.kind === "study").sort(byManualOrder((a, b) => b.updated_at.localeCompare(a.updated_at))),
     [itemsQ.data],
   );
 
@@ -282,10 +285,27 @@ export function StudyLibrary({
     return studies.filter((s) => (s.title ?? "").toLowerCase().includes(term) || (s.body_text ?? "").toLowerCase().includes(term));
   }, [q, studies]);
 
-  const StudyRow = ({ s }: { s: Study }) => {
+  const dragRef = useRef<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+  const StudyRow = ({ s, sortable = true }: { s: Study; sortable?: boolean }) => {
     const books = (s.books_of_bible ?? []).map(bookName).join(", ");
     return (
-      <button type="button" className="sl-row" onClick={() => openStudy(s.id)}>
+      <button
+        type="button"
+        className={`sl-row${dragOver === s.id ? " dragover" : ""}`}
+        onClick={() => openStudy(s.id)}
+        draggable={sortable}
+        onDragStart={(e) => { dragRef.current = s.id; e.dataTransfer.effectAllowed = "move"; }}
+        onDragOver={(e) => { if (dragRef.current) { e.preventDefault(); if (dragOver !== s.id) setDragOver(s.id); } }}
+        onDragEnd={() => { dragRef.current = null; setDragOver(null); }}
+        onDrop={async (e) => {
+          e.preventDefault();
+          const from = dragRef.current; dragRef.current = null; setDragOver(null);
+          if (!from) return;
+          const ids = await saveReorder(studies, from, s.id);
+          if (ids) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+        }}
+      >
         <span className="txt">
           <div className="nm">{s.status === "open" && <span className="sl-dot" />}{s.title?.trim() || "Untitled study"}</div>
           <div className="sb">{books ? `${books} · ` : ""}edited {relDay(s.updated_at)}</div>
@@ -302,7 +322,7 @@ export function StudyLibrary({
       groups.set(k, [...(groups.get(k) ?? []), s]);
     }
     return [...groups.entries()]
-      .map(([k, arr]) => ({ k, arr: [...arr].sort((a, b) => b.updated_at.localeCompare(a.updated_at)) }))
+      .map(([k, arr]) => ({ k, arr }))
       .sort((a, b) => (a.k ? bookOrder(a.k) : -1) - (b.k ? bookOrder(b.k) : -1));
   };
 
@@ -323,7 +343,7 @@ export function StudyLibrary({
       <>
         <div className="sl-label">Search results · {searchResults.length}</div>
         <div className="sl-list">
-          {searchResults.length === 0 ? <div className="sl-empty">No studies match “{q.trim()}”.</div> : searchResults.map((s) => <StudyRow key={s.id} s={s} />)}
+          {searchResults.length === 0 ? <div className="sl-empty">No studies match “{q.trim()}”.</div> : searchResults.map((s) => <StudyRow key={s.id} s={s} sortable={false} />)}
         </div>
       </>
     );

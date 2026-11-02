@@ -10,6 +10,7 @@ import { TopicPicker } from "@/components/TopicPicker";
 import { useStudyFolders } from "./ReadStudyLog";
 import { isEmptyStudy, markStudyContinued } from "@/lib/study-log";
 import { MoveToFolderButton } from "./StudyFolders";
+import { byManualOrder, saveReorder } from "@/lib/manual-order";
 
 export type WorkspaceItem = {
   id: string;
@@ -28,6 +29,7 @@ export type WorkspaceItem = {
   kind?: "note" | "study";
   folder_id?: string | null;
   books_of_bible?: string[] | null;
+  manual_order?: number | null;
 };
 
 const CSS = `
@@ -42,6 +44,8 @@ const CSS = `
 .ws-notetab{background:none;border:none;padding:0 0 9px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:600;color:#181A4D;opacity:0.5;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
 .ws-notetab:hover{opacity:0.85;}
 .ws-notetab.active{opacity:1;border-bottom-color:#CAC307;}
+.ws-notetab[draggable="true"]{cursor:grab;}
+.ws-notetab.dragover{box-shadow:inset 2px 0 0 #CAC307;opacity:1;}
 
 .ws-note-body{}
 .ws-note-title{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:600;font-size:14.5px;color:#181A4D;margin-bottom:8px;padding:0;outline:none;}
@@ -315,6 +319,8 @@ export function WorkspaceSection({
   const folderNames = useStudyFolders(userId, !guest).data ?? {};
   const [forcedIds, setForcedIds] = useState<string[]>([]);
 
+  const dragTabRef = useRef<string | null>(null);
+  const [dragOverTab, setDragOverTab] = useState<string | null>(null);
   const openNotes = useMemo(
     () => {
       if (isHistory) {
@@ -324,7 +330,7 @@ export function WorkspaceSection({
       }
       return items
         .filter((i) => i.status === "open")
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        .sort(byManualOrder((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
     },
     [items, isHistory, historyEntryId, forcedIds]
   );
@@ -606,8 +612,19 @@ export function WorkspaceSection({
               key={n.id}
               role="tab"
               aria-selected={n.id === activeId}
-              className={`ws-notetab ${n.id === activeId ? "active" : ""}`}
+              className={`ws-notetab ${n.id === activeId ? "active" : ""}${dragOverTab === n.id ? " dragover" : ""}`}
               onClick={() => setActiveId(n.id)}
+              draggable={!guest && !isHistory}
+              onDragStart={(e) => { dragTabRef.current = n.id; e.dataTransfer.effectAllowed = "move"; }}
+              onDragOver={(e) => { if (dragTabRef.current) { e.preventDefault(); setDragOverTab(n.id); } }}
+              onDragLeave={() => setDragOverTab((c) => (c === n.id ? null : c))}
+              onDrop={async (e) => {
+                e.preventDefault();
+                const from = dragTabRef.current; dragTabRef.current = null; setDragOverTab(null);
+                if (!from) return;
+                const ids = await saveReorder(openNotes, from, n.id);
+                if (ids) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+              }}
               title={n.title || "Untitled"}
             >
               {n.kind === "study" && <span className="ws-sdot" aria-label="Study" />}
