@@ -564,6 +564,12 @@ function EntryPage() {
   const search = Route.useSearch();
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
+  // Changing days clears any study id left in the address, so the new day always
+  // loads its own Where / Pray / To-do instead of a study from another day.
+  const goToDate = (iso: string) => {
+    setSelectedDate(iso);
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: iso } as any, replace: true });
+  };
   const [workspaceMode, setWorkspaceMode] = useState<"entry" | "day">("entry");
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
@@ -811,6 +817,13 @@ function EntryPage() {
 
 
   const dayEntryIdRef = useRef<string | null>(null);
+  const selectedDateRef = useRef(selectedDate);
+  selectedDateRef.current = selectedDate;
+  // Bumps after a save settles so a hydration skipped mid-save runs again.
+  const [saveTick, setSaveTick] = useState(0);
+  // Bumps whenever the day's fields are reloaded, so the editors remount with the
+  // loaded text — but never because autosave just created the day's row.
+  const [dayLoadVersion, setDayLoadVersion] = useState(0);
   const continuingRef = useRef(false);
 
   useEffect(() => {
@@ -952,7 +965,7 @@ function EntryPage() {
     const fallback = ((e as any)?.book_confirmed && (e as any)?.book_of_bible) ? [(e as any).book_of_bible as string] : [];
     setBooksOfBible(arr.length > 0 ? arr : fallback);
     setTopicIds(Array.isArray((e as any)?.topic_ids) ? ((e as any).topic_ids as string[]) : []);
-  }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDate, currentEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length, saveTick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Title / Where / Pray / To-Do stay with the day being worked on — continuing a
   // past study never overwrites them. Legacy reflect/apply fields fill in when the
@@ -962,6 +975,7 @@ function EntryPage() {
     const key = `day:${selectedDate}:${dayFieldsEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (dayHydratedRef.current === key) return;
     dayHydratedRef.current = key;
+    setDayLoadVersion((v) => v + 1);
     const e = dayFieldsEntry;
     setEntryTitle(e?.entry_title ?? "");
     setEntrySubtitle(e?.entry_subtitle ?? "");
@@ -972,7 +986,7 @@ function EntryPage() {
     // were written so future days stay clear for planning.
     const own = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(own);
-  }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length, saveTick]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
@@ -1037,6 +1051,11 @@ function EntryPage() {
     // the day, or a past study being continued), Read edits go to that study and
     // Pray / To-Do / Where / title go to the day's own row.
     const continuing = continuingRef.current;
+    // Capture the target rows now: if the day changes while this save is in
+    // flight, the refs move to the new day and must not receive this text.
+    const readTargetId = currentEntryIdRef.current;
+    const dayTargetId = dayEntryIdRef.current;
+    const saveDate = selectedDate;
     const readPatch: Record<string, unknown> = {};
     const dayPatch: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(patch)) {
@@ -1056,7 +1075,7 @@ function EntryPage() {
       if (isDayRow || !continuing) {
         // The day's own row: reuse an existing / in-flight entry for this date
         // instead of inserting a duplicate.
-        const rid = await resolveEntryForDate(selectedDate);
+        const rid = await resolveEntryForDate(saveDate);
         if (!rid) throw new Error("Could not resolve today's entry");
         const { error } = await supabase.from("devotional_entries").update(p as any).eq("id", rid);
         if (error) throw error;
@@ -1072,6 +1091,7 @@ function EntryPage() {
         data = ins.data;
       }
       const count = (pastQ.data ?? []).length;
+      if (saveDate !== selectedDateRef.current) return;
       if (isDayRow || !continuing) {
         dayEntryIdRef.current = data.id;
         dayHydratedRef.current = `day:${selectedDate}:${data.id}:${templateQ.data?.id ?? ""}:${count}`;
@@ -1088,10 +1108,10 @@ function EntryPage() {
 
     try {
       if (!continuing) {
-        await writeTo(currentEntryIdRef.current, patch, false);
+        await writeTo(readTargetId, patch, false);
       } else {
-        await writeTo(currentEntryIdRef.current, readPatch, false);
-        await writeTo(dayEntryIdRef.current, dayPatch, true);
+        await writeTo(readTargetId, readPatch, false);
+        await writeTo(dayTargetId, dayPatch, true);
       }
 
       const key = Object.keys(patch)[0];
@@ -1105,6 +1125,7 @@ function EntryPage() {
     } finally {
       entrySaveInFlightRef.current = false;
       if (pendingEntryPatchRef.current) void flushEntrySave();
+      else setSaveTick((t) => t + 1);
     }
   };
 
@@ -1116,6 +1137,10 @@ function EntryPage() {
     if (currentEntry?.id) return currentEntry.id;
     return resolveEntryForDate(selectedDate);
   };
+
+  const flushRef = useRef<() => Promise<void>>(async () => {});
+  flushRef.current = flushEntrySave;
+  useEffect(() => { const flushForThisDay = flushRef.current; return () => { void flushForThisDay(); }; }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scheduleSave = (field: SaveField, value: unknown) => {
     if (!ready) return;
@@ -1280,7 +1305,7 @@ function EntryPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSelectedDate(todayISO())}
+                    onClick={() => goToDate(todayISO())}
                     style={{
                       background: "#181A4D",
                       color: "#fff",
@@ -1331,14 +1356,14 @@ function EntryPage() {
                     <button
                       type="button"
                       aria-label="Previous day"
-                      onClick={() => setSelectedDate(shiftISODate(selectedDate, -1))}
+                      onClick={() => goToDate(shiftISODate(selectedDate, -1))}
                       style={stepBtnStyle}
                     >
                       ‹
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedDate(todayISO())}
+                      onClick={() => goToDate(todayISO())}
                       style={{
                         background: "none", border: "none", cursor: "pointer", padding: "0 6px",
                         fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12.5,
@@ -1351,7 +1376,7 @@ function EntryPage() {
                     <button
                       type="button"
                       aria-label="Next day"
-                      onClick={() => setSelectedDate(shiftISODate(selectedDate, 1))}
+                      onClick={() => goToDate(shiftISODate(selectedDate, 1))}
                       style={stepBtnStyle}
                     >
                       ›
@@ -1379,7 +1404,7 @@ function EntryPage() {
                 userId={userId}
                 initialDate={selectedDate}
                 defaultTemplateId={id}
-                onDateChange={(iso) => setSelectedDate(iso)}
+                onDateChange={(iso) => goToDate(iso)}
               />
             ) : (
               <>
@@ -1427,7 +1452,7 @@ function EntryPage() {
                   {focusBtn("where")}
                 </div>
                 <SectionRichEditor
-                  entryKey={`${dayFieldsEntry?.id ?? selectedDate}:where`}
+                  entryKey={`${selectedDate}:${dayLoadVersion}:where`}
                   userId={userId ?? ""}
                   className={`de-where-doc${focusSection === "where" ? " is-focus" : " is-inline"}`}
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
@@ -1467,7 +1492,7 @@ function EntryPage() {
                     <div className="de-prompt">What do you want to bring to God today?</div>
                     
                     <SectionRichEditor
-                      entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
+                      entryKey={`${selectedDate}:${dayLoadVersion}:pray`}
                       userId={userId ?? ""}
                       value={prayText}
                       className={`de-pray-doc${focusSection === "pray" ? " is-focus" : " is-inline"}`}
@@ -1489,7 +1514,7 @@ function EntryPage() {
                     {(stripHtml(todoText).trim() || focusSection === "todo") && (
                       <>
                         <SectionRichEditor
-                          entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
+                          entryKey={`${selectedDate}:${dayLoadVersion}:todo`}
                           userId={userId ?? ""}
                           value={todoText}
                           className={`de-todo-doc${focusSection === "todo" ? " is-focus" : " is-inline"}`}
@@ -1508,7 +1533,7 @@ function EntryPage() {
                       onAdd={addTodoWithText}
                       onRemove={removeTodoItem}
                       onMove={moveTodoItem}
-                      onGoToDate={(d) => setSelectedDate(d)}
+                      onGoToDate={(d) => goToDate(d)}
                     />
 
                   </div>
