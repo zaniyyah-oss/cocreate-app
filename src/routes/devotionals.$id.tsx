@@ -564,6 +564,12 @@ function EntryPage() {
   const search = Route.useSearch();
   const [selectedDate, setSelectedDate] = useState<string>(search.date ?? todayISO());
   useEffect(() => { if (search.date) setSelectedDate(search.date); }, [search.date]);
+  // Changing days clears any study id left in the address, so the new day always
+  // loads its own Where / Pray / To-do instead of a study from another day.
+  const goToDate = (iso: string) => {
+    setSelectedDate(iso);
+    navigate({ to: "/devotionals/$id", params: { id }, search: { date: iso } as any, replace: true });
+  };
   const [workspaceMode, setWorkspaceMode] = useState<"entry" | "day">("entry");
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
@@ -1299,7 +1305,7 @@ function EntryPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSelectedDate(todayISO())}
+                    onClick={() => goToDate(todayISO())}
                     style={{
                       background: "#181A4D",
                       color: "#fff",
@@ -1350,14 +1356,14 @@ function EntryPage() {
                     <button
                       type="button"
                       aria-label="Previous day"
-                      onClick={() => setSelectedDate(shiftISODate(selectedDate, -1))}
+                      onClick={() => goToDate(shiftISODate(selectedDate, -1))}
                       style={stepBtnStyle}
                     >
                       ‹
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedDate(todayISO())}
+                      onClick={() => goToDate(todayISO())}
                       style={{
                         background: "none", border: "none", cursor: "pointer", padding: "0 6px",
                         fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12.5,
@@ -1370,7 +1376,7 @@ function EntryPage() {
                     <button
                       type="button"
                       aria-label="Next day"
-                      onClick={() => setSelectedDate(shiftISODate(selectedDate, 1))}
+                      onClick={() => goToDate(shiftISODate(selectedDate, 1))}
                       style={stepBtnStyle}
                     >
                       ›
@@ -1398,7 +1404,7 @@ function EntryPage() {
                 userId={userId}
                 initialDate={selectedDate}
                 defaultTemplateId={id}
-                onDateChange={(iso) => setSelectedDate(iso)}
+                onDateChange={(iso) => goToDate(iso)}
               />
             ) : (
               <>
@@ -1527,7 +1533,7 @@ function EntryPage() {
                       onAdd={addTodoWithText}
                       onRemove={removeTodoItem}
                       onMove={moveTodoItem}
-                      onGoToDate={(d) => setSelectedDate(d)}
+                      onGoToDate={(d) => goToDate(d)}
                     />
 
                   </div>
