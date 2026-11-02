@@ -63,7 +63,9 @@ export function SavedDevotionalsSection({
   title = "Saved devotionals",
   note = "Devotionals you built or saved",
   emptyText = "Nothing here yet. Build a devotional from the Read page and it will show up here.",
+  startLabel = "Start today",
 }: {
+  startLabel?: string;
   title?: string;
   note?: string;
   emptyText?: string;
@@ -243,7 +245,7 @@ export function SavedDevotionalsSection({
                     onClick={() => start(p)}
                     style={{ background: c.hex, borderColor: c.hex, color: c.onHex }}
                   >
-                    Start today
+                    {startLabel}
                   </button>
                   <button
                     type="button"
