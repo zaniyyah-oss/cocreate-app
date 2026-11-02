@@ -73,6 +73,8 @@ export function WorkspaceEditor({
   ignoreExternalUpdates = false,
   placeholder,
   editable = true,
+  hideToolbarUntilFocused = false,
+  onEditorReady,
 }: {
   userId: string;
   initialJSON: any;
@@ -81,6 +83,10 @@ export function WorkspaceEditor({
   ignoreExternalUpdates?: boolean;
   placeholder?: string;
   editable?: boolean;
+  /** Keep the formatting bar hidden until the caret is inside the text. */
+  hideToolbarUntilFocused?: boolean;
+  /** Hands the live editor back so an outside affordance can place the caret. */
+  onEditorReady?: (editor: Editor) => void;
 }) {
   useWorkspaceEditorCss();
 
