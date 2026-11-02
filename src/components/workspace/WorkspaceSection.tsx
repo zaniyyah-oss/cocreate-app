@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
-import { useBibleBooks } from "@/components/BookTagger";
+import { useBibleBooks, BookTagger } from "@/components/BookTagger";
+import { TopicPicker } from "@/components/TopicPicker";
 import { useStudyFolders } from "./ReadStudyLog";
 import { isEmptyStudy, markStudyContinued } from "@/lib/study-log";
 import { MoveToFolderButton } from "./StudyFolders";
@@ -863,6 +864,14 @@ function NoteBody({
   });
 
   const isStudy = item.kind === "study";
+  const [studyBooks, setStudyBooks] = useState<string[]>(item.books_of_bible ?? []);
+  const [studyTopics, setStudyTopics] = useState<string[]>(((item as any).topic_ids as string[] | null) ?? []);
+  const saveStudyMeta = async (patch: { books_of_bible?: string[]; topic_ids?: string[] }) => {
+    if (patch.books_of_bible) setStudyBooks(patch.books_of_bible);
+    if (patch.topic_ids) setStudyTopics(patch.topic_ids);
+    const { error } = await supabase.from("workspace_items" as any).update(patch).eq("id", item.id);
+    if (!error) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+  };
   const bodyRef = useRef<HTMLDivElement>(null);
   const latestRef = useRef({ title: item.title, text: item.body_text });
   const continuedRef = useRef(false);
@@ -934,9 +943,20 @@ function NoteBody({
         <div className="ws-chiprow">
           <span className={`ws-chip study${studiesMode ? " dup" : ""}`}>Study</span>
           {folderName && <span className="ws-chip">{folderName}</span>}
-          {(item.books_of_bible ?? []).map((b) => (
+          {guest ? (item.books_of_bible ?? []).map((b) => (
             <span key={b} className="ws-chip">{bookName ? bookName(b) : b}</span>
-          ))}
+          )) : (
+            <>
+              <BookTagger
+                values={studyBooks}
+                onToggle={(abbr) => {
+                  const next = studyBooks.includes(abbr) ? studyBooks.filter((x) => x !== abbr) : [...studyBooks, abbr];
+                  void saveStudyMeta({ books_of_bible: next });
+                }}
+              />
+              <TopicPicker value={studyTopics} onChange={(next) => void saveStudyMeta({ topic_ids: next })} compact />
+            </>
+          )}
         </div>
       )}
 
