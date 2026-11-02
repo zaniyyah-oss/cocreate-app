@@ -18,6 +18,12 @@ const CSS = `
 .rsl-list{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .rsl-row{display:flex;align-items:center;gap:10px;width:100%;background:#FBF8ED;border:1px solid rgba(24,26,77,0.10);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;font-family:'Poppins',sans-serif;}
 .rsl-row:hover{border-color:#181A4D;}
+.rsl-wrap{position:relative;}
+.rsl-wrap .rsl-row{padding-right:64px;}
+.rsl-hide{position:absolute;right:30px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11.5px;color:#8a8678;padding:4px 6px;border-radius:6px;opacity:0;transition:opacity .15s;}
+.rsl-wrap:hover .rsl-hide,.rsl-hide:focus-visible{opacity:1;}
+.rsl-hide:hover{color:#181A4D;background:rgba(24,26,77,0.06);}
+@media (hover:none){.rsl-hide{opacity:.7;}}
 .rsl-ico{flex-shrink:0;color:#181A4D;display:inline-flex;}
 .rsl-txt{flex:1;min-width:0;}
 .rsl-title{font-size:14px;font-weight:600;color:#181A4D;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -190,14 +196,27 @@ export function ReadStudyLog({
       {rows.length > 0 ? (
         <div className="rsl-list">
           {rows.map((r) => (
-            <button key={r.id} type="button" className="rsl-row" onClick={() => onOpen(r.workspace_item_id)}>
-              <span className="rsl-ico"><FileIcon /></span>
-              <span className="rsl-txt">
-                <div className="rsl-title">{r.workspace_items?.title?.trim() || "Untitled study"}</div>
-                <div className="rsl-sub">{sub(r)}</div>
-              </span>
-              <span className="rsl-chev" aria-hidden="true">›</span>
-            </button>
+            <div key={r.id} className="rsl-wrap">
+              <button type="button" className="rsl-row" onClick={() => onOpen(r.workspace_item_id)}>
+                <span className="rsl-ico"><FileIcon /></span>
+                <span className="rsl-txt">
+                  <div className="rsl-title">{r.workspace_items?.title?.trim() || "Untitled study"}</div>
+                  <div className="rsl-sub">{sub(r)}</div>
+                </span>
+                <span className="rsl-chev" aria-hidden="true">›</span>
+              </button>
+              <button
+                type="button"
+                className="rsl-hide"
+                title="Hide from this day (the study itself stays)"
+                onClick={async () => {
+                  await supabase.from("entry_study_links" as any).delete().eq("id", r.id);
+                  linksQ.refetch();
+                }}
+              >
+                Hide
+              </button>
+            </div>
           ))}
         </div>
       ) : linksQ.isLoading && !guest ? null : (
