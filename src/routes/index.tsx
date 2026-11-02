@@ -223,7 +223,7 @@ function CardSave({ c, dark }: { c: ContentPreview; dark?: boolean }) {
 /* ============================================================ */
 /*  CSS                                                          */
 /* ============================================================ */
-const CSS = `
+export const HOME_CSS = `
 .hp{--navy:#181A4D;--navy-2:#22245e;--lime:#CAC307;--limelight:#DCE07A;--teal:#0F4A42;--amber:#FFAE00;--burgundy:#441B07;--blush:#E990A2;--cream:#FBF8ED;--ink:#20201C;--periwinkle:#6C6FD4;font-family:'Poppins',sans-serif;color:var(--ink);background:var(--cream);}
 .hp a{text-decoration:none;color:inherit;}
 .hp *{box-sizing:border-box;}
@@ -405,6 +405,8 @@ const CSS = `
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
 
 .hp-mast-media{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
+.hp-mast-media-link.is-active{background:#F3F6DC;}
+.hp-quickrow a.is-active{text-decoration:underline;text-underline-offset:4px;}
 .hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
 .hp-mast-media-link:hover{background:#FBF8ED;}
 .hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -729,7 +731,7 @@ const BOOKMARK_SVG = <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z" /
 const BOOK_SVG = <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14" /></svg>;
 const BAG_SVG = <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
 
-function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCount: number }) {
+export function HomeMasthead({ signedIn, upNextCount, active }: { signedIn: boolean; upNextCount: number; active?: "shop" }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <>
@@ -754,7 +756,7 @@ function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCoun
           {!signedIn && (
             <>
               <Link to="/auth" className="hp-mast-signin">Sign in</Link>
-              <Link to="/auth" search={{ mode: "signup" } as any} className="hp-mast-subscribe">Subscribe</Link>
+              <Link to="/subscribe" className="hp-mast-subscribe">Subscribe</Link>
             </>
           )}
         </div>
@@ -766,7 +768,7 @@ function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCoun
                 <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
                 <span>Up next</span>
               </Link>
-              <Link to="/shop" className="hp-mast-media-link">{BAG_SVG}<span>Shop</span></Link>
+              <Link to="/shop" className={`hp-mast-media-link${active === "shop" ? " is-active" : ""}`} aria-current={active === "shop" ? "page" : undefined}>{BAG_SVG}<span>Shop</span></Link>
             </nav>
             <span className="hp-mast-divider" aria-hidden />
           </>
@@ -783,7 +785,7 @@ function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCoun
       <div className="hp-quickrow">
         <Link to="/explore/devotionals">Devotionals</Link>
         <Link to="/up-next">Up next ({upNextCount})</Link>
-        <Link to="/shop">Shop</Link>
+        <Link to="/shop" className={active === "shop" ? "is-active" : undefined}>Shop</Link>
       </div>
     )}
     </>
@@ -1326,7 +1328,7 @@ function HomePage() {
 
   return (
     <AppShell current="explore" hideSide={!signedIn} hideTopbar>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
       <HomeCtx.Provider value={ctx}>
       <div className="hp">
         {signedIn ? null : <HomeTourBar />}
