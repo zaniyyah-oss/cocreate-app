@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import {
   useSessionUserId, useUpNext, useInvalidateUpNext, setKept, removeSaved, createReflectionNote,
   routeForType, lengthLabel, typeLabel, type UpNextRow,
@@ -62,6 +63,7 @@ function UpNextPage() {
   const invalidate = useInvalidateUpNext();
   const [menu, setMenu] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState<UpNextRow | null>(null);
 
   useEffect(() => {
     if (!menu) return;
@@ -151,7 +153,7 @@ function UpNextPage() {
                     {r.kept
                       ? <button type="button" onClick={() => { setMenu(null); run(() => setKept(r.savedId, false), "Moved back to Up next"); }}>Move to Up next</button>
                       : <button type="button" onClick={() => { setMenu(null); run(() => setKept(r.savedId, true), "Moved to Kept"); }}>Keep</button>}
-                    <button type="button" className="danger" onClick={() => { setMenu(null); run(() => removeSaved(r.savedId), "Removed"); }}>Remove</button>
+                    <button type="button" className="danger" onClick={() => { setMenu(null); setConfirm(r); }}>Remove</button>
                   </div>
                 )}
               </div>
@@ -159,6 +161,16 @@ function UpNextPage() {
           </div>
         )}
       </div>
+      <DeleteConfirmModal
+        open={!!confirm}
+        title="Remove from Up next?"
+        itemName={confirm?.content.title}
+        message="It will no longer be saved. You can save it again any time."
+        confirmLabel="Remove"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => { const r = confirm; if (!r) return; await run(() => removeSaved(r.savedId), "Removed"); setConfirm(null); }}
+      />
     </AppShell>
   );
 }
