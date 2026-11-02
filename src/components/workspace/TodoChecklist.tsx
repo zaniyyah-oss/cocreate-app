@@ -20,6 +20,9 @@ const CSS = `
 .tdc-row:hover{background:rgba(24,26,77,0.03);}
 .tdc-check{flex-shrink:0;width:18px;height:18px;margin-top:2px;accent-color:#181A4D;cursor:pointer;}
 .tdc-text{flex:1;min-width:0;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.45;outline:none;padding:0;resize:none;overflow:hidden;}
+.tdc-row.selected{background:#F3F6DC;}
+.tdc-textbtn{text-align:left;cursor:pointer;}
+.tds-inline{position:relative;display:flex;flex-direction:column;min-height:420px;font-family:'Poppins',sans-serif;}
 .tdc-row.done .tdc-text{text-decoration:line-through;color:#8a8678;}
 .tdc-rep{flex-shrink:0;color:#8a8678;margin-top:3px;display:inline-flex;}
 .tdc-more{flex-shrink:0;background:none;border:none;color:#181A4D;opacity:0.55;cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:6px;}
@@ -106,23 +109,8 @@ export function TodoChecklist({
 }) {
   const [draft, setDraft] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
-  const [confirmDel, setConfirmDel] = useState(false);
-  const [pickDate, setPickDate] = useState(false);
   const openIdx = items.findIndex((i) => i.id === openId);
   const open = openIdx >= 0 ? items[openIdx] : null;
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !confirmDel) setOpenId(null); };
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [!!open, confirmDel]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const isDone = (it: ChecklistItem) => (it.status ? it.status === "done" : it.done);
-  const toggle = (idx: number, checked: boolean) =>
-    onUpdate(idx, { done: checked, status: checked ? "done" : "not_started" });
 
   const commitDraft = () => {
     if (!draft.trim()) return;
@@ -130,33 +118,13 @@ export function TodoChecklist({
     setDraft("");
   };
 
-  const tomorrow = addDaysISO(todayISO, 1);
-  const nextWeek = addDaysISO(todayISO, 7);
-  const moveTo = (date: string) => {
-    if (openIdx < 0) return;
-    setPickDate(false);
-    if (date === selectedDate) return;
-    onMove(openIdx, date);
-    setOpenId(null);
-  };
-  const written = open?.written_on ?? selectedDate;
-  const writtenLabel = new Date(`${written}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-
   return (
     <div className="tdc">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tdc-list">
-        {items.map((it, idx) => {
-          const done = isDone(it);
-          return (
-            <div key={it.id} className={`tdc-row${done ? " done" : ""}`}>
-              <input type="checkbox" className="tdc-check" checked={done} onChange={(e) => toggle(idx, e.target.checked)} aria-label={done ? "Mark not done" : "Mark done"} />
-              <AutoText className="tdc-text" value={it.text} onChange={(v) => onUpdate(idx, { text: v })} />
-              {it.recurring_id && <span className="tdc-rep"><RepeatIcon /></span>}
-              <button type="button" className="tdc-more" onClick={() => setOpenId(it.id)} aria-label="Task details">⋯</button>
-            </div>
-          );
-        })}
+        {items.map((it, idx) => (
+          <ChecklistRow key={it.id} item={it} onUpdate={(p) => onUpdate(idx, p)} onMore={() => setOpenId(it.id)} />
+        ))}
         <div className="tdc-add">
           <span className="plus" aria-hidden="true">+</span>
           <input
@@ -169,64 +137,159 @@ export function TodoChecklist({
         </div>
       </div>
 
-      {open && typeof document !== "undefined" && createPortal(
-        <>
-          <style dangerouslySetInnerHTML={{ __html: CSS }} />
-          <div className="tds-ov" onClick={() => setOpenId(null)} />
-          <div className="tds-panel" role="dialog" aria-label="To-do details">
-            <div className="tds-grab" />
-            <button type="button" className="tds-x" onClick={() => setOpenId(null)} aria-label="Close">✕</button>
-            <div className="tds-body">
-              <div className="tds-titlerow">
-                <input type="checkbox" checked={isDone(open)} onChange={(e) => toggle(openIdx, e.target.checked)} aria-label="Done" />
-                <AutoText className="tds-title" done={isDone(open)} value={open.text} onChange={(v) => onUpdate(openIdx, { text: v })} />
-              </div>
-              <div>
-                <div className="tds-lbl">Details</div>
-                <RichTextField
-                  className="de-textarea short"
-                  placeholder="Notes, next steps, who's involved…"
-                  value={open.details ?? ""}
-                  onChange={(html) => onUpdate(openIdx, { details: html })}
-                />
-              </div>
-              <div>
-                <div className="tds-lbl">Day</div>
-                <div className="tds-chips">
-                  <button type="button" className={`tds-chip${selectedDate === todayISO ? " on" : ""}`} onClick={() => moveTo(todayISO)}>Today</button>
-                  <button type="button" className={`tds-chip${selectedDate === tomorrow ? " on" : ""}`} onClick={() => moveTo(tomorrow)}>Tomorrow</button>
-                  <button type="button" className={`tds-chip${selectedDate === nextWeek ? " on" : ""}`} onClick={() => moveTo(nextWeek)}>Next week</button>
-                  {pickDate ? (
-                    <span className="tds-chip"><input type="date" autoFocus defaultValue={selectedDate} onChange={(e) => e.target.value && moveTo(e.target.value)} /></span>
-                  ) : (
-                    <button type="button" className={`tds-chip${![todayISO, tomorrow, nextWeek].includes(selectedDate) ? " on" : ""}`} onClick={() => setPickDate(true)}>Pick a date</button>
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className="tds-row">
-                  <span>Repeats</span>
-                  <a href="/calendar">{open.recurring_id ? "Edit in Calendar" : "Doesn't repeat · set up in Calendar"}</a>
-                </div>
-                <div className="tds-row">
-                  <span>Written on</span>
-                  <button type="button" className="tds-link" onClick={() => { setOpenId(null); onGoToDate(written); }}>{writtenLabel}</button>
-                </div>
-              </div>
-              <button type="button" className="tds-del" onClick={() => setConfirmDel(true)}>Delete to-do</button>
-            </div>
-          </div>
-        </>,
-        document.body,
+      {open && (
+        <TaskDetailsSheet
+          item={open}
+          day={selectedDate}
+          todayISO={todayISO}
+          onClose={() => setOpenId(null)}
+          onUpdate={(p) => onUpdate(openIdx, p)}
+          onMove={(d) => onMove(openIdx, d)}
+          onRemove={() => onRemove(openIdx)}
+          onGoToDate={onGoToDate}
+        />
       )}
+    </div>
+  );
+}
 
+export const isChecklistDone = (it: ChecklistItem) => (it.status ? it.status === "done" : it.done);
+
+/** One checklist row: checkbox, editable text, repeat icon, ⋯ button. */
+export function ChecklistRow({ item, onUpdate, onMore, selected, readOnlyText }: {
+  item: ChecklistItem;
+  onUpdate: (patch: Partial<ChecklistItem>) => void;
+  onMore: () => void;
+  selected?: boolean;
+  readOnlyText?: boolean;
+}) {
+  const done = isChecklistDone(item);
+  return (
+    <div className={`tdc-row${done ? " done" : ""}${selected ? " selected" : ""}`}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <input type="checkbox" className="tdc-check" checked={done} onChange={(e) => onUpdate({ done: e.target.checked, status: e.target.checked ? "done" : "not_started" })} aria-label={done ? "Mark not done" : "Mark done"} />
+      {readOnlyText
+        ? <button type="button" className="tdc-text tdc-textbtn" onClick={onMore}>{item.text || "Untitled to-do"}</button>
+        : <AutoText className="tdc-text" value={item.text} onChange={(v) => onUpdate({ text: v })} />}
+      {item.recurring_id && <span className="tdc-rep"><RepeatIcon /></span>}
+      <button type="button" className="tdc-more" onClick={onMore} aria-label="Task details">⋯</button>
+    </div>
+  );
+}
+
+type DetailsProps = {
+  item: ChecklistItem;
+  /** The day the to-do currently sits on. */
+  day: string;
+  todayISO: string;
+  onClose: () => void;
+  onUpdate: (patch: Partial<ChecklistItem>) => void;
+  onMove: (date: string) => void;
+  onRemove: () => void;
+  onGoToDate: (date: string) => void;
+};
+
+/** The details content (title, Details, Day, Repeats, Written on, Delete). */
+export function TaskDetailsBody({ item, day, todayISO, onClose, onUpdate, onMove, onRemove, onGoToDate }: DetailsProps) {
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [pickDate, setPickDate] = useState(false);
+  const done = isChecklistDone(item);
+  const tomorrow = addDaysISO(todayISO, 1);
+  const nextWeek = addDaysISO(todayISO, 7);
+  const moveTo = (date: string) => {
+    setPickDate(false);
+    if (date === day) return;
+    onMove(date);
+    onClose();
+  };
+  const written = item.written_on ?? day;
+  const writtenLabel = new Date(`${written}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <button type="button" className="tds-x" onClick={onClose} aria-label="Close">✕</button>
+      <div className="tds-body">
+        <div className="tds-titlerow">
+          <input type="checkbox" checked={done} onChange={(e) => onUpdate({ done: e.target.checked, status: e.target.checked ? "done" : "not_started" })} aria-label="Done" />
+          <AutoText className="tds-title" done={done} value={item.text} onChange={(v) => onUpdate({ text: v })} />
+        </div>
+        <div>
+          <div className="tds-lbl">Details</div>
+          <RichTextField
+            key={item.id}
+            className="de-textarea short"
+            placeholder="Notes, next steps, who's involved…"
+            value={item.details ?? ""}
+            onChange={(html) => onUpdate({ details: html })}
+          />
+        </div>
+        <div>
+          <div className="tds-lbl">Day</div>
+          <div className="tds-chips">
+            <button type="button" className={`tds-chip${day === todayISO ? " on" : ""}`} onClick={() => moveTo(todayISO)}>Today</button>
+            <button type="button" className={`tds-chip${day === tomorrow ? " on" : ""}`} onClick={() => moveTo(tomorrow)}>Tomorrow</button>
+            <button type="button" className={`tds-chip${day === nextWeek ? " on" : ""}`} onClick={() => moveTo(nextWeek)}>Next week</button>
+            {pickDate ? (
+              <span className="tds-chip"><input type="date" autoFocus defaultValue={day} onChange={(e) => e.target.value && moveTo(e.target.value)} /></span>
+            ) : (
+              <button type="button" className={`tds-chip${![todayISO, tomorrow, nextWeek].includes(day) ? " on" : ""}`} onClick={() => setPickDate(true)}>Pick a date</button>
+            )}
+          </div>
+        </div>
+        <div>
+          <div className="tds-row">
+            <span>Repeats</span>
+            <a href="/calendar">{item.recurring_id ? "Edit in Calendar" : "Doesn't repeat · set up in Calendar"}</a>
+          </div>
+          <div className="tds-row">
+            <span>Written on</span>
+            <button type="button" className="tds-link" onClick={() => { onClose(); onGoToDate(written); }}>{writtenLabel}</button>
+          </div>
+        </div>
+        <button type="button" className="tds-del" onClick={() => setConfirmDel(true)}>Delete to-do</button>
+      </div>
       <DeleteConfirmModal
         open={confirmDel}
         title="Delete this to-do?"
         message="This to-do and its details will be removed. This can't be undone."
         onCancel={() => setConfirmDel(false)}
-        onConfirm={() => { if (openIdx >= 0) onRemove(openIdx); setConfirmDel(false); setOpenId(null); }}
+        onConfirm={() => { onRemove(); setConfirmDel(false); onClose(); }}
       />
+    </>
+  );
+}
+
+/** Mobile bottom sheet / desktop right-side panel over a dimmed page. */
+export function TaskDetailsSheet(props: DetailsProps) {
+  const { onClose } = props;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector("[data-delete-confirm-open]")) onClose();
+    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="tds-ov" onClick={onClose} />
+      <div className="tds-panel" role="dialog" aria-label="To-do details">
+        <div className="tds-grab" />
+        <TaskDetailsBody {...props} />
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+/** Same content rendered in-place (e.g. the Notes page's right-hand panel). */
+export function TaskDetailsInline(props: DetailsProps) {
+  return (
+    <div className="tds-inline" role="region" aria-label="To-do details">
+      <TaskDetailsBody {...props} />
     </div>
   );
 }
