@@ -566,25 +566,6 @@ function useShelf(shelf: ShelfKey, limit = 5) {
 /*  Sections                                                     */
 /* ============================================================ */
 
-function TopicsNav() {
-  const topicsQ = useTopics();
-  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
-  const list = (topicsQ.data ?? [])
-    .filter((t) => primary.includes(t.slug))
-    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
-  return (
-    <div className="hp-topics">
-      <div className="wrap">
-        {list.map((t) => (
-          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
-            {t.display_name || t.name}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function HomeIconBar() {
   const items = [
     { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
@@ -682,25 +663,17 @@ function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () 
   );
 }
 
-function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+const BOOKMARK_SVG = <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>;
+const BOOK_SVG = <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14" /></svg>;
+const BAG_SVG = <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
 
-  const topicsQ = useTopics();
-  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
-  const list = (topicsQ.data ?? [])
-    .filter((t) => primary.includes(t.slug))
-    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
-  const [moreOpen, setMoreOpen] = useState(false);
+function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCount: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  useEffect(() => {
-    if (!moreOpen) return;
-    const close = () => setMoreOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, [moreOpen]);
   return (
+    <>
     <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
       <div className="wrap">
-        <Link to="/" className="hp-mast-brand">
+        <Link to="/" search={{ feed: 1 } as any} className="hp-mast-brand">
           <div className="mark">C</div>
           <div className="word">CoCreate</div>
         </Link>
@@ -714,41 +687,7 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </button>
         {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
-        <nav className="hp-mast-links">
-
-          {list.map((t, i) => (
-            <Link
-              key={t.id}
-              to="/topics/$slug"
-              params={{ slug: t.slug }}
-              className={i >= 4 ? "mast-link-hide-md" : i >= 2 ? "mast-link-hide-sm" : ""}
-            >
-              {t.display_name || t.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="hp-mast-more">
-          <button
-            type="button"
-            className="hp-mast-more-btn"
-            onClick={(e) => { e.stopPropagation(); setMoreOpen((v) => !v); }}
-            aria-haspopup="menu"
-            aria-expanded={moreOpen}
-          >
-            <span className="hp-mast-more-desktop">More</span>
-            <span className="hp-mast-more-mobile">Topics</span>
-            <span aria-hidden>▾</span>
-          </button>
-          {moreOpen && (
-            <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-              {(topicsQ.data ?? []).map((t) => (
-                <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
-                  {t.display_name || t.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <div style={{ flex: 1 }} />
         <div className="hp-mast-actions">
           {!signedIn && (
             <>
@@ -757,9 +696,35 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             </>
           )}
         </div>
+        {signedIn && (
+          <>
+            <nav className="hp-mast-quick" aria-label="Your content">
+              <Link to="/explore/devotionals" className="hp-mast-media-link">{BOOK_SVG}<span>Devotionals</span></Link>
+              <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext">
+                <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
+                <span>Up next</span>
+              </Link>
+              <Link to="/shop" className="hp-mast-media-link">{BAG_SVG}<span>Shop</span></Link>
+            </nav>
+            <span className="hp-mast-divider" aria-hidden />
+          </>
+        )}
         <MediaNav />
+        {signedIn && (
+          <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext hp-mast-upnext-m" aria-label="Up next">
+            <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
+          </Link>
+        )}
       </div>
     </div>
+    {signedIn && (
+      <div className="hp-quickrow">
+        <Link to="/explore/devotionals">Devotionals</Link>
+        <Link to="/up-next">Up next ({upNextCount})</Link>
+        <Link to="/shop">Shop</Link>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -882,32 +847,6 @@ function LatestSection() {
     </div>
   );
 }
-
-function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES; style?: React.CSSProperties }) {
-  const q = useByTopic(topic?.id, 3);
-  const real = q.data ?? [];
-  const items = padDemo(real, demoKind, 3);
-  return (
-    <div className="wrap hp-section" id={id} style={style}>
-      <div className="hp-eyebrow">
-        <div className="bar" />
-        <h2>{label}</h2>
-        {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>}
-      </div>
-      <div className="hp-topic-grid">
-        {items.map((c) => (
-          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
-            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-            <h4>{c.title}</h4>
-            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-            <div className="hp-meta">{readTimeOf(c)}</div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 
 /* Shelf grid section */
 function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
