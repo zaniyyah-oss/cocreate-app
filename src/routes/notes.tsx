@@ -234,7 +234,7 @@ function NotesLibrary({ userId }: { userId: string }) {
       const { data, error } = await supabase
         .from("workspace_items" as any)
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", userId).eq("kind", "note")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Doc[];

@@ -604,6 +604,81 @@ export type Database = {
           },
         ]
       }
+      devotional_entries_backup_20261102: {
+        Row: {
+          apply_text: string | null
+          book_confirmed: boolean | null
+          book_of_bible: string | null
+          book_source: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible: string[] | null
+          created_at: string | null
+          entry_date: string | null
+          entry_subtitle: string | null
+          entry_title: string | null
+          further_reading_text: string | null
+          id: string | null
+          pray_text: string | null
+          reflect_text: string | null
+          scripture_reference: string | null
+          scripture_text: string | null
+          template_id: string | null
+          todo_items: Json | null
+          todo_text: string | null
+          topic_ids: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          where_text: string | null
+        }
+        Insert: {
+          apply_text?: string | null
+          book_confirmed?: boolean | null
+          book_of_bible?: string | null
+          book_source?: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible?: string[] | null
+          created_at?: string | null
+          entry_date?: string | null
+          entry_subtitle?: string | null
+          entry_title?: string | null
+          further_reading_text?: string | null
+          id?: string | null
+          pray_text?: string | null
+          reflect_text?: string | null
+          scripture_reference?: string | null
+          scripture_text?: string | null
+          template_id?: string | null
+          todo_items?: Json | null
+          todo_text?: string | null
+          topic_ids?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          where_text?: string | null
+        }
+        Update: {
+          apply_text?: string | null
+          book_confirmed?: boolean | null
+          book_of_bible?: string | null
+          book_source?: Database["public"]["Enums"]["book_tag_source"] | null
+          books_of_bible?: string[] | null
+          created_at?: string | null
+          entry_date?: string | null
+          entry_subtitle?: string | null
+          entry_title?: string | null
+          further_reading_text?: string | null
+          id?: string | null
+          pray_text?: string | null
+          reflect_text?: string | null
+          scripture_reference?: string | null
+          scripture_text?: string | null
+          template_id?: string | null
+          todo_items?: Json | null
+          todo_text?: string | null
+          topic_ids?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          where_text?: string | null
+        }
+        Relationships: []
+      }
       devotional_movements: {
         Row: {
           created_at: string
@@ -868,6 +943,41 @@ export type Database = {
             columns: ["essay_id"]
             isOneToOne: false
             referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entry_study_links: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          status: string
+          user_id: string
+          workspace_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_date: string
+          id?: string
+          status?: string
+          user_id: string
+          workspace_item_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          status?: string
+          user_id?: string
+          workspace_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entry_study_links_workspace_item_id_fkey"
+            columns: ["workspace_item_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_items"
             referencedColumns: ["id"]
           },
         ]
@@ -1631,6 +1741,33 @@ export type Database = {
         }
         Relationships: []
       }
+      study_folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       thread_participants: {
         Row: {
           id: string
@@ -1870,48 +2007,63 @@ export type Database = {
         Row: {
           body: Json
           body_text: string
+          books_of_bible: string[]
           closed_at: string | null
           created_at: string
           devotional_entry_id: string | null
+          folder_id: string | null
           id: string
+          kind: string
+          legacy_entry_id: string | null
           pinned: boolean
           plan_assignment_id: string | null
           plan_day_number: number | null
           status: string
           tags: string[]
           title: string
+          topic_ids: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
           body?: Json
           body_text?: string
+          books_of_bible?: string[]
           closed_at?: string | null
           created_at?: string
           devotional_entry_id?: string | null
+          folder_id?: string | null
           id?: string
+          kind?: string
+          legacy_entry_id?: string | null
           pinned?: boolean
           plan_assignment_id?: string | null
           plan_day_number?: number | null
           status?: string
           tags?: string[]
           title?: string
+          topic_ids?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
           body?: Json
           body_text?: string
+          books_of_bible?: string[]
           closed_at?: string | null
           created_at?: string
           devotional_entry_id?: string | null
+          folder_id?: string | null
           id?: string
+          kind?: string
+          legacy_entry_id?: string | null
           pinned?: boolean
           plan_assignment_id?: string | null
           plan_day_number?: number | null
           status?: string
           tags?: string[]
           title?: string
+          topic_ids?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -1924,6 +2076,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "workspace_items_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "study_folders"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "workspace_items_plan_assignment_id_fkey"
             columns: ["plan_assignment_id"]
             isOneToOne: false
@@ -1931,6 +2090,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workspace_items_backup_20261102: {
+        Row: {
+          body: Json | null
+          body_text: string | null
+          closed_at: string | null
+          created_at: string | null
+          devotional_entry_id: string | null
+          id: string | null
+          pinned: boolean | null
+          plan_assignment_id: string | null
+          plan_day_number: number | null
+          status: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: Json | null
+          body_text?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          devotional_entry_id?: string | null
+          id?: string | null
+          pinned?: boolean | null
+          plan_assignment_id?: string | null
+          plan_day_number?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: Json | null
+          body_text?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          devotional_entry_id?: string | null
+          id?: string | null
+          pinned?: boolean | null
+          plan_assignment_id?: string | null
+          plan_day_number?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

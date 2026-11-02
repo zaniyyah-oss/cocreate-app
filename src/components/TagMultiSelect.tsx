@@ -44,7 +44,7 @@ export function TagMultiSelect({
       const { data, error } = await supabase
         .from("workspace_items" as any)
         .select("tags")
-        .eq("user_id", userId)
+        .eq("user_id", userId).eq("kind", "note")
         .limit(500);
       if (error) throw error;
       const set = new Set<string>();
@@ -80,7 +80,7 @@ export function TagMultiSelect({
         const { data, error } = await supabase
           .from("workspace_items" as any)
           .select("id,tags")
-          .eq("user_id", userId)
+          .eq("user_id", userId).eq("kind", "note")
           .contains("tags", [tag]);
         if (error) throw error;
         for (const row of (data as any[]) || []) {
