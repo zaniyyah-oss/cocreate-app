@@ -1744,6 +1744,51 @@ export type Database = {
           },
         ]
       }
+      shop_products: {
+        Row: {
+          checkout_url: string | null
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          price_label: string | null
+          season: string | null
+          slug: string
+          sort_order: number
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          checkout_url?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_label?: string | null
+          season?: string | null
+          slug: string
+          sort_order?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          checkout_url?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_label?: string | null
+          season?: string | null
+          slug?: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sticky_notes: {
         Row: {
           body: string
@@ -1801,6 +1846,39 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          season_interest: string | null
+          source: string | null
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          season_interest?: string | null
+          source?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          season_interest?: string | null
+          source?: string | null
+          tags?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2302,6 +2380,16 @@ export type Database = {
         Returns: boolean
       }
       publish_scheduled_content: { Args: never; Returns: undefined }
+      subscribe_email: {
+        Args: {
+          _email: string
+          _first_name: string
+          _season: string
+          _source: string
+          _tags: string[]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
