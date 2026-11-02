@@ -23,7 +23,7 @@ export const Route = createFileRoute("/explore_/devotionals")({
   }),
 });
 
-export const DEV_CSS = `
+const DEV_CSS = `
 .xd{max-width:1080px;margin:0 auto;padding:44px 24px 120px;font-family:'Poppins',sans-serif;color:#20201C;}
 .xd-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8678;margin-bottom:10px;}
 .xd h1{font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 8px;}
@@ -59,7 +59,7 @@ export const DEV_CSS = `
 @media(max-width:640px){.xd{padding:24px 16px 110px;}.xd h1{font-size:32px;}}
 `;
 
-export function DevotionalBuilderBlock() {
+function DevotionalBuilderBlock() {
   return (
     <div className="xd-build">
       <h2>Create your own devotional</h2>
