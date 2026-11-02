@@ -136,7 +136,7 @@ const SHELL_CSS = `
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
 
-export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean }) {
+export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, hideTopbar }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean; /** The page renders its own mobile masthead. */ hideTopbar?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed] = useState<boolean>(true);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -242,7 +242,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
 
         {/* Main column */}
         <div className="app-main-wrap">
-          {!hideSide && (
+          {!hideSide && !hideTopbar && (
             <header className="app-topbar">
               <div className="app-topbar-brand-wrap">
                 <Link to={userId ? "/devotionals" : "/"} className="app-brand">

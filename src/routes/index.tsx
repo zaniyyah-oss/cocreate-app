@@ -6,7 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
-import { ContinueStrip } from "@/components/ContinueStrip";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SaveButton } from "@/components/SaveButton";
+import { useUpNext, lengthLabel, typeLabel } from "@/lib/up-next";
+import { useActiveDevotional, todayISO } from "@/lib/active-devotional";
+import { usePublishedDevotionals, subscribeToDevotional } from "@/lib/devotional-start";
+import { createContext, useContext } from "react";
+import { toast } from "sonner";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -194,8 +200,25 @@ function makeDemo(kind: keyof typeof DEMO_TITLES, count: number, offset = 0, typ
     } as unknown as ContentPreview;
   });
 }
-const padDemo = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+const padDemoRaw = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
   real.length >= needed ? real : [...real, ...makeDemo(kind, needed - real.length, real.length, type)];
+
+/* Signed-in readers never see filler: shelves show only what's published. */
+type HomeCtxValue = { demo: boolean; userId: string | null; savedMap: Record<string, string> };
+const HomeCtx = createContext<HomeCtxValue>({ demo: true, userId: null, savedMap: {} });
+const useHome = () => useContext(HomeCtx);
+function usePad() {
+  const { demo } = useHome();
+  return (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+    demo ? padDemoRaw(real, kind, needed, type) : real;
+}
+const isDemo = (c: ContentPreview) => (c.id ?? "").startsWith("demo-");
+
+function CardSave({ c, dark }: { c: ContentPreview; dark?: boolean }) {
+  const { userId, savedMap } = useHome();
+  if (!c.id || isDemo(c)) return null;
+  return <span className="hp-save"><SaveButton contentId={c.id} userId={userId} savedId={savedMap[c.id]} dark={dark} /></span>;
+}
 
 /* ============================================================ */
 /*  CSS                                                          */
@@ -392,7 +415,7 @@ const CSS = `
 .hp-mast-search-form input:focus{border-color:#181A4D;}
 .hp-mast-search-form button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#181A4D;color:#fff;border:none;border-radius:8px;cursor:pointer;}
 .hp-mast-search-form button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-@media(max-width:820px){.hp-mast-media-link > span:not(.hp-mast-media-dot){display:none;}.hp-mast-media-link{padding:6px 6px;gap:0;}.hp-mast-search-form input{width:110px;}.hp-masthead .wrap{gap:10px;}.hp-mast-media{gap:2px;}}
+@media(max-width:820px){.hp-mast-media-link > span:not(.hp-mast-media-dot):not(.ic){display:none;}.hp-mast-media-link{padding:6px 6px;gap:0;}.hp-mast-search-form input{width:110px;}.hp-masthead .wrap{gap:10px;}.hp-mast-media{gap:2px;}}
 @media(max-width:640px){.hp-mast-subscribe{display:none;}.hp-mast-signin{padding:6px 8px;font-size:12.5px;}.hp-mast-actions{gap:4px;}.hp-mast-more-btn{padding:6px 6px;}.hp-mast-search-form input{width:88px;}.hp-masthead .wrap{padding-left:12px;padding-right:12px;gap:6px;}}
 
 /* Signed-in home: horizontal navy icon bar (replaces the left rail) */
@@ -444,6 +467,68 @@ const CSS = `
 /* Photo-overlay cards must stay white even though they are <a> tags. */
 .hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
 
+/* Signed-in masthead quick links */
+.hp-mast-quick{display:flex;align-items:center;gap:2px;}
+.hp-mast-quick svg,.hp-mast-upnext svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-divider{width:1px;height:22px;background:rgba(24,26,77,0.14);margin:0 6px;flex-shrink:0;}
+.hp-mast-media{margin-left:0;}
+.hp-mast-upnext .ic{position:relative;display:inline-flex;}
+.hp-count{position:absolute;top:-7px;right:-9px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--limelight);color:var(--navy);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;}
+.hp-mast-upnext-m{display:none;}
+.hp-quickrow{display:none;}
+@media(max-width:767px){
+  .hp-mast-quick,.hp-mast-divider{display:none;}
+  .hp-mast-upnext-m{display:inline-flex;}
+  .hp-quickrow{display:flex;gap:22px;background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);padding:12px 16px;overflow-x:auto;}
+  .hp-quickrow a{font-size:13.5px;font-weight:700;color:var(--navy);white-space:nowrap;}
+}
+.hp-eyebrow-sub{font-size:13.5px;color:#6f6b5e;margin:0 0 18px 14px;}
+.hp-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.hp-save{display:inline-flex;flex-shrink:0;}
+.hp-save-corner{position:absolute;top:12px;right:12px;z-index:3;}
+/* Continue */
+.hp-cont-wrap{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:1000px){.hp-cont-wrap.has-plan{grid-template-columns:2fr 1fr;align-items:end;}}
+.hp-cont-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+@media(min-width:640px){.hp-cont-grid{grid-template-columns:repeat(3,1fr);}}
+.hp-cont-card{background:#fff;border:1px solid rgba(24,26,77,0.08);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;}
+.hp-cont-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.05);}
+.hp-cont-card .tag{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6f6b5e;}
+.hp-cont-card .dot{width:7px;height:7px;border-radius:50%;}
+.hp-cont-card .ttl{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-plan-card{background:var(--navy);color:var(--cream);border-radius:16px;padding:20px;}
+.hp-plan-card .eb{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--limelight);margin-bottom:6px;}
+.hp-plan-card h3{margin:0 0 6px;font-size:19px;font-weight:800;color:#fff;}
+.hp-plan-card p{margin:0 0 14px;font-size:13.5px;color:rgba(251,248,237,0.78);line-height:1.5;}
+.hp-lime-btn{display:inline-flex;align-items:center;background:var(--limelight);color:var(--navy) !important;font-weight:800;font-size:13px;padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;}
+.hp-lime-btn:hover{background:var(--lime);}
+.hp-lime-btn:disabled{opacity:.6;}
+/* Up next row */
+.hp-upnext-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.hp-un-extra{display:none;}
+.hp-un-card .art{height:130px;border-radius:12px;background-size:cover;background-position:center;background-color:var(--limelight);margin-bottom:10px;}
+.hp-un-card h4{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+@media(max-width:899px){
+  .hp-upnext-row{display:flex;overflow-x:auto;gap:14px;scrollbar-width:none;padding-bottom:4px;}
+  .hp-upnext-row::-webkit-scrollbar{display:none;}
+  .hp-un-card{flex:0 0 200px;}
+  .hp-un-extra{display:block;}
+}
+/* Devotionals band */
+.hp-dev-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+@media(min-width:900px){.hp-dev-grid{grid-template-columns:repeat(3,1fr);}}
+.hp-dev-card{background:var(--navy-2);border-top:4px solid var(--acc);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
+.hp-dev-card .meta{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(251,248,237,0.6);}
+.hp-dev-card h3{margin:0;font-size:18px;font-weight:800;color:#fff;}
+.hp-dev-card p{margin:0 0 6px;font-size:13px;color:rgba(251,248,237,0.75);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-dev-create{border:1.5px dashed rgba(220,224,122,0.5);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:160px;}
+.hp-dev-create:hover{border-color:var(--limelight);}
+.hp-dev-create .plus{font-size:24px;color:var(--limelight);font-weight:700;line-height:1;}
+.hp-dev-create .t{font-size:16px;font-weight:800;color:#fff;}
+.hp-dev-create .s{font-size:13px;color:rgba(251,248,237,0.7);line-height:1.5;}
+.hp-footer-cols--4{grid-template-columns:repeat(2,1fr);}
+@media(min-width:900px){.hp-footer-cols--4{grid-template-columns:repeat(4,1fr);}}
+.hp-stream-mini > .hp-save-corner{z-index:3;}
 
 `;
 
@@ -543,25 +628,6 @@ function useShelf(shelf: ShelfKey, limit = 5) {
 /*  Sections                                                     */
 /* ============================================================ */
 
-function TopicsNav() {
-  const topicsQ = useTopics();
-  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
-  const list = (topicsQ.data ?? [])
-    .filter((t) => primary.includes(t.slug))
-    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
-  return (
-    <div className="hp-topics">
-      <div className="wrap">
-        {list.map((t) => (
-          <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }}>
-            {t.display_name || t.name}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function HomeIconBar() {
   const items = [
     { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
@@ -659,25 +725,17 @@ function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () 
   );
 }
 
-function HomeMasthead({ signedIn }: { signedIn: boolean }) {
+const BOOKMARK_SVG = <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>;
+const BOOK_SVG = <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14" /></svg>;
+const BAG_SVG = <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
 
-  const topicsQ = useTopics();
-  const primary = ["identity", "marriage", "parenting", "ministry", "career", "business", "church"];
-  const list = (topicsQ.data ?? [])
-    .filter((t) => primary.includes(t.slug))
-    .sort((a, b) => primary.indexOf(a.slug) - primary.indexOf(b.slug));
-  const [moreOpen, setMoreOpen] = useState(false);
+function HomeMasthead({ signedIn, upNextCount }: { signedIn: boolean; upNextCount: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  useEffect(() => {
-    if (!moreOpen) return;
-    const close = () => setMoreOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, [moreOpen]);
   return (
+    <>
     <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
       <div className="wrap">
-        <Link to="/" className="hp-mast-brand">
+        <Link to="/" search={{ feed: 1 } as any} className="hp-mast-brand">
           <div className="mark">C</div>
           <div className="word">CoCreate</div>
         </Link>
@@ -691,41 +749,7 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
           <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </button>
         {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
-        <nav className="hp-mast-links">
-
-          {list.map((t, i) => (
-            <Link
-              key={t.id}
-              to="/topics/$slug"
-              params={{ slug: t.slug }}
-              className={i >= 4 ? "mast-link-hide-md" : i >= 2 ? "mast-link-hide-sm" : ""}
-            >
-              {t.display_name || t.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="hp-mast-more">
-          <button
-            type="button"
-            className="hp-mast-more-btn"
-            onClick={(e) => { e.stopPropagation(); setMoreOpen((v) => !v); }}
-            aria-haspopup="menu"
-            aria-expanded={moreOpen}
-          >
-            <span className="hp-mast-more-desktop">More</span>
-            <span className="hp-mast-more-mobile">Topics</span>
-            <span aria-hidden>▾</span>
-          </button>
-          {moreOpen && (
-            <div className="hp-mast-more-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-              {(topicsQ.data ?? []).map((t) => (
-                <Link key={t.id} to="/topics/$slug" params={{ slug: t.slug }} onClick={() => setMoreOpen(false)}>
-                  {t.display_name || t.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <div style={{ flex: 1 }} />
         <div className="hp-mast-actions">
           {!signedIn && (
             <>
@@ -734,9 +758,35 @@ function HomeMasthead({ signedIn }: { signedIn: boolean }) {
             </>
           )}
         </div>
+        {signedIn && (
+          <>
+            <nav className="hp-mast-quick" aria-label="Your content">
+              <Link to="/explore/devotionals" className="hp-mast-media-link">{BOOK_SVG}<span>Devotionals</span></Link>
+              <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext">
+                <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
+                <span>Up next</span>
+              </Link>
+              <Link to="/shop" className="hp-mast-media-link">{BAG_SVG}<span>Shop</span></Link>
+            </nav>
+            <span className="hp-mast-divider" aria-hidden />
+          </>
+        )}
         <MediaNav />
+        {signedIn && (
+          <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext hp-mast-upnext-m" aria-label="Up next">
+            <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
+          </Link>
+        )}
       </div>
     </div>
+    {signedIn && (
+      <div className="hp-quickrow">
+        <Link to="/explore/devotionals">Devotionals</Link>
+        <Link to="/up-next">Up next ({upNextCount})</Link>
+        <Link to="/shop">Shop</Link>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -794,7 +844,10 @@ function MediaNav() {
 function LatestSection() {
   const q = useLatest(5);
   const real = q.data ?? [];
+  const padDemo = usePad();
+  const { demo } = useHome();
   const items = padDemo(real, "latest", 5);
+  if (!demo && !q.isLoading && items.length === 0) return null;
   const lead = items[0];
   const sides = items.slice(1, 5);
 
@@ -829,8 +882,9 @@ function LatestSection() {
                 return text ? <p>{text}</p> : null;
               })()}
               <span className="readmore">Read more →</span>
-              <div className="hp-meta">
-                {(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}
+              <div className="hp-meta hp-meta-row">
+                <span>{(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}</span>
+                <CardSave c={lead} />
               </div>
             </Link>
           )}
@@ -843,7 +897,7 @@ function LatestSection() {
                   <div className="body">
                     <h4>{s.title}</h4>
                     {preview && <p>{preview}</p>}
-                    <div className="hp-meta">{relTime(s.published_at)}</div>
+                    <div className="hp-meta hp-meta-row"><span>{relTime(s.published_at)}</span><CardSave c={s} /></div>
                   </div>
                 </Link>
               );
@@ -856,36 +910,12 @@ function LatestSection() {
   );
 }
 
-function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow | undefined; label: string; id: string; demoKind: keyof typeof DEMO_TITLES; style?: React.CSSProperties }) {
-  const q = useByTopic(topic?.id, 3);
-  const real = q.data ?? [];
-  const items = padDemo(real, demoKind, 3);
-  return (
-    <div className="wrap hp-section" id={id} style={style}>
-      <div className="hp-eyebrow">
-        <div className="bar" />
-        <h2>{label}</h2>
-        {topic && <Link to="/topics/$slug" params={{ slug: topic.slug }} className="see-all">See all →</Link>}
-      </div>
-      <div className="hp-topic-grid">
-        {items.map((c) => (
-          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
-            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-            <h4>{c.title}</h4>
-            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-            <div className="hp-meta">{readTimeOf(c)}</div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-
 /* Shelf grid section */
 function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
   const q = useShelf(shelf, 3);
+  const padDemo = usePad();
   const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
+  if (items.length === 0) return null;
   return (
     <div className="wrap hp-section" id={shelf} style={style}>
       <div className="hp-eyebrow">
@@ -899,7 +929,7 @@ function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label:
             <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
             <h4>{c.title}</h4>
             <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-            <div className="hp-meta">{readTimeOf(c)}</div>
+            <div className="hp-meta hp-meta-row"><span>{readTimeOf(c)}</span><CardSave c={c} /></div>
           </Link>
         ))}
       </div>
@@ -910,7 +940,9 @@ function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label:
 /* Media shelf (navy feature + mini grid) */
 function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
   const q = useShelf(shelf, 5);
+  const padDemo = usePad();
   const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
+  if (!q.isLoading && items.length === 0) return null;
   const feature = items[0];
   const grid = items.slice(1, 5);
   return (
@@ -921,7 +953,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
           <h2>{label}</h2>
           {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
         </div>
-        <div className="hp-stream-row">
+        <div className="hp-stream-row" style={grid.length === 0 ? { gridTemplateColumns: "1fr" } : undefined}>
           {feature ? (
             <Link
               to={routeForType(feature.type) as any}
@@ -931,9 +963,10 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
             >
               <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
               <span className="label">{feature.title}</span>
+              <span className="hp-save-corner"><CardSave c={feature} dark /></span>
             </Link>
           ) : <div className="hp-skel" style={{ height: 320 }} />}
-          <div className="hp-stream-mini-grid">
+          {grid.length > 0 && <div className="hp-stream-mini-grid">
             {grid.map((c) => (
               <Link
                 key={c.id ?? ""}
@@ -943,9 +976,10 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
                 style={{ backgroundImage: `url(${coverOf(c)})` }}
               >
                 <span>{c.title}</span>
+                <span className="hp-save-corner"><CardSave c={c} dark /></span>
               </Link>
             ))}
-          </div>
+          </div>}
         </div>
       </div>
     </div>
@@ -1006,9 +1040,13 @@ function FeaturedCollectionSection() {
     banner_url: null,
     is_featured: true,
   };
+  const { demo } = useHome();
   const demoItems = makeDemo("latest", 5, 20);
-  const collection = q.data?.collection ?? demoCollection;
-  const items = q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
+  const collection = q.data?.collection ?? (demo ? demoCollection : null);
+  const items = !demo
+    ? (q.data?.items ?? []).slice(0, 5)
+    : q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
+  if (!collection || q.isLoading || items.length === 0) return null;
   const lead = items[0];
   const paired = items[1];
   const rest = items.slice(2, 5);
@@ -1047,6 +1085,7 @@ function FeaturedCollectionSection() {
                 <div className="body">
                   <h4>{lead.title}</h4>
                   {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
+                  <div style={{ marginTop: 10 }}><CardSave c={lead} /></div>
                 </div>
               </Link>
             )}
@@ -1055,7 +1094,7 @@ function FeaturedCollectionSection() {
                 <div className="thumb" style={{ backgroundImage: `url(${coverOf(paired)})` }} />
                 <div className="body">
                   <h5>{paired.title}</h5>
-                  <div className="byline">{paired.author_name ?? ""}</div>
+                  <div className="byline hp-meta-row"><span>{paired.author_name ?? ""}</span><CardSave c={paired} /></div>
                 </div>
               </Link>
             )}
@@ -1066,7 +1105,7 @@ function FeaturedCollectionSection() {
                 <div className="thumb" style={{ backgroundImage: `url(${coverOf(c)})` }} />
                 <div className="body">
                   <h5>{c.title}</h5>
-                  <div className="byline">{c.author_name ?? ""}</div>
+                  <div className="byline hp-meta-row"><span>{c.author_name ?? ""}</span><CardSave c={c} /></div>
                 </div>
               </Link>
             ))}
@@ -1083,108 +1122,171 @@ function FeaturedCollectionSection() {
   );
 }
 
-/* Footer */
-function SiteFooter() {
-  const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const s = q.trim();
-    if (!s) return;
-    navigate({ to: "/search", search: { q: s } as any });
-  };
-  const col = (title: string, links: { label: string; to?: string; slug?: string }[]) => (
+/* ---------- Signed-in feed sections ---------- */
+function useDefaultTemplateId() {
+  return useQuery({
+    queryKey: ["platform-default-template-id-home"],
+    queryFn: async () => {
+      const { data } = await supabase.from("devotional_templates").select("id")
+        .eq("is_default" as any, true).eq("status", "published").maybeSingle();
+      return data?.id ?? null;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+const fmtShort = (iso: string) => {
+  const d = iso.length === 10 ? new Date(`${iso}T12:00:00`) : new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+function ContinueCards({ userId }: { userId: string }) {
+  const defQ = useDefaultTemplateId();
+  const today = todayISO();
+  const q = useQuery({
+    queryKey: ["hp-continue", userId, today],
+    queryFn: async () => {
+      const [entry, study, note] = await Promise.all([
+        supabase.from("devotional_entries").select("id, template_id, entry_date, updated_at")
+          .eq("user_id", userId).eq("entry_date", today).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        (supabase.from("workspace_items") as any).select("id, title, updated_at")
+          .eq("user_id", userId).eq("kind", "study").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        (supabase.from("workspace_items") as any).select("id, title, updated_at")
+          .eq("user_id", userId).eq("kind", "note").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      return { entry: entry.data as any, study: study.data as any, note: note.data as any };
+    },
+  });
+  const d = q.data;
+  const def = defQ.data;
+  const cards: { key: string; label: string; color: string; title: string; meta: string; to: any }[] = [];
+  if (d?.entry?.template_id) cards.push({
+    key: "ws", label: "Workspace", color: "#0F4A42", title: `Today's entry · ${fmtShort(today)}`,
+    meta: `Edited ${relTime(d.entry.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: d.entry.template_id }, search: { date: today } },
+  });
+  if (d?.study && def) cards.push({
+    key: "study", label: "Study", color: "#FFAE00", title: d.study.title?.trim() || "Untitled study",
+    meta: `Edited ${relTime(d.study.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.study.id } },
+  });
+  if (d?.note && def) cards.push({
+    key: "note", label: "Note", color: "#6C6FD4", title: d.note.title?.trim() || "Untitled note",
+    meta: `Edited ${relTime(d.note.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.note.id } },
+  });
+  if (q.isLoading) return <div className="hp-skel" style={{ height: 110 }} />;
+  if (!cards.length) return null;
+  return (
     <div>
-      <h6>{title}</h6>
-      {links.map((l) => (
-        l.slug ? (
-          <Link key={l.label} to="/topics/$slug" params={{ slug: l.slug }}>{l.label}</Link>
-        ) : (
-          <a key={l.label} href={l.to ?? "#"}>{l.label}</a>
-        )
-      ))}
+      <div className="hp-eyebrow"><div className="bar" /><h2>Continue where you left off</h2></div>
+      <div className="hp-cont-grid">
+        {cards.map((c) => (
+          <Link key={c.key} {...c.to} className="hp-cont-card">
+            <div className="tag"><span className="dot" style={{ background: c.color }} />{c.label}</div>
+            <div className="ttl">{c.title}</div>
+            <div className="hp-meta">{c.meta}</div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
+}
 
+function ActiveDevotionalCard({ userId }: { userId: string }) {
+  const q = useActiveDevotional(userId);
+  const a = q.data;
+  if (!a) return null;
   return (
-    <footer className="hp-footer">
+    <div className="hp-plan-card">
+      <div className="eb">Your devotional · Day {a.day} of {a.total}</div>
+      <h3>{a.title}</h3>
+      <p>Today's read, pray and do are waiting in your workspace.</p>
+      {a.templateId
+        ? <Link to="/devotionals/$id" params={{ id: a.templateId }} search={{ date: todayISO() } as any} className="hp-lime-btn">Open today's in workspace →</Link>
+        : <Link to="/devotionals" className="hp-lime-btn">Open today's in workspace →</Link>}
+    </div>
+  );
+}
+
+function ContinueSection({ userId }: { userId: string }) {
+  const active = useActiveDevotional(userId);
+  return (
+    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
+      <div className={`hp-cont-wrap${active.data ? " has-plan" : ""}`}>
+        <ContinueCards userId={userId} />
+        <ActiveDevotionalCard userId={userId} />
+      </div>
+    </div>
+  );
+}
+
+function UpNextRowSection({ userId }: { userId: string }) {
+  const q = useUpNext(userId);
+  const rows = (q.data ?? []).filter((r) => !r.kept);
+  if (!rows.length) return null;
+  return (
+    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
+      <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
+        <div className="bar" />
+        <h2>Up next</h2>
+        <Link to="/up-next" className="see-all">See all {rows.length} →</Link>
+      </div>
+      <p className="hp-eyebrow-sub">What you saved to come back to</p>
+      <div className="hp-upnext-row">
+        {rows.slice(0, 8).map((r, i) => {
+          const c = r.content;
+          return (
+            <Link key={r.savedId} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className={`hp-un-card${i >= 4 ? " hp-un-extra" : ""}`}>
+              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+              <h4>{c.title}</h4>
+              <div className="hp-meta">{[typeLabel(c.type), lengthLabel(c)].filter(Boolean).join(" · ")}</div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DevotionalsBand({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+  const pub = usePublishedDevotionals(2);
+  const [busy, setBusy] = useState<string | null>(null);
+  const items = (pub.data ?? []).slice(0, 2);
+  const start = async (id: string) => {
+    setBusy(id);
+    try {
+      await subscribeToDevotional(userId, id);
+      navigate({ to: "/devotionals/$id", params: { id }, search: { date: todayISO() } as any });
+    } catch (e: any) { toast.error(e?.message ?? "Could not start this devotional."); setBusy(null); }
+  };
+  return (
+    <div className="hp-navy">
       <div className="wrap">
-        <form className="hp-footer-search" onSubmit={submit}>
-          <input
-            type="text"
-            placeholder="Search CoCreate…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        </form>
-
-        <div className="hp-footer-cols">
-          {col("Identity", [
-            { label: "Daughterhood", slug: "identity" },
-            { label: "Sonhood", slug: "identity" },
-            { label: "Becoming", slug: "identity" },
-            { label: "Grief & Healing", slug: "identity" },
-          ])}
-          {col("Marriage", [
-            { label: "Partnership", slug: "marriage" },
-            { label: "Conflict", slug: "marriage" },
-            { label: "Intimacy", slug: "marriage" },
-            { label: "Engaged", slug: "marriage" },
-          ])}
-          {col("Parenting", [
-            { label: "Early Years", slug: "parenting" },
-            { label: "Discipleship", slug: "parenting" },
-            { label: "Teens", slug: "parenting" },
-            { label: "Single Parenting", slug: "parenting" },
-          ])}
-          {col("Ministry", [
-            { label: "Calling", slug: "ministry" },
-            { label: "Serving", slug: "ministry" },
-            { label: "Leadership", slug: "ministry" },
-            { label: "Burnout", slug: "ministry" },
-          ])}
-          {col("Marketplace", [
-            { label: "Work & Faith", slug: "career" },
-            { label: "Leadership", slug: "career" },
-            { label: "Ambition", slug: "business" },
-            { label: "Rest", slug: "career" },
-          ])}
-          {col("Company", [
-            { label: "About", to: "#" },
-            { label: "Contact", to: "#" },
-            { label: "Store", to: "#" },
-          ])}
+        <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
+          <div className="bar" />
+          <h2>Devotionals</h2>
+          <Link to="/explore/devotionals" className="see-all">See all →</Link>
         </div>
-
-        <div className="hp-footer-brand-row">
-          <div className="hp-brand">
-            <div className="badge">C</div>
-            <div className="word">CoCreate</div>
-          </div>
-          <div className="hp-footer-social">
-            <span className="lbl">FOLLOW</span>
-            <a className="hp-icon-circle" href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M13 22v-8h3l1-4h-4V7.5C13 6.4 13.4 6 14.6 6H17V2.1C16.6 2 15.3 2 13.9 2 11 2 9 3.8 9 7.1V10H6v4h3v8h4z" /></svg></a>
-            <a className="hp-icon-circle" href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" stroke="#fff" strokeWidth="2" /></svg></a>
-            <a className="hp-icon-circle" href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#fff" strokeWidth="1.8" /><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" strokeWidth="1.8" /></svg></a>
-          </div>
-          <div className="hp-app-badges">
-            <div className="hp-app-pill">📱 iOS — Coming Soon</div>
-            <div className="hp-app-pill">▶ Android — Coming Soon</div>
-          </div>
-        </div>
-
-        <div className="hp-footer-legal">
-          <div>© {new Date().getFullYear()} CoCreate. All rights reserved.</div>
-          <div className="links">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Help Center</a>
-            <a href="#">Sitemap</a>
-          </div>
+        <p className="hp-eyebrow-sub" style={{ color: "rgba(251,248,237,0.72)" }}>Read it here, live it in your workspace</p>
+        <div className="hp-dev-grid">
+          {items.map((t) => (
+            <div key={t.id} className="hp-dev-card" style={{ ["--acc" as any]: t.accent_color || "#DCE07A" }}>
+              <div className="meta">{t.duration_days ? `${t.duration_days}-day devotional` : "Devotional"}</div>
+              <Link to="/devotionals/$slug/overview" params={{ slug: t.slug || t.id }}><h3>{t.title}</h3></Link>
+              {t.description && <p>{t.description}</p>}
+              <button type="button" className="hp-lime-btn" disabled={busy === t.id} onClick={() => start(t.id)}>+ Start in my workspace</button>
+            </div>
+          ))}
+          <Link to="/plans/new" search={{ length: 3 } as any} className="hp-dev-create">
+            <span className="plus">+</span>
+            <span className="t">Create your own devotional</span>
+            <span className="s">Pick 1, 3, 5 or 10 days and shape each day's read, pray and do.</span>
+          </Link>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }
 
@@ -1192,8 +1294,8 @@ function SiteFooter() {
 /*  Page                                                         */
 /* ============================================================ */
 function HomePage() {
-  const topicsQ = useTopics();
   const [signedIn, setSignedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const { feed } = Route.useSearch();
   const homeNavigate = useNavigate();
   // Signed-in users land on the daily workspace unless they explicitly opened the feed.
@@ -1201,28 +1303,36 @@ function HomePage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      const has = !!data.session?.user.id;
-      setSignedIn(has);
-      if (has && !feed) homeNavigate({ to: "/devotionals", replace: true });
+      const id = data.session?.user.id ?? null;
+      setSignedIn(!!id);
+      setUserId(id);
+      if (id && !feed) homeNavigate({ to: "/devotionals", replace: true });
       else setRedirecting(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s?.user.id));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setSignedIn(!!s?.user.id); setUserId(s?.user.id ?? null); });
     return () => sub.subscription.unsubscribe();
   }, []);
 
-
-  const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
-
+  const upNext = useUpNext(userId);
+  const savedMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    (upNext.data ?? []).forEach((r) => { if (r.content.id) m[r.content.id] = r.savedId; });
+    return m;
+  }, [upNext.data]);
+  const upNextCount = (upNext.data ?? []).filter((r) => !r.kept).length;
+  const ctx = useMemo(() => ({ demo: !signedIn, userId, savedMap }), [signedIn, userId, savedMap]);
 
   if (redirecting) return null;
 
   return (
-    <AppShell current="home" hideSide>
+    <AppShell current="explore" hideSide={!signedIn} hideTopbar>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <HomeCtx.Provider value={ctx}>
       <div className="hp">
         {signedIn ? null : <HomeTourBar />}
-        <HomeMasthead signedIn={signedIn} />
-        {signedIn && <ContinueStrip />}
+        <HomeMasthead signedIn={signedIn} upNextCount={upNextCount} />
+        {signedIn && userId && <ContinueSection userId={userId} />}
+        {signedIn && userId && <UpNextRowSection userId={userId} />}
         <LatestSection />
 
         <MediaShelfSection shelf="watch" label="Watch" seeAll="/watch" />
@@ -1230,12 +1340,14 @@ function HomePage() {
         <MediaShelfSection shelf="shorts" label="Shorts" seeAll="/watch" />
         <ShelfSection shelf="read" label="Read" seeAll="/explore" style={{ paddingTop: 80, paddingBottom: 44 }} />
         <ShelfSection shelf="listen" label="Listen" seeAll="/listen" style={{ paddingTop: 44, paddingBottom: 44 }} />
-        <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        {signedIn && userId
+          ? <div style={{ margin: "36px 0" }}><DevotionalsBand userId={userId} /></div>
+          : <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/explore/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />}
         <ShelfSection shelf="guides" label="Guides" seeAll="/explore" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
+      </HomeCtx.Provider>
     </AppShell>
   );
 }
-
