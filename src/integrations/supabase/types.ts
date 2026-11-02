@@ -2048,6 +2048,7 @@ export type Database = {
           created_at: string
           devotional_entry_id: string | null
           folder_id: string | null
+          hidden_from_recent_at: string | null
           id: string
           kind: string
           legacy_entry_id: string | null
@@ -2069,6 +2070,7 @@ export type Database = {
           created_at?: string
           devotional_entry_id?: string | null
           folder_id?: string | null
+          hidden_from_recent_at?: string | null
           id?: string
           kind?: string
           legacy_entry_id?: string | null
@@ -2090,6 +2092,7 @@ export type Database = {
           created_at?: string
           devotional_entry_id?: string | null
           folder_id?: string | null
+          hidden_from_recent_at?: string | null
           id?: string
           kind?: string
           legacy_entry_id?: string | null

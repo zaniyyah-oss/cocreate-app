@@ -1,0 +1,1 @@
+ALTER TABLE public.workspace_items ADD COLUMN IF NOT EXISTS hidden_from_recent_at timestamptz;

@@ -15,6 +15,13 @@
       "when": 1793631932180,
       "tag": "0001_up_next_and_contact",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793632867683,
+      "tag": "0002_workspace_items_hidden_from_recent",
+      "breakpoints": true
     }
   ]
 }
