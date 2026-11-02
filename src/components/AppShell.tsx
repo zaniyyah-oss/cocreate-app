@@ -10,7 +10,7 @@ export type NavKey = "home" | "read" | "explore" | "devotionals" | "calendar" | 
 const ICON = {
   home:        <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>,
   read:        <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg>,
-  explore:     <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
+  explore:     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>,
   devotionals: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>,
   calendar:    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg>,
   saved:       <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>,
@@ -23,8 +23,9 @@ const ICON = {
 
 function buildDesktopNav(labels: Record<string, string>) {
   return [
-    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.devotionals },
+    { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.home },
     { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read",        icon: ICON.read },
+    { key: "explore" as const,     label: labels.explore_label     || "Explore",    to: "/?feed=1",     icon: ICON.explore },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
     { key: "notes" as const,       label: labels.notes_label       || "Notes",      to: "/notes",       icon: ICON.notes },
   ];
