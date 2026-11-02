@@ -17,7 +17,7 @@ export type UpNextRow = {
 export const UP_NEXT_KEY = "up-next";
 
 export const routeForType = (t: ContentType | null | undefined) =>
-  t === "teaching" || t === "clip" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
+  t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
 
 export function useSessionUserId() {
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
