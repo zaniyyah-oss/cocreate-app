@@ -17,7 +17,7 @@ import { SavedContentPanel } from "@/components/SavedContentPanel";
 import { StudyLibrary } from "@/components/read/StudyLibrary";
 
 export const Route = createFileRoute("/read")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { open?: string } => ({
     open: typeof s.open === "string" ? s.open : undefined,
   }),
   head: () => ({
