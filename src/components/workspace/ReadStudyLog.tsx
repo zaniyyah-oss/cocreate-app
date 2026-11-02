@@ -24,6 +24,9 @@ const CSS = `
 .rsl-sub{font-size:12px;color:#6f6b5e;margin-top:2px;}
 .rsl-chev{flex-shrink:0;color:#181A4D;opacity:0.6;font-size:16px;}
 .rsl-empty{font-size:12.5px;color:#8a8678;margin:0 0 10px;}
+.rsl-lead{display:flex;align-items:center;gap:10px;padding:6px 2px;margin:0 0 6px;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-size:14px;line-height:1.45;color:#8a8678;text-align:left;}
+.rsl-lead:hover{color:#6f6b5e;}
+.rsl-lead .plus{width:18px;text-align:center;color:#8a8678;font-size:16px;flex-shrink:0;}
 .rsl-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .rsl-pill{background:transparent;border:1px dashed rgba(24,26,77,0.35);color:#181A4D;border-radius:999px;padding:7px 14px;font-family:'Poppins',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;}
 .rsl-pill:hover{border-style:solid;border-color:#181A4D;}
@@ -198,7 +201,14 @@ export function ReadStudyLog({
           ))}
         </div>
       ) : linksQ.isLoading && !guest ? null : (
-        <div className="rsl-empty">No studies logged for this day yet.</div>
+        <button
+          type="button"
+          className="rsl-lead"
+          onClick={() => (guest ? onGuestGate?.() : setPickerOpen(true))}
+        >
+          <span className="plus" aria-hidden="true">+</span>
+          Start or revisit a study
+        </button>
       )}
       <div className="rsl-actions">
         <button type="button" className="rsl-pill" onClick={newStudy} disabled={creating}>

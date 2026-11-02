@@ -1471,8 +1471,8 @@ function EntryPage() {
                       userId={userId ?? ""}
                       value={prayText}
                       className={`de-pray-doc${focusSection === "pray" ? " is-focus" : " is-inline"}`}
-                      placeholder="Write your prayer…"
-                      emptyAffordance="Write your prayer…"
+                      placeholder="Jot down your prayer points"
+                      emptyAffordance="Jot down your prayer points"
                       forceOpen={focusSection === "pray"}
                       onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
                     />
@@ -3367,8 +3367,8 @@ function SectionRichEditor({
         .de-section-doc.is-inline .ws-editor-content{min-height:120px;max-height:42vh;overflow-y:auto;padding-top:8px;}
         @media (min-width:1200px){.de-section-doc.is-inline .ws-editor-content{max-height:56vh;}}
         .de-section-doc.is-collapsed .ws-editor{display:none;}
-        .de-add-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:10px;padding:11px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:14px;line-height:1.4;color:#8a8678;}
-        .de-add-row:hover{border-color:rgba(24,26,77,0.38);color:#6f6b5e;background:rgba(24,26,77,0.02);}
+        .de-add-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;padding:6px 2px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:14px;line-height:1.45;color:#8a8678;}
+        .de-add-row:hover{color:#6f6b5e;}
         .de-add-row .plus{width:18px;text-align:center;color:#8a8678;font-size:16px;flex-shrink:0;}
       `}</style>
       <WorkspaceEditor
