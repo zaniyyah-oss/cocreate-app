@@ -547,7 +547,7 @@ export function WorkspaceSection({
         <div className="ws-recent">
           <div className="ws-recent-head">
             <div className="ws-recent-title"><span className="dot" /> Pinned &amp; recent today</div>
-            <div className="ws-recent-sub">Tap to review · won't open in edit mode</div>
+            <div className="ws-recent-sub">Tap to review · won't open in edit mode · hover a tile to hide it</div>
           </div>
           <div className="ws-recent-scroll">
             {recentItems.length === 0 ? (
