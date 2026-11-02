@@ -25,7 +25,7 @@ export const Route = createFileRoute("/up-next")({
 
 const CSS = `
 .un{max-width:880px;margin:0 auto;padding:44px 24px 120px;font-family:'Poppins',sans-serif;color:#20201C;}
-.un h1{font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 6px;}
+.un h1{font-weight:900;letter-spacing:-.02em;font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 6px;}
 .un-sub{font-size:14.5px;color:#6f6b5e;margin:0 0 24px;}
 .un-tabs{display:inline-flex;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:999px;padding:4px;margin-bottom:20px;}
 .un-tabs button{border:none;background:transparent;border-radius:999px;padding:8px 18px;font-family:inherit;font-size:14px;font-weight:700;color:#6f6b5e;cursor:pointer;}

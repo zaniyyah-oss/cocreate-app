@@ -38,7 +38,7 @@ const schema = z.object({
 const CSS = `
 .ct{max-width:640px;margin:0 auto;padding:56px 24px 120px;font-family:'Poppins',sans-serif;}
 .ct-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8678;margin-bottom:10px;}
-.ct h1{font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 8px;}
+.ct h1{font-weight:900;letter-spacing:-.02em;font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 8px;}
 .ct-sub{font-size:15px;color:#6f6b5e;margin:0 0 28px;}
 .ct-card{background:#fff;border:1px solid rgba(24,26,77,0.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;}
 .ct label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#181A4D;}

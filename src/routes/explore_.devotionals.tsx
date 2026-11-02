@@ -26,9 +26,9 @@ export const Route = createFileRoute("/explore_/devotionals")({
 const DEV_CSS = `
 .xd{max-width:1080px;margin:0 auto;padding:44px 24px 120px;font-family:'Poppins',sans-serif;color:#20201C;}
 .xd-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a8678;margin-bottom:10px;}
-.xd h1{font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 8px;}
+.xd h1{font-weight:900;letter-spacing:-.02em;font-family:'Archivo Black','Poppins',sans-serif;font-size:40px;color:#181A4D;margin:0 0 8px;}
 .xd-sub{font-size:14.5px;color:#6f6b5e;margin:0 0 34px;max-width:620px;line-height:1.55;}
-.xd-h2{font-family:'Archivo Black','Poppins',sans-serif;font-size:22px;color:#20201C;margin:0 0 14px;}
+.xd-h2{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:22px;color:#20201C;margin:0 0 14px;}
 .xd-sec{margin-bottom:40px;}
 .xd-active{background:#181A4D;color:#FBF8ED;border-radius:16px;padding:20px 22px;margin-bottom:18px;}
 .xd-active .eb{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#DCE07A;margin-bottom:6px;}
@@ -38,7 +38,7 @@ const DEV_CSS = `
 .xd-lime{display:inline-flex;align-items:center;background:#DCE07A;color:#181A4D;font-weight:800;font-size:13px;padding:10px 18px;border-radius:999px;text-decoration:none;border:none;cursor:pointer;font-family:inherit;}
 .xd-lime:hover{background:#CAC307;}
 .xd-build{background:#181A4D;color:#FBF8ED;border-radius:16px;padding:22px 24px;}
-.xd-build h2{font-family:'Archivo Black','Poppins',sans-serif;font-size:20px;margin:0 0 6px;color:#FBF8ED;}
+.xd-build h2{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;font-size:20px;margin:0 0 6px;color:#FBF8ED;}
 .xd-build p{font-size:13px;line-height:1.5;margin:0;color:rgba(251,248,237,.82);max-width:520px;}
 .xd-lens{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
 .xd-len{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#FBF8ED;border:1.5px solid #ECE4CE;border-radius:12px;padding:12px 18px;text-decoration:none;color:#20201C;min-height:58px;min-width:74px;}

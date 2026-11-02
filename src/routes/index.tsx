@@ -1325,7 +1325,7 @@ function HomePage() {
   if (redirecting) return null;
 
   return (
-    <AppShell current="explore" hideSide={!signedIn}>
+    <AppShell current="explore" hideSide={!signedIn} hideTopbar>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <HomeCtx.Provider value={ctx}>
       <div className="hp">
