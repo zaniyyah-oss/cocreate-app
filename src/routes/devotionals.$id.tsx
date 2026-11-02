@@ -1134,7 +1134,7 @@ function EntryPage() {
 
   const flushRef = useRef<() => Promise<void>>(async () => {});
   flushRef.current = flushEntrySave;
-  useEffect(() => () => { void flushRef.current(); }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const flushForThisDay = flushRef.current; return () => { void flushForThisDay(); }; }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scheduleSave = (field: SaveField, value: unknown) => {
     if (!ready) return;
