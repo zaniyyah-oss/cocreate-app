@@ -14,9 +14,9 @@ export const Route = createFileRoute("/read/$abbr")({
   }),
   head: ({ params }) => ({
     meta: [
-      { title: `${params.abbr} — Your entries on CoCreate` },
+      { title: `${params.abbr} — Your studies on CoCreate` },
       { name: "description", content: `Every devotional entry tagged to ${params.abbr}.` },
-      { property: "og:title", content: `${params.abbr} — Your entries on CoCreate` },
+      { property: "og:title", content: `${params.abbr} — Your studies on CoCreate` },
       { property: "og:description", content: `Every devotional entry tagged to ${params.abbr}.` },
       { name: "robots", content: "noindex" },
     ],
@@ -66,19 +66,27 @@ function BookDetail() {
       const { data: userRes } = await supabase.auth.getUser();
       const uid = userRes?.user?.id;
       if (!uid) return [] as Entry[];
+      // Studies are workspace documents (kind = 'study') tagged with this book.
       const { data, error } = await supabase
-        .from("devotional_entries")
-        .select("id,entry_date,entry_title,scripture_reference,scripture_text,topic_ids,book_of_bible,books_of_bible,book_confirmed")
+        .from("workspace_items" as any)
+        .select("id,title,body_text,topic_ids,books_of_bible,created_at,updated_at,status")
         .eq("user_id", uid)
-        .eq("book_confirmed", true)
-        .or(`books_of_bible.cs.{"${abbr}"},book_of_bible.eq.${abbr}`)
-        .order("entry_date", { ascending: false });
+        .eq("kind", "study")
+        .contains("books_of_bible", [abbr])
+        .order("updated_at", { ascending: false });
       if (error) throw error;
-      return ((data ?? []) as any[]).filter((e) => {
-        const arr = Array.isArray(e.books_of_bible) ? e.books_of_bible : [];
-        if (arr.length > 0) return arr.includes(abbr);
-        return e.book_of_bible === abbr;
-      }) as Entry[];
+      return ((data ?? []) as any[]).map((w) => {
+        const firstLine = String(w.body_text ?? "").split("\n").find((l: string) => l.trim()) ?? "";
+        const ref = parseScriptureRef(w.title).chapter != null ? w.title : firstLine;
+        return {
+          id: w.id,
+          entry_date: String(w.updated_at).slice(0, 10),
+          entry_title: w.title,
+          scripture_reference: ref,
+          scripture_text: w.body_text,
+          topic_ids: w.topic_ids ?? [],
+        } as Entry;
+      });
     },
   });
 
@@ -225,7 +233,7 @@ function BookDetail() {
 
         <div className="rb-wrap">
           <div className="rb-nav">
-            <Link to="/read" className="rb-back">‹ All books</Link>
+            <Link to="/read" className="rb-back">‹ Read</Link>
             <Link to="/notes" className="rb-back">All studies</Link>
           </div>
           <div className="rb-tag">{abbr}</div>
@@ -348,118 +356,31 @@ function BookDetail() {
 function EntryCard({
   entry,
   topicsById,
-  onChanged,
-  autoFocus = false,
 }: {
   entry: Entry;
   topicsById: Map<string, Topic>;
-  onChanged: () => void;
+  onChanged?: () => void;
   autoFocus?: boolean;
 }) {
-  const [note, setNote] = useState(entry.scripture_text ?? "");
-  const [topicIds, setTopicIds] = useState<string[]>(entry.topic_ids ?? []);
-  const [status, setStatus] = useState<"" | "saving" | "saved" | "error">("");
-  const saveTimer = useRef<number | null>(null);
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const noteRef = useRef<HTMLTextAreaElement | null>(null);
-
-  useEffect(() => {
-    if (!autoFocus) return;
-    const t = window.setTimeout(() => {
-      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      noteRef.current?.focus();
-    }, 100);
-    return () => window.clearTimeout(t);
-  }, [autoFocus]);
-
-  const saveNote = async (val: string) => {
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ scripture_text: val })
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-  };
-
-  const scheduleSaveNote = (val: string) => {
-    setNote(val);
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => saveNote(val), 700);
-  };
-
-  const saveTopics = async (next: string[]) => {
-    setTopicIds(next);
-    setStatus("saving");
-    const { error } = await supabase
-      .from("devotional_entries")
-      .update({ topic_ids: next } as any)
-      .eq("id", entry.id);
-    setStatus(error ? "error" : "saved");
-    if (!error) window.setTimeout(() => setStatus(""), 1500);
-    onChanged();
-  };
-
-  const previewTopics = topicIds
+  const previewTopics = (entry.topic_ids ?? [])
     .map((id) => topicsById.get(id))
     .filter((t): t is Topic => !!t)
     .slice(0, 2);
-
+  const preview = (entry.scripture_text ?? "").replace(/\s+/g, " ").trim().slice(0, 220);
   return (
-    <div className={`rb-card${autoFocus ? " focus" : ""}`} ref={cardRef}>
+    <Link to="/read" search={{ open: entry.id }} className="rb-card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <div className="rb-card-top">
         <div className="rb-pills">
-          <span className="rb-pill daily">Read</span>
+          <span className="rb-pill daily">Study</span>
           {previewTopics.map((t) => (
-            <span key={t.id} className="rb-pill topic">
-              {t.display_name ?? t.name}
-            </span>
+            <span key={t.id} className="rb-pill topic">{t.display_name ?? t.name}</span>
           ))}
         </div>
-        <Link
-          to="/devotionals/$id"
-          params={{ id: "default" }}
-          search={{ date: entry.entry_date ?? undefined } as any}
-          className="rb-focus"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
-          </svg>
-          Focus
-        </Link>
+        <span className="rb-focus">Open</span>
       </div>
-
-      <h3 className="rb-title">
-        {entry.entry_title || entry.scripture_reference || "Untitled study"}
-      </h3>
-      <div className="rb-meta">
-        {fmtDate(entry.entry_date)}
-        {entry.scripture_reference ? ` · ${entry.scripture_reference}` : ""}
-      </div>
-
-      <div className="rb-note-lbl">Read note</div>
-      <textarea
-        ref={noteRef}
-        className="rb-note"
-        value={note}
-        placeholder="Add a note from your reading…"
-        onChange={(e) => scheduleSaveNote(e.target.value)}
-        onBlur={() => {
-          if (saveTimer.current) {
-            window.clearTimeout(saveTimer.current);
-            saveTimer.current = null;
-          }
-          if ((entry.scripture_text ?? "") !== note) saveNote(note);
-        }}
-      />
-
-      <TopicPicker value={topicIds} onChange={saveTopics} />
-
-      <div className="rb-note-status">
-        {status === "saving" && "Saving…"}
-        {status === "saved" && "Saved"}
-        {status === "error" && "Couldn't save"}
-      </div>
-    </div>
+      <h3 className="rb-title">{entry.entry_title || entry.scripture_reference || "Untitled study"}</h3>
+      <div className="rb-meta">edited {fmtDate(entry.entry_date)}</div>
+      {preview && <p style={{ fontSize: 14, lineHeight: 1.55, color: "#4a4a44", margin: "8px 0 0" }}>{preview}</p>}
+    </Link>
   );
 }
