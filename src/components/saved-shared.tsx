@@ -364,7 +364,7 @@ export function useWorkspaceDocs(userId: string | null, ready: boolean) {
       const { data, error } = await supabase
         .from("workspace_items" as any)
         .select("id, title, tags, created_at, updated_at, body_text, devotional_entry_id")
-        .eq("user_id", userId!)
+        .eq("user_id", userId!).eq("kind", "note")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as WorkspaceDoc[];

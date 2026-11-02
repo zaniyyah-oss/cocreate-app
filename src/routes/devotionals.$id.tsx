@@ -1854,7 +1854,7 @@ function HistoryView({ userId, templateId, range }: { userId: string; templateId
         supabase.from("devotional_entries").select("*").eq("user_id", userId)
           .gte("entry_date", startISO).lte("entry_date", endISO),
         supabase.from("workspace_items" as any).select("id,tags,created_at,devotional_entry_id")
-          .eq("user_id", userId)
+          .eq("user_id", userId).eq("kind", "note")
           .gte("created_at", startISO + "T00:00:00")
           .lte("created_at", endISO + "T23:59:59"),
       ]);
@@ -2107,7 +2107,7 @@ function useDevoContentDates(userId: string | null, startISO: string, endISO: st
           .gte("entry_date", startISO).lte("entry_date", endISO),
         supabase.from("workspace_items" as any)
           .select("created_at, devotional_entry_id, title, content")
-          .eq("user_id", userId!)
+          .eq("user_id", userId!).eq("kind", "note")
           .gte("created_at", startISO + "T00:00:00")
           .lte("created_at", endISO + "T23:59:59"),
       ]);

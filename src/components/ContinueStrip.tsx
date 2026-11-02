@@ -80,7 +80,7 @@ export function ContinueStrip() {
           .eq("user_id", userId).order("updated_at", { ascending: false }).limit(8),
         supabase.from("workspace_items" as any)
           .select("id, title, body_text, updated_at")
-          .eq("user_id", userId).order("updated_at", { ascending: false }).limit(10),
+          .eq("user_id", userId).eq("kind", "note").order("updated_at", { ascending: false }).limit(10),
         supabase.from("plan_assignments" as any)
           .select("id, plan_id, start_date, current_day, status, updated_at")
           .eq("user_id", userId).order("updated_at", { ascending: false }).limit(5),
