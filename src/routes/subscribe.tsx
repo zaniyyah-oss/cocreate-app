@@ -41,12 +41,12 @@ const CSS = `
 .sb-brand .mark{width:32px;height:32px;border-radius:9px;background:#181A4D;color:#CAC307;display:flex;align-items:center;justify-content:center;font-family:'Archivo Black','Poppins',sans-serif;}
 .sb-brand .word{font-family:'Archivo Black','Poppins',sans-serif;font-size:18px;}
 .sb-signin{font-weight:700;font-size:13.5px;color:#181A4D;text-decoration:none;}
-.sb{max-width:1080px;margin:0 auto;padding:32px 24px 96px;display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:start;}
+.sb{max-width:1080px;margin:0 auto;padding:32px 24px 96px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);box-sizing:border-box;gap:48px;align-items:start;}
 .sb h1{font-family:'Archivo Black','Poppins',sans-serif;font-weight:900;letter-spacing:-.02em;font-size:44px;line-height:1.08;margin:0 0 16px;}
 .sb-lead{font-size:15.5px;color:#6f6b5e;line-height:1.6;margin:0 0 22px;}
 .sb-rs{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:14px;}
 .sb-rs li{display:flex;gap:10px;}.sb-rs li:before{content:"✓";color:#0F4A42;font-weight:900;}
-.sb-card{background:#fff;border:1px solid rgba(24,26,77,.08);border-radius:18px;padding:26px;display:flex;flex-direction:column;gap:16px;}
+.sb-card{box-sizing:border-box;min-width:0;background:#fff;border:1px solid rgba(24,26,77,.08);border-radius:18px;padding:26px;display:flex;flex-direction:column;gap:16px;}
 .sb-card label.f{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;}
 .sb-card input[type=text],.sb-card input[type=email]{border:1.5px solid #ECE4CE;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:15px;background:#FBF8ED;color:#20201C;outline:none;}
 .sb-card input:focus{border-color:#181A4D;}
@@ -61,7 +61,7 @@ const CSS = `
 .sb-err{font-size:12px;color:#9A3412;font-weight:600;}
 .sb-done{border-left:4px solid #CAC307;}
 .sb-done h2{margin:0;font-size:22px;}.sb-done p{margin:0;color:#6f6b5e;font-size:14px;}
-@media(max-width:860px){.sb{grid-template-columns:1fr;gap:28px;padding-top:12px;}.sb h1{font-size:34px;}.sb-grid{grid-template-columns:1fr;}}
+@media(max-width:860px){.sb{grid-template-columns:minmax(0,1fr);gap:28px;padding-top:12px;}.sb h1{font-size:34px;}.sb-grid{grid-template-columns:1fr;}}
 `;
 
 function SubscribePage() {
