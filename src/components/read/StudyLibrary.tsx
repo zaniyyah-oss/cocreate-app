@@ -303,7 +303,7 @@ export function StudyLibrary({
     }
     return [...groups.entries()]
       .map(([k, arr]) => ({ k, arr: [...arr].sort((a, b) => b.updated_at.localeCompare(a.updated_at)) }))
-      .sort((a, b) => b.arr[0].updated_at.localeCompare(a.arr[0].updated_at));
+      .sort((a, b) => (a.k ? bookOrder(a.k) : -1) - (b.k ? bookOrder(b.k) : -1));
   };
 
   if (ready && !userId) {
