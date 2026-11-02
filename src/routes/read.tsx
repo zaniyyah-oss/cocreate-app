@@ -14,14 +14,18 @@ import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { useAuth } from "@/components/saved-shared";
 import { SavedDevotionalsSection } from "@/components/SavedDevotionals";
 import { SavedContentPanel } from "@/components/SavedContentPanel";
+import { StudyLibrary } from "@/components/read/StudyLibrary";
 
 export const Route = createFileRoute("/read")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    open: typeof s.open === "string" ? s.open : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Read — Your Bible library on CoCreate" },
-      { name: "description", content: "Every study you've saved, grouped by book of the Bible." },
+      { name: "description", content: "Your Bible studies — folders, books, topics and the studies you have open." },
       { property: "og:title", content: "Read — Your Bible library on CoCreate" },
-      { property: "og:description", content: "Every study you've saved, grouped by book of the Bible." },
+      { property: "og:description", content: "Your Bible studies — folders, books, topics and the studies you have open." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -457,7 +461,53 @@ const RD_CSS = `
         }
       `;
 
-/*__READ_LIBRARY__*/
+function ReadLibrary() {
+  const { userId, ready } = useAuth();
+  const { open } = Route.useSearch();
+  const booksQ = useBibleBooks();
+  const [tab, setTab] = useState<"OT" | "NT">("OT");
+  const books = booksQ.data ?? [];
+
+  // The existing 66-book coverage view ("Whole Bible").
+  const bibleGrid = (counts: Record<string, number>) => {
+    const filtered = books.filter((b) => b.testament === tab);
+    return (
+      <>
+        <div className="rd-tabs" role="tablist" style={{ marginBottom: 16 }}>
+          <button role="tab" className={tab === "OT" ? "active" : ""} onClick={() => setTab("OT")}>Old Testament</button>
+          <button role="tab" className={tab === "NT" ? "active" : ""} onClick={() => setTab("NT")}>New Testament</button>
+        </div>
+        <div className="rd-section-label">{tab === "OT" ? "Old Testament" : "New Testament"} — {filtered.length} books</div>
+        <div className="rd-grid">
+          {filtered.map((b) => {
+            const n = counts[b.abbreviation] ?? 0;
+            return (
+              <Link key={b.abbreviation} to="/read/$abbr" params={{ abbr: b.abbreviation }} search={{} as any}
+                className={`rd-chip ${n > 0 ? "on" : ""}`} title={b.full_name}>
+                {b.abbreviation}
+                {n > 0 && <span className="rd-badge">{n}</span>}
+              </Link>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <AppShell>
+      <div style={{ background: "#FBF8ED", minHeight: "100vh", width: "100%" }}>
+        <style>{RD_CSS}</style>
+        <div className="rd-wrap">
+          <div className="rd-eyebrow">Workspace · Read</div>
+          <h1 className="rd-h1">Read</h1>
+          <StudyLibrary userId={userId} ready={ready} openId={open} bibleGrid={bibleGrid} />
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
 
 function StudiesTable({
   items,
