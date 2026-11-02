@@ -30,9 +30,11 @@ type Props = {
   onConfirmSuggestion?: () => void;
   /** Compact presentation: a single quiet icon button, no chips or helper rows. */
   iconOnly?: boolean;
+  /** Offer a "Various" choice for studies that span many books. */
+  allowVarious?: boolean;
 };
 
-export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion, iconOnly }: Props) {
+export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion, iconOnly, allowVarious }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const booksQ = useBibleBooks();
@@ -194,6 +196,15 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
             onChange={(e) => setQ(e.target.value)}
           />
           <div className="bt-hint">Select one or more books — this note will show up under each.</div>
+          {allowVarious && (
+            <div className="bt-group">
+              <div className="bt-list">
+                <button aria-pressed={values.includes("Various")} onClick={() => onToggle("Various")} title="Scripture from all over the Bible">
+                  {values.includes("Various") && "✓"} Various
+                </button>
+              </div>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <div className="bt-empty">No matching book</div>
           ) : (

@@ -949,6 +949,7 @@ function NoteBody({
             <>
               <BookTagger
                 values={studyBooks}
+                allowVarious
                 onToggle={(abbr) => {
                   const next = studyBooks.includes(abbr) ? studyBooks.filter((x) => x !== abbr) : [...studyBooks, abbr];
                   void saveStudyMeta({ books_of_bible: next });

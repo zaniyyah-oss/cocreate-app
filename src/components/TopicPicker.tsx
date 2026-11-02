@@ -177,7 +177,7 @@ export function TopicPicker({
         .tp-add{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;border:1.5px dashed #ECE4CE;background:transparent;color:#8a8879;cursor:pointer;font-family:inherit;}
         .tp-add:hover{border-color:#FFAE00;color:#20201C;}
         .tp-add[disabled]{opacity:.5;cursor:not-allowed;}
-        .tp-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:#fff;border:1.5px solid #ECE4CE;border-radius:12px;padding:8px;min-width:240px;max-height:300px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.08);}
+        .tp-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:200;background:#fff;border:1.5px solid #ECE4CE;border-radius:12px;padding:8px;min-width:240px;max-height:300px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.08);}
         .tp-menu input{width:100%;border:1px solid #ECE4CE;border-radius:8px;padding:6px 8px;font-size:13px;margin-bottom:6px;font-family:inherit;}
         .tp-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13px;color:#20201C;text-align:left;}
         .tp-opt:hover{background:#FBF8ED;}
