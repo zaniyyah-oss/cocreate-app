@@ -41,7 +41,7 @@ export function SiteFooter() {
             { label: "About", to: "/about" },
             { label: "Our mission", to: "/mission" },
             { label: "Shop", to: "/shop" },
-            { label: "Subscribe", to: "/auth", search: { mode: "signup" } },
+            { label: "Subscribe", to: "/subscribe" },
           ])}
           {col("Get in touch", [
             { label: "Contact us", to: "/contact", search: { reason: "general" } },
