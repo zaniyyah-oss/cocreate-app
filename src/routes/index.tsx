@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SaveButton } from "@/components/SaveButton";
 import { useUpNext, lengthLabel, typeLabel } from "@/lib/up-next";
 import { useActiveDevotional, todayISO } from "@/lib/active-devotional";
-import { usePublishedDevotionals, useSavedTemplateIds, subscribeToDevotional } from "@/lib/devotional-start";
+import { usePublishedDevotionals, subscribeToDevotional } from "@/lib/devotional-start";
 import { createContext, useContext } from "react";
 import { toast } from "sonner";
 
@@ -467,6 +467,68 @@ const CSS = `
 /* Photo-overlay cards must stay white even though they are <a> tags. */
 .hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
 
+/* Signed-in masthead quick links */
+.hp-mast-quick{display:flex;align-items:center;gap:2px;}
+.hp-mast-quick svg,.hp-mast-upnext svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hp-mast-divider{width:1px;height:22px;background:rgba(24,26,77,0.14);margin:0 6px;flex-shrink:0;}
+.hp-mast-media{margin-left:0;}
+.hp-mast-upnext .ic{position:relative;display:inline-flex;}
+.hp-count{position:absolute;top:-7px;right:-9px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--limelight);color:var(--navy);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;}
+.hp-mast-upnext-m{display:none;}
+.hp-quickrow{display:none;}
+@media(max-width:767px){
+  .hp-mast-quick,.hp-mast-divider{display:none;}
+  .hp-mast-upnext-m{display:inline-flex;}
+  .hp-quickrow{display:flex;gap:22px;background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);padding:12px 16px;overflow-x:auto;}
+  .hp-quickrow a{font-size:13.5px;font-weight:700;color:var(--navy);white-space:nowrap;}
+}
+.hp-eyebrow-sub{font-size:13.5px;color:#6f6b5e;margin:0 0 18px 14px;}
+.hp-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.hp-save{display:inline-flex;flex-shrink:0;}
+.hp-save-corner{position:absolute;top:12px;right:12px;z-index:3;}
+/* Continue */
+.hp-cont-wrap{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:1000px){.hp-cont-wrap.has-plan{grid-template-columns:2fr 1fr;align-items:end;}}
+.hp-cont-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+@media(min-width:640px){.hp-cont-grid{grid-template-columns:repeat(3,1fr);}}
+.hp-cont-card{background:#fff;border:1px solid rgba(24,26,77,0.08);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;}
+.hp-cont-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.05);}
+.hp-cont-card .tag{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6f6b5e;}
+.hp-cont-card .dot{width:7px;height:7px;border-radius:50%;}
+.hp-cont-card .ttl{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-plan-card{background:var(--navy);color:var(--cream);border-radius:16px;padding:20px;}
+.hp-plan-card .eb{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--limelight);margin-bottom:6px;}
+.hp-plan-card h3{margin:0 0 6px;font-size:19px;font-weight:800;color:#fff;}
+.hp-plan-card p{margin:0 0 14px;font-size:13.5px;color:rgba(251,248,237,0.78);line-height:1.5;}
+.hp-lime-btn{display:inline-flex;align-items:center;background:var(--limelight);color:var(--navy) !important;font-weight:800;font-size:13px;padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;}
+.hp-lime-btn:hover{background:var(--lime);}
+.hp-lime-btn:disabled{opacity:.6;}
+/* Up next row */
+.hp-upnext-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.hp-un-extra{display:none;}
+.hp-un-card .art{height:130px;border-radius:12px;background-size:cover;background-position:center;background-color:var(--limelight);margin-bottom:10px;}
+.hp-un-card h4{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+@media(max-width:899px){
+  .hp-upnext-row{display:flex;overflow-x:auto;gap:14px;scrollbar-width:none;padding-bottom:4px;}
+  .hp-upnext-row::-webkit-scrollbar{display:none;}
+  .hp-un-card{flex:0 0 200px;}
+  .hp-un-extra{display:block;}
+}
+/* Devotionals band */
+.hp-dev-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+@media(min-width:900px){.hp-dev-grid{grid-template-columns:repeat(3,1fr);}}
+.hp-dev-card{background:var(--navy-2);border-top:4px solid var(--acc);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
+.hp-dev-card .meta{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(251,248,237,0.6);}
+.hp-dev-card h3{margin:0;font-size:18px;font-weight:800;color:#fff;}
+.hp-dev-card p{margin:0 0 6px;font-size:13px;color:rgba(251,248,237,0.75);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-dev-create{border:1.5px dashed rgba(220,224,122,0.5);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:160px;}
+.hp-dev-create:hover{border-color:var(--limelight);}
+.hp-dev-create .plus{font-size:24px;color:var(--limelight);font-weight:700;line-height:1;}
+.hp-dev-create .t{font-size:16px;font-weight:800;color:#fff;}
+.hp-dev-create .s{font-size:13px;color:rgba(251,248,237,0.7);line-height:1.5;}
+.hp-footer-cols--4{grid-template-columns:repeat(2,1fr);}
+@media(min-width:900px){.hp-footer-cols--4{grid-template-columns:repeat(4,1fr);}}
+.hp-stream-mini > .hp-save-corner{z-index:3;}
 
 `;
 
@@ -1060,13 +1122,180 @@ function FeaturedCollectionSection() {
   );
 }
 
-__NEWSECTIONS__
+/* ---------- Signed-in feed sections ---------- */
+function useDefaultTemplateId() {
+  return useQuery({
+    queryKey: ["platform-default-template-id-home"],
+    queryFn: async () => {
+      const { data } = await supabase.from("devotional_templates").select("id")
+        .eq("is_default" as any, true).eq("status", "published").maybeSingle();
+      return data?.id ?? null;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+const fmtShort = (iso: string) => {
+  const d = iso.length === 10 ? new Date(`${iso}T12:00:00`) : new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+function ContinueCards({ userId }: { userId: string }) {
+  const defQ = useDefaultTemplateId();
+  const today = todayISO();
+  const q = useQuery({
+    queryKey: ["hp-continue", userId, today],
+    queryFn: async () => {
+      const [entry, study, note] = await Promise.all([
+        supabase.from("devotional_entries").select("id, template_id, entry_date, updated_at")
+          .eq("user_id", userId).eq("entry_date", today).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        (supabase.from("workspace_items") as any).select("id, title, updated_at")
+          .eq("user_id", userId).eq("kind", "study").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        (supabase.from("workspace_items") as any).select("id, title, updated_at")
+          .eq("user_id", userId).eq("kind", "note").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      return { entry: entry.data as any, study: study.data as any, note: note.data as any };
+    },
+  });
+  const d = q.data;
+  const def = defQ.data;
+  const cards: { key: string; label: string; color: string; title: string; meta: string; to: any }[] = [];
+  if (d?.entry?.template_id) cards.push({
+    key: "ws", label: "Workspace", color: "#0F4A42", title: `Today's entry · ${fmtShort(today)}`,
+    meta: `Edited ${relTime(d.entry.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: d.entry.template_id }, search: { date: today } },
+  });
+  if (d?.study && def) cards.push({
+    key: "study", label: "Study", color: "#FFAE00", title: d.study.title?.trim() || "Untitled study",
+    meta: `Edited ${relTime(d.study.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.study.id } },
+  });
+  if (d?.note && def) cards.push({
+    key: "note", label: "Note", color: "#6C6FD4", title: d.note.title?.trim() || "Untitled note",
+    meta: `Edited ${relTime(d.note.updated_at).toLowerCase()}`,
+    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.note.id } },
+  });
+  if (q.isLoading) return <div className="hp-skel" style={{ height: 110 }} />;
+  if (!cards.length) return null;
+  return (
+    <div>
+      <div className="hp-eyebrow"><div className="bar" /><h2>Continue where you left off</h2></div>
+      <div className="hp-cont-grid">
+        {cards.map((c) => (
+          <Link key={c.key} {...c.to} className="hp-cont-card">
+            <div className="tag"><span className="dot" style={{ background: c.color }} />{c.label}</div>
+            <div className="ttl">{c.title}</div>
+            <div className="hp-meta">{c.meta}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ActiveDevotionalCard({ userId }: { userId: string }) {
+  const q = useActiveDevotional(userId);
+  const a = q.data;
+  if (!a) return null;
+  return (
+    <div className="hp-plan-card">
+      <div className="eb">Your devotional · Day {a.day} of {a.total}</div>
+      <h3>{a.title}</h3>
+      <p>Today's read, pray and do are waiting in your workspace.</p>
+      {a.templateId
+        ? <Link to="/devotionals/$id" params={{ id: a.templateId }} search={{ date: todayISO() } as any} className="hp-lime-btn">Open today's in workspace →</Link>
+        : <Link to="/devotionals" className="hp-lime-btn">Open today's in workspace →</Link>}
+    </div>
+  );
+}
+
+function ContinueSection({ userId }: { userId: string }) {
+  const active = useActiveDevotional(userId);
+  return (
+    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
+      <div className={`hp-cont-wrap${active.data ? " has-plan" : ""}`}>
+        <ContinueCards userId={userId} />
+        <ActiveDevotionalCard userId={userId} />
+      </div>
+    </div>
+  );
+}
+
+function UpNextRowSection({ userId }: { userId: string }) {
+  const q = useUpNext(userId);
+  const rows = (q.data ?? []).filter((r) => !r.kept);
+  if (!rows.length) return null;
+  return (
+    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
+      <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
+        <div className="bar" />
+        <h2>Up next</h2>
+        <Link to="/up-next" className="see-all">See all {rows.length} →</Link>
+      </div>
+      <p className="hp-eyebrow-sub">What you saved to come back to</p>
+      <div className="hp-upnext-row">
+        {rows.slice(0, 8).map((r, i) => {
+          const c = r.content;
+          return (
+            <Link key={r.savedId} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className={`hp-un-card${i >= 4 ? " hp-un-extra" : ""}`}>
+              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
+              <h4>{c.title}</h4>
+              <div className="hp-meta">{[typeLabel(c.type), lengthLabel(c)].filter(Boolean).join(" · ")}</div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DevotionalsBand({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+  const pub = usePublishedDevotionals(2);
+  const [busy, setBusy] = useState<string | null>(null);
+  const items = (pub.data ?? []).slice(0, 2);
+  const start = async (id: string) => {
+    setBusy(id);
+    try {
+      await subscribeToDevotional(userId, id);
+      navigate({ to: "/devotionals/$id", params: { id }, search: { date: todayISO() } as any });
+    } catch (e: any) { toast.error(e?.message ?? "Could not start this devotional."); setBusy(null); }
+  };
+  return (
+    <div className="hp-navy">
+      <div className="wrap">
+        <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
+          <div className="bar" />
+          <h2>Devotionals</h2>
+          <Link to="/explore/devotionals" className="see-all">See all →</Link>
+        </div>
+        <p className="hp-eyebrow-sub" style={{ color: "rgba(251,248,237,0.72)" }}>Read it here, live it in your workspace</p>
+        <div className="hp-dev-grid">
+          {items.map((t) => (
+            <div key={t.id} className="hp-dev-card" style={{ ["--acc" as any]: t.accent_color || "#DCE07A" }}>
+              <div className="meta">{t.duration_days ? `${t.duration_days}-day devotional` : "Devotional"}</div>
+              <Link to="/devotionals/$slug/overview" params={{ slug: t.slug || t.id }}><h3>{t.title}</h3></Link>
+              {t.description && <p>{t.description}</p>}
+              <button type="button" className="hp-lime-btn" disabled={busy === t.id} onClick={() => start(t.id)}>+ Start in my workspace</button>
+            </div>
+          ))}
+          <Link to="/plans/new" search={{ length: 3 } as any} className="hp-dev-create">
+            <span className="plus">+</span>
+            <span className="t">Create your own devotional</span>
+            <span className="s">Pick 1, 3, 5 or 10 days and shape each day's read, pray and do.</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================ */
 /*  Page                                                         */
 /* ============================================================ */
 function HomePage() {
-  const topicsQ = useTopics();
   const [signedIn, setSignedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const { feed } = Route.useSearch();
   const homeNavigate = useNavigate();
   // Signed-in users land on the daily workspace unless they explicitly opened the feed.
@@ -1074,28 +1303,36 @@ function HomePage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      const has = !!data.session?.user.id;
-      setSignedIn(has);
-      if (has && !feed) homeNavigate({ to: "/devotionals", replace: true });
+      const id = data.session?.user.id ?? null;
+      setSignedIn(!!id);
+      setUserId(id);
+      if (id && !feed) homeNavigate({ to: "/devotionals", replace: true });
       else setRedirecting(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s?.user.id));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setSignedIn(!!s?.user.id); setUserId(s?.user.id ?? null); });
     return () => sub.subscription.unsubscribe();
   }, []);
 
-
-  const bySlug = (slug: string) => (topicsQ.data ?? []).find((t) => t.slug === slug);
-
+  const upNext = useUpNext(userId);
+  const savedMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    (upNext.data ?? []).forEach((r) => { if (r.content.id) m[r.content.id] = r.savedId; });
+    return m;
+  }, [upNext.data]);
+  const upNextCount = (upNext.data ?? []).filter((r) => !r.kept).length;
+  const ctx = useMemo(() => ({ demo: !signedIn, userId, savedMap }), [signedIn, userId, savedMap]);
 
   if (redirecting) return null;
 
   return (
-    <AppShell current="home" hideSide>
+    <AppShell current="explore" hideSide={!signedIn}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <HomeCtx.Provider value={ctx}>
       <div className="hp">
         {signedIn ? null : <HomeTourBar />}
-        <HomeMasthead signedIn={signedIn} />
-        {signedIn && <ContinueStrip />}
+        <HomeMasthead signedIn={signedIn} upNextCount={upNextCount} />
+        {signedIn && userId && <ContinueSection userId={userId} />}
+        {signedIn && userId && <UpNextRowSection userId={userId} />}
         <LatestSection />
 
         <MediaShelfSection shelf="watch" label="Watch" seeAll="/watch" />
@@ -1103,12 +1340,14 @@ function HomePage() {
         <MediaShelfSection shelf="shorts" label="Shorts" seeAll="/watch" />
         <ShelfSection shelf="read" label="Read" seeAll="/explore" style={{ paddingTop: 80, paddingBottom: 44 }} />
         <ShelfSection shelf="listen" label="Listen" seeAll="/listen" style={{ paddingTop: 44, paddingBottom: 44 }} />
-        <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />
+        {signedIn && userId
+          ? <div style={{ margin: "36px 0" }}><DevotionalsBand userId={userId} /></div>
+          : <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/explore/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />}
         <ShelfSection shelf="guides" label="Guides" seeAll="/explore" style={{ paddingTop: 44, paddingBottom: 80 }} />
 
         <SiteFooter />
       </div>
+      </HomeCtx.Provider>
     </AppShell>
   );
 }
-
