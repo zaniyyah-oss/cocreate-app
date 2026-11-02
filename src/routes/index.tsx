@@ -953,7 +953,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
           <h2>{label}</h2>
           {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
         </div>
-        <div className="hp-stream-row">
+        <div className="hp-stream-row" style={grid.length === 0 ? { gridTemplateColumns: "1fr" } : undefined}>
           {feature ? (
             <Link
               to={routeForType(feature.type) as any}
@@ -966,7 +966,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
               <span className="hp-save-corner"><CardSave c={feature} dark /></span>
             </Link>
           ) : <div className="hp-skel" style={{ height: 320 }} />}
-          <div className="hp-stream-mini-grid">
+          {grid.length > 0 && <div className="hp-stream-mini-grid">
             {grid.map((c) => (
               <Link
                 key={c.id ?? ""}
@@ -979,7 +979,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
                 <span className="hp-save-corner"><CardSave c={c} dark /></span>
               </Link>
             ))}
-          </div>
+          </div>}
         </div>
       </div>
     </div>
