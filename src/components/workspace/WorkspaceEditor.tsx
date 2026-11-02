@@ -239,6 +239,27 @@ export function WorkspaceEditor({
     if (editor.isEditable !== editable) editor.setEditable(editable);
   }, [editor, editable]);
 
+  // The formatting bar only belongs on screen while the caret is in the text.
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!editor) return;
+    const onFocus = () => setFocused(true);
+    const onBlur = () => setFocused(false);
+    editor.on("focus", onFocus);
+    editor.on("blur", onBlur);
+    setFocused(editor.isFocused);
+    return () => {
+      editor.off("focus", onFocus);
+      editor.off("blur", onBlur);
+    };
+  }, [editor]);
+
+  const onEditorReadyRef = useRef(onEditorReady);
+  onEditorReadyRef.current = onEditorReady;
+  useEffect(() => {
+    if (editor) onEditorReadyRef.current?.(editor);
+  }, [editor]);
+
   editorRef.current = editor;
 
   if (!editor) return null;
