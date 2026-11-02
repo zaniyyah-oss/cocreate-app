@@ -6,7 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
 import { NotificationBell } from "@/components/NotificationBell";
-import { ContinueStrip } from "@/components/ContinueStrip";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SaveButton } from "@/components/SaveButton";
+import { useUpNext, lengthLabel, typeLabel } from "@/lib/up-next";
+import { useActiveDevotional, todayISO } from "@/lib/active-devotional";
+import { usePublishedDevotionals, useSavedTemplateIds, subscribeToDevotional } from "@/lib/devotional-start";
+import { createContext, useContext } from "react";
+import { toast } from "sonner";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -194,8 +200,25 @@ function makeDemo(kind: keyof typeof DEMO_TITLES, count: number, offset = 0, typ
     } as unknown as ContentPreview;
   });
 }
-const padDemo = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+const padDemoRaw = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
   real.length >= needed ? real : [...real, ...makeDemo(kind, needed - real.length, real.length, type)];
+
+/* Signed-in readers never see filler: shelves show only what's published. */
+type HomeCtxValue = { demo: boolean; userId: string | null; savedMap: Record<string, string> };
+const HomeCtx = createContext<HomeCtxValue>({ demo: true, userId: null, savedMap: {} });
+const useHome = () => useContext(HomeCtx);
+function usePad() {
+  const { demo } = useHome();
+  return (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
+    demo ? padDemoRaw(real, kind, needed, type) : real;
+}
+const isDemo = (c: ContentPreview) => (c.id ?? "").startsWith("demo-");
+
+function CardSave({ c, dark }: { c: ContentPreview; dark?: boolean }) {
+  const { userId, savedMap } = useHome();
+  if (!c.id || isDemo(c)) return null;
+  return <span className="hp-save"><SaveButton contentId={c.id} userId={userId} savedId={savedMap[c.id]} dark={dark} /></span>;
+}
 
 /* ============================================================ */
 /*  CSS                                                          */
@@ -794,7 +817,10 @@ function MediaNav() {
 function LatestSection() {
   const q = useLatest(5);
   const real = q.data ?? [];
+  const padDemo = usePad();
+  const { demo } = useHome();
   const items = padDemo(real, "latest", 5);
+  if (!demo && !q.isLoading && items.length === 0) return null;
   const lead = items[0];
   const sides = items.slice(1, 5);
 
@@ -829,8 +855,9 @@ function LatestSection() {
                 return text ? <p>{text}</p> : null;
               })()}
               <span className="readmore">Read more →</span>
-              <div className="hp-meta">
-                {(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}
+              <div className="hp-meta hp-meta-row">
+                <span>{(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}</span>
+                <CardSave c={lead} />
               </div>
             </Link>
           )}
@@ -843,7 +870,7 @@ function LatestSection() {
                   <div className="body">
                     <h4>{s.title}</h4>
                     {preview && <p>{preview}</p>}
-                    <div className="hp-meta">{relTime(s.published_at)}</div>
+                    <div className="hp-meta hp-meta-row"><span>{relTime(s.published_at)}</span><CardSave c={s} /></div>
                   </div>
                 </Link>
               );
@@ -885,7 +912,9 @@ function TopicSection({ topic, label, id, demoKind, style }: { topic: TopicRow |
 /* Shelf grid section */
 function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
   const q = useShelf(shelf, 3);
+  const padDemo = usePad();
   const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
+  if (items.length === 0) return null;
   return (
     <div className="wrap hp-section" id={shelf} style={style}>
       <div className="hp-eyebrow">
@@ -899,7 +928,7 @@ function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label:
             <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
             <h4>{c.title}</h4>
             <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-            <div className="hp-meta">{readTimeOf(c)}</div>
+            <div className="hp-meta hp-meta-row"><span>{readTimeOf(c)}</span><CardSave c={c} /></div>
           </Link>
         ))}
       </div>
@@ -910,7 +939,9 @@ function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label:
 /* Media shelf (navy feature + mini grid) */
 function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
   const q = useShelf(shelf, 5);
+  const padDemo = usePad();
   const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
+  if (!q.isLoading && items.length === 0) return null;
   const feature = items[0];
   const grid = items.slice(1, 5);
   return (
@@ -931,6 +962,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
             >
               <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
               <span className="label">{feature.title}</span>
+              <span className="hp-save-corner"><CardSave c={feature} dark /></span>
             </Link>
           ) : <div className="hp-skel" style={{ height: 320 }} />}
           <div className="hp-stream-mini-grid">
@@ -943,6 +975,7 @@ function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: s
                 style={{ backgroundImage: `url(${coverOf(c)})` }}
               >
                 <span>{c.title}</span>
+                <span className="hp-save-corner"><CardSave c={c} dark /></span>
               </Link>
             ))}
           </div>
@@ -1006,9 +1039,13 @@ function FeaturedCollectionSection() {
     banner_url: null,
     is_featured: true,
   };
+  const { demo } = useHome();
   const demoItems = makeDemo("latest", 5, 20);
-  const collection = q.data?.collection ?? demoCollection;
-  const items = q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
+  const collection = q.data?.collection ?? (demo ? demoCollection : null);
+  const items = !demo
+    ? (q.data?.items ?? []).slice(0, 5)
+    : q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
+  if (!collection || q.isLoading || items.length === 0) return null;
   const lead = items[0];
   const paired = items[1];
   const rest = items.slice(2, 5);
@@ -1047,6 +1084,7 @@ function FeaturedCollectionSection() {
                 <div className="body">
                   <h4>{lead.title}</h4>
                   {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
+                  <div style={{ marginTop: 10 }}><CardSave c={lead} /></div>
                 </div>
               </Link>
             )}
@@ -1055,7 +1093,7 @@ function FeaturedCollectionSection() {
                 <div className="thumb" style={{ backgroundImage: `url(${coverOf(paired)})` }} />
                 <div className="body">
                   <h5>{paired.title}</h5>
-                  <div className="byline">{paired.author_name ?? ""}</div>
+                  <div className="byline hp-meta-row"><span>{paired.author_name ?? ""}</span><CardSave c={paired} /></div>
                 </div>
               </Link>
             )}
@@ -1066,7 +1104,7 @@ function FeaturedCollectionSection() {
                 <div className="thumb" style={{ backgroundImage: `url(${coverOf(c)})` }} />
                 <div className="body">
                   <h5>{c.title}</h5>
-                  <div className="byline">{c.author_name ?? ""}</div>
+                  <div className="byline hp-meta-row"><span>{c.author_name ?? ""}</span><CardSave c={c} /></div>
                 </div>
               </Link>
             ))}
@@ -1083,111 +1121,7 @@ function FeaturedCollectionSection() {
   );
 }
 
-/* Footer */
-function SiteFooter() {
-  const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const s = q.trim();
-    if (!s) return;
-    navigate({ to: "/search", search: { q: s } as any });
-  };
-  const col = (title: string, links: { label: string; to?: string; slug?: string }[]) => (
-    <div>
-      <h6>{title}</h6>
-      {links.map((l) => (
-        l.slug ? (
-          <Link key={l.label} to="/topics/$slug" params={{ slug: l.slug }}>{l.label}</Link>
-        ) : (
-          <a key={l.label} href={l.to ?? "#"}>{l.label}</a>
-        )
-      ))}
-    </div>
-  );
-
-  return (
-    <footer className="hp-footer">
-      <div className="wrap">
-        <form className="hp-footer-search" onSubmit={submit}>
-          <input
-            type="text"
-            placeholder="Search CoCreate…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        </form>
-
-        <div className="hp-footer-cols">
-          {col("Identity", [
-            { label: "Daughterhood", slug: "identity" },
-            { label: "Sonhood", slug: "identity" },
-            { label: "Becoming", slug: "identity" },
-            { label: "Grief & Healing", slug: "identity" },
-          ])}
-          {col("Marriage", [
-            { label: "Partnership", slug: "marriage" },
-            { label: "Conflict", slug: "marriage" },
-            { label: "Intimacy", slug: "marriage" },
-            { label: "Engaged", slug: "marriage" },
-          ])}
-          {col("Parenting", [
-            { label: "Early Years", slug: "parenting" },
-            { label: "Discipleship", slug: "parenting" },
-            { label: "Teens", slug: "parenting" },
-            { label: "Single Parenting", slug: "parenting" },
-          ])}
-          {col("Ministry", [
-            { label: "Calling", slug: "ministry" },
-            { label: "Serving", slug: "ministry" },
-            { label: "Leadership", slug: "ministry" },
-            { label: "Burnout", slug: "ministry" },
-          ])}
-          {col("Marketplace", [
-            { label: "Work & Faith", slug: "career" },
-            { label: "Leadership", slug: "career" },
-            { label: "Ambition", slug: "business" },
-            { label: "Rest", slug: "career" },
-          ])}
-          {col("Company", [
-            { label: "About", to: "#" },
-            { label: "Contact", to: "#" },
-            { label: "Store", to: "#" },
-          ])}
-        </div>
-
-        <div className="hp-footer-brand-row">
-          <div className="hp-brand">
-            <div className="badge">C</div>
-            <div className="word">CoCreate</div>
-          </div>
-          <div className="hp-footer-social">
-            <span className="lbl">FOLLOW</span>
-            <a className="hp-icon-circle" href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M13 22v-8h3l1-4h-4V7.5C13 6.4 13.4 6 14.6 6H17V2.1C16.6 2 15.3 2 13.9 2 11 2 9 3.8 9 7.1V10H6v4h3v8h4z" /></svg></a>
-            <a className="hp-icon-circle" href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" stroke="#fff" strokeWidth="2" /></svg></a>
-            <a className="hp-icon-circle" href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#fff" strokeWidth="1.8" /><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" strokeWidth="1.8" /></svg></a>
-          </div>
-          <div className="hp-app-badges">
-            <div className="hp-app-pill">📱 iOS — Coming Soon</div>
-            <div className="hp-app-pill">▶ Android — Coming Soon</div>
-          </div>
-        </div>
-
-        <div className="hp-footer-legal">
-          <div>© {new Date().getFullYear()} CoCreate. All rights reserved.</div>
-          <div className="links">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Help Center</a>
-            <a href="#">Sitemap</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
+__NEWSECTIONS__
 /* ============================================================ */
 /*  Page                                                         */
 /* ============================================================ */
