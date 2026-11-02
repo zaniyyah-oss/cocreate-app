@@ -3333,8 +3333,21 @@ function SectionRichEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entryKey]);
 
+  // An empty section stays out of the way until it is asked for, so the box
+  // reads as one quiet line instead of a toolbar over a blank page.
+  const editorHandle = useRef<Editor | null>(null);
+  const [opened, setOpened] = useState(false);
+  const hasContent = stripHtml(value ?? "").trim().length > 0;
+  const collapsed = !!emptyAffordance && !hasContent && !opened && !forceOpen;
+
+  useEffect(() => {
+    if (!opened || collapsed) return;
+    const t = window.setTimeout(() => editorHandle.current?.commands.focus(), 0);
+    return () => window.clearTimeout(t);
+  }, [opened, collapsed]);
+
   return (
-    <div className={`${className ?? ""} de-section-doc ws-doc`}>
+    <div className={`${className ?? ""} de-section-doc ws-doc${collapsed ? " is-collapsed" : ""}`}>
       <style>{`
         .de-section-doc.is-focus{min-height:min(60vh,560px);}
         .de-section-doc.is-focus .ProseMirror{min-height:min(56vh,520px);outline:none;}
@@ -3342,6 +3355,10 @@ function SectionRichEditor({
         .de-section-doc.is-inline .ws-toolbar{position:relative;top:auto;z-index:20;margin-bottom:8px;}
         .de-section-doc.is-inline .ws-editor-content{min-height:120px;max-height:42vh;overflow-y:auto;padding-top:8px;}
         @media (min-width:1200px){.de-section-doc.is-inline .ws-editor-content{max-height:56vh;}}
+        .de-section-doc.is-collapsed .ws-editor{display:none;}
+        .de-add-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:1px dashed rgba(24,26,77,0.22);border-radius:10px;padding:11px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:14px;line-height:1.4;color:#8a8678;}
+        .de-add-row:hover{border-color:rgba(24,26,77,0.38);color:#6f6b5e;background:rgba(24,26,77,0.02);}
+        .de-add-row .plus{width:18px;text-align:center;color:#8a8678;font-size:16px;flex-shrink:0;}
       `}</style>
       <WorkspaceEditor
         key={entryKey}
@@ -3349,8 +3366,17 @@ function SectionRichEditor({
         initialJSON={initial as unknown as any}
         ignoreExternalUpdates
         placeholder={placeholder}
+        hideToolbarUntilFocused
+        onEditorReady={(e) => { editorHandle.current = e; }}
+        onBlur={() => setOpened(false)}
         onChange={(_json, _text, html) => onChange(html)}
       />
+      {collapsed && (
+        <button type="button" className="de-add-row" onClick={() => setOpened(true)}>
+          <span className="plus" aria-hidden="true">+</span>
+          {emptyAffordance}
+        </button>
+      )}
     </div>
   );
 }
