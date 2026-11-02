@@ -130,12 +130,12 @@ function UpNextPage() {
 
         {q.isLoading ? (
           <div className="un-empty">Loading…</div>
-        ) : list.length === 0 ? (
+        ) : list.length === 0 ? (tab !== "kept" && finished ? null :
           <div className="un-empty">
             {tab === "kept"
               ? "Nothing kept yet. When you finish something you want to hold onto, choose Keep it."
               : <>Nothing waiting. Tap Save on anything in <Link to="/" search={{ feed: 1 } as any}>Explore</Link> to line it up here.</>}
-          </div>
+          </div>)
         ) : (
           <div className="un-list">
             {list.map((r) => (
