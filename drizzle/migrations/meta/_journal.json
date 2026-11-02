@@ -8,6 +8,13 @@
       "when": 1793629338659,
       "tag": "0000_study_groundwork_phase1",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793631932180,
+      "tag": "0001_up_next_and_contact",
+      "breakpoints": true
     }
   ]
 }

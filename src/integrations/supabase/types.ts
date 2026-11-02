@@ -306,6 +306,36 @@ export type Database = {
           },
         ]
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       content_items: {
         Row: {
           author_name: string | null
@@ -1666,21 +1696,27 @@ export type Database = {
         Row: {
           content_item_id: string | null
           devotional_template_id: string | null
+          finished_at: string | null
           id: string
+          kept: boolean
           saved_at: string
           user_id: string
         }
         Insert: {
           content_item_id?: string | null
           devotional_template_id?: string | null
+          finished_at?: string | null
           id?: string
+          kept?: boolean
           saved_at?: string
           user_id: string
         }
         Update: {
           content_item_id?: string | null
           devotional_template_id?: string | null
+          finished_at?: string | null
           id?: string
+          kept?: boolean
           saved_at?: string
           user_id?: string
         }
