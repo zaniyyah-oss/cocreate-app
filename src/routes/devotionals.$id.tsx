@@ -18,6 +18,7 @@ import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
 import { RichTextField, stripHtml } from "@/components/RichTextField";
+import type { Editor } from "@tiptap/react";
 import { ReadStudyLog } from "@/components/workspace/ReadStudyLog";
 import { TodoChecklist } from "@/components/workspace/TodoChecklist";
 import { resolveDayEntry } from "@/lib/day-entry";
@@ -1431,6 +1432,7 @@ function EntryPage() {
                   className={`de-where-doc${focusSection === "where" ? " is-focus" : " is-inline"}`}
                   placeholder="Share what you're thinking and feeling with the Lord — let's just start here."
                   value={whereText}
+                  forceOpen={focusSection === "where"}
                   onChange={(html) => { setWhereText(html); scheduleSave("where_text", html); }}
                 />
                 {statusRow("where_text")}
@@ -1469,7 +1471,8 @@ function EntryPage() {
                       userId={userId ?? ""}
                       value={prayText}
                       className={`de-pray-doc${focusSection === "pray" ? " is-focus" : " is-inline"}`}
-                      placeholder="Speak plainly to God…"
+                      emptyAffordance="Write your prayer…"
+                      forceOpen={focusSection === "pray"}
                       onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
                     />
                     {statusRow("pray_text")}
@@ -1490,6 +1493,7 @@ function EntryPage() {
                           value={todoText}
                           className={`de-todo-doc${focusSection === "todo" ? " is-focus" : " is-inline"}`}
                           placeholder="What is God asking you to do today?"
+                          forceOpen={focusSection === "todo"}
                           onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
                         />
                         {statusRow("todo_text")}
