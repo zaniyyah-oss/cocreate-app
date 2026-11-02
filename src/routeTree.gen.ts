@@ -31,6 +31,7 @@ import { Route as ReadRouteImport } from './routes/read'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SubscribeRouteImport } from './routes/subscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as UpNextRouteImport } from './routes/up-next'
@@ -169,6 +170,11 @@ const SearchRoute = SearchRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscribeRoute = SubscribeRouteImport.update({
+  id: '/subscribe',
+  path: '/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/subscribe': typeof SubscribeRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/up-next': typeof UpNextRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/subscribe': typeof SubscribeRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/up-next': typeof UpNextRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/subscribe': typeof SubscribeRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/up-next': typeof UpNextRoute
@@ -499,6 +508,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/shop'
+    | '/subscribe'
     | '/terms'
     | '/tour'
     | '/up-next'
@@ -550,6 +560,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/shop'
+    | '/subscribe'
     | '/terms'
     | '/tour'
     | '/up-next'
@@ -602,6 +613,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/shop'
+    | '/subscribe'
     | '/terms'
     | '/tour'
     | '/up-next'
@@ -656,6 +668,7 @@ export interface RootRouteChildren {
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRoute
+  SubscribeRoute: typeof SubscribeRoute
   TermsRoute: typeof TermsRoute
   TourRoute: typeof TourRoute
   UpNextRoute: typeof UpNextRoute
@@ -826,6 +839,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscribe': {
+      id: '/subscribe'
+      path: '/subscribe'
+      fullPath: '/subscribe'
+      preLoaderRoute: typeof SubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1122,6 +1142,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRoute,
+  SubscribeRoute: SubscribeRoute,
   TermsRoute: TermsRoute,
   TourRoute: TourRoute,
   UpNextRoute: UpNextRoute,
