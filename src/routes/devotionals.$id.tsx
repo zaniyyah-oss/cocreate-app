@@ -17,7 +17,9 @@ import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
-import { RichTextField } from "@/components/RichTextField";
+import { RichTextField, stripHtml } from "@/components/RichTextField";
+import { ReadStudyLog } from "@/components/workspace/ReadStudyLog";
+import { TodoChecklist } from "@/components/workspace/TodoChecklist";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -52,6 +54,9 @@ type TodoItem = {
   status?: TodoStatus;
   /** Rich-text detail, only surfaced in focus mode. */
   details?: string | null;
+  /** Day the task was originally written (kept when moved). */
+  written_on?: string | null;
+  recurring_id?: string | null;
 };
 
 const todoStatusOf = (it: TodoItem): TodoStatus =>
@@ -266,6 +271,7 @@ const CSS = `
 .de-invite{display:none;}
 
 /* To-do */
+.de-prompt{font-size:14px;color:#6f6b5e;font-weight:400;line-height:1.5;margin:0 0 10px;}
 .de-todos{margin-top:10px;padding:0;background:transparent;}
 .de-todos-head{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#181A4D;margin:0 0 6px;padding-top:2px;border-top:none;}
 .de-todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:start;column-gap:10px;row-gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
@@ -560,6 +566,7 @@ function EntryPage() {
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
   const [openTodoId, setOpenTodoId] = useState<string | null>(null);
+  const [wsOpenReq, setWsOpenReq] = useState<{ id: string; n: number } | null>(null);
 
   // Lock body scroll when a section is focused
   useEffect(() => {
@@ -1136,6 +1143,31 @@ function EntryPage() {
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+  const addTodoWithText = (text: string) => {
+    const next = [...todoItems, { id: crypto.randomUUID(), text, done: false, status: "not_started" as TodoStatus, due_date: selectedDate, written_on: selectedDate }];
+    setTodoItems(next);
+    scheduleSave("todo_items", next);
+  };
+  // Move a to-do onto another day's entry (removed here, appended there).
+  const moveTodoItem = async (idx: number, date: string) => {
+    const it = todoItems[idx];
+    if (!it) return;
+    if (!userId) { guestNote("save"); return; }
+    const moved: TodoItem = { ...it, due_date: date, written_on: it.written_on ?? selectedDate };
+    const { data: existing } = await supabase
+      .from("devotional_entries").select("id, todo_items")
+      .eq("user_id", userId).eq("template_id", id).eq("entry_date", date)
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+    const res = existing?.id
+      ? await supabase.from("devotional_entries").update({
+          todo_items: [...(Array.isArray((existing as any).todo_items) ? (existing as any).todo_items : []), moved],
+        } as any).eq("id", existing.id)
+      : await supabase.from("devotional_entries").insert({ user_id: userId, template_id: id, entry_date: date, todo_items: [moved] } as any);
+    if (res.error) { console.error("move to-do failed", res.error); return; }
+    removeTodoItem(idx);
+    await flushEntrySave();
+    qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+  };
 
 
   // Guest preview mode: unauthenticated visitors see the full workspace and can
@@ -1492,6 +1524,8 @@ function EntryPage() {
                   isFocused={focusSection === "workspace"}
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
+                  openRequest={wsOpenReq}
+                  logDate={selectedDate}
                   guest={isGuest}
                   onGuestGate={guestNote}
                   historyEntryId={selectedDate !== todayISO() ? (currentEntry?.id ?? null) : null}
