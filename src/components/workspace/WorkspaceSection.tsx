@@ -21,6 +21,7 @@ export type WorkspaceItem = {
   status: "open" | "closed";
   pinned?: boolean;
   closed_at?: string | null;
+  hidden_from_recent_at?: string | null;
   created_at: string;
   updated_at: string;
   kind?: "note" | "study";
@@ -168,6 +169,10 @@ const CSS = `
 .ws-rc-flag{font-size:10px;font-weight:600;color:#9A6B00;white-space:nowrap;}
 .ws-rc-pin{margin-left:auto;background:none;border:none;cursor:pointer;padding:2px;color:#8a8678;font-size:14px;line-height:1;}
 .ws-rc-pin.active{color:#181A4D;}
+.ws-rc-hide{background:none;border:none;cursor:pointer;padding:2px 4px;color:#8a8678;font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.02em;line-height:1;opacity:0;transition:opacity .15s ease;border-radius:6px;}
+.ws-rc:hover .ws-rc-hide,.ws-rc:focus-within .ws-rc-hide{opacity:0.75;}
+.ws-rc-hide:hover{opacity:1 !important;color:#181A4D;background:rgba(24,26,77,0.07);}
+@media (hover:none){.ws-rc-hide{opacity:0.6;}}
 .ws-rc-title{font-size:13px;font-weight:700;color:#181A4D;margin:0 0 4px;line-height:1.3;}
 .ws-rc-snippet{font-size:11.5px;color:#5B5B54;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .ws-rc-status{font-size:10px;color:#8a8678;font-weight:500;margin-top:6px;}
