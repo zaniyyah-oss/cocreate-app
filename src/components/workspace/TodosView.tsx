@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +41,9 @@ export type TodosViewHandle = { focusAdd: () => void };
 export const TodosView = forwardRef<TodosViewHandle, {
   userId: string;
   search: string;
-  /** Rendered into the page's right-hand column on desktop. */
-  renderDetail: (node: React.ReactNode) => void;
-}>(function TodosView({ userId, search, renderDetail }, ref) {
+  /** The page's right-hand column on desktop; details are portaled into it. */
+  detailTarget: HTMLElement | null;
+}>(function TodosView({ userId, search, detailTarget }, ref) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const today = localISO();
@@ -158,13 +159,6 @@ export const TodosView = forwardRef<TodosViewHandle, {
     onGoToDate: (d: string) => goToDay(sel.templateId, d),
   } : null;
 
-  // Desktop: details live in the page's right column.
-  useEffect(() => {
-    if (!wide) { renderDetail(null); return; }
-    renderDetail(detailProps ? <TaskDetailsInline key={sel!.item.id} {...detailProps} /> : null);
-  }); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => () => renderDetail(null), []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const renderGroups = (groups: [string, Row[]][]) => groups.map(([day, list]) => (
     <div className="td-group" key={day}>
       <div className={`td-ghead${day < today ? " overdue" : ""}${day === today ? " today" : ""}`}>
@@ -227,6 +221,12 @@ export const TodosView = forwardRef<TodosViewHandle, {
       )}
 
       {!wide && detailProps && <TaskDetailsSheet key={sel!.item.id} {...detailProps} />}
+      {wide && detailTarget && createPortal(
+        detailProps
+          ? <TaskDetailsInline key={sel!.item.id} {...detailProps} />
+          : <div className="nt-panel-empty">Tap ⋯ on a to-do to see its details here.</div>,
+        detailTarget,
+      )}
     </div>
   );
 });

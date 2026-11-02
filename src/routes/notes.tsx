@@ -370,7 +370,7 @@ function NotesLibrary({ userId }: { userId: string }) {
 
   const openDocObj = docs.find((d) => d.id === openId) ?? null;
   const [mode, setMode] = useState<"docs" | "todos">("docs");
-  const [todoDetail, setTodoDetail] = useState<React.ReactNode>(null);
+  const [todoDetailEl, setTodoDetailEl] = useState<HTMLDivElement | null>(null);
   const todosRef = useRef<TodosViewHandle>(null);
   const isTodos = mode === "todos";
   const modeToggle = (cls: string) => (
@@ -434,12 +434,10 @@ function NotesLibrary({ userId }: { userId: string }) {
       {isTodos ? (
         <div className="nt-split">
           <div className="nt-listcol">
-            <TodosView ref={todosRef} userId={userId} search={search} renderDetail={setTodoDetail} />
+            <TodosView ref={todosRef} userId={userId} search={search} detailTarget={todoDetailEl} />
           </div>
           <div className="nt-detailcol">
-            <div className="nt-detailcard">
-              {todoDetail ?? <div className="nt-panel-empty">Tap ⋯ on a to-do to see its details here.</div>}
-            </div>
+            <div className="nt-detailcard" ref={setTodoDetailEl} />
           </div>
         </div>
       ) : (<>
