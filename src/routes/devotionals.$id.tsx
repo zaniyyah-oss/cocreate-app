@@ -1471,6 +1471,7 @@ function EntryPage() {
                       userId={userId ?? ""}
                       value={prayText}
                       className={`de-pray-doc${focusSection === "pray" ? " is-focus" : " is-inline"}`}
+                      placeholder="Write your prayer…"
                       emptyAffordance="Write your prayer…"
                       forceOpen={focusSection === "pray"}
                       onChange={(html) => { setPrayText(html); scheduleSave("pray_text", html); }}
