@@ -25,7 +25,7 @@ function buildDesktopNav(labels: Record<string, string>) {
   return [
     { key: "devotionals" as const, label: labels.devotionals_label || "Workspace", to: "/devotionals", icon: ICON.home },
     { key: "read" as const,        label: labels.read_label        || "Read",       to: "/read",        icon: ICON.read },
-    { key: "explore" as const,     label: labels.explore_label     || "Explore",    to: "/?feed=1",     icon: ICON.explore },
+    { key: "explore" as const,     label: labels.explore_label     || "Explore",    to: "/",            icon: ICON.explore },
     { key: "calendar" as const,    label: labels.calendar_label    || "Calendar",  to: "/calendar",    icon: ICON.calendar },
     { key: "notes" as const,       label: labels.notes_label       || "Notes",      to: "/notes",       icon: ICON.notes },
   ];
@@ -210,6 +210,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide }:
               <Link
                 key={n.key}
                 to={n.to}
+                search={n.to === "/" ? ({ feed: 1 } as any) : undefined}
                 className={`app-side-item${isActive(n) ? " active" : ""}`}
                 title={collapsed ? n.label : undefined}
               >
