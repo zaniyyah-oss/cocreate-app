@@ -196,7 +196,7 @@ const CSS = `
 .ws-ov-body h3{color:#181A4D;font-size:17px;margin:0 0 8px;}
 .ws-ov-body .body{font-size:13.5px;line-height:1.6;color:#3A3A34;white-space:pre-wrap;}
 .ws-sdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFAE00;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
-.ws-chiprow{position:relative;z-index:70;display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;}
+.ws-chiprow{position:relative;z-index:70;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px;}
 .ws-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(15,74,66,0.08);color:#0F4A42;font-family:'Poppins',sans-serif;}
 .ws-chip.study,.ws-rc-tag.study{background:#FFE3A3;color:#5c3d00;}
 .ws-badge.study{background:#FFAE00;color:#20201C;}
