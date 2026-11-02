@@ -405,6 +405,8 @@ export const HOME_CSS = `
 .hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
 
 .hp-mast-media{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
+.hp-mast-media-link.is-active{background:#F3F6DC;}
+.hp-quickrow a.is-active{text-decoration:underline;text-underline-offset:4px;}
 .hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
 .hp-mast-media-link:hover{background:#FBF8ED;}
 .hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -783,7 +785,7 @@ export function HomeMasthead({ signedIn, upNextCount, active }: { signedIn: bool
       <div className="hp-quickrow">
         <Link to="/explore/devotionals">Devotionals</Link>
         <Link to="/up-next">Up next ({upNextCount})</Link>
-        <Link to="/shop">Shop</Link>
+        <Link to="/shop" className={active === "shop" ? "is-active" : undefined}>Shop</Link>
       </div>
     )}
     </>
