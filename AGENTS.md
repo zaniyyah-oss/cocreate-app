@@ -10,4 +10,5 @@
 <!-- LOVABLE:END -->
 
 Workspace daily reflection sections use the shared SectionRichEditor in inline and focus views so rich-text features and toolbar behavior stay consistent.
-- workspace_items holds both notes and studies (`kind`); note lists must filter `kind = note` until study UI ships, so migrated studies never appear as notes.
+- workspace_items holds both notes and studies (`kind`); the Workspace widget shows both (studies marked orange); other note lists (Notes page, tags, strips) still filter `kind = note` until their study UI ships.
+- Study day-logging (new/continued/revisited) lives in `src/lib/study-log.ts` and `entry_study_links`; the Read box only lists logged studies and opens them as Workspace tabs, so study content is edited in WorkspaceEditor only.

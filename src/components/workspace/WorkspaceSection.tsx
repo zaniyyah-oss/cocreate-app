@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
+import { useBibleBooks } from "@/components/BookTagger";
+import { useStudyFolders } from "./ReadStudyLog";
+import { isEmptyStudy, markStudyContinued } from "@/lib/study-log";
 
 export type WorkspaceItem = {
   id: string;
@@ -19,6 +22,9 @@ export type WorkspaceItem = {
   closed_at?: string | null;
   created_at: string;
   updated_at: string;
+  kind?: "note" | "study";
+  folder_id?: string | null;
+  books_of_bible?: string[] | null;
 };
 
 const CSS = `
@@ -178,6 +184,10 @@ const CSS = `
 .ws-ov-body{padding:18px 22px 24px;}
 .ws-ov-body h3{color:#181A4D;font-size:17px;margin:0 0 8px;}
 .ws-ov-body .body{font-size:13.5px;line-height:1.6;color:#3A3A34;white-space:pre-wrap;}
+.ws-sdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFAE00;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
+.ws-chiprow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;}
+.ws-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(15,74,66,0.08);color:#0F4A42;font-family:'Poppins',sans-serif;}
+.ws-chip.study,.ws-rc-tag.study{background:#FFE3A3;color:#5c3d00;}
 .ws-ov-meta{font-size:11px;color:#8a8678;margin-top:14px;padding-top:12px;border-top:1px solid rgba(24,26,77,0.10);}
 `;
 
@@ -244,6 +254,8 @@ export function WorkspaceSection({
   guest = false,
   onGuestGate,
   historyEntryId = null,
+  openRequest = null,
+  logDate,
 }: {
   userId: string;
   ensureEntry: () => Promise<string | null>;
@@ -255,6 +267,10 @@ export function WorkspaceSection({
   onGuestGate?: (kind: "type" | "save") => void;
   /** When set, show notes tied to this past devotional entry (all statuses) instead of the live open-notes list. */
   historyEntryId?: string | null;
+  /** Open (and scroll to) this item as a tab. `n` changes per request. */
+  openRequest?: { id: string; n: number } | null;
+  /** Date studies are logged against when edited. */
+  logDate?: string;
 }) {
   const isHistory = !!historyEntryId;
   const qc = useQueryClient();
@@ -266,7 +282,7 @@ export function WorkspaceSection({
       const { data, error } = await supabase
         .from("workspace_items" as any)
         .select("*")
-        .eq("user_id", userId).eq("kind", "note")
+        .eq("user_id", userId)
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as WorkspaceItem[];
@@ -275,19 +291,23 @@ export function WorkspaceSection({
 
   const items = guest ? guestItems : (itemsQ.data ?? []);
   const { colors: parentTagColors } = useTagColors(userId, guest);
+  const booksQ = useBibleBooks();
+  const bookName = (abbr: string) => booksQ.data?.find((b) => b.abbreviation === abbr)?.full_name ?? abbr;
+  const folderNames = useStudyFolders(userId, !guest).data ?? {};
+  const [forcedIds, setForcedIds] = useState<string[]>([]);
 
   const openNotes = useMemo(
     () => {
       if (isHistory) {
         return items
-          .filter((i) => i.devotional_entry_id === historyEntryId)
+          .filter((i) => i.devotional_entry_id === historyEntryId || forcedIds.includes(i.id))
           .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       }
       return items
         .filter((i) => i.status === "open")
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     },
-    [items, isHistory, historyEntryId]
+    [items, isHistory, historyEntryId, forcedIds]
   );
 
   const libraryItems = useMemo(
@@ -432,6 +452,23 @@ export function WorkspaceSection({
   }, [focusItemId, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
+  const lastReqRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!openRequest || lastReqRef.current === openRequest.n) return;
+    const target = items.find((i) => i.id === openRequest.id);
+    if (!target) {
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+      return;
+    }
+    lastReqRef.current = openRequest.n;
+    setForcedIds((cur) => (cur.includes(target.id) ? cur : [...cur, target.id]));
+    if (target.status === "closed") reopen.mutate(target.id);
+    else setActiveId(target.id);
+    setTimeout(() => {
+      document.getElementById("sec-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }, [openRequest, items]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className={`ws-root ${isFocused ? "is-full" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -479,7 +516,12 @@ export function WorkspaceSection({
               return (
                 <div key={n.id} className={`ws-rc ${n.pinned ? "pinned" : ""}`} onClick={() => setPreviewId(n.id)} role="button" tabIndex={0}>
                   <div className="ws-rc-top">
-                    {n.tags[0] && (
+                    {n.kind === "study" && (
+                      <span className="ws-rc-tag study">
+                        Study{n.books_of_bible?.[0] ? ` · ${bookName(n.books_of_bible[0])}` : ""}
+                      </span>
+                    )}
+                    {n.kind !== "study" && n.tags[0] && (
                       <span
                         className="ws-rc-tag"
                         style={parentTagColors[n.tags[0]] ? { background: parentTagColors[n.tags[0]], color: "#181A4D" } : undefined}
@@ -515,6 +557,7 @@ export function WorkspaceSection({
               onClick={() => setActiveId(n.id)}
               title={n.title || "Untitled"}
             >
+              {n.kind === "study" && <span className="ws-sdot" aria-label="Study" />}
               {n.title?.trim() || "Untitled"}
             </button>
           ))}
@@ -528,7 +571,7 @@ export function WorkspaceSection({
           {isHistory ? "No notes were created on this day." : "No open notes. Start a new one to begin."}
         </div>
       ) : (
-        <NoteBody key={activeNote.id} item={activeNote} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
+        <NoteBody key={activeNote.id} item={activeNote} logDate={logDate} folderName={activeNote.folder_id ? folderNames[activeNote.folder_id] : undefined} bookName={bookName} userId={userId} guest={guest} onGuestGate={onGuestGate} onTitleChange={() => { /* live tab label */ }} onGuestUpdate={(patch) => setGuestItems((cur) => cur.map((i) => (i.id === activeNote.id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))} />
       )}
 
       {!isHistory && (
@@ -543,6 +586,7 @@ export function WorkspaceSection({
             <div className="ws-libgrid">
               {libraryItems.map((it) => (
                 <button key={it.id} className="ws-libitem" onClick={() => reopen.mutate(it.id)}>
+                  {it.kind === "study" && <span className="ws-sdot" aria-label="Study" />}
                   <b>{it.title?.trim() || toPreview(it.body_text) || "Untitled"}</b>
                   {it.tags[0] ? <span className="tg"> · #{it.tags[0]}</span> : null}
                 </button>
@@ -608,7 +652,13 @@ function NoteBody({
   guest = false,
   onGuestGate,
   onGuestUpdate,
+  logDate,
+  folderName,
+  bookName,
 }: {
+  logDate?: string;
+  folderName?: string;
+  bookName?: (abbr: string) => string;
   item: WorkspaceItem;
   userId: string;
   onTitleChange?: (title: string) => void;
@@ -754,9 +804,28 @@ function NoteBody({
     onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
   });
 
+  const isStudy = item.kind === "study";
+  const latestRef = useRef({ title: item.title, text: item.body_text });
+  const continuedRef = useRef(false);
+  const noteStudyEdit = (text: string) => {
+    latestRef.current.text = text;
+    if (!isStudy || guest || continuedRef.current || !logDate) return;
+    if (text === (item.body_text ?? "")) return;
+    continuedRef.current = true;
+    void markStudyContinued(userId, logDate, item.id).then((changed) => {
+      if (changed) qc.invalidateQueries({ queryKey: ["study-links", userId, logDate] });
+    });
+  };
+
   const close = useMutation({
     mutationFn: async () => {
       if (guest) return;
+      if (isStudy && isEmptyStudy(latestRef.current.title, latestRef.current.text)) {
+        const { error } = await supabase.from("workspace_items" as any).delete().eq("id", item.id);
+        if (error) throw error;
+        qc.invalidateQueries({ queryKey: ["study-links"] });
+        return;
+      }
       const { error } = await supabase.from("workspace_items" as any).update({ status: "closed" }).eq("id", item.id);
       if (error) throw error;
     },
@@ -780,14 +849,25 @@ function NoteBody({
     <div className="ws-note-body">
       <input
         className="ws-note-title"
-        placeholder="Untitled note"
+        placeholder={isStudy ? "Untitled study" : "Untitled note"}
         value={title}
         onChange={(e) => {
           setTitle(e.target.value);
+          latestRef.current.title = e.target.value;
           onTitleChange?.(e.target.value);
           scheduleSave({ title: e.target.value });
         }}
       />
+
+      {isStudy && (
+        <div className="ws-chiprow">
+          <span className="ws-chip study">Study</span>
+          {folderName && <span className="ws-chip">{folderName}</span>}
+          {(item.books_of_bible ?? []).map((b) => (
+            <span key={b} className="ws-chip">{bookName ? bookName(b) : b}</span>
+          ))}
+        </div>
+      )}
 
       <div className="ws-tagrow" onClick={(e) => {
         if (!(e.target as HTMLElement).closest(".ws-tag")) setOpenColorFor(null);
@@ -840,7 +920,7 @@ function NoteBody({
       <WorkspaceEditor
         userId={userId}
         initialJSON={item.body}
-        onChange={(json, text) => scheduleSave({ body: json, body_text: text })}
+        onChange={(json, text) => { noteStudyEdit(text); scheduleSave({ body: json, body_text: text }); }}
         onBlur={() => { void flushSave(); }}
         ignoreExternalUpdates={hasPendingPatch || saving}
       />

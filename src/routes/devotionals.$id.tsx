@@ -17,7 +17,9 @@ import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 
-import { RichTextField } from "@/components/RichTextField";
+import { RichTextField, stripHtml } from "@/components/RichTextField";
+import { ReadStudyLog } from "@/components/workspace/ReadStudyLog";
+import { TodoChecklist } from "@/components/workspace/TodoChecklist";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -52,6 +54,9 @@ type TodoItem = {
   status?: TodoStatus;
   /** Rich-text detail, only surfaced in focus mode. */
   details?: string | null;
+  /** Day the task was originally written (kept when moved). */
+  written_on?: string | null;
+  recurring_id?: string | null;
 };
 
 const todoStatusOf = (it: TodoItem): TodoStatus =>
@@ -266,6 +271,7 @@ const CSS = `
 .de-invite{display:none;}
 
 /* To-do */
+.de-prompt{font-size:14px;color:#6f6b5e;font-weight:400;line-height:1.5;margin:0 0 10px;}
 .de-todos{margin-top:10px;padding:0;background:transparent;}
 .de-todos-head{font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#181A4D;margin:0 0 6px;padding-top:2px;border-top:none;}
 .de-todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:start;column-gap:10px;row-gap:4px;padding:8px 0;border-bottom:1px solid rgba(24,26,77,0.08);}
@@ -560,6 +566,7 @@ function EntryPage() {
 
   const [focusSection, setFocusSection] = useState<string | null>(null);
   const [openTodoId, setOpenTodoId] = useState<string | null>(null);
+  const [wsOpenReq, setWsOpenReq] = useState<{ id: string; n: number } | null>(null);
 
   // Lock body scroll when a section is focused
   useEffect(() => {
@@ -1136,6 +1143,31 @@ function EntryPage() {
     setTodoItems(next);
     scheduleSave("todo_items", next);
   };
+  const addTodoWithText = (text: string) => {
+    const next = [...todoItems, { id: crypto.randomUUID(), text, done: false, status: "not_started" as TodoStatus, due_date: selectedDate, written_on: selectedDate }];
+    setTodoItems(next);
+    scheduleSave("todo_items", next);
+  };
+  // Move a to-do onto another day's entry (removed here, appended there).
+  const moveTodoItem = async (idx: number, date: string) => {
+    const it = todoItems[idx];
+    if (!it) return;
+    if (!userId) { guestNote("save"); return; }
+    const moved: TodoItem = { ...it, due_date: date, written_on: it.written_on ?? selectedDate };
+    const { data: existing } = await supabase
+      .from("devotional_entries").select("id, todo_items")
+      .eq("user_id", userId).eq("template_id", id).eq("entry_date", date)
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+    const res = existing?.id
+      ? await supabase.from("devotional_entries").update({
+          todo_items: [...(Array.isArray((existing as any).todo_items) ? (existing as any).todo_items : []), moved],
+        } as any).eq("id", existing.id)
+      : await supabase.from("devotional_entries").insert({ user_id: userId, template_id: id, entry_date: date, todo_items: [moved] } as any);
+    if (res.error) { console.error("move to-do failed", res.error); return; }
+    removeTodoItem(idx);
+    await flushEntrySave();
+    qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+  };
 
 
   // Guest preview mode: unauthenticated visitors see the full workspace and can
@@ -1387,220 +1419,19 @@ function EntryPage() {
               <div className="de-stack">
                 <div className="de-cols" ref={setColsEl}>
                   {/* Read */}
-                  <div id="sec-read" className={`de-block de-anchor read ${focusSection === "read" ? "is-full" : ""}`}>
+                  <div id="sec-read" className="de-block de-anchor read">
                     <div className="de-block-header">
                       <span className="de-badge read">read</span>
-                      {focusBtn("read")}
                     </div>
-                    <div className="de-readbar">
-                      <div className="de-readbar-left">
-                        {!isGuest && (
-                          <span className="de-studywrap">
-                            <button
-                              type="button"
-                              className="de-studybtn"
-                              onClick={() => setStudyMenuOpen((v) => !v)}
-                              aria-haspopup="menu"
-                              aria-expanded={studyMenuOpen}
-                              title="Switch studies or continue a past study"
-                            >
-                              <span className="lbl">
-                                {studyLabel(currentEntry, dayEntries.findIndex((e) => e.id === activeEntryId))}
-                              </span>
-                              <span aria-hidden="true">▾</span>
-                            </button>
-                            {studyMenuOpen && (
-                              <div className="de-studymenu" role="menu">
-                                {currentEntry && !dayEntries.some((e) => e.id === currentEntry.id) && (
-                                  <>
-                                    <div className="grp">Continuing</div>
-                                    <button type="button" className="de-studyopt on">
-                                      {studyLabel(currentEntry, 0)}
-                                      <span className="sub">{formatDate(currentEntry.entry_date ?? selectedDate)}</span>
-                                    </button>
-                                    <div className="de-studysep" />
-                                  </>
-                                )}
-                                {dayEntries.length > 0 && <div className="grp">Today</div>}
-                                {dayEntries.map((e, i) => (
-                                  <button
-                                    key={e.id}
-                                    type="button"
-                                    className={`de-studyopt ${e.id === activeEntryId ? "on" : ""}`}
-                                    onClick={() => goToEntry(e)}
-                                  >
-                                    {studyLabel(e, i)}
-                                    {e.entry_title ? <span className="sub">{e.entry_title}</span> : null}
-                                  </button>
-                                ))}
-                                {pendingNewStudy && (
-                                  <button type="button" className="de-studyopt on">
-                                    New study
-                                    <span className="sub">Not saved yet</span>
-                                  </button>
-                                )}
-
-                                <div className="de-studysep" />
-                                <div className="grp">Continue a past study</div>
-                                <input
-                                  className="de-studysearch"
-                                  placeholder="Search your studies…"
-                                  value={studyQuery}
-                                  onChange={(ev) => setStudyQuery(ev.target.value)}
-                                />
-                                {continuable.length === 0 ? (
-                                  <div className="de-studyopt" style={{ opacity: 0.5 }}>No other studies yet</div>
-                                ) : (
-                                  continuable.map((e, i) => (
-                                    <button key={e.id} type="button" className="de-studyopt" onClick={() => goToEntry(e)}>
-                                      {studyLabel(e, i)}
-                                      <span className="sub">
-                                        {formatDate(e.entry_date ?? selectedDate)}
-                                        {e.entry_title ? ` · ${e.entry_title}` : ""}
-                                      </span>
-                                    </button>
-                                  ))
-                                )}
-                                {currentEntry && (
-                                  <>
-                                    <div className="de-studysep" />
-                                    <button
-                                      type="button"
-                                      className="de-studyopt danger"
-                                      disabled={deletingStudy}
-                                      onClick={() => requestDeleteStudy(currentEntry.id)}
-                                    >
-                                      Delete this study
-                                      <span className="sub">This can't be undone</span>
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </span>
-                        )}
-                        {!isGuest && studiesForDayCount > 0 && studiesForDayCount < MAX_STUDIES_PER_DAY && !pendingNewStudy && (
-                          <button
-                            type="button"
-                            className="de-studyicon"
-                            onClick={addStudyForDay}
-                            title="New study for today"
-                            aria-label="New study for today"
-                          >
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
-                              <path d="M14 3l5 5" />
-                              <path d="M18 13v6M15 16h6" />
-                            </svg>
-                          </button>
-                        )}
-                        {!isGuest && studiesForDayCount >= MAX_STUDIES_PER_DAY && (
-                          <Link to="/read" className="de-studyadd" style={{ textDecoration: "none" }}>
-                            More in Read →
-                          </Link>
-                        )}
-                      </div>
-                      <div className="de-readbar-right">
-                        <BookTagger
-                          iconOnly
-                          values={booksOfBible}
-                          suggestion={
-                            booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
-                              ? bookOfBible
-                              : null
-                          }
-                          disabled={!userId}
-                          onToggle={(abbr: string) => {
-                            const next = booksOfBible.includes(abbr)
-                              ? booksOfBible.filter((b) => b !== abbr)
-                              : [...booksOfBible, abbr];
-                            setBooksOfBible(next);
-                            const primary = next[0] ?? null;
-                            setBookOfBible(primary);
-                            setBookSource("manual");
-                            setBookConfirmed(next.length > 0);
-                            scheduleSave("books_of_bible", next);
-                            scheduleSave("book_of_bible", primary);
-                            scheduleSave("book_source", "manual");
-                            scheduleSave("book_confirmed", next.length > 0);
-                          }}
-                          onConfirmSuggestion={() => {
-                            if (!bookOfBible) return;
-                            const next = booksOfBible.includes(bookOfBible)
-                              ? booksOfBible
-                              : [...booksOfBible, bookOfBible];
-                            setBooksOfBible(next);
-                            setBookConfirmed(true);
-                            scheduleSave("books_of_bible", next);
-                            scheduleSave("book_confirmed", true);
-                          }}
-                        />
-                        <TopicPicker
-                          iconOnly
-                          value={topicIds}
-                          disabled={!userId}
-                          onChange={(next) => {
-                            setTopicIds(next);
-                            scheduleSave("topic_ids", next);
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <ReadTagChips
-                      books={booksOfBible}
-                      topicIds={topicIds}
-                      suggestion={
-                        booksOfBible.length === 0 && bookSource === "auto" && !bookConfirmed
-                          ? bookOfBible
-                          : null
-                      }
-                      onConfirmSuggestion={() => {
-                        if (!bookOfBible) return;
-                        const next = booksOfBible.includes(bookOfBible)
-                          ? booksOfBible
-                          : [...booksOfBible, bookOfBible];
-                        setBooksOfBible(next);
-                        setBookConfirmed(true);
-                        scheduleSave("books_of_bible", next);
-                        scheduleSave("book_confirmed", true);
-                      }}
-                      onRemoveBook={(abbr) => {
-                        const next = booksOfBible.filter((b) => b !== abbr);
-                        setBooksOfBible(next);
-                        const primary = next[0] ?? null;
-                        setBookOfBible(primary);
-                        setBookConfirmed(next.length > 0);
-                        scheduleSave("books_of_bible", next);
-                        scheduleSave("book_of_bible", primary);
-                        scheduleSave("book_confirmed", next.length > 0);
-                      }}
-                      onRemoveTopic={(id) => {
-                        const next = topicIds.filter((t) => t !== id);
-                        setTopicIds(next);
-                        scheduleSave("topic_ids", next);
-                      }}
+                    <div className="de-prompt">What are you reading today?</div>
+                    <ReadStudyLog
+                      userId={userId ?? ""}
+                      date={selectedDate}
+                      guest={isGuest}
+                      onGuestGate={() => guestNote("save")}
+                      ensureEntry={ensureEntry}
+                      onOpen={(itemId) => setWsOpenReq({ id: itemId, n: Date.now() })}
                     />
-
-                    <div className="de-read-part">
-                      {/* preserve original wrapper start */}
-                      <input
-                        className="de-scr-ref"
-                        placeholder="What scripture are you reading today?"
-                        value={scriptureRef}
-                        onChange={(e) => { setScriptureRef(e.target.value); scheduleSave("scripture_reference", e.target.value); }}
-                      />
-                      <SectionRichEditor
-                        entryKey={activeEntryId ?? "new"}
-                        userId={userId ?? ""}
-                        value={scriptureText}
-                        className={`de-read-doc${focusSection === "read" ? " is-focus" : " is-inline"}`}
-                        placeholder="What did you notice? What is God saying?"
-                        onChange={(html) => { setScriptureText(html); scheduleSave("scripture_text", html); }}
-                      />
-
-                      {statusRow("scripture_text")}
-                    </div>
-
                   </div>
 
                   {/* Pray */}
@@ -1609,6 +1440,7 @@ function EntryPage() {
                       <span className="de-badge pray">pray</span>
                       {focusBtn("pray")}
                     </div>
+                    <div className="de-prompt">What do you want to bring to God today?</div>
                     
                     <SectionRichEditor
                       entryKey={`${dayFieldsEntry?.id ?? selectedDate}:pray`}
@@ -1627,69 +1459,30 @@ function EntryPage() {
                       <span className="de-badge todo">to-do</span>
                       {focusBtn("todo")}
                     </div>
-                    
-                    <SectionRichEditor
-                      entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
-                      userId={userId ?? ""}
-                      value={todoText}
-                      className={`de-todo-doc${focusSection === "todo" ? " is-focus" : " is-inline"}`}
-                      placeholder="What is God asking you to do today?"
-                      onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
+                    <div className="de-prompt">What is God asking you to do today?</div>
+                    {(stripHtml(todoText).trim() || focusSection === "todo") && (
+                      <>
+                        <SectionRichEditor
+                          entryKey={`${dayFieldsEntry?.id ?? selectedDate}:todo`}
+                          userId={userId ?? ""}
+                          value={todoText}
+                          className={`de-todo-doc${focusSection === "todo" ? " is-focus" : " is-inline"}`}
+                          placeholder="What is God asking you to do today?"
+                          onChange={(html) => { setTodoText(html); scheduleSave("todo_text", html); }}
+                        />
+                        {statusRow("todo_text")}
+                      </>
+                    )}
+                    <TodoChecklist
+                      items={todoItems}
+                      selectedDate={selectedDate}
+                      todayISO={todayISO()}
+                      onUpdate={updateTodoItem}
+                      onAdd={addTodoWithText}
+                      onRemove={removeTodoItem}
+                      onMove={moveTodoItem}
+                      onGoToDate={(d) => setSelectedDate(d)}
                     />
-                    {statusRow("todo_text")}
-
-                    <div className="de-todos">
-                      <div className="de-todos-head">Tasks</div>
-                      {todoItems.map((it, idx) => {
-                        const status = todoStatusOf(it);
-                        const open = openTodoId === it.id;
-                        return (
-                        <div key={it.id} className="de-todo" data-status={status}>
-                          <TodoStatusSelect
-                            value={status}
-                            onChange={(v) => setTodoStatus(idx, v)}
-                          />
-                          <TodoTextArea
-                            done={status === "done"}
-                            value={it.text}
-                            onChange={(v) => updateTodoItem(idx, { text: v })}
-                          />
-                          <input
-                            type="date"
-                            className="de-todo-date"
-                            value={it.due_date ?? ""}
-                            onChange={(e) => updateTodoItem(idx, { due_date: e.target.value || null })}
-                            title="Due date (optional)"
-                          />
-                          <button type="button" className="de-todo-x" onClick={() => removeTodoItem(idx)} aria-label="Remove">×</button>
-
-                          {/* Focus-mode extras: details */}
-                          <div className="de-todo-more">
-                            <button
-                              type="button"
-                              className="de-todo-details-btn"
-                              onClick={() => setOpenTodoId(open ? null : it.id)}
-                            >
-                              {open ? "▴ Hide details" : (it.details ? "▾ Details" : "＋ Add details")}
-                            </button>
-                          </div>
-
-
-                          {open && (
-                            <div className="de-todo-details">
-                              <RichTextField
-                                className="de-textarea short"
-                                placeholder="Notes, next steps, who's involved…"
-                                value={it.details ?? ""}
-                                onChange={(html) => updateTodoItem(idx, { details: html })}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        );
-                      })}
-                      <button type="button" className="de-todo-add" onClick={addTodoItem}>+ Add a step</button>
-                    </div>
 
                   </div>
                 </div>
@@ -1731,6 +1524,8 @@ function EntryPage() {
                   isFocused={focusSection === "workspace"}
                   onToggleFocus={() => setFocusSection((cur) => (cur === "workspace" ? null : "workspace"))}
                   focusItemId={search.ws}
+                  openRequest={wsOpenReq}
+                  logDate={selectedDate}
                   guest={isGuest}
                   onGuestGate={guestNote}
                   historyEntryId={selectedDate !== todayISO() ? (currentEntry?.id ?? null) : null}
