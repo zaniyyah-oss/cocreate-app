@@ -73,6 +73,8 @@ export function WorkspaceEditor({
   ignoreExternalUpdates = false,
   placeholder,
   editable = true,
+  hideToolbarUntilFocused = false,
+  onEditorReady,
 }: {
   userId: string;
   initialJSON: any;
@@ -81,6 +83,10 @@ export function WorkspaceEditor({
   ignoreExternalUpdates?: boolean;
   placeholder?: string;
   editable?: boolean;
+  /** Keep the formatting bar hidden until the caret is inside the text. */
+  hideToolbarUntilFocused?: boolean;
+  /** Hands the live editor back so an outside affordance can place the caret. */
+  onEditorReady?: (editor: Editor) => void;
 }) {
   useWorkspaceEditorCss();
 
@@ -233,6 +239,27 @@ export function WorkspaceEditor({
     if (editor.isEditable !== editable) editor.setEditable(editable);
   }, [editor, editable]);
 
+  // The formatting bar only belongs on screen while the caret is in the text.
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!editor) return;
+    const onFocus = () => setFocused(true);
+    const onBlur = () => setFocused(false);
+    editor.on("focus", onFocus);
+    editor.on("blur", onBlur);
+    setFocused(editor.isFocused);
+    return () => {
+      editor.off("focus", onFocus);
+      editor.off("blur", onBlur);
+    };
+  }, [editor]);
+
+  const onEditorReadyRef = useRef(onEditorReady);
+  onEditorReadyRef.current = onEditorReady;
+  useEffect(() => {
+    if (editor) onEditorReadyRef.current?.(editor);
+  }, [editor]);
+
   editorRef.current = editor;
 
   if (!editor) return null;
@@ -240,7 +267,7 @@ export function WorkspaceEditor({
 
   return (
     <div className="ws-editor">
-      {editable && <Toolbar editor={editor} userId={userId} />}
+      {editable && (!hideToolbarUntilFocused || focused) && <Toolbar editor={editor} userId={userId} />}
       {editable && (
         <BubbleMenu
           editor={editor}
