@@ -832,7 +832,7 @@ function NoteBody({
       const { error } = await supabase.from("workspace_items" as any).delete().eq("id", item.id);
       if (error) throw error;
     },
-    onSuccess: () => { if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); },
+    onSuccess: () => { if (!guest) { qc.invalidateQueries({ queryKey: ["workspace-items", userId] }); qc.invalidateQueries({ queryKey: ["study-links"] }); } },
   });
 
   const isStudy = item.kind === "study";
