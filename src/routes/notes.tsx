@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
+import { TodosView, type TodosViewHandle } from "@/components/workspace/TodosView";
 
 export const Route = createFileRoute("/notes")({
   validateSearch: (s: Record<string, unknown>): { doc?: string } =>
@@ -17,9 +18,9 @@ export const Route = createFileRoute("/notes")({
   head: () => ({
     meta: [
       { title: "Notes — CoCreate" },
-      { name: "description", content: "All of your workspace documents in one place — open, edit, and filter by tag." },
+      { name: "description", content: "Every document you've written across the workspace, and every to-do you've written down." },
       { property: "og:title", content: "Notes — CoCreate" },
-      { property: "og:description", content: "Every workspace document you've written, right where you can return to it." },
+      { property: "og:description", content: "Every document you've written across the workspace, and every to-do you've written down." },
     ],
   }),
 });
@@ -160,6 +161,10 @@ const NOTES_CSS = `
 .nt-panel-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#8a8678;font-size:13px;text-align:center;padding:40px;}
 
 /* ── Mobile: single view at a time ──────────────────────────── */
+.nt-mode{display:inline-flex;background:#fff;border:1.5px solid #ECE4CE;border-radius:999px;padding:4px;}
+.nt-mode button{border:none;background:transparent;padding:8px 20px;border-radius:999px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#6b6a60;}
+.nt-mode button.active{background:#181A4D;color:#fff;}
+.nt-mode.m{display:none;}
 .nt-mobilebar{display:none;}
 @media (max-width:900px){
   .nt-wrap{padding:16px 16px 24px;overflow:visible;}
@@ -171,6 +176,10 @@ const NOTES_CSS = `
   .nt-iconbtn.primary{background:#181A4D;color:#DCE07A;border-color:#181A4D;font-size:20px;font-weight:700;}
   .nt-toolbar{gap:8px;margin-bottom:12px;}
   .nt-toolbar .nt-newbtn{display:none;}
+  .nt-toolbar .nt-mode{display:none;}
+  .nt-mode.m{display:flex;width:100%;margin-bottom:12px;}
+  .nt-mode.m button{flex:1;}
+  .nt-wrap.todos .nt-detailcol{display:none !important;}
   .nt-select{font-size:12.5px;padding:9px 30px 9px 14px;}
   .nt-search{max-width:none;margin-left:0;width:100%;}
   .nt-search.hidden{display:none;}
@@ -360,9 +369,19 @@ function NotesLibrary({ userId }: { userId: string }) {
   });
 
   const openDocObj = docs.find((d) => d.id === openId) ?? null;
+  const [mode, setMode] = useState<"docs" | "todos">("docs");
+  const [todoDetailEl, setTodoDetailEl] = useState<HTMLDivElement | null>(null);
+  const todosRef = useRef<TodosViewHandle>(null);
+  const isTodos = mode === "todos";
+  const modeToggle = (cls: string) => (
+    <div className={`nt-mode ${cls}`} role="tablist" aria-label="Docs or to-dos">
+      <button type="button" role="tab" aria-selected={!isTodos} className={!isTodos ? "active" : ""} onClick={() => setMode("docs")}>Docs</button>
+      <button type="button" role="tab" aria-selected={isTodos} className={isTodos ? "active" : ""} onClick={() => setMode("todos")}>To-dos</button>
+    </div>
+  );
 
   return (
-    <div className={`nt-wrap ${openId ? "detail" : ""}`}>
+    <div className={`nt-wrap ${openId && !isTodos ? "detail" : ""} ${isTodos ? "todos" : ""}`}>
       <div className="nt-mobilebar">
         <div className="m-title">Notes</div>
         <div className="m-actions">
@@ -377,8 +396,8 @@ function NotesLibrary({ userId }: { userId: string }) {
           <button
             type="button"
             className="nt-iconbtn primary"
-            aria-label="New note"
-            onClick={() => createDoc.mutate()}
+            aria-label={isTodos ? "New to-do" : "New note"}
+            onClick={() => (isTodos ? todosRef.current?.focusAdd() : createDoc.mutate())}
             disabled={createDoc.isPending}
           >
             +
@@ -386,28 +405,42 @@ function NotesLibrary({ userId }: { userId: string }) {
         </div>
       </div>
 
+      {modeToggle("m")}
+
       <div className="nt-eyebrow">Workspace · Notes</div>
       <h1 className="nt-h1">Notes</h1>
       <p className="nt-desc">
-        Every document you've written across the workspace — browse by tag, search by title, and pick
-        up right where you left off.
+        Every document you've written across the workspace, and every to-do you've written down.
       </p>
 
       <div className="nt-toolbar">
-        <button className="nt-newbtn" onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
-          <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-          {createDoc.isPending ? "Creating…" : "New note"}
-        </button>
+        {modeToggle("")}
+        {!isTodos && (
+          <button className="nt-newbtn" onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
+            <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+            {createDoc.isPending ? "Creating…" : "New note"}
+          </button>
+        )}
         <div className={`nt-search ${searchOpen ? "" : "hidden"}`}>
           <SearchIcon />
           <input
-            placeholder="Search by title…"
+            placeholder={isTodos ? "Search to-dos…" : "Search by title…"}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </div>
 
+      {isTodos ? (
+        <div className="nt-split">
+          <div className="nt-listcol">
+            <TodosView ref={todosRef} userId={userId} search={search} detailTarget={todoDetailEl} />
+          </div>
+          <div className="nt-detailcol">
+            <div className="nt-detailcard" ref={setTodoDetailEl} />
+          </div>
+        </div>
+      ) : (<>
       {topTags.length > 0 && (
         <>
           <div className="nt-sectionlabel">Browse by tag</div>
@@ -555,6 +588,7 @@ function NotesLibrary({ userId }: { userId: string }) {
           </div>
         </div>
       </div>
+      </>)}
     </div>
   );
 }

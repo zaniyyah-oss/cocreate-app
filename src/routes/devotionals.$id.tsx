@@ -20,6 +20,7 @@ import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { RichTextField, stripHtml } from "@/components/RichTextField";
 import { ReadStudyLog } from "@/components/workspace/ReadStudyLog";
 import { TodoChecklist } from "@/components/workspace/TodoChecklist";
+import { resolveDayEntry } from "@/lib/day-entry";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { AppShell } from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1005,25 +1006,17 @@ function EntryPage() {
     if (cached) return Promise.resolve(cached.id);
     const existing = entryPromiseRef.current.get(key);
     if (existing) return existing;
-    const find = async () => {
-      const { data } = await supabase
-        .from("devotional_entries").select("id")
-        .eq("user_id", userId).eq("template_id", id).eq("entry_date", date)
-        .order("created_at", { ascending: true }).limit(1).maybeSingle();
-      return data?.id ?? null;
-    };
     const p = (async () => {
-      const found = await find();
-      if (found) return found;
-      const { data, error } = await supabase
-        .from("devotional_entries")
-        .insert({ user_id: userId, template_id: id, entry_date: date } as any)
-        .select("*").single();
-      if (error) return find();
-      trackEvent("devotional_entry_created", { template_id: id });
-      if (date === selectedDate) applyEntryPatchToCache(data.id, {}, data as Entry);
-      else qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
-      return data.id as string;
+      const rid = await resolveDayEntry(userId, id, date);
+      if (!rid) return null;
+      const inCache = (qc.getQueryData<Entry[]>(["dev-entries", id, userId]) ?? []).some((e) => e.id === rid);
+      if (!inCache) {
+        if (date === selectedDate) {
+          const { data } = await supabase.from("devotional_entries").select("*").eq("id", rid).maybeSingle();
+          if (data) applyEntryPatchToCache(rid, {}, data as Entry);
+        } else qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
+      }
+      return rid;
     })();
     entryPromiseRef.current.set(key, p);
     p.then((v) => { if (!v) entryPromiseRef.current.delete(key); }, () => entryPromiseRef.current.delete(key));
