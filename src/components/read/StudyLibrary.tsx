@@ -64,7 +64,7 @@ const CSS = `
 .sl-row .cnt{font-size:12px;font-weight:700;color:#0F4A42;background:rgba(15,74,66,.08);border-radius:999px;padding:2px 9px;flex-shrink:0;}
 .sl-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFAE00;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
 .sl-sub{display:flex;flex-direction:column;gap:6px;margin:2px 0 6px 14px;padding-left:12px;border-left:2px solid #ECE4CE;}
-.sl-back{background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;color:#181A4D;cursor:pointer;padding:0;margin-bottom:10px;}
+.sl-back{display:block;background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;color:#181A4D;cursor:pointer;padding:0;margin-bottom:10px;}
 .sl-fhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
 .sl-fname{font-family:'Archivo Black','Poppins',sans-serif;font-size:26px;font-weight:900;color:#20201C;line-height:1.15;margin:0;}
 .sl-fcount{font-size:13px;color:#6f6b5e;margin-top:4px;}
