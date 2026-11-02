@@ -10,15 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DevotionalsRouteImport } from './routes/devotionals'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as ListenRouteImport } from './routes/listen'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MissionRouteImport } from './routes/mission'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -26,6 +30,8 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReadRouteImport } from './routes/read'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ShopRouteImport } from './routes/shop'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -58,6 +64,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -71,6 +82,11 @@ const AuthRoute = AuthRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevotionalsRoute = DevotionalsRouteImport.update({
@@ -93,6 +109,11 @@ const GroupsRoute = GroupsRouteImport.update({
   path: '/groups',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListenRoute = ListenRouteImport.update({
   id: '/listen',
   path: '/listen',
@@ -101,6 +122,11 @@ const ListenRoute = ListenRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissionRoute = MissionRouteImport.update({
+  id: '/mission',
+  path: '/mission',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesRoute = NotesRouteImport.update({
@@ -136,6 +162,16 @@ const SavedRoute = SavedRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TourRoute = TourRouteImport.update({
@@ -271,15 +307,19 @@ const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/contact': typeof ContactRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/help': typeof HelpRoute
   '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
+  '/mission': typeof MissionRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
@@ -287,6 +327,8 @@ export interface FileRoutesByFullPath {
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -316,13 +358,17 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/help': typeof HelpRoute
   '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
+  '/mission': typeof MissionRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
@@ -330,6 +376,8 @@ export interface FileRoutesByTo {
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/content': typeof AdminContentRoute
@@ -359,15 +407,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/contact': typeof ContactRoute
   '/devotionals': typeof DevotionalsRouteWithChildren
   '/explore': typeof ExploreRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/help': typeof HelpRoute
   '/listen': typeof ListenRoute
   '/messages': typeof MessagesRoute
+  '/mission': typeof MissionRoute
   '/notes': typeof NotesRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
@@ -375,6 +427,8 @@ export interface FileRoutesById {
   '/read': typeof ReadRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
+  '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
   '/watch': typeof WatchRoute
   '/admin/collections': typeof AdminCollectionsRouteWithChildren
@@ -406,15 +460,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
     | '/auth'
     | '/calendar'
+    | '/contact'
     | '/devotionals'
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/help'
     | '/listen'
     | '/messages'
+    | '/mission'
     | '/notes'
     | '/notifications'
     | '/privacy'
@@ -422,6 +480,8 @@ export interface FileRouteTypes {
     | '/read'
     | '/saved'
     | '/search'
+    | '/shop'
+    | '/terms'
     | '/tour'
     | '/watch'
     | '/admin/collections'
@@ -451,13 +511,17 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/calendar'
+    | '/contact'
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/help'
     | '/listen'
     | '/messages'
+    | '/mission'
     | '/notes'
     | '/notifications'
     | '/privacy'
@@ -465,6 +529,8 @@ export interface FileRouteTypes {
     | '/read'
     | '/saved'
     | '/search'
+    | '/shop'
+    | '/terms'
     | '/tour'
     | '/watch'
     | '/admin/content'
@@ -493,15 +559,19 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
     | '/auth'
     | '/calendar'
+    | '/contact'
     | '/devotionals'
     | '/explore'
     | '/friends'
     | '/groups'
+    | '/help'
     | '/listen'
     | '/messages'
+    | '/mission'
     | '/notes'
     | '/notifications'
     | '/privacy'
@@ -509,6 +579,8 @@ export interface FileRouteTypes {
     | '/read'
     | '/saved'
     | '/search'
+    | '/shop'
+    | '/terms'
     | '/tour'
     | '/watch'
     | '/admin/collections'
@@ -539,15 +611,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
+  ContactRoute: typeof ContactRoute
   DevotionalsRoute: typeof DevotionalsRouteWithChildren
   ExploreRoute: typeof ExploreRoute
   FriendsRoute: typeof FriendsRoute
   GroupsRoute: typeof GroupsRoute
+  HelpRoute: typeof HelpRoute
   ListenRoute: typeof ListenRoute
   MessagesRoute: typeof MessagesRoute
+  MissionRoute: typeof MissionRoute
   NotesRoute: typeof NotesRoute
   NotificationsRoute: typeof NotificationsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -555,6 +631,8 @@ export interface RootRouteChildren {
   ReadRoute: typeof ReadRouteWithChildren
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  ShopRoute: typeof ShopRoute
+  TermsRoute: typeof TermsRoute
   TourRoute: typeof TourRoute
   WatchRoute: typeof WatchRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -577,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -596,6 +681,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devotionals': {
@@ -626,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listen': {
       id: '/listen'
       path: '/listen'
@@ -638,6 +737,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mission': {
+      id: '/mission'
+      path: '/mission'
+      fullPath: '/mission'
+      preLoaderRoute: typeof MissionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes': {
@@ -687,6 +793,20 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tour': {
@@ -941,15 +1061,19 @@ const ReadRouteWithChildren = ReadRoute._addFileChildren(ReadRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,
+  ContactRoute: ContactRoute,
   DevotionalsRoute: DevotionalsRouteWithChildren,
   ExploreRoute: ExploreRoute,
   FriendsRoute: FriendsRoute,
   GroupsRoute: GroupsRoute,
+  HelpRoute: HelpRoute,
   ListenRoute: ListenRoute,
   MessagesRoute: MessagesRoute,
+  MissionRoute: MissionRoute,
   NotesRoute: NotesRoute,
   NotificationsRoute: NotificationsRoute,
   PrivacyRoute: PrivacyRoute,
@@ -957,6 +1081,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReadRoute: ReadRouteWithChildren,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  ShopRoute: ShopRoute,
+  TermsRoute: TermsRoute,
   TourRoute: TourRoute,
   WatchRoute: WatchRoute,
   AuthCallbackRoute: AuthCallbackRoute,
