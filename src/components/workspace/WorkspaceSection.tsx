@@ -425,6 +425,22 @@ export function WorkspaceSection({
     },
   });
 
+  const hideFromRecent = useMutation({
+    mutationFn: async (it: WorkspaceItem) => {
+      const stamp = new Date().toISOString();
+      if (guest) {
+        setGuestItems((cur) => cur.map((i) => (i.id === it.id ? { ...i, hidden_from_recent_at: stamp } : i)));
+        return stamp;
+      }
+      const { error } = await supabase.from("workspace_items" as any).update({ hidden_from_recent_at: stamp }).eq("id", it.id);
+      if (error) throw error;
+      return stamp;
+    },
+    onSuccess: () => {
+      if (!guest) qc.invalidateQueries({ queryKey: ["workspace-items", userId] });
+    },
+  });
+
   const [previewId, setPreviewId] = useState<string | null>(null);
   const previewItem = items.find((i) => i.id === previewId) ?? null;
 
@@ -437,10 +453,10 @@ export function WorkspaceSection({
 
   const recentItems = useMemo(() => {
     if (isHistory) return [];
-    const pinned = items.filter((i) => i.pinned);
+    const pinned = items.filter((i) => i.pinned && !i.hidden_from_recent_at);
     const pinnedIds = new Set(pinned.map((i) => i.id));
     const todayItems = items.filter(
-      (i) => !pinnedIds.has(i.id) && (isToday(i.created_at) || (i.status === "closed" && isToday(i.closed_at ?? i.updated_at))),
+      (i) => !pinnedIds.has(i.id) && !i.hidden_from_recent_at && (isToday(i.created_at) || (i.status === "closed" && isToday(i.closed_at ?? i.updated_at))),
     );
     const sortDesc = (arr: WorkspaceItem[]) =>
       arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
