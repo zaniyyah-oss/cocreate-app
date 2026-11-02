@@ -267,7 +267,7 @@ export function WorkspaceEditor({
 
   return (
     <div className="ws-editor">
-      {editable && <Toolbar editor={editor} userId={userId} />}
+      {editable && (!hideToolbarUntilFocused || focused) && <Toolbar editor={editor} userId={userId} />}
       {editable && (
         <BubbleMenu
           editor={editor}
