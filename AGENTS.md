@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 Workspace daily reflection sections use the shared SectionRichEditor in inline and focus views so rich-text features and toolbar behavior stay consistent.
+- workspace_items holds both notes and studies (`kind`); note lists must filter `kind = note` until study UI ships, so migrated studies never appear as notes.
