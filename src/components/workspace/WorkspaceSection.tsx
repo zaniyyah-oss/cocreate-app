@@ -575,6 +575,12 @@ export function WorkspaceSection({
                     )}
                     {isNewToday && !n.pinned && <span className="ws-rc-flag">✦ new today</span>}
                     <button
+                      className="ws-rc-hide"
+                      onClick={(e) => { e.stopPropagation(); hideFromRecent.mutate(n); }}
+                      aria-label="Hide from this strip"
+                      title="Hide from this strip"
+                    >Hide</button>
+                    <button
                       className={`ws-rc-pin ${n.pinned ? "active" : ""}`}
                       onClick={(e) => { e.stopPropagation(); togglePin.mutate(n); }}
                       aria-label={n.pinned ? "Unpin" : "Pin"}
