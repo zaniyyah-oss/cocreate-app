@@ -507,6 +507,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         {btn(I.bullet, () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
         {btn(I.ordered, () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
         {btn(I.quote, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
+        {btn(I.toggle, () => editor.chain().focus().turnIntoToggle().run(), editor.isActive("toggleBlock"), "Turn into toggle")}
       </div>
 
       <div className="ws-tbdiv" />

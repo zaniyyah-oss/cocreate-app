@@ -122,7 +122,7 @@ export function indentSmart(editor: any) {
   if (!itemType) return editor.chain().focus().indent().run();
   if (editor.chain().focus().sinkListItem(itemType).run()) return true;
   const { items, wrapperPos, wrapper } = listInfo(editor);
-  if (items !== 1 || wrapperPos === null || !wrapper.type.spec.attrs?.indent && wrapper.attrs.indent === undefined) return false;
+  if (items !== 1 || wrapperPos === null || wrapper.attrs.indent === undefined) return false;
   const cur = Number(wrapper.attrs.indent) || 0;
   if (cur >= MAX) return false;
   editor.view.dispatch(editor.state.tr.setNodeMarkup(wrapperPos, undefined, { ...wrapper.attrs, indent: cur + 1 }));
