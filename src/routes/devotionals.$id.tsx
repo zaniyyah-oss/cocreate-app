@@ -11,7 +11,8 @@ import {
   type EventCategory,
 } from "@/lib/event-categories";
 import { deleteStudyOnly } from "@/lib/study-delete";
-import { useRecurringOccurrences } from "@/lib/recurring-tasks";
+import { useRecurringOccurrences, useRecurringTasks, expandOccurrences, type RecurringTask } from "@/lib/recurring-tasks";
+import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
@@ -2097,6 +2098,29 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
   });
 }
 
+/** One-off events plus recurring events expanded over the range (ids "recur:<taskId>"). */
+function useEventsWithRecurring(userId: string | null, startISO: string, endISO: string) {
+  const eventsQ = useUserEvents(userId, startISO, endISO);
+  const recurQ = useRecurringTasks(userId);
+  const map = useMemo(() => {
+    const out = new Map<string, UserEvent[]>();
+    for (const [k, v] of eventsQ.data ?? []) out.set(k, [...v]);
+    const evTasks = (recurQ.data ?? []).filter(t => t.item_kind === "event");
+    for (const [iso, tasks] of expandOccurrences(evTasks, startISO, endISO)) {
+      const arr = out.get(iso) ?? [];
+      for (const t of tasks) arr.push({
+        id: `recur:${t.id}`, event_date: iso, event_type: "other", title: t.title, color: t.color,
+        notes: t.notes, item_type: "event", start_time: t.start_time, end_time: t.end_time,
+      } as unknown as UserEvent);
+      arr.sort((a: any, b: any) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
+      out.set(iso, arr);
+    }
+    return out;
+  }, [eventsQ.data, recurQ.data, startISO, endISO]);
+  const tasksById = useMemo(() => new Map((recurQ.data ?? []).map(t => [t.id, t] as const)), [recurQ.data]);
+  return { map, tasksById };
+}
+
 export function AddEventDialog({
   open, onOpenChange, userId, defaultDate, event, onSaved, defaultItemType,
   defaultStartTime, defaultEndTime,
@@ -2830,8 +2854,13 @@ export function MonthCalendarView({ templateId, userId }: { templateId: string; 
   const devoDates = devoDatesQ.data ?? new Set<string>();
   const topicalQ = useTopicalDates(userId, rangeStartISO, rangeEndISO);
   const topicalMap = topicalQ.data ?? new Map<string, string>();
-  const eventsQ = useUserEvents(userId, rangeStartISO, rangeEndISO);
-  const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const { map: eventsMap, tasksById } = useEventsWithRecurring(userId, rangeStartISO, rangeEndISO);
+  const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
+  const openEv = (ev: UserEvent) => {
+    const id = String(ev.id);
+    if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
+    setEditEvent(ev);
+  };
   const todoDueQ = useTodoDueDates(userId, rangeStartISO, rangeEndISO);
   const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
@@ -2933,8 +2962,8 @@ export function MonthCalendarView({ templateId, userId }: { templateId: string; 
                         const fg = light ? "#181A4D" : "#fff";
                         return (
                         <span key={ev.id} title={eventDisplayLabel(ev)} role="button" tabIndex={0}
-                          onClick={(e) => { e.stopPropagation(); setEditEvent(ev); }}
-                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setEditEvent(ev); } }}
+                          onClick={(e) => { e.stopPropagation(); openEv(ev); }}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); openEv(ev); } }}
                           style={{
                             display: "inline-flex", alignItems: "center", gap: 4, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap",
                             padding: "2px 8px", borderRadius: light ? 6 : 999, background: ev.color,
@@ -2971,6 +3000,8 @@ export function MonthCalendarView({ templateId, userId }: { templateId: string; 
       <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
         defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
         onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <RecurringTaskDialog open={!!recurEdit} onOpenChange={(v) => { if (!v) setRecurEdit(null); }} userId={userId}
+        task={recurEdit} onSaved={() => { qc.invalidateQueries({ queryKey: ["recurring-tasks"] }); qc.invalidateQueries({ queryKey: ["recurring-task-completions"] }); }} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
@@ -3054,8 +3085,13 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
   const devoDates = devoDatesQ.data ?? new Set<string>();
   const topicalQ = useTopicalDates(userId, isoDate(anchor), isoDate(endD));
   const topicalMap = topicalQ.data ?? new Map<string, string>();
-  const eventsQ = useUserEvents(userId, isoDate(anchor), isoDate(endD));
-  const eventsMap = eventsQ.data ?? new Map<string, UserEvent[]>();
+  const { map: eventsMap, tasksById } = useEventsWithRecurring(userId, isoDate(anchor), isoDate(endD));
+  const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
+  const openEv = (ev: UserEvent) => {
+    const id = String(ev.id);
+    if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
+    setEditEvent(ev);
+  };
   const todoDueQ = useTodoDueDates(userId, isoDate(anchor), isoDate(endD));
   const todoDueMap = todoDueQ.data ?? new Map<string, number>();
   const qc = useQueryClient();
@@ -3201,7 +3237,7 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
                     const light = isLightEventBg(ev.color);
                     const fg = light ? "#181A4D" : "#fff";
                     return (
-                    <button key={ev.id} type="button" onClick={() => setEditEvent(ev)}
+                    <button key={ev.id} type="button" onClick={() => openEv(ev)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "4px 10px", borderRadius: light ? 6 : 999, background: ev.color,
@@ -3258,6 +3294,8 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
       <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
         defaultDate={editEvent?.event_date ?? isoDate(todayD)} event={editEvent}
         onSaved={() => qc.invalidateQueries({ queryKey: ["user-events"] })} />
+      <RecurringTaskDialog open={!!recurEdit} onOpenChange={(v) => { if (!v) setRecurEdit(null); }} userId={userId}
+        task={recurEdit} onSaved={() => { qc.invalidateQueries({ queryKey: ["recurring-tasks"] }); qc.invalidateQueries({ queryKey: ["recurring-task-completions"] }); }} />
       <NewTodoDialog open={todoOpen} onOpenChange={setTodoOpen} userId={userId} templateId={templateId} defaultDate={todoDate}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
