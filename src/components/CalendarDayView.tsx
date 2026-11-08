@@ -351,7 +351,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
             {["S","M","T","W","T","F","S"].map((d, i) => <div key={i} className="dow">{d}</div>)}
             {monthCells.map(c => {
               const isSel = c.iso === selectedISO;
-              const hasDot = monthDots.has(c.iso);
+              const hasDot = monthDots.has(c.iso) || (recurQ.data ?? []).some(t => t.item_kind === "event" && occursOn(t, c.date));
               const cls = ["day", c.inMonth ? "" : "muted", isSel ? "selected" : "", hasDot ? "has-dot" : ""].filter(Boolean).join(" ");
               return (
                 <button key={c.iso} type="button" className={cls} onClick={() => pickDate(c.date)}>
@@ -399,7 +399,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
           {weekDays.map(d => {
             const iso = isoDate(d);
             const sel = iso === selectedISO;
-            const has = (itemsQ.data?.get(iso) ?? []).length > 0;
+            const has = (itemsQ.data?.get(iso) ?? []).length > 0 || (recurQ.data ?? []).some(t => t.item_kind === "event" && occursOn(t, d));
             return (
               <button key={iso} type="button" className={"cald-pill" + (sel ? " selected" : "") + (has ? " has-events" : "")} onClick={() => pickDate(d)}>
                 <div className="dow">{d.toLocaleDateString(undefined, { weekday: "short" })}</div>
