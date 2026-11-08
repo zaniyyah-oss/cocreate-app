@@ -1,4 +1,5 @@
 import { Extension } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -97,6 +98,7 @@ export const Indent = Extension.create({
     return {
       Tab: () => { indentSmart(this.editor); return true; },
       "Shift-Tab": () => { outdentSmart(this.editor); return true; },
+      Backspace: () => backspaceInList(this.editor),
     };
   },
 
@@ -140,4 +142,40 @@ export function outdentSmart(editor: any) {
   if (wrapperPos === null || cur <= 0) return false;
   editor.view.dispatch(editor.state.tr.setNodeMarkup(wrapperPos, undefined, { ...wrapper.attrs, indent: cur - 1 }));
   return true;
+}
+
+/** Backspace at the start of a bullet: an empty bullet is removed and the
+ * caret jumps to the end of the line above (which stays a bullet); a bullet
+ * with text that's tucked in just moves out one level. */
+function backspaceInList(editor: any) {
+  const { state } = editor;
+  const sel = state.selection;
+  if (!sel.empty) return false;
+  const $f = sel.$from;
+  if ($f.parentOffset !== 0) return false;
+  let d = $f.depth - 1;
+  if (d < 1) return false;
+  const item = $f.node(d);
+  if (!["listItem", "taskItem"].includes(item.type.name)) return false;
+  if ($f.index(d) !== 0) return false; // caret not in the item's first line
+  const { items } = listInfo(editor);
+  const list = $f.node(d - 1);
+  const isFirst = $f.index(d - 1) === 0;
+  if ($f.parent.content.size === 0 && item.childCount === 1 && (!isFirst || items > 1)) {
+    const from = $f.before(d);
+    const tr = state.tr.delete(from, $f.after(d));
+    const target = Selection_findBefore(tr.doc, Math.min(from, tr.doc.content.size));
+    if (target != null) tr.setSelection(TextSelection.create(tr.doc, target));
+    editor.view.dispatch(tr.scrollIntoView());
+    return true;
+  }
+  if (items > 1 && isFirst) return editor.chain().liftListItem(item.type.name).run();
+  void list;
+  return false;
+}
+
+function Selection_findBefore(doc: any, pos: number): number | null {
+  const $p = doc.resolve(pos);
+  const sel = TextSelection.findFrom($p, -1, true);
+  return sel ? sel.from : null;
 }
