@@ -2504,10 +2504,15 @@ export function AddEventDialog({
 
 function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO: string }) {
   const qc = useQueryClient();
-  const eventsQ = useUserEvents(userId, dateISO, dateISO);
-  const events = (eventsQ.data?.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event");
+  const { map: evMap, tasksById } = useEventsWithRecurring(userId, dateISO, dateISO);
+  const events = (evMap.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event");
   const [addOpen, setAddOpen] = useState(false);
-  const [editEvent, setEditEvent] = useState<UserEvent | null>(null);
+  const [editEvent, setEditEventRaw] = useState<UserEvent | null>(null);
+  const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
+  const setEditEvent = (ev: UserEvent | null) => {
+    if (ev && ev.id.startsWith("recur:")) { setRecurEdit(tasksById.get(ev.id.slice(6)) ?? null); return; }
+    setEditEventRaw(ev);
+  };
   const onSaved = () => qc.invalidateQueries({ queryKey: ["user-events"] });
 
   if (!userId) return null;
@@ -2566,6 +2571,8 @@ function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO
       <AddEventDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} defaultDate={dateISO} onSaved={onSaved} />
       <AddEventDialog open={!!editEvent} onOpenChange={(v) => { if (!v) setEditEvent(null); }} userId={userId}
         defaultDate={editEvent?.event_date ?? dateISO} event={editEvent} onSaved={onSaved} />
+      <RecurringTaskDialog open={!!recurEdit} onOpenChange={(v) => { if (!v) setRecurEdit(null); }} userId={userId}
+        task={recurEdit} onSaved={() => { qc.invalidateQueries({ queryKey: ["recurring-tasks"] }); qc.invalidateQueries({ queryKey: ["recurring-task-completions"] }); }} />
     </div>
   );
 }
