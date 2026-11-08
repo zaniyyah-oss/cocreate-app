@@ -102,7 +102,9 @@ function CalendarPage() {
 
 const CAL_CSS = `
 .cal-wrap{max-width:1200px;margin:0 auto;padding:24px 20px 80px;font-family:'Poppins',sans-serif;color:#20201C;}
-.cal-toggle-row{display:flex;justify-content:flex-start;margin-bottom:20px;}
+.cal-toggle-row{display:flex;justify-content:flex-start;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
+.cal-hol{display:inline-flex;align-items:center;gap:6px;font-family:"Poppins",sans-serif;font-size:12.5px;font-weight:600;color:#68655C;cursor:pointer;}
+.cal-hol input{accent-color:#181A4D;width:15px;height:15px;}
 .cal-toggle{display:inline-flex;background:#fff;border-radius:20px;padding:4px;gap:2px;border:1px solid rgba(24,26,77,0.08);}
 .cal-toggle button{border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:600;font-size:13px;padding:8px 18px;border-radius:16px;color:#9a968a;cursor:pointer;}
 .cal-toggle button.active{background:#181A4D;color:#DCE07A;}
