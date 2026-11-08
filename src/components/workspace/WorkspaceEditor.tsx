@@ -371,6 +371,8 @@ const I = {
   plus: <svg viewBox="0 0 24 24" style={{ width: 15, height: 15 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>,
   chevron: <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>,
   callout: <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" /><line x1="4" y1="10" x2="20" y2="10" /></svg>,
+  undo: <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>,
+  redo: <svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></svg>,
   toggle: <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /><line x1="17" y1="6" x2="21" y2="6" /><line x1="17" y1="12" x2="21" y2="12" /><line x1="17" y1="18" x2="21" y2="18" /></svg>,
   table: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="9" y1="10" x2="9" y2="20" /></svg>,
   image: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="M4 17l5-5 4 4 3-3 4 4" /></svg>,
@@ -463,6 +465,13 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
 
   return (
     <div className="ws-toolbar" ref={barRef}>
+      <div className="ws-tbgroup">
+        {btn(I.undo, () => editor.chain().focus().undo().run(), false, `Undo (${mod}+Z)`)}
+        {btn(I.redo, () => editor.chain().focus().redo().run(), false, `Redo (${mod}+${shift}+Z)`)}
+      </div>
+
+      <div className="ws-tbdiv" />
+
       <div className="ws-tbgroup">
         {btn(I.bold, () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"), `Bold (${mod}+B)`)}
         {btn(I.italic, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"), `Italic (${mod}+I)`)}
@@ -604,7 +613,6 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         </button>
         {menu === "insert" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle</button>
             {!inCallout && (
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout</button>
             )}
