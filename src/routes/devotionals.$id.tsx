@@ -13,6 +13,7 @@ import {
 import { deleteStudyOnly } from "@/lib/study-delete";
 import { useRecurringOccurrences, useRecurringTasks, expandOccurrences, type RecurringTask } from "@/lib/recurring-tasks";
 import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import { useShowHolidays, holidaysInRange } from "@/lib/us-holidays";
 import type { Database } from "@/integrations/supabase/types";
 import { trackEvent } from "@/lib/track";
 import { WorkspaceSection } from "@/components/workspace/WorkspaceSection";
@@ -2102,9 +2103,14 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
 function useEventsWithRecurring(userId: string | null, startISO: string, endISO: string) {
   const eventsQ = useUserEvents(userId, startISO, endISO);
   const recurQ = useRecurringTasks(userId);
+  const showHolidays = useShowHolidays();
   const map = useMemo(() => {
     const out = new Map<string, UserEvent[]>();
-    for (const [k, v] of eventsQ.data ?? []) out.set(k, [...v]);
+    if (showHolidays) for (const h of holidaysInRange(startISO, endISO)) {
+      out.set(h.iso, [{ id: `holiday:${h.iso}:${h.name}`, event_date: h.iso, event_type: "other", title: h.name,
+        color: "#B9B4A4", notes: null, item_type: "event", start_time: null, end_time: null } as unknown as UserEvent]);
+    }
+    for (const [k, v] of eventsQ.data ?? []) out.set(k, [...(out.get(k) ?? []), ...v]);
     const evTasks = (recurQ.data ?? []).filter(t => t.item_kind === "event");
     for (const [iso, tasks] of expandOccurrences(evTasks, startISO, endISO)) {
       const arr = out.get(iso) ?? [];
@@ -2116,7 +2122,7 @@ function useEventsWithRecurring(userId: string | null, startISO: string, endISO:
       out.set(iso, arr);
     }
     return out;
-  }, [eventsQ.data, recurQ.data, startISO, endISO]);
+  }, [eventsQ.data, recurQ.data, startISO, endISO, showHolidays]);
   const tasksById = useMemo(() => new Map((recurQ.data ?? []).map(t => [t.id, t] as const)), [recurQ.data]);
   return { map, tasksById };
 }
@@ -2510,6 +2516,7 @@ function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO
   const [editEvent, setEditEventRaw] = useState<UserEvent | null>(null);
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
   const setEditEvent = (ev: UserEvent | null) => {
+    if (ev && ev.id.startsWith("holiday:")) return;
     if (ev && ev.id.startsWith("recur:")) { setRecurEdit(tasksById.get(ev.id.slice(6)) ?? null); return; }
     setEditEventRaw(ev);
   };
@@ -2865,6 +2872,7 @@ export function MonthCalendarView({ templateId, userId }: { templateId: string; 
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
   const openEv = (ev: UserEvent) => {
     const id = String(ev.id);
+    if (id.startsWith("holiday:")) return;
     if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
     setEditEvent(ev);
   };
@@ -3096,6 +3104,7 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
   const openEv = (ev: UserEvent) => {
     const id = String(ev.id);
+    if (id.startsWith("holiday:")) return;
     if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
     setEditEvent(ev);
   };

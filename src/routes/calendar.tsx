@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { CalendarDayView } from "@/components/CalendarDayView";
 import { RecurringTasksPanel } from "@/components/RecurringTasksPanel";
+import { useShowHolidays, setShowHolidays } from "@/lib/us-holidays";
 import { MonthCalendarView, WeekListView } from "./devotionals.$id";
 
 export const Route = createFileRoute("/calendar")({
@@ -52,6 +53,7 @@ function CalendarPage() {
   });
 
   const templateId = defaultQ.data ?? null;
+  const showHol = useShowHolidays();
 
   return (
     <AppShell current="calendar">
@@ -70,6 +72,10 @@ function CalendarPage() {
               </button>
             ))}
           </div>
+          <label className="cal-hol">
+            <input type="checkbox" checked={showHol} onChange={(e) => setShowHolidays(e.target.checked)} />
+            US holidays
+          </label>
         </div>
 
         {view === "today" ? (
