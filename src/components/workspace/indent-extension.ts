@@ -16,7 +16,7 @@ export const Indent = Extension.create({
   name: "indent",
 
   addOptions() {
-    return { types: ["paragraph", "heading", "blockquote", "callout", "bulletList", "orderedList"] as string[] };
+    return { types: ["paragraph", "heading", "blockquote", "callout", "bulletList", "orderedList", "toggleBlock"] as string[] };
   },
 
   addGlobalAttributes() {
@@ -51,7 +51,7 @@ export const Indent = Extension.create({
       // Prefer indenting the outermost matching wrapper (callout / blockquote)
       // when the selection sits inside one, so Tab moves the whole block
       // rather than double-indenting both wrapper and inner paragraph.
-      const wrapperTypes = ["callout", "blockquote"];
+      const wrapperTypes = ["callout", "blockquote", "toggleBlock"];
       const $from = state.selection.$from;
       let wrapperPos: number | null = null;
       let wrapperNode: any = null;
@@ -95,26 +95,49 @@ export const Indent = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      Tab: () => {
-        const editor = this.editor;
-        if (editor.isActive("listItem")) {
-          // Try to nest under a previous sibling; if that fails (e.g. first
-          // item in the list), shift the whole list wrapper right instead
-          // so users can push a list further in from its starting indent.
-          if (editor.chain().focus().sinkListItem("listItem").run()) return true;
-          return editor.chain().focus().indent().run();
-        }
-        return editor.chain().focus().indent().run();
-      },
-      "Shift-Tab": () => {
-        const editor = this.editor;
-        if (editor.isActive("listItem")) {
-          if (editor.chain().focus().liftListItem("listItem").run()) return true;
-          return editor.chain().focus().outdent().run();
-        }
-        return editor.chain().focus().outdent().run();
-      },
+      Tab: () => { indentSmart(this.editor); return true; },
+      "Shift-Tab": () => { outdentSmart(this.editor); return true; },
     };
   },
 
 });
+
+function listInfo(editor: any) {
+  const $f = editor.state.selection.$from;
+  let items = 0;
+  let wrapperPos: number | null = null;
+  let wrapper: any = null;
+  for (let d = $f.depth; d > 0; d--) {
+    const n = $f.node(d);
+    if (n.type.name === "listItem" || n.type.name === "taskItem") items++;
+    if (["bulletList", "orderedList", "taskList"].includes(n.type.name)) { wrapperPos = $f.before(d); wrapper = n; }
+  }
+  return { items, wrapperPos, wrapper };
+}
+
+/** Indent: nest a bullet under the one above; only the first bullet of a
+ * list shifts the whole list. Never touches other blocks' indent. */
+export function indentSmart(editor: any) {
+  const itemType = editor.isActive("taskItem") ? "taskItem" : editor.isActive("listItem") ? "listItem" : null;
+  if (!itemType) return editor.chain().focus().indent().run();
+  if (editor.chain().focus().sinkListItem(itemType).run()) return true;
+  const { items, wrapperPos, wrapper } = listInfo(editor);
+  if (items !== 1 || wrapperPos === null || !wrapper.type.spec.attrs?.indent && wrapper.attrs.indent === undefined) return false;
+  const cur = Number(wrapper.attrs.indent) || 0;
+  if (cur >= MAX) return false;
+  editor.view.dispatch(editor.state.tr.setNodeMarkup(wrapperPos, undefined, { ...wrapper.attrs, indent: cur + 1 }));
+  return true;
+}
+
+/** Outdent: un-nest a bullet; a top-level bullet only moves its list left
+ * and never stops being a bullet. */
+export function outdentSmart(editor: any) {
+  const itemType = editor.isActive("taskItem") ? "taskItem" : editor.isActive("listItem") ? "listItem" : null;
+  if (!itemType) return editor.chain().focus().outdent().run();
+  const { items, wrapperPos, wrapper } = listInfo(editor);
+  if (items > 1) return editor.chain().focus().liftListItem(itemType).run();
+  const cur = Number(wrapper?.attrs.indent) || 0;
+  if (wrapperPos === null || cur <= 0) return false;
+  editor.view.dispatch(editor.state.tr.setNodeMarkup(wrapperPos, undefined, { ...wrapper.attrs, indent: cur - 1 }));
+  return true;
+}
