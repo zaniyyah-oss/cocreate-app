@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
-import { Indent } from "./indent-extension";
+import { Indent, indentSmart, outdentSmart } from "./indent-extension";
 import { Callout } from "./callout-node";
 import { ToggleBlock } from "./toggle-node";
 import { WORKSPACE_EDITOR_CSS } from "./editor-css";
@@ -507,18 +507,15 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         {btn(I.bullet, () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
         {btn(I.ordered, () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
         {btn(I.quote, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
+        {btn(I.toggle, () => editor.chain().focus().turnIntoToggle().run(), editor.isActive("toggleBlock"), "Turn into toggle")}
       </div>
 
       <div className="ws-tbdiv" />
 
       <div className="ws-tbgroup">
-        {btn(I.indent, () => {
-          if (editor.isActive("listItem") && editor.chain().focus().sinkListItem("listItem").run()) return;
-          (editor.chain().focus() as any).indent().run();
-        }, false, "Indent (Tab)")}
+        {btn(I.indent, () => { indentSmart(editor); }, false, "Indent (Tab)")}
         {btn(I.outdent, () => {
-          if (editor.isActive("listItem") && editor.chain().focus().liftListItem("listItem").run()) return;
-          (editor.chain().focus() as any).outdent().run();
+          outdentSmart(editor);
         }, false, "Outdent (Shift+Tab)")}
         {btn(I.divider, () => editor.chain().focus().setHorizontalRule().run(), false, "Divider")}
       </div>
@@ -607,7 +604,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         </button>
         {menu === "insert" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertToggle().run(); setMenu(null); }}>{I.toggle}Toggle</button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle</button>
             {!inCallout && (
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout</button>
             )}
