@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEventDialog, type UserEvent } from "@/routes/devotionals.$id";
 import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import { setFocusDone, useFocusDone } from "@/lib/focus-tasks";
 import { PlanDayBanner } from "@/components/PlanDayBanner";
 import {
   occursOn,
@@ -210,6 +211,25 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     },
   });
   const dayItems = itemsQ.data?.get(selectedISO) ?? [];
+  const focusDoneQ = useFocusDone(userId, weekStartISO, weekEndISO);
+  const focusCheck = (ev: UserEvent, label: string) => {
+    if (ev.item_type !== "focus") return null;
+    const done = focusDoneQ.data?.get(ev.id) ?? false;
+    const toggle = async (e: { stopPropagation(): void; preventDefault(): void }) => {
+      e.stopPropagation(); e.preventDefault();
+      if (!userId) return;
+      qc.setQueryData<Map<string, boolean>>(["focus-done", userId, weekStartISO, weekEndISO], (m) => new Map(m ?? []).set(ev.id, !done));
+      try { await setFocusDone(userId, ev.id, ev.event_date, label, !done); }
+      finally { qc.invalidateQueries({ queryKey: ["focus-done"] }); qc.invalidateQueries({ queryKey: ["dev-entries"] }); }
+    };
+    return (
+      <span role="checkbox" aria-checked={done} tabIndex={0} aria-label={`Mark ${label} done`}
+        className={`cald-fcheck${done ? " is-done" : ""}`} onClick={toggle}
+        onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") void toggle(e); }}>
+        {done ? "✓" : ""}
+      </span>
+    );
+  };
 
   const recurQ = useRecurringTasks(userId);
   const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
@@ -466,7 +486,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="swatch-bar" style={{ background: ev.color }} />
                 <div className="cald-block-body">
                   <div className="ev-title">
-                    {label}
+                    {focusCheck(ev, label)}
+                    <span style={ev.item_type === "focus" && focusDoneQ.data?.get(ev.id) ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>{label}</span>
                     {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
                   <div className="ev-time">{timeLabel}</div>
@@ -491,7 +512,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="swatch-bar" style={{ background: ev.color }} />
                 <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
                   <div className="ev-title">
-                    {label}
+                    {focusCheck(ev, label)}
+                    <span style={ev.item_type === "focus" && focusDoneQ.data?.get(ev.id) ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>{label}</span>
                     {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
                   {ev.notes && <div className="ev-notes">{ev.notes}</div>}
@@ -676,6 +698,8 @@ const CSS = `
 .cald-block .swatch-bar{width:3px;border-radius:2px;flex-shrink:0;}
 .cald-block-body{min-width:0;flex:1;overflow:hidden;}
 .cald-block .ev-title{font-size:12.5px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cald-fcheck{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:none;border:1.5px solid #181A4D;border-radius:4px;background:#fff;color:#DCE07A;font-size:10px;font-weight:800;cursor:pointer;vertical-align:-2px;margin-right:4px;}
+.cald-fcheck.is-done{background:#181A4D;}
 .cald-block .ev-tag{font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:1px 6px;border-radius:999px;}
 .cald-block .ev-time{font-size:10.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cald-block .ev-notes{font-size:11px;color:#20201C;opacity:0.65;margin-top:2px;overflow:hidden;}

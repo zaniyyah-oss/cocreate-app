@@ -23,6 +23,7 @@ import { RichTextField, stripHtml } from "@/components/RichTextField";
 import type { Editor } from "@tiptap/react";
 import { ReadStudyLog } from "@/components/workspace/ReadStudyLog";
 import { TodoChecklist } from "@/components/workspace/TodoChecklist";
+import { syncFocusTodo, removeFocusTodo } from "@/lib/focus-tasks";
 import { resolveDayEntry } from "@/lib/day-entry";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { AppShell } from "@/components/AppShell";
@@ -61,6 +62,8 @@ type TodoItem = {
   /** Day the task was originally written (kept when moved). */
   written_on?: string | null;
   recurring_id?: string | null;
+  /** Set when this to-do is the check-off for a calendar focus item. */
+  focus_event_id?: string | null;
 };
 
 const todoStatusOf = (it: TodoItem): TodoStatus =>
@@ -989,6 +992,24 @@ function EntryPage() {
     const own = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(own);
   }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length, saveTick]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Focus items created/checked on the calendar write the linked to-do directly;
+  // mirror that into this page's list so a later autosave can't drop it.
+  useEffect(() => {
+    const onFocusTodo = (e: Event) => {
+      const { date, eventId, item } = (e as CustomEvent).detail ?? {};
+      if (date !== selectedDate) return;
+      setTodoItems((cur) => {
+        const rest = cur.filter((t) => (t as any).focus_event_id !== eventId);
+        if (!item) return rest;
+        const idx = cur.findIndex((t) => (t as any).focus_event_id === eventId);
+        if (idx < 0) return [...rest, item as TodoItem];
+        const next = [...cur]; next[idx] = item as TodoItem; return next;
+      });
+    };
+    window.addEventListener("cc:focus-todo", onFocusTodo);
+    return () => window.removeEventListener("cc:focus-todo", onFocusTodo);
+  }, [selectedDate]);
 
 
 
@@ -2142,6 +2163,7 @@ export function AddEventDialog({
   defaultEndTime?: string;
 }) {
   const isEdit = !!event;
+  const qc = useQueryClient();
   const [date, setDate] = useState(defaultDate);
   const [itemType, setItemType] = useState<UserEventItemType>(defaultItemType ?? "event");
   const [type, setType] = useState<UserEventType>("prayer_meeting");
@@ -2219,10 +2241,22 @@ export function AddEventDialog({
       end_time: endTime || null,
     };
     let error;
+    let savedId: string | null = event?.id ?? null;
     if (isEdit && event) {
       ({ error } = await supabase.from("user_events" as any).update(payload).eq("id", event.id));
     } else {
-      ({ error } = await supabase.from("user_events" as any).insert({ user_id: userId, ...payload }));
+      let data: any;
+      ({ data, error } = await supabase.from("user_events" as any).insert({ user_id: userId, ...payload }).select("id").single());
+      savedId = data?.id ?? null;
+    }
+    if (!error && savedId) {
+      // Focus items are scheduled tasks: keep one linked to-do on their day.
+      try {
+        if (isFocus) await syncFocusTodo(userId, { id: savedId, event_date: date, title: title.trim() }, event?.event_date);
+        else if (event?.item_type === "focus") await removeFocusTodo(userId, savedId, event.event_date);
+      } catch { /* event saved; to-do link retried on next edit */ }
+      qc.invalidateQueries({ queryKey: ["focus-done"] });
+      qc.invalidateQueries({ queryKey: ["todo-due-dates"] });
     }
     setSaving(false);
     if (error) { setErr(error.message); return; }
@@ -2240,6 +2274,10 @@ export function AddEventDialog({
     if (!event) return;
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("user_events" as any).delete().eq("id", event.id);
+    if (!error && event.item_type === "focus" && userId) {
+      try { await removeFocusTodo(userId, event.id, event.event_date); } catch { /* ignore */ }
+      qc.invalidateQueries({ queryKey: ["focus-done"] });
+    }
     setDeleting(false);
     if (error) { setErr(error.message); return; }
     setConfirmDelete(false);
