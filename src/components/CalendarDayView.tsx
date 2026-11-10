@@ -215,7 +215,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   const focusCheck = (ev: UserEvent, label: string) => {
     if (ev.item_type !== "focus") return null;
     const done = focusDoneQ.data?.get(ev.id) ?? false;
-    const toggle = async (e: React.SyntheticEvent) => {
+    const toggle = async (e: { stopPropagation(): void; preventDefault(): void }) => {
       e.stopPropagation(); e.preventDefault();
       if (!userId) return;
       qc.setQueryData<Map<string, boolean>>(["focus-done", userId, weekStartISO, weekEndISO], (m) => new Map(m ?? []).set(ev.id, !done));
@@ -698,6 +698,8 @@ const CSS = `
 .cald-block .swatch-bar{width:3px;border-radius:2px;flex-shrink:0;}
 .cald-block-body{min-width:0;flex:1;overflow:hidden;}
 .cald-block .ev-title{font-size:12.5px;font-weight:700;color:#20201C;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cald-fcheck{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:none;border:1.5px solid #181A4D;border-radius:4px;background:#fff;color:#DCE07A;font-size:10px;font-weight:800;cursor:pointer;vertical-align:-2px;margin-right:4px;}
+.cald-fcheck.is-done{background:#181A4D;}
 .cald-block .ev-tag{font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#181A4D;color:#DCE07A;padding:1px 6px;border-radius:999px;}
 .cald-block .ev-time{font-size:10.5px;font-weight:600;color:#181A4D;opacity:0.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cald-block .ev-notes{font-size:11px;color:#20201C;opacity:0.65;margin-top:2px;overflow:hidden;}
