@@ -62,6 +62,8 @@ type TodoItem = {
   /** Day the task was originally written (kept when moved). */
   written_on?: string | null;
   recurring_id?: string | null;
+  /** Set when this to-do is the check-off for a calendar focus item. */
+  focus_event_id?: string | null;
 };
 
 const todoStatusOf = (it: TodoItem): TodoStatus =>
@@ -990,6 +992,24 @@ function EntryPage() {
     const own = Array.isArray(e?.todo_items) ? (e!.todo_items as TodoItem[]) : [];
     setTodoItems(own);
   }, [selectedDate, dayFieldsEntry?.id, templateQ.data?.id, (pastQ.data ?? []).length, saveTick]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Focus items created/checked on the calendar write the linked to-do directly;
+  // mirror that into this page's list so a later autosave can't drop it.
+  useEffect(() => {
+    const onFocusTodo = (e: Event) => {
+      const { date, eventId, item } = (e as CustomEvent).detail ?? {};
+      if (date !== selectedDate) return;
+      setTodoItems((cur) => {
+        const rest = cur.filter((t) => (t as any).focus_event_id !== eventId);
+        if (!item) return rest;
+        const idx = cur.findIndex((t) => (t as any).focus_event_id === eventId);
+        if (idx < 0) return [...rest, item as TodoItem];
+        const next = [...cur]; next[idx] = item as TodoItem; return next;
+      });
+    };
+    window.addEventListener("cc:focus-todo", onFocusTodo);
+    return () => window.removeEventListener("cc:focus-todo", onFocusTodo);
+  }, [selectedDate]);
 
 
 
