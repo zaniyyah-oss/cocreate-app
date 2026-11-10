@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AddEventDialog, type UserEvent } from "@/routes/devotionals.$id";
 import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
+import { setFocusDone, useFocusDone } from "@/lib/focus-tasks";
 import { PlanDayBanner } from "@/components/PlanDayBanner";
 import {
   occursOn,
@@ -210,6 +211,25 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
     },
   });
   const dayItems = itemsQ.data?.get(selectedISO) ?? [];
+  const focusDoneQ = useFocusDone(userId, weekStartISO, weekEndISO);
+  const focusCheck = (ev: UserEvent, label: string) => {
+    if (ev.item_type !== "focus") return null;
+    const done = focusDoneQ.data?.get(ev.id) ?? false;
+    const toggle = async (e: React.SyntheticEvent) => {
+      e.stopPropagation(); e.preventDefault();
+      if (!userId) return;
+      qc.setQueryData<Map<string, boolean>>(["focus-done", userId, weekStartISO, weekEndISO], (m) => new Map(m ?? []).set(ev.id, !done));
+      try { await setFocusDone(userId, ev.id, ev.event_date, label, !done); }
+      finally { qc.invalidateQueries({ queryKey: ["focus-done"] }); qc.invalidateQueries({ queryKey: ["dev-entries"] }); }
+    };
+    return (
+      <span role="checkbox" aria-checked={done} tabIndex={0} aria-label={`Mark ${label} done`}
+        className={`cald-fcheck${done ? " is-done" : ""}`} onClick={toggle}
+        onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") void toggle(e); }}>
+        {done ? "✓" : ""}
+      </span>
+    );
+  };
 
   const recurQ = useRecurringTasks(userId);
   const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
@@ -466,7 +486,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="swatch-bar" style={{ background: ev.color }} />
                 <div className="cald-block-body">
                   <div className="ev-title">
-                    {label}
+                    {focusCheck(ev, label)}
+                    <span style={ev.item_type === "focus" && focusDoneQ.data?.get(ev.id) ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>{label}</span>
                     {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
                   <div className="ev-time">{timeLabel}</div>
@@ -491,7 +512,8 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
                 <div className="swatch-bar" style={{ background: ev.color }} />
                 <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
                   <div className="ev-title">
-                    {label}
+                    {focusCheck(ev, label)}
+                    <span style={ev.item_type === "focus" && focusDoneQ.data?.get(ev.id) ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>{label}</span>
                     {ev.item_type === "focus" && <span className="ev-tag">focus</span>}
                   </div>
                   {ev.notes && <div className="ev-notes">{ev.notes}</div>}

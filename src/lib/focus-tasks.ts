@@ -76,13 +76,19 @@ export async function syncFocusTodo(userId: string, ev: { id: string; event_date
   announce(ev.event_date, ev.id, result);
 }
 
-export async function setFocusDone(userId: string, eventId: string, date: string, done: boolean) {
+export async function setFocusDone(userId: string, eventId: string, date: string, title: string, done: boolean) {
   const entryId = await entryFor(userId, date, true);
   if (!entryId) return;
   let result: Todo | null = null;
-  await updateEntryTodos<Todo>(entryId, (items) => items.map((t) =>
-    t.focus_event_id === eventId ? (result = { ...t, done, status: done ? "done" : "not_started" }) : t));
-  if (result) announce(date, eventId, result);
+  const status = done ? "done" : "not_started";
+  await updateEntryTodos<Todo>(entryId, (items) => {
+    const out = items.map((t) => t.focus_event_id === eventId ? (result = { ...t, done, status }) : t);
+    if (result) return out;
+    // Older focus items made before linking: create their to-do now.
+    result = { id: crypto.randomUUID(), text: title, done, status, due_date: date, focus_event_id: eventId };
+    return [...out, result];
+  });
+  announce(date, eventId, result);
 }
 
 /** Map of focus event id -> done, for focus items in the date range. */
