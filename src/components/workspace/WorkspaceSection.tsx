@@ -148,6 +148,7 @@ const CSS = `
 /* focus mode passthrough */
 .ws-root.is-full{position:fixed;inset:0;z-index:400;background:#fff;margin:0;border:none;border-radius:0;overflow-y:auto;padding:64px 20px 80px;}
 .ws-root.is-full{padding:0;}
+.ws-root.is-full > .ws-note-body{max-width:none !important;width:100% !important;margin:0 !important;}
 .ws-root.is-full .ws-head,.ws-root.is-full .ws-recent,.ws-root.is-full .ws-notetabs,.ws-root.is-full .ws-studyhead,.ws-root.is-full .ws-note-actions,.ws-root.is-full .ws-library,.ws-root.is-full .ws-library-strip{display:none !important;}
 .ws-focus-exit{position:fixed;top:14px;right:18px;z-index:420;background:#fff;}
 .ws-root.is-full .ws-props{border-bottom:none;padding:0;margin:0 0 18px;}
