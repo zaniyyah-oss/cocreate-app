@@ -2131,6 +2131,7 @@ export type Database = {
           kind: string
           legacy_entry_id: string | null
           manual_order: number | null
+          pages: Json | null
           pinned: boolean
           plan_assignment_id: string | null
           plan_day_number: number | null
@@ -2154,6 +2155,7 @@ export type Database = {
           kind?: string
           legacy_entry_id?: string | null
           manual_order?: number | null
+          pages?: Json | null
           pinned?: boolean
           plan_assignment_id?: string | null
           plan_day_number?: number | null
@@ -2177,6 +2179,7 @@ export type Database = {
           kind?: string
           legacy_entry_id?: string | null
           manual_order?: number | null
+          pages?: Json | null
           pinned?: boolean
           plan_assignment_id?: string | null
           plan_day_number?: number | null

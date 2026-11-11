@@ -1,0 +1,2 @@
+ALTER TABLE public.workspace_items ADD COLUMN IF NOT EXISTS pages jsonb;
+COMMENT ON COLUMN public.workspace_items.pages IS 'Optional ordered pages [{id,title,parentId,body,text,order}]; body mirrors first page, body_text holds all pages text. Null = single page from body.';
