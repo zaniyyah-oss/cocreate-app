@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
@@ -5,7 +6,8 @@ import { addPage, deletePage, mirrorFields, movePage, outlineOf, pagesFromItem, 
 
 const CSS = `
 .dp-wrap{position:relative;}
-.dp-wrap.focus{display:flex;gap:28px;align-items:flex-start;}
+.dp-wrap.focus{display:flex;align-items:flex-start;min-height:100vh;}
+.dp-wrap.focus .dp-main{padding:56px 40px 120px;max-width:900px;margin:0 auto;}
 .dp-main{flex:1;min-width:0;}
 /* compact peek bar */
 .dp-peekrow{display:flex;align-items:center;gap:8px;margin:2px 0 6px;position:relative;z-index:60;}
@@ -39,11 +41,11 @@ const CSS = `
 .dp-addtab{display:block;width:100%;margin-top:10px;background:none;border:1px dashed rgba(24,26,77,0.18);border-radius:9px;font-family:inherit;font-size:13px;color:rgba(24,26,77,0.6);padding:8px;cursor:pointer;}
 .dp-addtab:hover{color:#181A4D;border-color:rgba(24,26,77,0.35);}
 /* focus sidebar */
-.dp-side{position:sticky;top:12px;width:260px;flex-shrink:0;max-height:calc(100vh - 140px);overflow:auto;padding:6px 6px 16px 0;border-right:1px solid rgba(24,26,77,0.08);}
-.dp-side.closed{width:auto;border-right:none;padding:0;}
+.dp-side{position:sticky;top:0;width:280px;flex-shrink:0;height:100vh;overflow:auto;padding:16px 14px 24px;background:#f7f6f1;border-right:1px solid rgba(24,26,77,0.08);box-sizing:border-box;}
+.dp-side.closed{width:auto;background:transparent;border-right:none;padding:16px 10px;}
 .dp-collapse{background:none;border:1px solid rgba(24,26,77,0.12);border-radius:7px;color:#181A4D;cursor:pointer;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;}
 .dp-collapse:hover{background:rgba(24,26,77,0.05);}
-@media (max-width:899px){.dp-wrap.focus{display:block;}.dp-side{position:static;width:auto;max-height:none;border-right:none;border-bottom:1px solid rgba(24,26,77,0.08);margin-bottom:14px;}}
+@media (max-width:899px){.dp-wrap.focus{display:block;}.dp-wrap.focus .dp-main{padding:56px 18px 100px;}.dp-side{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid rgba(24,26,77,0.08);margin-bottom:14px;}}
 `;
 
 export function DocPages({
@@ -54,7 +56,9 @@ export function DocPages({
   onBlur,
   ignoreExternalUpdates,
   focused = false,
+  header,
 }: {
+  header?: React.ReactNode;
   item: { id: string; body: any; body_text: string; pages?: any };
   userId: string;
   onSave: (patch: Record<string, unknown>) => void;
@@ -190,6 +194,7 @@ export function DocPages({
       )}
 
       <div className="dp-main">
+        {header}
         {!focused && (
           <div className="dp-peekrow">
             <button type="button" className={`dp-peek${peekOpen ? " on" : ""}`} onClick={() => setPeekOpen((v) => !v)} aria-label="Tabs and outline">
