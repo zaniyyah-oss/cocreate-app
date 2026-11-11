@@ -36,6 +36,13 @@
       "when": 1793635818237,
       "tag": "0004_workspace_items_manual_order",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794358462156,
+      "tag": "0005_workspace_item_pages",
+      "breakpoints": true
     }
   ]
 }

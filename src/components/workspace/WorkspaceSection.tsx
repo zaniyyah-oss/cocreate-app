@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { WorkspaceEditor } from "./WorkspaceEditor";
+import { DocPages } from "./DocPages";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { useBibleBooks, BookTagger } from "@/components/BookTagger";
 import { TopicPicker } from "@/components/TopicPicker";
@@ -1026,10 +1027,11 @@ function NoteBody({
         />
       </div>
 
-      <WorkspaceEditor
+      <DocPages
+        item={item as any}
         userId={userId}
-        initialJSON={item.body}
-        onChange={(json, text) => { noteStudyEdit(text); scheduleSave({ body: json, body_text: text }); }}
+        onTextChange={noteStudyEdit}
+        onSave={scheduleSave}
         onBlur={() => { void flushSave(); }}
         ignoreExternalUpdates={hasPendingPatch || saving}
       />
