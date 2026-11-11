@@ -147,14 +147,12 @@ const CSS = `
 
 /* focus mode passthrough */
 .ws-root.is-full{position:fixed;inset:0;z-index:400;background:#fff;margin:0;border:none;border-radius:0;overflow-y:auto;padding:64px 20px 80px;}
-@media (min-width:720px){
-  .ws-root.is-full{padding:72px 48px 80px;}
-  .ws-root.is-full > *{max-width:980px;margin-left:auto;margin-right:auto;}
-}
-@media (min-width:1200px){
-  .ws-root.is-full{padding:84px 72px 100px;}
-  .ws-root.is-full > *{max-width:1200px;}
-}
+.ws-root.is-full{padding:0;}
+.ws-root.is-full .ws-head,.ws-root.is-full .ws-recent,.ws-root.is-full .ws-notetabs,.ws-root.is-full .ws-studyhead,.ws-root.is-full .ws-note-actions,.ws-root.is-full .ws-library,.ws-root.is-full .ws-library-strip{display:none !important;}
+.ws-focus-exit{position:fixed;top:14px;right:18px;z-index:420;background:#fff;}
+.ws-root.is-full .ws-props{border-bottom:none;padding:0;margin:0 0 18px;}
+.ws-root.is-full .ws-toolbar{position:sticky;top:12px;z-index:60;width:fit-content;max-width:100%;margin:0 auto 22px;background:#fff;border:1px solid rgba(24,26,77,0.10);border-radius:14px;box-shadow:0 6px 20px rgba(24,26,77,0.10);padding:4px 8px;}
+.bt-pop{z-index:500 !important;}
 .ws-focus-btn{background:transparent;border:1px solid rgba(24,26,77,0.15);color:#181A4D;font-family:'Poppins',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .ws-focus-btn:hover{background:#181A4D;color:#fff;border-color:#181A4D;}
 
@@ -201,7 +199,8 @@ const CSS = `
 .ws-props>.ws-chiprow,.ws-props>.ws-tagrow,.ws-root.is-full .ws-props>.ws-tagrow{display:contents;}
 .ws-props>div>*{box-sizing:border-box;min-height:26px;display:inline-flex;align-items:center;}
 .ws-props .ws-chip,.ws-props .ws-tag{font-size:11.5px;padding:0 10px;border-radius:7px;}
-.ws-root.is-full .ws-note-title{font-size:28px;font-weight:700;margin:6px 0 12px;}
+.ws-root.is-full .ws-note-title{font-size:34px;font-weight:700;line-height:1.2;margin:0 0 10px;}
+.ws-props .bt-select,.ws-props .tp-wrap>button,.ws-props .ws-tag-input{height:26px !important;min-height:26px;padding:0 10px !important;font-size:11.5px !important;border-radius:7px !important;border-style:solid !important;border-width:1px !important;}
 .ws-chiprow{position:relative;z-index:70;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px;}
 .ws-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(15,74,66,0.08);color:#0F4A42;font-family:'Poppins',sans-serif;}
 .ws-chip.study,.ws-rc-tag.study{background:#FFE3A3;color:#5c3d00;}
@@ -936,20 +935,8 @@ function NoteBody({
     scheduleSave({ tags: next });
   };
 
-  return (
-    <div className="ws-note-body" ref={bodyRef}>
-      {studiesMode && (
-        <div className="ws-studyhead">
-          <span className="ws-chip study">Study{folderName ? ` · ${folderName}` : ""}</span>
-          <span className="ws-studydate">{new Date(item.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
-          <span className="acts">
-            <button type="button" className="ws-focus-btn" onClick={() => bodyRef.current?.querySelector<HTMLElement>(".ws-editor-content")?.focus()}>✎ Edit</button>
-            {onToggleFocus && (
-              <button type="button" className="ws-focus-btn" onClick={onToggleFocus}>{isFocused ? "✕ Exit focus" : "⛶ Focus"}</button>
-            )}
-          </span>
-        </div>
-      )}
+  const docHeader = (
+    <>
       <input
         className="ws-note-title"
         placeholder={isStudy ? "Untitled study" : "Untitled note"}
@@ -1035,7 +1022,28 @@ function NoteBody({
 
       </div>
 
+    </>
+  );
+
+  return (
+    <div className="ws-note-body" ref={bodyRef}>
+      {isFocused && onToggleFocus && (
+        <button type="button" className="ws-focus-btn ws-focus-exit" onClick={onToggleFocus}>✕ Exit focus</button>
+      )}
+      {studiesMode && (
+        <div className="ws-studyhead">
+          <span className="ws-chip study">Study</span>
+          <span className="ws-studydate">{new Date(item.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+          <span className="acts">
+            <button type="button" className="ws-focus-btn" onClick={() => bodyRef.current?.querySelector<HTMLElement>(".ws-editor-content")?.focus()}>✎ Edit</button>
+            {onToggleFocus && (
+              <button type="button" className="ws-focus-btn" onClick={onToggleFocus}>{isFocused ? "✕ Exit focus" : "⛶ Focus"}</button>
+            )}
+          </span>
+        </div>
+      )}
       <DocPages
+        header={docHeader}
         focused={isFocused}
         item={item as any}
         userId={userId}
