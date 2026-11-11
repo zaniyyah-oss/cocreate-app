@@ -197,6 +197,11 @@ const CSS = `
 .ws-ov-body h3{color:#181A4D;font-size:17px;margin:0 0 8px;}
 .ws-ov-body .body{font-size:13.5px;line-height:1.6;color:#3A3A34;white-space:pre-wrap;}
 .ws-sdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFAE00;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
+.ws-props{position:relative;z-index:70;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 0 10px;margin:0 0 10px;border-bottom:1px solid rgba(24,26,77,0.08);}
+.ws-props>.ws-chiprow,.ws-props>.ws-tagrow,.ws-root.is-full .ws-props>.ws-tagrow{display:contents;}
+.ws-props>div>*{box-sizing:border-box;min-height:26px;display:inline-flex;align-items:center;}
+.ws-props .ws-chip,.ws-props .ws-tag{font-size:11.5px;padding:0 10px;border-radius:7px;}
+.ws-root.is-full .ws-note-title{font-size:28px;font-weight:700;margin:6px 0 12px;}
 .ws-chiprow{position:relative;z-index:70;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px;}
 .ws-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(15,74,66,0.08);color:#0F4A42;font-family:'Poppins',sans-serif;}
 .ws-chip.study,.ws-rc-tag.study{background:#FFE3A3;color:#5c3d00;}
@@ -957,6 +962,7 @@ function NoteBody({
         }}
       />
 
+      <div className="ws-props">
       {isStudy && (
         <div className="ws-chiprow">
           <span className={`ws-chip study${studiesMode ? " dup" : ""}`}>Study</span>
@@ -1027,7 +1033,10 @@ function NoteBody({
         />
       </div>
 
+      </div>
+
       <DocPages
+        focused={isFocused}
         item={item as any}
         userId={userId}
         onTextChange={noteStudyEdit}
