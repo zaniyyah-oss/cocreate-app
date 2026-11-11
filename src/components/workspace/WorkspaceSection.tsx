@@ -148,7 +148,7 @@ const CSS = `
 /* focus mode passthrough */
 .ws-root.is-full{position:fixed;inset:0;z-index:400;background:#fff;margin:0;border:none;border-radius:0;overflow-y:auto;padding:64px 20px 80px;}
 .ws-root.is-full{padding:0;}
-.ws-root.is-full .ws-head,.ws-root.is-full .ws-recent,.ws-root.is-full .ws-notetabs,.ws-root.is-full .ws-studyhead,.ws-root.is-full .ws-note-actions,.ws-root.is-full .ws-library{display:none !important;}
+.ws-root.is-full .ws-head,.ws-root.is-full .ws-recent,.ws-root.is-full .ws-notetabs,.ws-root.is-full .ws-studyhead,.ws-root.is-full .ws-note-actions,.ws-root.is-full .ws-library,.ws-root.is-full .ws-library-strip{display:none !important;}
 .ws-focus-exit{position:fixed;top:14px;right:18px;z-index:420;background:#fff;}
 .ws-root.is-full .ws-props{border-bottom:none;padding:0;margin:0 0 18px;}
 .ws-root.is-full .ws-toolbar{position:sticky;top:12px;z-index:60;width:fit-content;max-width:100%;margin:0 auto 22px;background:#fff;border:1px solid rgba(24,26,77,0.10);border-radius:14px;box-shadow:0 6px 20px rgba(24,26,77,0.10);padding:4px 8px;}
