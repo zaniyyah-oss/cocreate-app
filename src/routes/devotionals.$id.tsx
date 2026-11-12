@@ -132,6 +132,10 @@ export const Route = createFileRoute("/devotionals/$id")({
     meta: [
       { title: "Devotional — CoCreate" },
       { name: "description", content: "Where are you, Read, Pray, To-Do, Workspace." },
+      { property: "og:title", content: "Devotional Workspace — CoCreate" },
+      { property: "og:description", content: "Reflect, pray, study Scripture, and organize your daily writing with CoCreate." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
 });

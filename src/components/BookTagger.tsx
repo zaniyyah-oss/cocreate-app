@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Database } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
 
 export type BibleBook = Database["public"]["Tables"]["bible_books"]["Row"];
 export type BookSource = "manual" | "auto" | null;
@@ -32,9 +33,11 @@ type Props = {
   iconOnly?: boolean;
   /** Offer a "Various" choice for studies that span many books. */
   allowVarious?: boolean;
+  /** Document properties render selected books separately from the add control. */
+  propertyRow?: boolean;
 };
 
-export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion, iconOnly, allowVarious }: Props) {
+export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSuggestion, iconOnly, allowVarious, propertyRow }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const booksQ = useBibleBooks();
@@ -71,7 +74,11 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
     </svg>
   );
 
-  const trigger = iconOnly ? (
+  const trigger = propertyRow ? (
+    <Button type="button" variant="ghost" className="doc-property-add" disabled={disabled} aria-label="Add book of the Bible">
+      + Book
+    </Button>
+  ) : iconOnly ? (
     <button
       type="button"
       className={`bt-icon${values.length > 0 ? " on" : ""}`}
@@ -96,7 +103,7 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
         {state === "empty"
           ? "+ Add book of the Bible"
           : state === "suggested"
-          ? byAbbr.get(suggestion!)?.full_name ?? suggestion
+          ? (suggestion ? byAbbr.get(suggestion)?.full_name ?? suggestion : "")
           : `${values.length} book${values.length === 1 ? "" : "s"} selected — add or change`}
       </span>
       {chevron}
@@ -104,7 +111,7 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
   );
 
   return (
-    <div className={`book-tagger bt-${state}${iconOnly ? " bt-iconmode" : ""}`}>
+    <div className={`book-tagger bt-${state}${iconOnly || propertyRow ? " bt-iconmode" : ""}`}>
       <style>{`
         .book-tagger{margin-bottom:12px;font-family:'Poppins',sans-serif;}
         .book-tagger.bt-iconmode{margin-bottom:0;display:inline-flex;}
@@ -257,7 +264,7 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
         </PopoverContent>
       </Popover>
 
-      {hasValues && !iconOnly && (
+      {hasValues && !iconOnly && !propertyRow && (
         <div className="bt-chips">
           {values.map((abbr) => (
             <span key={abbr} className="bt-chip">
@@ -274,7 +281,7 @@ export function BookTagger({ values, suggestion, disabled, onToggle, onConfirmSu
         </div>
       )}
 
-      {state === "suggested" && !iconOnly && (
+      {state === "suggested" && !iconOnly && !propertyRow && (
 
         <div className="bt-suggest-row">
           <span className="txt">
