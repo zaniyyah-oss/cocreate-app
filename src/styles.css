@@ -87,6 +87,7 @@
 }
 
 /* Flat document properties: selections first, quiet add controls last. */
+.ws-props style { display: none !important; }
 .ws-props .ws-chip,
 .ws-props .ws-tag,
 .ws-props .doc-property-add,

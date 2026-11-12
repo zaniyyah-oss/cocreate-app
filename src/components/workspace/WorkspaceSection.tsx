@@ -199,7 +199,7 @@ const CSS = `
 .ws-sdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFAE00;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
 .ws-props{position:relative;z-index:70;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 0 10px;margin:0 0 10px;border-bottom:1px solid rgba(24,26,77,0.08);}
 .ws-props>.ws-chiprow,.ws-props>.ws-tagrow,.ws-root.is-full .ws-props>.ws-tagrow{display:contents;}
-.ws-props>div>*{box-sizing:border-box;min-height:26px;display:inline-flex;align-items:center;}
+.ws-props>div>*:not(style){box-sizing:border-box;min-height:26px;display:inline-flex;align-items:center;}
 .ws-props .ws-chip,.ws-props .ws-tag{font-size:11.5px;padding:0 10px;border-radius:7px;}
 .ws-root.is-full .ws-note-title{font-size:34px;font-weight:700;line-height:1.2;margin:0 0 10px;}
 .ws-props .bt-select,.ws-props .tp-wrap>button,.ws-props .ws-tag-input{height:26px !important;min-height:26px;padding:0 10px !important;font-size:11.5px !important;border-radius:7px !important;border-style:solid !important;border-width:1px !important;}
