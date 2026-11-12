@@ -118,6 +118,34 @@ export const ToggleBlock = Node.create({
     };
   },
 
+  addKeyboardShortcuts() {
+    return {
+      // In a toggle's title with the caret at the end, Enter makes a fresh,
+      // empty toggle right after it; the original's inner notes stay put.
+      Enter: ({ editor }) => {
+        const { state } = editor;
+        const { selection } = state;
+        if (!selection.empty) return false;
+        const $f = selection.$from;
+        if ($f.depth < 2) return false;
+        const toggle = $f.node($f.depth - 1);
+        if (toggle.type.name !== "toggleBlock") return false;
+        if ($f.index($f.depth - 1) !== 0) return false;
+        const summary = $f.parent;
+        if ($f.parentOffset !== summary.content.size) return false;
+        if (toggle.attrs.open && summary.content.size === 0) return false;
+        if (toggle.attrs.open) return false;
+        const after = $f.after($f.depth - 1);
+        const paragraph = state.schema.nodes.paragraph;
+        const fresh = this.type.create({ ...toggle.attrs, open: true }, [paragraph.create(), paragraph.create()]);
+        const tr = state.tr.insert(after, fresh);
+        tr.setSelection(TextSelection.create(tr.doc, after + 2));
+        editor.view.dispatch(tr.scrollIntoView());
+        return true;
+      },
+    };
+  },
+
   addNodeView() {
     return ({ editor, node, getPos }) => {
       const dom = document.createElement("div");
