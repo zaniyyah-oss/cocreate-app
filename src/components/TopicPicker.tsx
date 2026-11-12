@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export type TopicRow = {
   id: string;
@@ -55,6 +56,7 @@ export function TopicPicker({
   compact,
   placeholder = "+ Add topic",
   iconOnly,
+  propertyRow,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
@@ -63,6 +65,7 @@ export function TopicPicker({
   placeholder?: string;
   /** Compact presentation: a single quiet icon button, no chips. */
   iconOnly?: boolean;
+  propertyRow?: boolean;
 }) {
 
   const qc = useQueryClient();
@@ -192,7 +195,7 @@ export function TopicPicker({
         .tp-icon[disabled]{opacity:.4;cursor:not-allowed;}
         .tp-wrap.icon .tp-menu{right:0;left:auto;}
       `}</style>
-      {!iconOnly &&
+      {!iconOnly && !propertyRow &&
         value.map((id) => {
           const t = byId.get(id);
           if (!t) return null;
@@ -211,7 +214,11 @@ export function TopicPicker({
             </span>
           );
         })}
-      {iconOnly ? (
+      {propertyRow ? (
+        <Button type="button" variant="ghost" className="doc-property-add" disabled={disabled} aria-label="Add a topic" onClick={() => setOpen((o) => !o)}>
+          + Topic
+        </Button>
+      ) : iconOnly ? (
         <button
           type="button"
           className={`tp-icon${value.length > 0 ? " on" : ""}`}

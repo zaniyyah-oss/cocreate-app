@@ -77,7 +77,68 @@
   --ring: #8A96E0;
   --destructive: #FF340C;
   --destructive-foreground: #FBF8ED;
+  --document-study: oklch(0.91 0.10 85);
+  --document-study-foreground: oklch(0.36 0.07 70);
+  --document-folder: color-mix(in oklab, var(--teal) 8%, var(--card));
+  --document-book: var(--teal);
+  --document-book-foreground: var(--card);
+  --document-topic: color-mix(in oklab, var(--periwinkle) 20%, var(--card));
+  --document-tag: color-mix(in oklab, var(--blush) 20%, var(--card));
 }
+
+/* Flat document properties: selections first, quiet add controls last. */
+.ws-props .ws-chip,
+.ws-props .ws-tag,
+.ws-props .doc-property-add,
+.ws-props .tp-wrap > .doc-property-add,
+.ws-props .ws-tagms-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px !important;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 0 9px !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  font-family: inherit;
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ws-props .ws-chip { background: var(--document-folder); color: var(--teal); }
+.ws-props .ws-chip.study { background: var(--document-study); color: var(--document-study-foreground); }
+.ws-props .doc-property-book { background: var(--document-book); color: var(--document-book-foreground); }
+.ws-props .doc-property-topic { background: var(--document-topic); color: var(--primary); }
+.ws-props .ws-tag { background: var(--document-tag); color: var(--primary); }
+.ws-props .doc-property-add,
+.ws-props .tp-wrap > .doc-property-add,
+.ws-props .ws-tagms-btn { background: var(--card); border-color: var(--border) !important; color: var(--muted-foreground); }
+.ws-props .doc-property-add:hover,
+.ws-props .ws-tagms-btn:hover { background: var(--muted); color: var(--foreground); }
+.ws-props .doc-property-remove,
+.ws-props .ws-tag > .doc-property-remove {
+  width: 16px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  opacity: .75;
+}
+.ws-props .doc-property-remove:hover { opacity: 1; background: color-mix(in oklab, currentColor 12%, transparent); }
+.ws-props .book-tagger.bt-iconmode { margin: 0; min-height: 0; }
+.ws-props .tp-wrap,
+.ws-props .ws-tagms { min-height: 0; align-items: center; }
 
 @layer base {
   * {

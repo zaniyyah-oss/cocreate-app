@@ -7,7 +7,8 @@ import { WorkspaceEditor } from "./WorkspaceEditor";
 import { DocPages } from "./DocPages";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
 import { useBibleBooks, BookTagger } from "@/components/BookTagger";
-import { TopicPicker } from "@/components/TopicPicker";
+import { TopicPicker, useAllTopics } from "@/components/TopicPicker";
+import { Button } from "@/components/ui/button";
 import { useStudyFolders } from "./ReadStudyLog";
 import { isEmptyStudy, markStudyContinued } from "@/lib/study-log";
 import { MoveToFolderButton } from "./StudyFolders";
@@ -887,6 +888,7 @@ function NoteBody({
   });
 
   const isStudy = item.kind === "study";
+  const topicsQ = useAllTopics();
   const [studyBooks, setStudyBooks] = useState<string[]>(item.books_of_bible ?? []);
   const [studyTopics, setStudyTopics] = useState<string[]>(((item as any).topic_ids as string[] | null) ?? []);
   const saveStudyMeta = async (patch: { books_of_bible?: string[]; topic_ids?: string[] }) => {
@@ -953,21 +955,24 @@ function NoteBody({
       <div className="ws-props">
       {isStudy && (
         <div className="ws-chiprow">
-          <span className={`ws-chip study${studiesMode ? " dup" : ""}`}>Study</span>
+          <span className="ws-chip study">Study</span>
           {folderName && <span className="ws-chip">{folderName}</span>}
           {guest ? (item.books_of_bible ?? []).map((b) => (
             <span key={b} className="ws-chip">{bookName ? bookName(b) : b}</span>
           )) : (
             <>
-              <BookTagger
-                values={studyBooks}
-                allowVarious
-                onToggle={(abbr) => {
-                  const next = studyBooks.includes(abbr) ? studyBooks.filter((x) => x !== abbr) : [...studyBooks, abbr];
-                  void saveStudyMeta({ books_of_bible: next });
-                }}
-              />
-              <TopicPicker value={studyTopics} onChange={(next) => void saveStudyMeta({ topic_ids: next })} compact />
+              {studyBooks.map((abbr) => (
+                <span key={abbr} className="ws-chip doc-property-book">
+                  {bookName ? bookName(abbr) : abbr}
+                  <Button type="button" variant="ghost" className="doc-property-remove" aria-label={`Remove book ${bookName ? bookName(abbr) : abbr}`} onClick={() => void saveStudyMeta({ books_of_bible: studyBooks.filter((x) => x !== abbr) })}>×</Button>
+                </span>
+              ))}
+              {studyTopics.map((id) => {
+                const topic = topicsQ.data?.find((t) => t.id === id);
+                if (!topic) return null;
+                const name = topic.display_name ?? topic.name;
+                return <span key={id} className="ws-chip doc-property-topic">{name}<Button type="button" variant="ghost" className="doc-property-remove" aria-label={`Remove topic ${name}`} onClick={() => void saveStudyMeta({ topic_ids: studyTopics.filter((x) => x !== id) })}>×</Button></span>;
+              })}
             </>
           )}
         </div>
@@ -986,7 +991,7 @@ function NoteBody({
                 onClick={() => setOpenColorFor(openColorFor === t ? null : t)}
                 title="Click to pick a color"
               >#{t}</span>
-              <button onClick={() => removeTag(t)} aria-label="Remove tag">×</button>
+              <Button type="button" variant="ghost" className="doc-property-remove" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`}>×</Button>
               {openColorFor === t && (
                 <div className="ws-tag-pop" onClick={(e) => e.stopPropagation()}>
                   <button
@@ -1008,6 +1013,12 @@ function NoteBody({
             </span>
           );
         })}
+      </div>
+
+      {!guest && isStudy && <>
+        <BookTagger values={studyBooks} allowVarious propertyRow onToggle={(abbr) => void saveStudyMeta({ books_of_bible: studyBooks.includes(abbr) ? studyBooks.filter((x) => x !== abbr) : [...studyBooks, abbr] })} />
+        <TopicPicker value={studyTopics} onChange={(next) => void saveStudyMeta({ topic_ids: next })} propertyRow />
+      </>}
         <TagMultiSelect
           userId={userId}
           guest={guest}
@@ -1019,8 +1030,6 @@ function NoteBody({
           draft={tagDraft}
           setDraft={setTagDraft}
         />
-      </div>
-
       </div>
 
     </>

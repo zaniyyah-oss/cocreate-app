@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export function TagMultiSelect({
   userId,
@@ -128,9 +129,9 @@ export function TagMultiSelect({
         .ws-tagms-create{display:block;width:100%;padding:7px 9px;border:none;border-radius:8px;background:#F2FBF4;color:#0F4A42;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;text-align:left;}
         .ws-tagms-empty{padding:8px 9px;font-size:11.5px;color:#8a8879;}
       `}</style>
-      <button type="button" className="ws-tagms-btn" onClick={() => setOpen((o) => !o)}>
-        + tag <span aria-hidden>▾</span>
-      </button>
+      <Button type="button" variant="ghost" className="ws-tagms-btn" onClick={() => setOpen((o) => !o)}>
+        + Tag
+      </Button>
       {open && (
         <div className="ws-tagms-menu">
           <input
