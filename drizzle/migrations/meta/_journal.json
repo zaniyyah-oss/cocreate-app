@@ -50,6 +50,13 @@
       "when": 1794667144491,
       "tag": "0006_restrict_profiles_and_thumbnails",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794667363541,
+      "tag": "0007_tighten_contact_and_page_content_policies",
+      "breakpoints": true
     }
   ]
 }
