@@ -198,10 +198,7 @@ function FriendsPage() {
     enabled: ready && !!userId && q.length >= 2,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id,name,avatar_url,member_since,streak_count,created_at,updated_at")
-        .ilike("name", `%${q}%`)
-        .limit(20);
+        .rpc("search_profiles", { _q: q });
       if (error) throw error;
       return ((data ?? []) as Profile[]).filter((p) => !existingIds.has(p.id));
     },
@@ -294,10 +291,7 @@ function FriendsPage() {
     enabled: ready && !!userId && dq.length >= 2,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id,name,avatar_url,member_since,streak_count,created_at,updated_at")
-        .ilike("name", `%${dq}%`)
-        .limit(20);
+        .rpc("search_profiles", { _q: dq });
       if (error) throw error;
       return ((data ?? []) as Profile[]).filter((p) => !discExistingIds.has(p.id));
     },
