@@ -702,7 +702,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
             <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkRef.current(); }}>{I.link}Link<span className="ws-kbd">{`${mod}K`}</span></button>
             <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleTaskList().run(); setMenu(null); }}>{I.task}Task list<span className="ws-kbd">{`${mod}${shift}9`}</span></button>
             <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle<span className="ws-kbd">{`${mod}${alt}T`}</span></button>
-            <p className="ws-popover-label" style={{ margin: "6px 8px 2px" }}>Tip: press \\ to open this menu</p>
+            <p className="ws-popover-label" style={{ margin: "6px 8px 2px" }}>Tip: press {"\\"} to open this menu</p>
           </div>
         )}
       </div>
