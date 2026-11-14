@@ -71,7 +71,7 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-editor-content .ws-linkcard-domain{font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#181A4D;}
 .ws-editor-content .ws-linkcard-title{font-size:13px;font-weight:700;color:#181A4D;line-height:1.35;}
 .ws-editor-content .ws-linkcard-desc{font-size:12px;color:#8a8678;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.ws-editor-content .tableWrapper{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
+.ws-editor-content .tableWrapper{width:100%;max-width:100%;min-width:0;contain:inline-size;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
 .ws-editor-content table,.ws-editor-content .ws-table{border-collapse:collapse;margin:10px 0;width:100%;table-layout:fixed;overflow:hidden;}
 .ws-editor-content table td,.ws-editor-content table th{border:1px solid rgba(24,26,77,0.28);padding:6px 8px;vertical-align:top;min-width:60px;position:relative;}
 .ws-editor-content table th{background:#F1EDDD;font-weight:700;color:#181A4D;text-align:left;}
