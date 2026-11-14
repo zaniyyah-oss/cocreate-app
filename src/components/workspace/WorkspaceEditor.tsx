@@ -17,6 +17,27 @@ import { fetchOgPreview } from "@/lib/og-preview.functions";
 import { LinkCard } from "./link-card-node";
 import { Indent, indentSmart, outdentSmart } from "./indent-extension";
 import { Callout } from "./callout-node";
+import { TaskList, TaskItem } from "@tiptap/extension-list";
+import { Extension } from "@tiptap/core";
+
+/** Ask this editor's toolbar to run a UI action (open Insert menu, pick an image, add a link). */
+function editorCmd(dom: HTMLElement, cmd: string) {
+  dom.dispatchEvent(new CustomEvent("cc:editor-cmd", { detail: cmd }));
+}
+
+const InsertShortcuts = Extension.create({
+  name: "insertShortcuts",
+  addKeyboardShortcuts() {
+    return {
+      "Mod-Alt-t": () => this.editor.chain().focus().turnIntoToggle().run(),
+      "Mod-Alt-c": () => this.editor.chain().focus().toggleCallout().run(),
+      "Mod-Alt-b": () => this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      "Mod-Alt-i": () => { editorCmd(this.editor.view.dom, "image"); return true; },
+      "Mod-k": () => { editorCmd(this.editor.view.dom, "link"); return true; },
+      "\\": () => { editorCmd(this.editor.view.dom, "insert"); return true; },
+    };
+  },
+});
 import { ToggleBlock } from "./toggle-node";
 import { WORKSPACE_EDITOR_CSS } from "./editor-css";
 
@@ -59,6 +80,7 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(naviga
 const mod = isMac ? "⌘" : "Ctrl";
 const alt = isMac ? "⌥" : "Alt";
 const shift = isMac ? "⇧" : "Shift";
+const alt = isMac ? "⌥" : "Alt";
 
 export type WorkspaceEditorHandle = {
   getJSON: () => any;
@@ -115,6 +137,9 @@ export function WorkspaceEditor({
       Color,
       Callout,
       ToggleBlock,
+      TaskList.configure({ HTMLAttributes: { class: "ws-tasklist" } }),
+      TaskItem.configure({ nested: true }),
+      InsertShortcuts,
     ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
@@ -376,6 +401,7 @@ const I = {
   toggle: <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /><line x1="17" y1="6" x2="21" y2="6" /><line x1="17" y1="12" x2="21" y2="12" /><line x1="17" y1="18" x2="21" y2="18" /></svg>,
   table: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="9" y1="10" x2="9" y2="20" /></svg>,
   image: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="M4 17l5-5 4 4 3-3 4 4" /></svg>,
+  task: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="6" height="6" rx="1.5" /><path d="m4.5 7 1 1 2-2" /><rect x="3" y="14" width="6" height="6" rx="1.5" /><line x1="12" y1="7" x2="21" y2="7" /><line x1="12" y1="17" x2="21" y2="17" /></svg>,
   link: <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></svg>,
 };
 
@@ -422,6 +448,28 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
     };
   }, [menu]);
 
+  const addLinkRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const on = (e: Event) => {
+      const cmd = (e as CustomEvent).detail;
+      if (cmd === "insert") setMenu("insert");
+      else if (cmd === "image") fileRef.current?.click();
+      else if (cmd === "link") addLinkRef.current();
+    };
+    dom.addEventListener("cc:editor-cmd", on);
+    return () => dom.removeEventListener("cc:editor-cmd", on);
+  }, [editor]);
+
+  useEffect(() => {
+    if (menu !== "insert") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); setMenu(null); editor.commands.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menu, editor]);
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
@@ -453,6 +501,17 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
       return;
     }
     await insertLinkCard(editor.view, url.trim());
+  };
+
+  // Cmd/Ctrl+K: link the selected text, or remove an existing link.
+  addLinkRef.current = () => {
+    if (editor.isActive("link")) { editor.chain().focus().extendMarkRange("link").unsetLink().run(); return; }
+    const url = window.prompt("Link to (URL):");
+    if (!url) return editor.commands.focus() && undefined;
+    const href = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
+    const { empty } = editor.state.selection;
+    if (empty) editor.chain().focus().insertContent({ type: "text", text: url.trim(), marks: [{ type: "link", attrs: { href } }] }).run();
+    else editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
   };
 
   const inTable = editor.isActive("table");
@@ -516,7 +575,8 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         {btn(I.bullet, () => toggleListPreservingIndent(editor, "bulletList"), editor.isActive("bulletList"), `Bullet list (${mod}+${shift}+8)`)}
         {btn(I.ordered, () => toggleListPreservingIndent(editor, "orderedList"), editor.isActive("orderedList"), `Numbered list (${mod}+${shift}+7)`)}
         {btn(I.quote, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"), `Quote (${mod}+${shift}+B)`)}
-        {btn(I.toggle, () => editor.chain().focus().turnIntoToggle().run(), editor.isActive("toggleBlock"), "Turn into toggle")}
+        {btn(I.task, () => editor.chain().focus().toggleTaskList().run(), editor.isActive("taskList"), `Task list (${mod}+${shift}+9)`)}
+        {btn(I.toggle, () => editor.chain().focus().turnIntoToggle().run(), editor.isActive("toggleBlock"), `Turn into toggle (${mod}+${alt}+T)`)}
       </div>
 
       <div className="ws-tbdiv" />
@@ -614,7 +674,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         {menu === "insert" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
             {!inCallout && (
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout</button>
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout<span className="ws-kbd">{`${mod}${alt}C`}</span></button>
             )}
             {inCallout && <>
               {[
@@ -635,11 +695,15 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().unsetCallout().run(); setMenu(null); }}>Remove callout</button>
             </>}
 
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table</button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table<span className="ws-kbd">{`${mod}${alt}B`}</span></button>
 
 
-            <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image</button>
+            <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image<span className="ws-kbd">{`${mod}${alt}I`}</span></button>
             <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkCard(); }}>{I.link}Link card</button>
+            <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkRef.current(); }}>{I.link}Link<span className="ws-kbd">{`${mod}K`}</span></button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleTaskList().run(); setMenu(null); }}>{I.task}Task list<span className="ws-kbd">{`${mod}${shift}9`}</span></button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle<span className="ws-kbd">{`${mod}${alt}T`}</span></button>
+            <p className="ws-popover-label" style={{ margin: "6px 8px 2px" }}>Tip: press \\ to open this menu</p>
           </div>
         )}
       </div>
