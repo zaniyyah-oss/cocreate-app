@@ -12,7 +12,7 @@
  * tweaks on top (they render later in the document).
  */
 export const WORKSPACE_EDITOR_CSS = `
-.ws-editor{border:none;background:transparent;position:relative;scroll-margin-top:110px;}
+.ws-editor{border:none;background:transparent;position:relative;scroll-margin-top:110px;min-width:0;max-width:100%;}
 .ws-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:6px;border:1px solid rgba(32,32,28,0.08);border-radius:12px;background:#fff;margin:0 0 12px;box-shadow:0 1px 2px rgba(32,32,28,0.04);position:relative;}
 .ws-tbgroup{display:flex;align-items:center;gap:2px;position:relative;}
 .ws-tbdiv{width:1px;height:20px;background:rgba(32,32,28,0.12);margin:0 6px;flex-shrink:0;}
@@ -71,6 +71,7 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-editor-content .ws-linkcard-domain{font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#181A4D;}
 .ws-editor-content .ws-linkcard-title{font-size:13px;font-weight:700;color:#181A4D;line-height:1.35;}
 .ws-editor-content .ws-linkcard-desc{font-size:12px;color:#8a8678;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ws-editor-content .tableWrapper{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
 .ws-editor-content table,.ws-editor-content .ws-table{border-collapse:collapse;margin:10px 0;width:100%;table-layout:fixed;overflow:hidden;}
 .ws-editor-content table td,.ws-editor-content table th{border:1px solid rgba(24,26,77,0.28);padding:6px 8px;vertical-align:top;min-width:60px;position:relative;}
 .ws-editor-content table th{background:#F1EDDD;font-weight:700;color:#181A4D;text-align:left;}
