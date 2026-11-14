@@ -2386,6 +2386,18 @@ export type Database = {
         Returns: boolean
       }
       publish_scheduled_content: { Args: never; Returns: undefined }
+      search_profiles: {
+        Args: { _q: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          id: string
+          member_since: string
+          name: string
+          streak_count: number
+          updated_at: string
+        }[]
+      }
       subscribe_email: {
         Args: {
           _email: string
