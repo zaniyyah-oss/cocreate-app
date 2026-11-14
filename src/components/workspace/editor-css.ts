@@ -121,4 +121,15 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-doc .ws-editor-content table td,
 .ws-root.is-full .ws-editor-content table td{padding:10px 12px;}
 .ws-doc .ws-toolbar{position:sticky;top:0;z-index:60;}
+.ws-popover-col:has(.ws-kbd){min-width:250px;}
+.ws-popover-col:has(.ws-kbd) .ws-popover-label{white-space:normal;}
+.ws-kbd{margin-left:auto;padding-left:12px;font-size:11px;color:rgba(32,32,28,0.42);font-weight:500;}
+.ws-editor-content ul[data-type="taskList"]{list-style:none;padding-left:2px;margin:4px 0;}
+.ws-editor-content ul[data-type="taskList"] li{display:flex;align-items:flex-start;gap:8px;margin:2px 0;}
+.ws-editor-content ul[data-type="taskList"] li>label{flex:0 0 auto;margin-top:0.3em;user-select:none;}
+.ws-editor-content ul[data-type="taskList"] li>label input{width:16px;height:16px;accent-color:#20201C;cursor:pointer;margin:0;}
+.ws-editor-content ul[data-type="taskList"] li>div{flex:1 1 auto;min-width:0;}
+.ws-editor-content ul[data-type="taskList"] li>div>p{margin:0;}
+.ws-editor-content ul[data-type="taskList"] li[data-checked="true"]>div>p{text-decoration:line-through;color:rgba(32,32,28,0.45);}
+.ws-editor-content ul[data-type="taskList"] ul[data-type="taskList"]{padding-left:22px;}
 `;
