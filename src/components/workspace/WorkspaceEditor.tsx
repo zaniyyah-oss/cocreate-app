@@ -80,7 +80,6 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(naviga
 const mod = isMac ? "⌘" : "Ctrl";
 const alt = isMac ? "⌥" : "Alt";
 const shift = isMac ? "⇧" : "Shift";
-const alt = isMac ? "⌥" : "Alt";
 
 export type WorkspaceEditorHandle = {
   getJSON: () => any;
