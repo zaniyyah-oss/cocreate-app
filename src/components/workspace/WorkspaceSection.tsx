@@ -83,6 +83,7 @@ const CSS = `
 }
 
 .ws-bubble{display:flex;gap:2px;background:#181A4D;color:#fff;border-radius:8px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
+@media (hover:none),(max-width:768px){.ws-bubble{display:none!important;}}
 .ws-bb-btn{background:transparent;border:none;color:#fff;font-family:'Poppins',sans-serif;font-weight:600;font-size:12.5px;padding:6px 9px;border-radius:5px;cursor:pointer;}
 .ws-bb-btn:hover{background:rgba(255,255,255,0.14);}
 .ws-bb-btn.on{background:#CAC307;color:#181A4D;}
