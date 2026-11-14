@@ -53,6 +53,52 @@ function useWorkspaceEditorCss() {
   }, []);
 }
 
+const cellBgAttr = {
+  default: null,
+  parseHTML: (el: HTMLElement) => el.getAttribute("data-bg") || el.style.backgroundColor || null,
+  renderHTML: (a: { background?: string | null }) =>
+    a.background ? { "data-bg": a.background, style: `background-color:${a.background}` } : {},
+};
+
+// Cell fill colors: grey + highlighter colors + callout tones.
+const CELL_COLORS = [
+  { name: "None", value: "" },
+  { name: "Grey", value: "#ECEAE4" },
+  { name: "Yellow", value: "#FDE68A" },
+  { name: "Lime", value: "#DCE07A" },
+  { name: "Peach", value: "#FFD3B6" },
+  { name: "Blush", value: "#F4C2CD" },
+  { name: "Sky", value: "#C7D8F5" },
+  { name: "Mint", value: "#BEE3D4" },
+  { name: "Amber callout", value: "#FFF4D6" },
+  { name: "Teal callout", value: "#E4F1EE" },
+  { name: "Blush callout", value: "#FBE3E9" },
+  { name: "Lime callout", value: "#F2F4C7" },
+];
+
+/** Paint every cell in the cursor's row or column. */
+function colorTableLine(editor: Editor, which: "row" | "col", color: string) {
+  const { state } = editor;
+  const $from = state.selection.$from;
+  let tableDepth = -1;
+  for (let d = $from.depth; d > 0; d--) if ($from.node(d).type.name === "table") { tableDepth = d; break; }
+  if (tableDepth < 0) return;
+  const table = $from.node(tableDepth);
+  const tableStart = $from.start(tableDepth);
+  const rowIdx = $from.index(tableDepth);
+  const colIdx = $from.index(tableDepth + 1);
+  const tr = state.tr;
+  table.forEach((row, rowOff, r) => {
+    row.forEach((cell, cellOff, c) => {
+      if ((which === "row" && r === rowIdx) || (which === "col" && c === colIdx)) {
+        tr.setNodeMarkup(tableStart + rowOff + 1 + cellOff, undefined, { ...cell.attrs, background: color || null });
+      }
+    });
+  });
+  editor.view.dispatch(tr);
+  editor.commands.focus();
+}
+
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
 // Curated palette for text color + highlight. Cream palette-friendly.
@@ -129,8 +175,8 @@ export function WorkspaceEditor({
       Indent,
       Table.configure({ resizable: true, HTMLAttributes: { class: "ws-table" } }),
       TableRow,
-      TableHeader,
-      TableCell,
+      TableHeader.extend({ addAttributes() { return { ...this.parent?.(), background: cellBgAttr }; } }),
+      TableCell.extend({ addAttributes() { return { ...this.parent?.(), background: cellBgAttr }; } }),
       Highlight.configure({ multicolor: true }),
       TextStyle,
       Color,
@@ -729,6 +775,24 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
                 <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnAfter().run()}>Column right</button>
                 <button className="ws-popbtn" onClick={() => editor.chain().focus().addColumnBefore().run()}>Column left</button>
                 <button className="ws-popbtn" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Toggle header row</button>
+                <div className="ws-popdiv" />
+                {(["row", "col"] as const).map((w) => (
+                  <div key={w}>
+                    <p className="ws-popover-label" style={{ margin: "4px 8px 2px" }}>{w === "row" ? "Row color" : "Column color"}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "2px 8px 6px", maxWidth: 200 }}>
+                      {CELL_COLORS.map((c) => (
+                        <button
+                          key={c.name}
+                          type="button"
+                          title={c.name}
+                          aria-label={`${w === "row" ? "Row" : "Column"} ${c.name}`}
+                          onClick={() => colorTableLine(editor, w, c.value)}
+                          style={{ width: 22, height: 22, borderRadius: 5, border: "1px solid rgba(0,0,0,.15)", background: c.value || "linear-gradient(135deg,#fff 45%,#d33 47%,#d33 53%,#fff 55%)", cursor: "pointer" }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
                 <div className="ws-popdiv" />
                 <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteRow().run()}>Delete this row</button>
                 <button className="ws-popbtn" onClick={() => editor.chain().focus().deleteColumn().run()}>Delete this column</button>
