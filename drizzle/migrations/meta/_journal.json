@@ -43,6 +43,13 @@
       "when": 1794358462156,
       "tag": "0005_workspace_item_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794667144491,
+      "tag": "0006_restrict_profiles_and_thumbnails",
+      "breakpoints": true
     }
   ]
 }
