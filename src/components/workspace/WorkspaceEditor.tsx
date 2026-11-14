@@ -173,7 +173,7 @@ export function WorkspaceEditor({
       LinkCard,
       Placeholder.configure({ placeholder: placeholder ?? "Write, paste a link, or drop in an image…" }),
       Indent,
-      Table.configure({ resizable: true, HTMLAttributes: { class: "ws-table" } }),
+      Table.configure({ resizable: true, renderWrapper: true, cellMinWidth: 60, HTMLAttributes: { class: "ws-table" } }),
       TableRow,
       TableHeader.extend({ addAttributes() { return { ...this.parent?.(), background: cellBgAttr }; } }),
       TableCell.extend({ addAttributes() { return { ...this.parent?.(), background: cellBgAttr }; } }),
