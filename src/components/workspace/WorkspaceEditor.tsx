@@ -673,7 +673,7 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
         {menu === "insert" && (
           <div className="ws-popover ws-popover-col" onMouseDown={(e) => e.preventDefault()}>
             {!inCallout && (
-              <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout<span className="ws-kbd">{`${mod}${alt}C`}</span></button>
+              <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleCallout().run(); setMenu(null); }}>{I.callout}Callout<span className="ws-kbd">{`${mod}+${alt}+C`}</span></button>
             )}
             {inCallout && <>
               {[
@@ -694,14 +694,14 @@ function Toolbar({ editor, userId }: { editor: Editor; userId: string }) {
               <button className="ws-popbtn" onClick={() => { editor.chain().focus().unsetCallout().run(); setMenu(null); }}>Remove callout</button>
             </>}
 
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table<span className="ws-kbd">{`${mod}${alt}B`}</span></button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setMenu(null); }}>{I.table}Table<span className="ws-kbd">{`${mod}+${alt}+B`}</span></button>
 
 
-            <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image<span className="ws-kbd">{`${mod}${alt}I`}</span></button>
+            <button className="ws-popbtn" onClick={() => { setMenu(null); fileRef.current?.click(); }}>{I.image}Image<span className="ws-kbd">{`${mod}+${alt}+I`}</span></button>
             <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkCard(); }}>{I.link}Link card</button>
-            <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkRef.current(); }}>{I.link}Link<span className="ws-kbd">{`${mod}K`}</span></button>
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleTaskList().run(); setMenu(null); }}>{I.task}Task list<span className="ws-kbd">{`${mod}${shift}9`}</span></button>
-            <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle<span className="ws-kbd">{`${mod}${alt}T`}</span></button>
+            <button className="ws-popbtn" onClick={() => { setMenu(null); addLinkRef.current(); }}>{I.link}Link<span className="ws-kbd">{`${mod}+K`}</span></button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().toggleTaskList().run(); setMenu(null); }}>{I.task}Task list<span className="ws-kbd">{`${mod}+${shift}+9`}</span></button>
+            <button className="ws-popbtn" onClick={() => { editor.chain().focus().turnIntoToggle().run(); setMenu(null); }}>{I.toggle}Toggle<span className="ws-kbd">{`${mod}+${alt}+T`}</span></button>
             <p className="ws-popover-label" style={{ margin: "6px 8px 2px" }}>Tip: press {"\\"} to open this menu</p>
           </div>
         )}
