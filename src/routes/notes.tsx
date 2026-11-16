@@ -798,16 +798,6 @@ function DocPanel({
         </div>
         <button
           type="button"
-          className={`nt-edit-btn ${editing ? "active" : ""}`}
-          onClick={() => {
-            if (editing) void flushSave();
-            setEditing((v) => !v);
-          }}
-        >
-          {editing ? "Done" : "Edit"}
-        </button>
-        <button
-          type="button"
           className={`nt-edit-btn ${focusMode ? "active" : ""}`}
           onClick={() => (focusMode ? exitDoc() : setFocusMode(true))}
           title={focusMode ? "Leave focus mode" : "Read and write with the whole screen"}
