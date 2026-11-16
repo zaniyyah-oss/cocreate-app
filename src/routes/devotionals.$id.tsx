@@ -819,6 +819,7 @@ function EntryPage() {
   const entrySaveInFlightRef = useRef(false);
   // The day the pending / in-flight save belongs to.
   const saveDateRef = useRef<string | null>(null);
+  const inFlightDateRef = useRef<string | null>(null);
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
@@ -970,7 +971,7 @@ function EntryPage() {
 
   // Read section: follows the active study, including a past study being continued.
   useEffect(() => {
-    if ((pendingEntryPatchRef.current || entrySaveInFlightRef.current) && saveDateRef.current === selectedDate) return;
+    if ((pendingEntryPatchRef.current && saveDateRef.current === selectedDate) || (entrySaveInFlightRef.current && inFlightDateRef.current === selectedDate)) return;
     const key = `read:${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
@@ -990,7 +991,7 @@ function EntryPage() {
   // past study never overwrites them. Legacy reflect/apply fields fill in when the
   // newer fields are empty.
   useEffect(() => {
-    if ((pendingEntryPatchRef.current || entrySaveInFlightRef.current) && saveDateRef.current === selectedDate) return;
+    if ((pendingEntryPatchRef.current && saveDateRef.current === selectedDate) || (entrySaveInFlightRef.current && inFlightDateRef.current === selectedDate)) return;
     const key = `day:${selectedDate}:${dayFieldsEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (dayHydratedRef.current === key) return;
     dayHydratedRef.current = key;
@@ -1093,6 +1094,7 @@ function EntryPage() {
     const readTargetId = currentEntryIdRef.current;
     const dayTargetId = dayEntryIdRef.current;
     const saveDate = saveDateRef.current ?? selectedDate;
+    inFlightDateRef.current = saveDate;
     const readPatch: Record<string, unknown> = {};
     const dayPatch: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(patch)) {
@@ -1185,7 +1187,7 @@ function EntryPage() {
     setSavingField(field);
     // A leftover patch from another day goes out first, to its own day.
     if (pendingEntryPatchRef.current && saveDateRef.current && saveDateRef.current !== selectedDate) void flushEntrySave();
-    if (!entrySaveInFlightRef.current) saveDateRef.current = selectedDate;
+    saveDateRef.current = selectedDate;
     pendingEntryPatchRef.current = { ...(pendingEntryPatchRef.current ?? {}), [field]: value };
     if (entrySaveTimerRef.current) clearTimeout(entrySaveTimerRef.current);
     entrySaveTimerRef.current = setTimeout(() => { void flushEntrySave(); }, 600);
