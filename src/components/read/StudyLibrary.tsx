@@ -186,6 +186,7 @@ export function StudyLibrary({
 
   const openStudy = async (id: string) => {
     setOpenReq({ id, n: Date.now() });
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 899px)").matches) setFocused(true);
     if (!userId) return;
     await logStudyOpen(userId, localISO(), id, "revisited");
     qc.invalidateQueries({ queryKey: ["study-links"] });
@@ -206,6 +207,7 @@ export function StudyLibrary({
       await refreshItems();
       qc.invalidateQueries({ queryKey: ["study-links"] });
       setOpenReq({ id, n: Date.now() });
+      if (window.matchMedia("(max-width: 899px)").matches) setFocused(true);
     } catch (e) {
       console.error("create study failed", e);
     } finally {

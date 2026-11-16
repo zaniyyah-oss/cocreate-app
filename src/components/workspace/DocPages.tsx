@@ -46,7 +46,7 @@ const CSS = `
 .dp-side.closed{width:auto;background:transparent;border-right:none;padding:16px 10px;}
 .dp-collapse{background:none;border:1px solid rgba(24,26,77,0.12);border-radius:7px;color:#181A4D;cursor:pointer;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;}
 .dp-collapse:hover{background:rgba(24,26,77,0.05);}
-@media (max-width:899px){.dp-wrap.focus{display:block;}.dp-wrap.focus .dp-main{padding:56px 18px 100px;}.dp-side{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid rgba(24,26,77,0.08);margin-bottom:14px;}}
+@media (max-width:899px){.dp-wrap.focus{display:block;}.dp-wrap.focus .dp-main{padding:56px 18px 100px;}.dp-side{position:sticky;top:0;z-index:80;width:auto;height:auto;max-height:70vh;border-right:none;border-bottom:1px solid rgba(24,26,77,0.08);margin-bottom:14px;}.dp-side.closed{background:#fff;padding:10px 14px;}}
 `;
 
 export function DocPages({
@@ -77,6 +77,10 @@ export function DocPages({
   const [sideOpen, setSideOpen] = useState(true);
   const [pendingJump, setPendingJump] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  // On phones the tabs panel starts tucked away so the page opens on the writing.
+  useEffect(() => {
+    if (focused && window.matchMedia("(max-width: 899px)").matches) setSideOpen(false);
+  }, [focused]);
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
 

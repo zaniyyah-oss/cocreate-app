@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { SAVED_CSS, SignGate, useAuth } from "@/components/saved-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { TagMultiSelect } from "@/components/TagMultiSelect";
-import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
+import { DocPages } from "@/components/workspace/DocPages";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { TodosView, type TodosViewHandle } from "@/components/workspace/TodosView";
 
@@ -35,6 +35,7 @@ type Doc = {
   tags: string[];
   status: "open" | "closed";
   pinned?: boolean;
+  pages?: any;
 
   created_at: string;
   updated_at: string;
@@ -140,7 +141,11 @@ const NOTES_CSS = `
 /* Focus mode: the open note takes the whole screen, nothing else visible. */
 .nt-panel.is-focus{position:fixed;inset:0;z-index:120;background:#fff;overflow-y:auto;border-radius:0;display:block;}
 .nt-panel.is-focus .nt-panel-header{position:relative;border-radius:0;padding:18px max(24px,4vw) 14px;}
-.nt-panel.is-focus .nt-panel-body{max-width:1100px;margin:0 auto;padding:28px max(20px,3vw) 96px;}
+.nt-panel.is-focus .nt-panel-body{max-width:none;margin:0;padding:0 0 96px;}
+.nt-panel.is-focus .nt-panel-actions{padding:0 max(20px,3vw);}
+.nt-panel.is-focus .dp-side{height:calc(100vh - 80px);}
+.nt-panel.is-focus .dp-wrap.focus{min-height:calc(100vh - 80px);}
+.nt-panel.is-focus .dp-wrap.focus .dp-main{padding-top:28px;}
 .nt-panel.is-focus .ws-toolbar{position:sticky;top:0;z-index:60;border-radius:0;margin-top:0;}
 
 .nt-panel-title-input{width:100%;border:none;background:transparent;font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;color:#20201C;margin-bottom:8px;padding:0;outline:none;letter-spacing:-0.01em;}
@@ -625,8 +630,9 @@ function DocPanel({
   const [savedFlash, setSavedFlash] = useState(false);
   const [hasPending, setHasPending] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
+  const [editing, setEditing] = useState(true);
+  // Every note opens straight into the full document view.
+  const [focusMode, setFocusMode] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -636,14 +642,15 @@ function DocPanel({
   useEffect(() => {
     setTitle(doc.title);
     setTags(doc.tags ?? []);
-    setEditing(false);
+    setEditing(true);
+    setFocusMode(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.id]);
 
-  // Escape leaves focus mode (the note itself stays open).
+  // Escape leaves the document view (back to the list on phones).
   useEffect(() => {
     if (!focusMode) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFocusMode(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") exitDoc(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [focusMode]);
@@ -677,6 +684,11 @@ function DocPanel({
       setSaving(false);
       if (pendingRef.current) void flushSave();
     }
+  };
+
+  const exitDoc = () => {
+    if (window.matchMedia("(max-width: 900px)").matches) { void flushSave(); onClose(); }
+    else setFocusMode(false);
   };
 
   const schedule = (patch: Record<string, unknown>) => {
@@ -797,7 +809,7 @@ function DocPanel({
         <button
           type="button"
           className={`nt-edit-btn ${focusMode ? "active" : ""}`}
-          onClick={() => setFocusMode((v) => !v)}
+          onClick={() => (focusMode ? exitDoc() : setFocusMode(true))}
           title={focusMode ? "Leave focus mode" : "Read and write with the whole screen"}
         >
           {focusMode ? "Exit focus" : "Focus"}
@@ -855,13 +867,13 @@ function DocPanel({
           </>
         )}
 
-        <WorkspaceEditor
+        <DocPages
+          item={doc as any}
           userId={userId}
-          initialJSON={doc.body}
-          onChange={(json, text) => schedule({ body: json, body_text: text })}
+          focused={focusMode}
+          onSave={schedule}
           onBlur={() => { void flushSave(); }}
           ignoreExternalUpdates={hasPending || saving}
-          editable={editing}
         />
 
         <div className="nt-panel-actions">
