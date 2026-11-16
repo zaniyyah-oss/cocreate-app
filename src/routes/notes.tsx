@@ -143,8 +143,8 @@ const NOTES_CSS = `
 .nt-panel.is-focus .nt-panel-header{position:relative;border-radius:0;padding:18px max(24px,4vw) 14px;}
 .nt-panel.is-focus .nt-panel-body{max-width:none;margin:0;padding:0 0 96px;}
 .nt-panel.is-focus .nt-panel-actions{padding:0 max(20px,3vw);}
-.nt-panel.is-focus .dp-side{height:calc(100vh - 80px);}
-.nt-panel.is-focus .dp-wrap.focus{min-height:calc(100vh - 80px);}
+@media (min-width:900px){.nt-panel.is-focus .dp-side{height:calc(100vh - 80px);}.nt-panel.is-focus .dp-wrap.focus{min-height:calc(100vh - 80px);}}
+@media (max-width:899px){.nt-panel.is-focus .dp-wrap.focus{min-height:0;}.nt-panel.is-focus .dp-side{top:0;}}
 .nt-panel.is-focus .dp-wrap.focus .dp-main{padding-top:28px;}
 .nt-panel.is-focus .ws-toolbar{position:sticky;top:0;z-index:60;border-radius:0;margin-top:0;}
 
