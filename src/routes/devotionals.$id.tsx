@@ -576,6 +576,14 @@ function EntryPage() {
   // Changing days clears any study id left in the address, so the new day always
   // loads its own Where / Pray / To-do instead of a study from another day.
   const goToDate = (iso: string) => {
+    if (iso === selectedDateRef.current) return;
+    // Send the old day's unsaved text to the old day before switching, then
+    // start the new day blank until its own saved fields load.
+    void flushRef.current();
+    hydratedRef.current = "";
+    dayHydratedRef.current = "";
+    setWhereText(""); setPrayText(""); setTodoText(""); setTodoItems([]);
+    setEntryTitle(""); setEntrySubtitle("");
     setSelectedDate(iso);
     navigate({ to: "/devotionals/$id", params: { id }, search: { date: iso } as any, replace: true });
   };
@@ -809,6 +817,9 @@ function EntryPage() {
   const entrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEntryPatchRef = useRef<Record<string, unknown> | null>(null);
   const entrySaveInFlightRef = useRef(false);
+  // The day the pending / in-flight save belongs to.
+  const saveDateRef = useRef<string | null>(null);
+  const inFlightDateRef = useRef<string | null>(null);
   const currentEntryIdRef = useRef<string | null>(null);
   const [colsEl, setColsEl] = useState<HTMLDivElement | null>(null);
 
@@ -960,7 +971,7 @@ function EntryPage() {
 
   // Read section: follows the active study, including a past study being continued.
   useEffect(() => {
-    if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
+    if ((pendingEntryPatchRef.current && saveDateRef.current === selectedDate) || (entrySaveInFlightRef.current && inFlightDateRef.current === selectedDate)) return;
     const key = `read:${selectedDate}:${currentEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (hydratedRef.current === key) return;
     hydratedRef.current = key;
@@ -980,7 +991,7 @@ function EntryPage() {
   // past study never overwrites them. Legacy reflect/apply fields fill in when the
   // newer fields are empty.
   useEffect(() => {
-    if (pendingEntryPatchRef.current || entrySaveInFlightRef.current) return;
+    if ((pendingEntryPatchRef.current && saveDateRef.current === selectedDate) || (entrySaveInFlightRef.current && inFlightDateRef.current === selectedDate)) return;
     const key = `day:${selectedDate}:${dayFieldsEntry?.id ?? "new"}:${templateQ.data?.id ?? ""}:${(pastQ.data ?? []).length}`;
     if (dayHydratedRef.current === key) return;
     dayHydratedRef.current = key;
@@ -1082,7 +1093,8 @@ function EntryPage() {
     // flight, the refs move to the new day and must not receive this text.
     const readTargetId = currentEntryIdRef.current;
     const dayTargetId = dayEntryIdRef.current;
-    const saveDate = selectedDate;
+    const saveDate = saveDateRef.current ?? selectedDate;
+    inFlightDateRef.current = saveDate;
     const readPatch: Record<string, unknown> = {};
     const dayPatch: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(patch)) {
@@ -1110,7 +1122,7 @@ function EntryPage() {
         data = { id: rid };
       } else {
         const ins = await supabase.from("devotional_entries").insert({
-          user_id: userId, template_id: id, entry_date: selectedDate, ...p,
+          user_id: userId, template_id: id, entry_date: saveDate, ...p,
         } as any).select("*").single();
         if (ins.error) throw ins.error;
         trackEvent("devotional_entry_created", { template_id: id });
@@ -1173,6 +1185,9 @@ function EntryPage() {
     if (!ready) return;
     if (!userId) { guestNote("type"); return; }
     setSavingField(field);
+    // A leftover patch from another day goes out first, to its own day.
+    if (pendingEntryPatchRef.current && saveDateRef.current && saveDateRef.current !== selectedDate) void flushEntrySave();
+    saveDateRef.current = selectedDate;
     pendingEntryPatchRef.current = { ...(pendingEntryPatchRef.current ?? {}), [field]: value };
     if (entrySaveTimerRef.current) clearTimeout(entrySaveTimerRef.current);
     entrySaveTimerRef.current = setTimeout(() => { void flushEntrySave(); }, 600);
