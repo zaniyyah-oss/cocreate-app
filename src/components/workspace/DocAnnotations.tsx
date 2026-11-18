@@ -48,8 +48,12 @@ const STYLES = `
 .an-quote{font-size:11.5px;color:rgba(24,26,77,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;font-style:italic;}
 .an-body{font-size:13px;line-height:1.45;color:#181A4D;margin-top:5px;white-space:pre-wrap;word-break:break-word;}
 .an-body.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.an-body ul{margin:2px 0;padding-left:18px;}.an-body li{margin:0;}.an-body p{margin:0;}
+.an-tb{display:flex;gap:3px;margin-top:6px;}
+.an-tb button{border:1px solid #ECE4CE;background:#fff;border-radius:6px;min-width:26px;height:24px;font:inherit;font-size:12px;color:#181A4D;cursor:pointer;padding:0 6px;}
+.an-tb button:hover{background:rgba(24,26,77,0.06);}
 .an-body.empty{color:rgba(24,26,77,0.4);}
-.an-ta{display:block;width:100%;box-sizing:border-box;margin-top:6px;min-height:64px;resize:vertical;border:1px solid #ECE4CE;border-radius:8px;padding:7px 8px;font:inherit;font-size:13px;line-height:1.45;color:#181A4D;background:#FFFDF6;outline:none;}
+.an-ta{display:block;width:100%;box-sizing:border-box;margin-top:6px;min-height:64px;resize:none;overflow:hidden;border:1px solid #ECE4CE;border-radius:8px;padding:7px 8px;font:inherit;font-size:13px;line-height:1.45;color:#181A4D;background:#FFFDF6;outline:none;}
 .an-ta:focus{border-color:#CAC307;}
 .an-more{background:none;border:none;color:rgba(24,26,77,0.5);cursor:pointer;padding:0 4px;font-size:14px;line-height:1;border-radius:6px;}
 .an-more:hover{color:#181A4D;background:rgba(24,26,77,0.06);}
@@ -358,7 +362,7 @@ export function AnnotationLayer({
                 </div>
               </>
             ) : (
-              <div className={`an-body clamp${row.body ? "" : " empty"}`}>{row.body || (row.kind === "word" ? row.quote : "Tap to write…")}</div>
+              <div className={`an-body clamp${row.body ? "" : " empty"}`}>{row.body ? <RichBody text={row.body} /> : (row.kind === "word" ? row.quote : "Tap to write…")}</div>
             )}
           </div>,
           host,
@@ -419,11 +423,42 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onResolve
         <BodyEditor row={row} onSave={onSave} onDone={onDone} />
       ) : (
         <div className={`an-body${clamp ? " clamp" : ""}${row.body ? "" : " empty"}`}>
-          {row.body || (row.kind === "word" ? row.quote : row.kind === "question" ? "Write your question…" : "Write a note…")}
+          {row.body ? <RichBody text={row.body} /> : (row.kind === "word" ? row.quote : row.kind === "question" ? "Write your question…" : "Write a note…")}
         </div>
       )}
     </>
   );
+}
+
+function renderInline(t: string, key: string): React.ReactNode[] {
+  const parts = t.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*\s][^*]*\*)/g);
+  return parts.map((p, i) => {
+    const k = `${key}-${i}`;
+    if (/^\*\*[^*]+\*\*$/.test(p)) return <strong key={k}>{renderInline(p.slice(2, -2), k)}</strong>;
+    if (/^__[^_]+__$/.test(p)) return <u key={k}>{renderInline(p.slice(2, -2), k)}</u>;
+    if (/^\*[^*]+\*$/.test(p)) return <em key={k}>{renderInline(p.slice(1, -1), k)}</em>;
+    return p;
+  });
+}
+
+/** Renders a margin-note body: **bold**, *italic*, __underline__, and "- " bullet lines. */
+export function RichBody({ text }: { text: string }) {
+  const out: React.ReactNode[] = [];
+  let list: string[] = [];
+  const lines = text.split("\n");
+  const flushList = (k: number) => {
+    if (!list.length) return;
+    out.push(<ul key={`u${k}`}>{list.map((l, j) => <li key={j}>{renderInline(l, `l${k}-${j}`)}</li>)}</ul>);
+    list = [];
+  };
+  lines.forEach((l, i) => {
+    const m = /^\s*[-•*]\s+(.*)$/.exec(l);
+    if (m) { list.push(m[1]); return; }
+    flushList(i);
+    out.push(<p key={`p${i}`}>{l ? renderInline(l, `p${i}`) : "\u00a0"}</p>);
+  });
+  flushList(lines.length);
+  return <>{out}</>;
 }
 
 function BodyEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void }) {
@@ -435,25 +470,83 @@ function BodyEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string)
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     if (val !== last.current) { last.current = val; onSave(val); }
   };
+  const grow = () => { const el = ref.current; if (!el) return; el.style.height = "auto"; el.style.height = `${el.scrollHeight + 2}px`; };
+  useLayoutEffect(grow, [v]);
   useEffect(() => {
-    const t = setTimeout(() => ref.current?.focus({ preventScroll: true }), 30);
+    const t = setTimeout(() => {
+      const el = ref.current; if (!el) return;
+      el.focus({ preventScroll: true });
+      const end = el.value.length; el.setSelectionRange(end, end);
+      grow();
+    }, 30);
     return () => clearTimeout(t);
   }, []);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const change = (val: string) => {
+    setV(val);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => flush(val), 600);
+  };
+  const wrap = (m: string) => {
+    const el = ref.current; if (!el) return;
+    const a = el.selectionStart, b = el.selectionEnd;
+    const sel = v.slice(a, b);
+    let next: string, na: number, nb: number;
+    if (sel && v.slice(a - m.length, a) === m && v.slice(b, b + m.length) === m) {
+      next = v.slice(0, a - m.length) + sel + v.slice(b + m.length); na = a - m.length; nb = b - m.length;
+    } else {
+      next = v.slice(0, a) + m + sel + m + v.slice(b); na = a + m.length; nb = b + m.length;
+    }
+    change(next);
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(na, nb); });
+  };
+  const bullet = () => {
+    const el = ref.current; if (!el) return;
+    const a = el.selectionStart, b = el.selectionEnd;
+    const ls = v.lastIndexOf("\n", a - 1) + 1;
+    const le = (() => { const i = v.indexOf("\n", b); return i < 0 ? v.length : i; })();
+    const block = v.slice(ls, le).split("\n");
+    const allB = block.every((l) => /^- /.test(l));
+    const nb2 = block.map((l) => allB ? l.replace(/^- /, "") : `- ${l}`).join("\n");
+    const next = v.slice(0, ls) + nb2 + v.slice(le);
+    change(next);
+    const caret = ls + nb2.length;
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(caret, caret); });
+  };
+  const keep = (e: React.SyntheticEvent) => { e.preventDefault(); e.stopPropagation(); };
   return (
-    <textarea
-      ref={ref}
-      className="an-ta"
-      value={v}
-      placeholder={row.kind === "question" ? "What are you asking?" : "Write a note…"}
-      onClick={(e) => e.stopPropagation()}
-      onChange={(e) => {
-        const val = e.target.value; setV(val);
-        if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(() => flush(val), 600);
-      }}
-      onBlur={() => { flush(v); onDone(); }}
-      onKeyDown={(e) => { if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur(); }}
-    />
+    <>
+      <div className="an-tb" onMouseDown={keep} onPointerDown={keep} onClick={(e) => e.stopPropagation()}>
+        <button type="button" aria-label="Bold" onClick={() => wrap("**")}><b>B</b></button>
+        <button type="button" aria-label="Italic" onClick={() => wrap("*")}><i>I</i></button>
+        <button type="button" aria-label="Underline" onClick={() => wrap("__")}><u>U</u></button>
+        <button type="button" aria-label="Bullet list" onClick={bullet}>•</button>
+      </div>
+      <textarea
+        ref={ref}
+        className="an-ta"
+        value={v}
+        placeholder={row.kind === "question" ? "What are you asking?" : "Write a note…"}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => change(e.target.value)}
+        onBlur={() => { flush(v); onDone(); }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") { (e.target as HTMLTextAreaElement).blur(); return; }
+          const mod = e.metaKey || e.ctrlKey;
+          if (mod && e.key.toLowerCase() === "b") { e.preventDefault(); wrap("**"); return; }
+          if (mod && e.key.toLowerCase() === "i") { e.preventDefault(); wrap("*"); return; }
+          if (mod && e.key.toLowerCase() === "u") { e.preventDefault(); wrap("__"); return; }
+          if (e.key === "Enter" && !e.shiftKey) {
+            const el = e.currentTarget; const a = el.selectionStart;
+            const ls = v.lastIndexOf("\n", a - 1) + 1; const line = v.slice(ls, a);
+            if (/^- /.test(line) && el.selectionEnd === a) {
+              e.preventDefault();
+              if (line === "- ") { const next = v.slice(0, ls) + v.slice(a); change(next); requestAnimationFrame(() => el.setSelectionRange(ls, ls)); }
+              else { const next = v.slice(0, a) + "\n- " + v.slice(a); change(next); requestAnimationFrame(() => el.setSelectionRange(a + 3, a + 3)); }
+            }
+          }
+        }}
+      />
+    </>
   );
 }
