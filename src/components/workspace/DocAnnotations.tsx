@@ -1,7 +1,9 @@
 import type React from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Editor } from "@tiptap/react";
+import { useEditor, EditorContent, useEditorState, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +64,14 @@ const STYLES = `
 .an-side-head .an-more{font-size:20px;}
 .an-side-quote{font-size:13px;font-style:italic;color:rgba(24,26,77,0.6);margin:10px 0 4px;}
 .an-ta:focus{border-color:#CAC307;}
+.an-tb button.on{background:#181A4D;color:#fff;border-color:#181A4D;}
+.an-rich{border:1px solid #ECE4CE;border-radius:10px;background:#FFFDF6;margin-top:8px;}
+.an-rich:focus-within{border-color:#CAC307;}
+.an-rich .ProseMirror{outline:none;min-height:60vh;font-size:15px;line-height:1.6;padding:12px 14px;color:#181A4D;word-break:break-word;}
+.an-rich .ProseMirror p{margin:0 0 2px;}
+.an-rich .ProseMirror ul{margin:2px 0;padding-left:22px;list-style:disc;}
+.an-rich .ProseMirror li p{margin:0;}
+.an-rich .ProseMirror p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:rgba(24,26,77,0.4);float:left;height:0;pointer-events:none;}
 .an-more{background:none;border:none;color:rgba(24,26,77,0.5);cursor:pointer;padding:0 4px;font-size:14px;line-height:1;border-radius:6px;}
 .an-more:hover{color:#181A4D;background:rgba(24,26,77,0.06);}
 .an-menu{position:absolute;top:30px;right:8px;z-index:30;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:10px;box-shadow:0 8px 24px rgba(24,26,77,0.14);padding:4px;min-width:130px;display:flex;flex-direction:column;}
@@ -412,7 +422,7 @@ export function AnnotationLayer({
                 <button type="button" className="an-more" aria-label="Close" onClick={() => setBigId(null)}>×</button>
               </div>
               {row.quote && <div className="an-side-quote">“{row.quote}”</div>}
-              <BodyEditor key={row.id} row={row} big onSave={(b) => patch(row.id, { body: b })} onDone={() => {}} />
+              <MiniRichEditor key={row.id} row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => {}} />
             </aside>
           </>,
           document.body,
@@ -492,6 +502,114 @@ export function RichBody({ text }: { text: string }) {
   });
   flushList(lines.length);
   return <>{out}</>;
+}
+
+/* ── side-panel rich editor: reads/writes the same stored mini-markdown ── */
+
+function mdToHtml(md: string): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (s: string) =>
+    esc(s)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(.+?)__/g, "<u>$1</u>")
+      .replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>");
+  let html = "";
+  let inList = false;
+  for (const l of md.split("\n")) {
+    const m = /^\s*[-•]\s+(.*)$/.exec(l);
+    if (m) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += `<li><p>${inline(m[1])}</p></li>`;
+    } else {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<p>${l ? inline(l) : ""}</p>`;
+    }
+  }
+  if (inList) html += "</ul>";
+  return html;
+}
+
+function docToMd(doc: Record<string, any>): string {
+  const textOf = (node: any): string => {
+    if (node.type === "text") {
+      let t: string = node.text ?? "";
+      const marks: any[] = node.marks ?? [];
+      const has = (n: string) => marks.some((m) => m.type === n);
+      if (has("italic")) t = `*${t}*`;
+      if (has("underline")) t = `__${t}__`;
+      if (has("bold")) t = `**${t}**`;
+      return t;
+    }
+    return (node.content ?? []).map(textOf).join("");
+  };
+  const lines: string[] = [];
+  const listItems = (list: any) => {
+    for (const li of list.content ?? []) {
+      const parts: string[] = [];
+      for (const c of li.content ?? []) {
+        if (c.type === "paragraph") parts.push(textOf(c));
+        else if (c.type === "bulletList") listItems(c); // flatten nesting
+      }
+      if (parts.length) lines.push(`- ${parts.join(" ")}`);
+    }
+  };
+  for (const node of (doc.content ?? []) as any[]) {
+    if (node.type === "bulletList") listItems(node);
+    else if (node.type === "paragraph") lines.push(textOf(node));
+  }
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function MiniRichEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void }) {
+  const onSaveRef = useRef(onSave); onSaveRef.current = onSave;
+  const onDoneRef = useRef(onDone); onDoneRef.current = onDone;
+  const last = useRef(row.body);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flush = (ed: Editor) => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    const md = docToMd(ed.getJSON() as Record<string, any>);
+    if (md !== last.current) { last.current = md; onSaveRef.current(md); }
+  };
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false, blockquote: false, code: false, codeBlock: false,
+        horizontalRule: false, orderedList: false, strike: false, link: false,
+      }),
+      Placeholder.configure({ placeholder: row.kind === "question" ? "What are you asking?" : "Write a note…" }),
+    ],
+    content: mdToHtml(row.body),
+    onUpdate: ({ editor: ed }) => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => flush(ed), 600);
+    },
+    onBlur: ({ editor: ed }) => { flush(ed); onDoneRef.current(); },
+    onCreate: ({ editor: ed }) => { setTimeout(() => ed.commands.focus("end"), 30); },
+  });
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const active = useEditorState({
+    editor,
+    selector: (ctx) => ctx.editor ? {
+      bold: ctx.editor.isActive("bold"),
+      italic: ctx.editor.isActive("italic"),
+      underline: ctx.editor.isActive("underline"),
+      bullet: ctx.editor.isActive("bulletList"),
+    } : null,
+  });
+  const keep = (e: React.SyntheticEvent) => { e.preventDefault(); e.stopPropagation(); };
+  return (
+    <>
+      <div className="an-tb" onMouseDown={keep} onPointerDown={keep} onClick={(e) => e.stopPropagation()}>
+        <button type="button" aria-label="Bold" className={active?.bold ? "on" : ""} onClick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
+        <button type="button" aria-label="Italic" className={active?.italic ? "on" : ""} onClick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
+        <button type="button" aria-label="Underline" className={active?.underline ? "on" : ""} onClick={() => editor?.chain().focus().toggleUnderline().run()}><u>U</u></button>
+        <button type="button" aria-label="Bullet list" className={active?.bullet ? "on" : ""} onClick={() => editor?.chain().focus().toggleBulletList().run()}>•</button>
+      </div>
+      <div className="an-rich" onClick={(e) => e.stopPropagation()}>
+        <EditorContent editor={editor} />
+      </div>
+    </>
+  );
 }
 
 function BodyEditor({ row, onSave, onDone, onExpand, big }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void; onExpand?: () => void; big?: boolean }) {
