@@ -54,6 +54,13 @@ const STYLES = `
 .an-tb button:hover{background:rgba(24,26,77,0.06);}
 .an-body.empty{color:rgba(24,26,77,0.4);}
 .an-ta{display:block;width:100%;box-sizing:border-box;margin-top:6px;min-height:64px;resize:none;overflow:hidden;border:1px solid #ECE4CE;border-radius:8px;padding:7px 8px;font:inherit;font-size:13px;line-height:1.45;color:#181A4D;background:#FFFDF6;outline:none;}
+.an-ta:not(.big){max-height:320px;}
+.an-ta.big{min-height:60vh;font-size:15px;line-height:1.6;padding:12px 14px;}
+.an-side-bg{position:fixed;inset:0;z-index:300;background:rgba(24,26,77,0.18);}
+.an-side{position:fixed;top:0;right:0;bottom:0;z-index:301;width:min(560px,100vw);background:#fff;box-shadow:-10px 0 30px rgba(24,26,77,0.18);padding:18px 22px calc(env(safe-area-inset-bottom,0px) + 24px);overflow-y:auto;box-sizing:border-box;color:#181A4D;}
+.an-side-head{display:flex;align-items:center;gap:8px;}
+.an-side-head .an-more{font-size:20px;}
+.an-side-quote{font-size:13px;font-style:italic;color:rgba(24,26,77,0.6);margin:10px 0 4px;}
 .an-ta:focus{border-color:#CAC307;}
 .an-more{background:none;border:none;color:rgba(24,26,77,0.5);cursor:pointer;padding:0 4px;font-size:14px;line-height:1;border-radius:6px;}
 .an-more:hover{color:#181A4D;background:rgba(24,26,77,0.06);}
@@ -138,6 +145,8 @@ export function AnnotationLayer({
   const [inline, setInline] = useStored<"on" | "off">(`cc-margin-inline:${userId}`, "on", ["on", "off"]);
   const [filter, setFilter] = useState<Filter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [bigId, setBigId] = useState<string | null>(null);
+  const openBig = (id: string) => { setEditingId(null); setMenuId(null); setBigId(id); };
   const [menuId, setMenuId] = useState<string | null>(null);
   const [hotId, setHotId] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
@@ -282,6 +291,7 @@ export function AnnotationLayer({
           menuOpen={menuId === row.id}
           onMenu={() => setMenuId(menuId === row.id ? null : row.id)}
           onEdit={() => { setEditingId(row.id); setMenuId(null); }}
+          onExpand={() => openBig(row.id)}
           onResolve={() => { toggleResolve(row); setMenuId(null); }}
           onDelete={() => { setConfirmDel(row.id); setMenuId(null); }}
           onSave={(body) => patch(row.id, { body })}
@@ -354,7 +364,7 @@ export function AnnotationLayer({
             </div>
             {editing ? (
               <>
-                <BodyEditor row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} />
+                <BodyEditor row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} onExpand={() => openBig(row.id)} />
                 <div className="an-strip-acts" onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()}>
                   <button type="button" onClick={(e) => { e.stopPropagation(); setEditingId(null); }}>Done</button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); toggleResolve(row); }}>{row.resolved_at ? "Unresolve" : "Resolve"}</button>
@@ -388,6 +398,27 @@ export function AnnotationLayer({
         document.body,
       )}
 
+      {bigId && (() => {
+        const row = rows.find((r) => r.id === bigId);
+        if (!row) return null;
+        return createPortal(
+          <>
+            <div className="an-side-bg" onClick={() => setBigId(null)} />
+            <aside className="an-side" role="dialog" aria-label={LABEL[row.kind]}>
+              <style>{STYLES}</style>
+              <div className="an-side-head">
+                <span className="an-num" style={{ background: ANNO_CIRCLE[row.kind] }}>{attached.find((a) => a.row.id === row.id)?.r.n ?? "–"}</span>
+                <span className="an-lab">{LABEL[row.kind]}</span>
+                <button type="button" className="an-more" aria-label="Close" onClick={() => setBigId(null)}>×</button>
+              </div>
+              {row.quote && <div className="an-side-quote">“{row.quote}”</div>}
+              <BodyEditor key={row.id} row={row} big onSave={(b) => patch(row.id, { body: b })} onDone={() => {}} />
+            </aside>
+          </>,
+          document.body,
+        );
+      })()}
+
       <DeleteConfirmModal
         open={!!confirmDel}
         title="Delete this margin note?"
@@ -399,7 +430,8 @@ export function AnnotationLayer({
   );
 }
 
-function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onResolve, onDelete, onSave, onDone }: {
+function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand, onResolve, onDelete, onSave, onDone }: {
+  onExpand: () => void;
   row: AnnoRow; n: number | null; editing: boolean; clamp: boolean; menuOpen: boolean;
   onMenu: () => void; onEdit: () => void; onResolve: () => void; onDelete: () => void;
   onSave: (b: string) => void; onDone: () => void;
@@ -414,13 +446,14 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onResolve
       {menuOpen && (
         <div className="an-menu" onClick={(e) => e.stopPropagation()}>
           <button type="button" onClick={onEdit}>Edit</button>
+          <button type="button" onClick={onExpand}>Open in side panel</button>
           <button type="button" onClick={onResolve}>{row.resolved_at ? "Unresolve" : "Resolve"}</button>
           <button type="button" className="del" onClick={onDelete}>Delete</button>
         </div>
       )}
       {row.kind !== "word" && row.quote && <div className="an-quote" title={row.quote}>“{row.quote}”</div>}
       {editing ? (
-        <BodyEditor row={row} onSave={onSave} onDone={onDone} />
+        <BodyEditor row={row} onSave={onSave} onDone={onDone} onExpand={onExpand} />
       ) : (
         <div className={`an-body${clamp ? " clamp" : ""}${row.body ? "" : " empty"}`}>
           {row.body ? <RichBody text={row.body} /> : (row.kind === "word" ? row.quote : row.kind === "question" ? "Write your question…" : "Write a note…")}
@@ -461,7 +494,7 @@ export function RichBody({ text }: { text: string }) {
   return <>{out}</>;
 }
 
-function BodyEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void }) {
+function BodyEditor({ row, onSave, onDone, onExpand, big }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void; onExpand?: () => void; big?: boolean }) {
   const [v, setV] = useState(row.body);
   const ref = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -470,7 +503,7 @@ function BodyEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string)
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     if (val !== last.current) { last.current = val; onSave(val); }
   };
-  const grow = () => { const el = ref.current; if (!el) return; el.style.height = "auto"; el.style.height = `${el.scrollHeight + 2}px`; };
+  const grow = () => { const el = ref.current; if (!el) return; el.style.height = "auto"; el.style.height = `${el.scrollHeight + 2}px`; el.style.overflowY = !big && el.scrollHeight > 320 ? "auto" : "hidden"; };
   useLayoutEffect(grow, [v]);
   useEffect(() => {
     const t = setTimeout(() => {
@@ -521,10 +554,11 @@ function BodyEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string)
         <button type="button" aria-label="Italic" onClick={() => wrap("*")}><i>I</i></button>
         <button type="button" aria-label="Underline" onClick={() => wrap("__")}><u>U</u></button>
         <button type="button" aria-label="Bullet list" onClick={bullet}>•</button>
+        {onExpand && <button type="button" aria-label="Open in side panel" title="Open larger" style={{ marginLeft: "auto" }} onClick={() => { flush(v); onExpand(); }}>⤢</button>}
       </div>
       <textarea
         ref={ref}
-        className="an-ta"
+        className={`an-ta${big ? " big" : ""}`}
         value={v}
         placeholder={row.kind === "question" ? "What are you asking?" : "Write a note…"}
         onClick={(e) => e.stopPropagation()}
