@@ -67,6 +67,16 @@ export const Annotation = Mark.create<Record<string, never>, { strips: boolean }
                 s.className = "ws-anno-num";
                 s.contentEditable = "false";
                 s.setAttribute("data-anno-num", r.id);
+                s.setAttribute("role", "button");
+                s.setAttribute("aria-label", `Open margin note ${r.n}`);
+                s.setAttribute("tabindex", "0");
+                s.style.cursor = "pointer";
+                s.addEventListener("keydown", (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    s.click();
+                  }
+                });
                 s.style.background = ANNO_CIRCLE[r.kind];
                 s.textContent = String(r.n);
                 return s;

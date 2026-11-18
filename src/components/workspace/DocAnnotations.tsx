@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
+import { Button } from "@/components/ui/button";
+import { positionAnnotationCards } from "@/lib/annotation-layout";
 import { ANNO_CIRCLE, annoPluginKey, annotationRanges, type AnnoKind, type AnnoRange } from "./annotation-mark";
 
 export type AnnoRow = {
@@ -48,7 +50,7 @@ const STYLES = `
 .an-num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:9.5px;font-weight:700;color:#181A4D;flex-shrink:0;}
 .an-lab{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#181A4D;flex:1;}
 .an-quote{font-size:11.5px;color:rgba(24,26,77,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;font-style:italic;}
-.an-body{font-size:13px;line-height:1.45;color:#181A4D;margin-top:5px;white-space:pre-wrap;word-break:break-word;}
+.an-body{font-size:13px;line-height:1.45;color:#181A4D;margin-top:5px;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow-y:auto;overscroll-behavior-y:contain;}
 .an-body.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .an-body ul{margin:2px 0;padding-left:18px;}.an-body li{margin:0;}.an-body p{margin:0;}
 .an-tb{display:flex;gap:3px;margin-top:6px;}
@@ -56,13 +58,18 @@ const STYLES = `
 .an-tb button:hover{background:rgba(24,26,77,0.06);}
 .an-body.empty{color:rgba(24,26,77,0.4);}
 .an-ta{display:block;width:100%;box-sizing:border-box;margin-top:6px;min-height:64px;resize:none;overflow:hidden;border:1px solid #ECE4CE;border-radius:8px;padding:7px 8px;font:inherit;font-size:13px;line-height:1.45;color:#181A4D;background:#FFFDF6;outline:none;}
-.an-ta:not(.big){max-height:320px;}
+.an-ta:not(.big){max-height:240px;}
 .an-ta.big{min-height:60vh;font-size:15px;line-height:1.6;padding:12px 14px;}
 .an-side-bg{position:fixed;inset:0;z-index:2000;background:rgba(24,26,77,0.18);}
 .an-side{position:fixed;top:0;right:0;bottom:0;z-index:2001;width:min(560px,100vw);background:#fff;box-shadow:-10px 0 30px rgba(24,26,77,0.18);padding:18px 22px calc(env(safe-area-inset-bottom,0px) + 24px);overflow-y:auto;box-sizing:border-box;color:#181A4D;}
 .an-side-head{display:flex;align-items:center;gap:8px;}
 .an-side-head .an-more{font-size:20px;}
 .an-side-quote{font-size:13px;font-style:italic;color:rgba(24,26,77,0.6);margin:10px 0 4px;}
+.an-word{display:flex;align-items:baseline;gap:6px;max-width:100%;width:fit-content;margin-top:6px;padding:3px 7px;border-radius:6px;background:var(--study-log-word-fill);color:var(--document-study-foreground);font-size:12px;overflow-wrap:anywhere;}
+.an-word span{font-size:10px;font-weight:600;flex-shrink:0;}
+.an-word strong{min-width:0;}
+.an-side .an-word{font-size:14px;margin:12px 0 8px;}
+.an-card.active,.an-strip.active{border:1px solid var(--primary);}
 .an-ta:focus{border-color:#CAC307;}
 .an-tb button.on{background:#181A4D;color:#fff;border-color:#181A4D;}
 .an-rich{border:1px solid #ECE4CE;border-radius:10px;background:#FFFDF6;margin-top:8px;}
@@ -155,6 +162,7 @@ export function AnnotationLayer({
   const [inline, setInline] = useStored<"on" | "off">(`cc-margin-inline:${userId}`, "on", ["on", "off"]);
   const [filter, setFilter] = useState<Filter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [bigId, setBigId] = useState<string | null>(null);
   const openBig = (id: string) => { setEditingId(null); setMenuId(null); setBigId(id); };
   const [menuId, setMenuId] = useState<string | null>(null);
@@ -178,7 +186,7 @@ export function AnnotationLayer({
     const st = (editor.storage as any).annotation as { strips: boolean } | undefined;
     if (!st || st.strips === strips) return;
     st.strips = strips;
-    editor.view.dispatch(editor.state.tr.setMeta(annoPluginKey, true));
+    editor.view.dispatch(editor.state.tr.setMeta(annoPluginKey, true).setMeta("preventUpdate", true));
   }, [editor, strips]);
   useEffect(() => () => {
     const st = (editor.storage as any).annotation as { strips: boolean } | undefined;
@@ -199,6 +207,7 @@ export function AnnotationLayer({
     if (wide && mode === "off") setMode("compact");
     if (!wide && inline === "off") setInline("on");
     setEditingId(id);
+    setActiveId(id);
     const { error } = await supabase.from("doc_annotations").insert({ id, user_id: userId, workspace_item_id: itemId, kind, quote, body: "" });
     if (error) {
       console.error(error);
@@ -232,7 +241,28 @@ export function AnnotationLayer({
     if (error) { console.error(error); toast.error("Couldn't delete that margin note."); qc.invalidateQueries({ queryKey: key }); }
   };
 
-  /* ── hover pairing ── */
+  const activate = (id: string) => {
+    if (!rowById.has(id)) return;
+    setActiveId(id);
+    setEditingId(null);
+    setMenuId(null);
+    setFilter("all");
+    if (wide && mode === "off") setMode("compact");
+    if (!wide && inline === "off") setInline("on");
+  };
+
+  /* ── number activation and hover pairing ── */
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const click = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const id = target.closest("[data-anno-num]")?.getAttribute("data-anno-num");
+      if (id) { event.preventDefault(); activate(id); }
+    };
+    dom.addEventListener("click", click);
+    return () => dom.removeEventListener("click", click);
+  });
   useEffect(() => {
     const dom = editor.view.dom;
     const over = (e: Event) => {
@@ -245,7 +275,8 @@ export function AnnotationLayer({
   useEffect(() => {
     const dom = editor.view.dom;
     dom.querySelectorAll(".ws-anno.is-hot").forEach((el) => el.classList.remove("is-hot"));
-    if (hotId) dom.querySelectorAll(`[data-anno-id="${CSS.escape(hotId)}"]`).forEach((el) => el.classList.add("is-hot"));
+    const pairedId = hotId ?? activeId;
+    if (pairedId) dom.querySelectorAll(`[data-anno-id="${window.CSS.escape(pairedId)}"]`).forEach((el) => el.classList.add("is-hot"));
   });
 
   /* ── margin card placement ── */
@@ -256,15 +287,21 @@ export function AnnotationLayer({
   const layout = () => {
     const m = marginRef.current; if (!m) return;
     const base = m.getBoundingClientRect().top;
-    let bottom = 0;
+    const cards = [];
     for (const { r, row } of attached) {
       if (!pass(row)) continue;
       const el = cardEls.current.get(r.id); if (!el) continue;
       let top = 0;
       try { top = editor.view.coordsAtPos(r.from).top - base - 4; } catch { /* stale pos */ }
-      top = Math.max(top, bottom ? bottom + 10 : 0, 0);
-      el.style.top = `${top}px`;
-      bottom = top + el.offsetHeight;
+      cards.push({ id: r.id, anchor: top, height: el.offsetHeight });
+    }
+    const positions = positionAnnotationCards(cards, activeId);
+    let bottom = 0;
+    for (const card of cards) {
+      const top = positions.get(card.id) ?? 0;
+      const el = cardEls.current.get(card.id);
+      if (el) el.style.top = `${top}px`;
+      bottom = Math.max(bottom, top + card.height);
     }
     if (detRef.current) { detRef.current.style.top = `${bottom ? bottom + 22 : 0}px`; bottom = (bottom ? bottom + 22 : 0) + detRef.current.offsetHeight; }
     m.style.minHeight = `${bottom}px`;
@@ -275,15 +312,16 @@ export function AnnotationLayer({
     const ro = new ResizeObserver(() => layout());
     ro.observe(editor.view.dom);
     if (marginRef.current) ro.observe(marginRef.current);
+    cardEls.current.forEach((el) => ro.observe(el));
     return () => ro.disconnect();
   });
 
   const scrollTo = (id: string) => {
     setSheet(false);
-    const el = editor.view.dom.querySelector(`[data-anno-id="${CSS.escape(id)}"]`) as HTMLElement | null;
+    activate(id);
+    const el = editor.view.dom.querySelector(`[data-anno-id="${window.CSS.escape(id)}"]`) as HTMLElement | null;
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     setHotId(id);
-    if (inline === "on") setEditingId(id);
   };
 
   const card = (row: AnnoRow, n: number | null, opts: { placed?: boolean; onPick?: () => void } = {}) => {
@@ -292,15 +330,16 @@ export function AnnotationLayer({
       <div
         key={row.id}
         ref={opts.placed ? (el) => { if (el) cardEls.current.set(row.id, el); else cardEls.current.delete(row.id); } : undefined}
-        className={`an-card${hotId === row.id ? " hot" : ""}${row.resolved_at ? " res" : ""}`}
+        data-annotation-card={row.id}
+        className={`an-card${activeId === row.id ? " active" : ""}${hotId === row.id ? " hot" : ""}${row.resolved_at ? " res" : ""}`}
         onMouseEnter={() => setHotId(row.id)}
         onMouseLeave={() => setHotId((h) => (h === row.id ? null : h))}
-        onClick={() => { if (opts.onPick) opts.onPick(); else setEditingId(row.id); }}
+        onClick={() => { if (opts.onPick) opts.onPick(); else { setActiveId(row.id); setEditingId(row.id); } }}
       >
-        <CardInner row={row} n={n} editing={editing} clamp={mode === "compact" && !editing}
+        <CardInner row={row} n={n} editing={editing} clamp={!editing && (activeId ? activeId !== row.id : mode === "compact")}
           menuOpen={menuId === row.id}
           onMenu={() => setMenuId(menuId === row.id ? null : row.id)}
-          onEdit={() => { setEditingId(row.id); setMenuId(null); }}
+          onEdit={() => { setActiveId(row.id); setEditingId(row.id); setMenuId(null); }}
           onExpand={() => openBig(row.id)}
           onResolve={() => { toggleResolve(row); setMenuId(null); }}
           onDelete={() => { setConfirmDel(row.id); setMenuId(null); }}
@@ -332,10 +371,11 @@ export function AnnotationLayer({
             <div className="an-seg" role="group" aria-label="Margin">
               <span>Margin:</span>
               {(["full", "compact", "off"] as MarginMode[]).map((m) => (
-                <button key={m} type="button" className={mode === m ? "on" : ""} onClick={() => setMode(m)}>{m[0].toUpperCase() + m.slice(1)}</button>
+                <button key={m} type="button" className={mode === m ? "on" : ""} onClick={() => { setMode(m); setActiveId(null); setEditingId(null); }}>{m[0].toUpperCase() + m.slice(1)}</button>
               ))}
             </div>
             {mode !== "off" && chips}
+            {activeId && mode !== "off" && <Button variant="ghost" size="sm" onClick={() => { setActiveId(null); setEditingId(null); }}>Show all notes</Button>}
           </div>
         </div>
       )}
@@ -367,11 +407,12 @@ export function AnnotationLayer({
         const host = hosts.get(r.id); if (!host) return null;
         const editing = editingId === row.id;
         return createPortal(
-          <div className={`an-strip${row.resolved_at ? " res" : ""}`} style={{ background: STRIP_BG[row.kind] }} onClick={() => !editing && setEditingId(row.id)}>
+          <div data-annotation-card={row.id} className={`an-strip${activeId === row.id ? " active" : ""}${row.resolved_at ? " res" : ""}`} style={{ background: STRIP_BG[row.kind] }} onClick={() => { if (!editing) { setActiveId(row.id); setEditingId(row.id); } }}>
             <div className="an-head">
               <span className="an-num" style={{ background: ANNO_CIRCLE[row.kind] }}>{r.n}</span>
               <span className="an-lab">{LABEL[row.kind]}</span>
             </div>
+            {row.kind === "word" && row.quote && <WordQuote quote={row.quote} />}
             {editing ? (
               <>
                 <BodyEditor row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} onExpand={() => openBig(row.id)} />
@@ -382,7 +423,7 @@ export function AnnotationLayer({
                 </div>
               </>
             ) : (
-              <div className={`an-body clamp${row.body ? "" : " empty"}`}>{row.body ? <RichBody text={row.body} /> : (row.kind === "word" ? row.quote : "Tap to write…")}</div>
+              <div className={`an-body${activeId === row.id ? "" : " clamp"}${row.body ? "" : " empty"}`}>{row.body ? <RichBody text={row.body} /> : "Tap to write…"}</div>
             )}
           </div>,
           host,
@@ -421,7 +462,7 @@ export function AnnotationLayer({
                 <span className="an-lab">{LABEL[row.kind]}</span>
                 <button type="button" className="an-more" aria-label="Close" onClick={() => setBigId(null)}>×</button>
               </div>
-              {row.quote && <div className="an-side-quote">“{row.quote}”</div>}
+              {row.quote && (row.kind === "word" ? <WordQuote quote={row.quote} /> : <div className="an-side-quote">“{row.quote}”</div>)}
               <MiniRichEditor key={row.id} row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => {}} />
             </aside>
           </>,
@@ -461,16 +502,20 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand,
           <button type="button" className="del" onClick={onDelete}>Delete</button>
         </div>
       )}
-      {row.kind !== "word" && row.quote && <div className="an-quote" title={row.quote}>“{row.quote}”</div>}
+      {row.quote && (row.kind === "word" ? <WordQuote quote={row.quote} /> : <div className="an-quote" title={row.quote}>“{row.quote}”</div>)}
       {editing ? (
         <BodyEditor row={row} onSave={onSave} onDone={onDone} onExpand={onExpand} />
       ) : (
         <div className={`an-body${clamp ? " clamp" : ""}${row.body ? "" : " empty"}`}>
-          {row.body ? <RichBody text={row.body} /> : (row.kind === "word" ? row.quote : row.kind === "question" ? "Write your question…" : "Write a note…")}
+          {row.body ? <RichBody text={row.body} /> : (row.kind === "question" ? "Write your question…" : "Write a note…")}
         </div>
       )}
     </>
   );
+}
+
+function WordQuote({ quote }: { quote: string }) {
+  return <div className="an-word"><span>Word:</span><strong>{quote}</strong></div>;
 }
 
 function renderInline(t: string, key: string): React.ReactNode[] {
@@ -584,7 +629,7 @@ function MiniRichEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: str
       timer.current = setTimeout(() => flush(ed), 600);
     },
     onBlur: ({ editor: ed }) => { flush(ed); onDoneRef.current(); },
-    onCreate: ({ editor: ed }) => { setTimeout(() => ed.commands.focus("end"), 30); },
+    onCreate: ({ editor: ed }) => { setTimeout(() => { if (!ed.isDestroyed) ed.commands.focus("end"); }, 30); },
   });
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const active = useEditorState({
@@ -621,7 +666,7 @@ function BodyEditor({ row, onSave, onDone, onExpand, big }: { row: AnnoRow; onSa
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     if (val !== last.current) { last.current = val; onSave(val); }
   };
-  const grow = () => { const el = ref.current; if (!el) return; el.style.height = "auto"; el.style.height = `${el.scrollHeight + 2}px`; el.style.overflowY = !big && el.scrollHeight > 320 ? "auto" : "hidden"; };
+  const grow = () => { const el = ref.current; if (!el) return; el.style.height = "auto"; el.style.height = `${el.scrollHeight + 2}px`; el.style.overflowY = !big && el.scrollHeight > 240 ? "auto" : "hidden"; };
   useLayoutEffect(grow, [v]);
   useEffect(() => {
     const t = setTimeout(() => {
