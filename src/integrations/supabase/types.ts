@@ -977,6 +977,53 @@ export type Database = {
           },
         ]
       }
+      doc_annotations: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          quote: string
+          resolved_at: string | null
+          updated_at: string
+          user_id: string
+          word_study_id: string | null
+          workspace_item_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind: string
+          quote?: string
+          resolved_at?: string | null
+          updated_at?: string
+          user_id: string
+          word_study_id?: string | null
+          workspace_item_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          quote?: string
+          resolved_at?: string | null
+          updated_at?: string
+          user_id?: string
+          word_study_id?: string | null
+          workspace_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_annotations_workspace_item_id_fkey"
+            columns: ["workspace_item_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entry_study_links: {
         Row: {
           created_at: string

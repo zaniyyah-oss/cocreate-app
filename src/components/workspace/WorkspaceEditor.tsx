@@ -1,5 +1,7 @@
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
+import { Annotation, type AnnoKind } from "./annotation-mark";
+import { AnnotationLayer } from "./DocAnnotations";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -142,7 +144,12 @@ export function WorkspaceEditor({
   editable = true,
   hideToolbarUntilFocused = false,
   onEditorReady,
+  annotationItemId,
+  otherPageAnnotationIds,
 }: {
+  /** Workspace document id: turns on margin notes for this editor. */
+  annotationItemId?: string;
+  otherPageAnnotationIds?: Set<string>;
   userId: string;
   initialJSON: any;
   onChange: (json: any, text: string, html: string) => void;
@@ -185,6 +192,7 @@ export function WorkspaceEditor({
       TaskList.configure({ HTMLAttributes: { class: "ws-tasklist" } }),
       TaskItem.configure({ nested: true }),
       InsertShortcuts,
+      Annotation,
     ],
     content: initialJSON && Object.keys(initialJSON).length ? initialJSON : undefined,
     editorProps: {
@@ -331,23 +339,37 @@ export function WorkspaceEditor({
   }, [editor]);
 
   editorRef.current = editor;
+  const annoCreateRef = useRef<((k: AnnoKind) => void) | null>(null);
+  const annotate = Boolean(annotationItemId && userId && editable);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none), (max-width: 768px)");
+    const f = () => setNarrow(mq.matches); f();
+    mq.addEventListener("change", f);
+    return () => mq.removeEventListener("change", f);
+  }, []);
 
   if (!editor) return null;
+  const content = <EditorContent editor={editor} />;
 
 
   return (
-    <div className="ws-editor">
+    <div className={`ws-editor${annotate ? " has-anno" : ""}`}>
       {editable && (!hideToolbarUntilFocused || focused) && <Toolbar editor={editor} userId={userId} />}
       {editable && (
         <BubbleMenu
           editor={editor}
-          options={{ placement: "top" }}
+          options={{ placement: annotate && narrow ? "bottom" : "top" }}
           shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
         >
-          <MobileBubble editor={editor} />
+          <MobileBubble editor={editor} onAnnotate={annotate ? (k) => annoCreateRef.current?.(k) : undefined} />
         </BubbleMenu>
       )}
-      <EditorContent editor={editor} />
+      {annotate ? (
+        <AnnotationLayer editor={editor} itemId={annotationItemId!} userId={userId} otherPageIds={otherPageAnnotationIds} createRef={annoCreateRef}>
+          {content}
+        </AnnotationLayer>
+      ) : content}
       {editable && <TableDeleteButton editor={editor} />}
     </div>
   );
@@ -409,18 +431,28 @@ function TableDeleteButton({ editor }: { editor: Editor }) {
 }
 
 
-function MobileBubble({ editor }: { editor: Editor }) {
+function MobileBubble({ editor, onAnnotate }: { editor: Editor; onAnnotate?: (k: AnnoKind) => void }) {
   // preventDefault on pointerdown (covers mouse + touch + pen) is required
   // to stop iOS Safari from collapsing the selection before onClick fires.
   const hold = (e: React.SyntheticEvent) => e.preventDefault();
+  const b = (cls: string, on: boolean, run: () => void, label: React.ReactNode, title?: string) => (
+    <button type="button" className={`ws-bb-btn ${cls} ${on ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={run} title={title}>{label}</button>
+  );
+  const dot = (c: string) => <span className="ws-bb-dot" style={{ background: c }} />;
   return (
     <div className="ws-bubble">
-      <button type="button" className={`ws-bb-btn ${editor.isActive("bold") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
-      <button type="button" className={`ws-bb-btn ${editor.isActive("italic") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button>
-      <button type="button" className={`ws-bb-btn ${editor.isActive("highlight") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleHighlight({ color: "#FDE68A" }).run()} title="Highlight">🖍</button>
-      <button type="button" className={`ws-bb-btn ${editor.isActive("heading", { level: 2 }) ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-      <button type="button" className={`ws-bb-btn ${editor.isActive("bulletList") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBulletList().run()}>•</button>
-      <button type="button" className={`ws-bb-btn ${editor.isActive("blockquote") ? "on" : ""}`} onPointerDown={hold} onMouseDown={hold} onClick={() => editor.chain().focus().toggleBlockquote().run()}>“”</button>
+      {b("", editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), "B", "Bold")}
+      {b("", editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), <i>I</i>, "Italic")}
+      {b("", editor.isActive("underline"), () => editor.chain().focus().toggleUnderline().run(), <u>U</u>, "Underline")}
+      {b("", editor.isActive("highlight"), () => editor.chain().focus().toggleHighlight({ color: "#FDE68A" }).run(), "🖍", "Highlight")}
+      {onAnnotate && (
+        <>
+          <span className="ws-bb-sep" />
+          {b("ws-bb-anno", false, () => onAnnotate("note"), <>{dot("#DCE07A")}Note</>, "Add a margin note")}
+          {b("ws-bb-anno", false, () => onAnnotate("question"), <>{dot("#F4C2CD")}<span className="lg">Question</span><span className="sm">Ask</span></>, "Ask a question")}
+          {b("ws-bb-anno", false, () => onAnnotate("word"), <>{dot("#FFD27A")}<span className="lg">Study this word</span><span className="sm">Word</span></>, "Study this word")}
+        </>
+      )}
     </div>
   );
 }

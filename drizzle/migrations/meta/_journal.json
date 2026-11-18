@@ -57,6 +57,13 @@
       "when": 1794667363541,
       "tag": "0007_tighten_contact_and_page_content_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794965982003,
+      "tag": "0008_create_doc_annotations",
+      "breakpoints": true
     }
   ]
 }

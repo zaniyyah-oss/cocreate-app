@@ -1062,6 +1062,7 @@ function NoteBody({
         onSave={scheduleSave}
         onBlur={() => { void flushSave(); }}
         ignoreExternalUpdates={hasPendingPatch || saving}
+        annotations={!guest}
       />
 
       <div className="ws-note-actions">

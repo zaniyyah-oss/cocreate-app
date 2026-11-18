@@ -2,6 +2,7 @@ import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
+import { annotationIdsInJSON } from "./annotation-mark";
 import { addPage, deletePage, mirrorFields, movePage, outlineOf, pagesFromItem, type DocPage } from "@/lib/doc-pages";
 
 const CSS = `
@@ -9,6 +10,7 @@ const CSS = `
 .dp-wrap.focus{display:flex;align-items:flex-start;min-height:100vh;}
 .dp-wrap.focus .dp-main{padding:64px clamp(32px,6vw,96px) 160px;max-width:1080px;margin:0 auto;box-sizing:border-box;}
 .dp-wrap.focus .ws-editor-content{font-size:17px;line-height:1.75;}
+@media (min-width:900px){.dp-wrap.focus .dp-main:has(.ws-editor.has-anno){max-width:1440px;padding-left:clamp(16px,2vw,48px);padding-right:clamp(16px,2vw,48px);}}
 .dp-main{flex:1;min-width:0;}
 /* compact peek bar */
 .dp-peekrow{display:flex;align-items:center;gap:8px;margin:2px 0 6px;position:relative;z-index:60;}
@@ -58,7 +60,9 @@ export function DocPages({
   ignoreExternalUpdates,
   focused = false,
   header,
+  annotations = true,
 }: {
+  annotations?: boolean;
   header?: React.ReactNode;
   item: { id: string; body: any; body_text: string; pages?: any };
   userId: string;
@@ -85,6 +89,11 @@ export function DocPages({
   pagesRef.current = pages;
 
   const active = pages.find((p) => p.id === activeId) ?? pages[0];
+  const otherAnnoIds = useMemo(() => {
+    const ids = new Set<string>();
+    pages.forEach((p) => { if (p.id !== activeId) annotationIdsInJSON(p.body, ids); });
+    return ids;
+  }, [pages, activeId]);
   const outline = useMemo(() => outlineOf(active.body), [active.body]);
 
   const commit = (next: DocPage[]) => {
@@ -219,6 +228,8 @@ export function DocPages({
           onChange={(json, text) => commit(pagesRef.current.map((p) => (p.id === active.id ? { ...p, body: json, text } : p)))}
           onBlur={onBlur}
           ignoreExternalUpdates={ignoreExternalUpdates}
+          annotationItemId={annotations ? item.id : undefined}
+          otherPageAnnotationIds={otherAnnoIds}
         />
       </div>
 
