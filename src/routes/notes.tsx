@@ -21,6 +21,8 @@ export const Route = createFileRoute("/notes")({
       { name: "description", content: "Every document you've written across the workspace, and every to-do you've written down." },
       { property: "og:title", content: "Notes — CoCreate" },
       { property: "og:description", content: "Every document you've written across the workspace, and every to-do you've written down." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

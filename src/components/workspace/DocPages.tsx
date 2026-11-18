@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { annotationIdsInJSON } from "./annotation-mark";
+import { StudyOverview } from "./StudyOverview";
+import { studyOverviewPage } from "@/lib/study-overview";
 import { addPage, deletePage, mirrorFields, movePage, outlineOf, pagesFromItem, type DocPage } from "@/lib/doc-pages";
 
 const CSS = `
@@ -13,7 +15,7 @@ const CSS = `
 @media (min-width:900px){.dp-wrap.focus .dp-main:has(.ws-editor.has-anno){max-width:1440px;padding-left:clamp(16px,2vw,48px);padding-right:clamp(16px,2vw,48px);}}
 .dp-main{flex:1;min-width:0;}
 /* compact peek bar */
-.dp-peekrow{display:flex;align-items:center;gap:8px;margin:2px 0 6px;position:relative;z-index:60;}
+.dp-peekrow{display:flex;align-items:center;gap:8px;margin:2px 0 6px;position:relative;z-index:80;}
 .dp-peek{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:8px;border:1px solid rgba(24,26,77,0.12);background:#fff;color:#181A4D;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;max-width:100%;}
 .dp-peek:hover,.dp-peek.on{border-color:rgba(24,26,77,0.3);box-shadow:0 2px 8px rgba(24,26,77,0.08);}
 .dp-peek .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
@@ -64,7 +66,7 @@ export function DocPages({
 }: {
   annotations?: boolean;
   header?: React.ReactNode;
-  item: { id: string; body: any; body_text: string; pages?: any };
+  item: { id: string; body: any; body_text: string; pages?: any; kind?: string };
   userId: string;
   onSave: (patch: Record<string, unknown>) => void;
   onTextChange?: (allText: string) => void;
@@ -73,13 +75,17 @@ export function DocPages({
   focused?: boolean;
 }) {
   const [pages, setPages] = useState<DocPage[]>(() => pagesFromItem(item));
-  const [activeId, setActiveId] = useState(pages[0].id);
+  const isStudy = item.kind === "study";
+  const overview = isStudy ? studyOverviewPage(pages) : null;
+  const displayPages = overview && !pages.some((p) => p.id === overview.id) ? [overview, ...pages] : pages;
+  const [activeId, setActiveId] = useState(() => isStudy ? studyOverviewPage(pages).id : pages[0].id);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const [peekOpen, setPeekOpen] = useState(false);
   const [sideOpen, setSideOpen] = useState(true);
   const [pendingJump, setPendingJump] = useState<number | null>(null);
+  const [annotationJump, setAnnotationJump] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   // On phones the tabs panel starts tucked away so the page opens on the writing.
   useEffect(() => {
@@ -88,7 +94,7 @@ export function DocPages({
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
 
-  const active = pages.find((p) => p.id === activeId) ?? pages[0];
+  const active = displayPages.find((p) => p.id === activeId) ?? displayPages[0];
   const otherAnnoIds = useMemo(() => {
     const ids = new Set<string>();
     pages.forEach((p) => { if (p.id !== activeId) annotationIdsInJSON(p.body, ids); });
@@ -131,13 +137,29 @@ export function DocPages({
 
   const pickPage = (id: string) => { setActiveId(id); setMenuFor(null); if (!focused) setPeekOpen(false); };
 
+  useEffect(() => {
+    if (!annotationJump) return;
+    let attempts = 0;
+    let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+    const timer = setInterval(() => {
+      const el = wrapRef.current?.querySelector<HTMLElement>(`[data-anno-id="${window.CSS.escape(annotationJump)}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("study-log-target");
+        highlightTimer = setTimeout(() => el.classList.remove("study-log-target"), 2400);
+        clearInterval(timer);
+      } else if (++attempts > 30) { clearInterval(timer); setAnnotationJump(null); }
+    }, 50);
+    return () => { clearInterval(timer); if (highlightTimer) clearTimeout(highlightTimer); };
+  }, [annotationJump, activeId]);
+
   const tree = (
     <>
       <div className="dp-head">
-        <span>Tabs {pages.length}</span>
+        <span>Tabs {displayPages.length}</span>
         <button type="button" aria-label="Add tab" onClick={() => add(null)}>+</button>
       </div>
-      {pages.map((p) => {
+      {displayPages.map((p) => {
         const isRoot = !p.parentId;
         const sibs = pages.filter((x) => (x.parentId ?? null) === (p.parentId ?? null));
         const idx = sibs.findIndex((x) => x.id === p.id);
@@ -157,7 +179,7 @@ export function DocPages({
               ) : (
                 <button type="button" className="dp-name" onClick={() => pickPage(p.id)} onDoubleClick={() => setRenaming(p.id)} title={p.title}>{p.title}</button>
               )}
-              <button type="button" className="dp-more" aria-label="Tab options" onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }}>⋯</button>
+              {pages.some((saved) => saved.id === p.id) && <button type="button" className="dp-more" aria-label="Tab options" onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }}>⋯</button>}
               {menuFor === p.id && (
                 <div className="dp-menu" onClick={(e) => e.stopPropagation()}>
                   <button type="button" onClick={() => { setRenaming(p.id); setMenuFor(null); }}>Rename</button>
@@ -214,7 +236,7 @@ export function DocPages({
             <button type="button" className={`dp-peek${peekOpen ? " on" : ""}`} onClick={() => setPeekOpen((v) => !v)} aria-label="Tabs and outline">
               <span>☰</span>
               <span className="nm">{active.title}</span>
-              {(pages.length > 1 || outline.length > 0) && <span className="ct">· {pages.length} {pages.length === 1 ? "tab" : "tabs"}</span>}
+              {(displayPages.length > 1 || outline.length > 0) && <span className="ct">· {displayPages.length} {displayPages.length === 1 ? "tab" : "tabs"}</span>}
               <span className="ct">▾</span>
             </button>
             {peekOpen && <div className="dp-pop">{tree}</div>}
@@ -225,12 +247,17 @@ export function DocPages({
           key={active.id}
           userId={userId}
           initialJSON={active.body}
-          onChange={(json, text) => commit(pagesRef.current.map((p) => (p.id === active.id ? { ...p, body: json, text } : p)))}
+          onChange={(json, text) => {
+            const existing = pagesRef.current.some((p) => p.id === active.id);
+            if (!existing && JSON.stringify(json) === JSON.stringify(active.body)) return;
+            commit(existing ? pagesRef.current.map((p) => (p.id === active.id ? { ...p, body: json, text } : p)) : [{ ...active, body: json, text }, ...pagesRef.current]);
+          }}
           onBlur={onBlur}
           ignoreExternalUpdates={ignoreExternalUpdates}
           annotationItemId={annotations ? item.id : undefined}
           otherPageAnnotationIds={otherAnnoIds}
         />
+        {isStudy && annotations && active.id === overview?.id && <StudyOverview itemId={item.id} pages={pages} onJump={(pageId, id) => { setAnnotationJump(null); pickPage(pageId); requestAnimationFrame(() => setAnnotationJump(id)); }} />}
       </div>
 
       <DeleteConfirmModal
@@ -239,7 +266,8 @@ export function DocPages({
         message="This tab, its sub-pages, and everything written on them will be removed. This can't be undone."
         onCancel={() => setConfirmDel(null)}
         onConfirm={() => {
-          const id = confirmDel!;
+          const id = confirmDel;
+          if (!id) return;
           const next = deletePage(pagesRef.current, id);
           commit(next);
           if (!next.find((p) => p.id === activeId)) setActiveId(next[0].id);

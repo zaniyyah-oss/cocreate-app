@@ -48,7 +48,8 @@ const CSS = `
 .sl-star{position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;font-size:15px;color:#8a8678;padding:2px;line-height:1;}
 .sl-star.on{color:#181A4D;}
 .sl-empty{font-size:13px;color:#8a8879;padding:6px 0 18px;}
-.sl-cols{display:grid;grid-template-columns:1fr;gap:22px;align-items:start;}
+.sl-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start;}
+.sl-cols>*{min-width:0;}
 @media (min-width:1024px){.sl-cols{grid-template-columns:360px minmax(0,1fr);}.sl-cols.wide{grid-template-columns:1fr;}}
 .sl-listhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
 .sl-bible{font-size:13px;font-weight:700;color:#0F4A42;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;}
