@@ -17,8 +17,9 @@ import { SavedContentPanel } from "@/components/SavedContentPanel";
 import { StudyLibrary } from "@/components/read/StudyLibrary";
 
 export const Route = createFileRoute("/read")({
-  validateSearch: (s: Record<string, unknown>): { open?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { open?: string; anno?: string } => ({
     open: typeof s.open === "string" ? s.open : undefined,
+    anno: typeof s.anno === "string" ? s.anno : undefined,
   }),
   head: () => ({
     meta: [
@@ -463,7 +464,7 @@ const RD_CSS = `
 
 function ReadLibrary() {
   const { userId, ready } = useAuth();
-  const { open } = Route.useSearch();
+  const { open, anno } = Route.useSearch();
   const booksQ = useBibleBooks();
   const [tab, setTab] = useState<"OT" | "NT">("OT");
   const books = booksQ.data ?? [];
@@ -501,7 +502,7 @@ function ReadLibrary() {
         <div className="rd-wrap">
           <div className="rd-eyebrow">Workspace · Read</div>
           <h1 className="rd-h1">Read</h1>
-          <StudyLibrary userId={userId} ready={ready} openId={open} bibleGrid={bibleGrid} />
+          <StudyLibrary userId={userId} ready={ready} openId={open} openAnno={anno} bibleGrid={bibleGrid} />
         </div>
       </div>
     </AppShell>

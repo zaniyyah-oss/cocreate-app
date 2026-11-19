@@ -9,9 +9,12 @@ import { WorkspaceSection, type WorkspaceItem } from "@/components/workspace/Wor
 import { createFolder, invalidateFolders, useStudyFolderList } from "@/components/workspace/StudyFolders";
 import { byManualOrder, saveReorder } from "@/lib/manual-order";
 import { createStudy, logStudyOpen, shortDate } from "@/lib/study-log";
+import { requestAnnoJump } from "@/lib/anno-jump";
+import { LANG_LABEL, useWordRefs, useWordStudies, type WordRef } from "@/lib/word-bank";
+import { WordCard } from "@/components/workspace/WordStudy";
 
 type Study = WorkspaceItem & { topic_ids?: string[] | null };
-type ListView = "folders" | "books" | "topics";
+type ListView = "folders" | "books" | "topics" | "words";
 
 const localISO = (d = new Date()) => {
   const p = (x: number) => String(x).padStart(2, "0");
@@ -84,6 +87,25 @@ const CSS = `
 .sl-rename{display:flex;gap:8px;margin-bottom:12px;}
 .sl-rename input{flex:1;border:1.5px solid #ECE4CE;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:15px;outline:none;}
 #sec-workspace .ws-root{margin-top:0;}
+@media (min-width:1024px){.sl-cols.words{grid-template-columns:380px minmax(0,1fr);}}
+.wb-search{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #ECE4CE;border-radius:999px;padding:0 14px;margin-bottom:10px;}
+.wb-search input{border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;padding:10px 0;flex:1;min-width:0;color:#20201C;}
+.wb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.wb-chip{height:28px;padding:0 11px;border-radius:999px;border:1.5px solid #ECE4CE;background:#fff;font-family:inherit;font-size:12px;font-weight:700;color:rgba(24,26,77,.7);cursor:pointer;}
+.wb-chip.on{border-color:#181A4D;color:#181A4D;}
+.wb-row{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1.5px solid #ECE4CE;border-radius:14px;padding:11px 14px;cursor:pointer;text-align:left;font-family:inherit;}
+.wb-row:hover{border-color:#181A4D;}
+.wb-row.on{background:#FFF4D6;border-color:#F5D58C;}
+.wb-row .tm{font-size:15px;font-weight:700;color:#181A4D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wb-row .sb{font-size:12px;color:#6f6b5e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wb-row .pl{margin-left:auto;font-size:12px;color:#6f6b5e;white-space:nowrap;flex-shrink:0;}
+.wb-card{background:#fff;border:1px solid #ECE4CE;border-radius:18px;padding:22px 24px;}
+.wb-empty{background:#fff;border:1.5px dashed #ECE4CE;border-radius:18px;padding:28px;color:#6f6b5e;font-size:14px;text-align:center;}
+.wb-wchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 18px;}
+.wb-wchip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:999px;border:1px solid #F5D58C;background:#FFF8E6;color:#5c3d00;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
+.wb-wchip .d{width:7px;height:7px;border-radius:50%;background:#E08F00;}
+.sl-wordmobile{display:none;}
+@media (max-width:1023px){.sl-wordpane{display:none;}.sl-cols.wordsel .sl-wordmobile{display:block;}.sl-cols.wordsel .sl-leftlist{display:none;}}
 @media (max-width:719px){
   .sl-search{display:none;}
   .sl-search.show{display:flex;width:100%;min-width:0;margin-left:0;order:9;}
@@ -106,8 +128,10 @@ export function StudyLibrary({
   userId,
   ready,
   openId,
+  openAnno,
   bibleGrid,
 }: {
+  openAnno?: string;
   userId: string | null;
   ready: boolean;
   openId?: string;
@@ -182,10 +206,17 @@ export function StudyLibrary({
   const [confirmDeleteFolder, setConfirmDeleteFolder] = useState(false);
   const [openReq, setOpenReq] = useState<{ id: string; n: number } | null>(null);
   const [focused, setFocused] = useState(false);
+  const [wordSel, setWordSel] = useState<string | null>(null);
+  const [wordQ, setWordQ] = useState("");
+  const [wordFolder, setWordFolder] = useState<string | null>(null);
+  const wordsQ = useWordStudies(userId);
+  const refsQ = useWordRefs(userId);
 
   const refreshItems = () => qc.invalidateQueries({ queryKey: ["workspace-items", uid] });
 
-  const openStudy = async (id: string) => {
+  const openStudy = async (id: string, annoId?: string) => {
+    if (annoId) requestAnnoJump(id, annoId);
+    setWordSel(null);
     setOpenReq({ id, n: Date.now() });
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 899px)").matches) setFocused(true);
     if (!userId) return;
@@ -197,7 +228,7 @@ export function StudyLibrary({
   useEffect(() => {
     if (!openId || openedFromUrl.current === openId || !studies.some((s) => s.id === openId)) return;
     openedFromUrl.current = openId;
-    void openStudy(openId);
+    void openStudy(openId, openAnno);
   }, [openId, studies]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const newStudy = async (folderId: string | null = null) => {
@@ -340,6 +371,23 @@ export function StudyLibrary({
   const currentFolder = folderView && folderView !== "__none" ? folders.find((f) => f.id === folderView) : null;
   const folderStudies = folderView ? byFolder.get(folderView) ?? [] : [];
 
+  // ---- Word bank
+  const words = wordsQ.data ?? [];
+  const linkedRefs = (refsQ.data ?? []).filter((r) => r.word_study_id);
+  const studyById = new Map(studies.map((s) => [s.id, s]));
+  const refFolder = (r: WordRef) => studyById.get(r.workspace_item_id)?.folder_id ?? "__none";
+  const refsByWord = new Map<string, WordRef[]>();
+  for (const r of linkedRefs) refsByWord.set(r.word_study_id!, [...(refsByWord.get(r.word_study_id!) ?? []), r]);
+  const wordFolderCounts = new Map<string, Set<string>>();
+  for (const r of linkedRefs) { const f = refFolder(r); if (f === "__none") continue; wordFolderCounts.set(f, (wordFolderCounts.get(f) ?? new Set()).add(r.word_study_id!)); }
+  const wq = wordQ.trim().toLowerCase();
+  const shownWords = words.filter((w) =>
+    (!wordFolder || (refsByWord.get(w.id) ?? []).some((r) => refFolder(r) === wordFolder)) &&
+    (!wq || [w.term, w.original, w.original_script, w.strongs, w.meaning, w.notes_text].some((x) => (x ?? "").toLowerCase().includes(wq))));
+  const selectedWord = view === "words" && !folderView && !q.trim() && !bible ? words.find((w) => w.id === wordSel) : undefined;
+  const folderWords = folderView ? words.filter((w) => (refsByWord.get(w.id) ?? []).some((r) => refFolder(r) === folderView)) : [];
+  const showWord = (id: string) => { setFolderView(null); setView("words"); setWordSel(id); };
+
   let left: React.ReactNode;
   if (q.trim()) {
     left = (
@@ -389,6 +437,14 @@ export function StudyLibrary({
         <button type="button" className="sl-dashed" onClick={() => newStudy(currentFolder?.id ?? null)} disabled={busy}>
           + New study in this folder
         </button>
+        {folderWords.length > 0 && (
+          <>
+            <div className="sl-group">Words from this study</div>
+            <div className="wb-wchips">
+              {folderWords.map((w) => <button key={w.id} type="button" className="wb-wchip" onClick={() => showWord(w.id)}><span className="d" />{w.term}</button>)}
+            </div>
+          </>
+        )}
         {folderStudies.length === 0 && <div className="sl-empty">No studies here yet.</div>}
         {groupByBook(folderStudies).map((g) => (
           <div key={g.k || "none"}>
@@ -404,8 +460,8 @@ export function StudyLibrary({
       <>
         <div className="sl-listhead">
           <div className="rd-viewtoggle" role="tablist">
-            {(["folders", "books", "topics"] as ListView[]).map((v) => (
-              <button key={v} type="button" role="tab" className={view === v ? "active" : ""} onClick={() => { setView(v); setExpanded(null); }}>
+            {(["folders", "books", "topics", "words"] as ListView[]).map((v) => (
+              <button key={v} type="button" role="tab" className={view === v ? "active" : ""} onClick={() => { setView(v); setExpanded(null); setWordSel(null); }}>
                 {v[0].toUpperCase() + v.slice(1)}
               </button>
             ))}
@@ -433,6 +489,31 @@ export function StudyLibrary({
                 <span className="txt"><div className="nm">Not in a folder · {unfiled.length} {unfiled.length === 1 ? "study" : "studies"}</div></span>
                 <span className="ch" aria-hidden>›</span>
               </button>
+            </>
+          )}
+          {view === "words" && (
+            <>
+              <label className="wb-search"><SearchIcon /><input placeholder="Search your words…" value={wordQ} onChange={(e) => setWordQ(e.target.value)} /></label>
+              <div className="wb-chips">
+                <button type="button" className={`wb-chip${!wordFolder ? " on" : ""}`} onClick={() => setWordFolder(null)}>All {words.length}</button>
+                {folders.filter((f) => wordFolderCounts.has(f.id)).map((f) => (
+                  <button key={f.id} type="button" className={`wb-chip${wordFolder === f.id ? " on" : ""}`} onClick={() => setWordFolder(f.id)}>{f.name} {wordFolderCounts.get(f.id)!.size}</button>
+                ))}
+              </div>
+              {words.length === 0 ? <div className="sl-empty">No words yet. In a study, select a word and tap “Study this word”.</div>
+                : shownWords.length === 0 ? <div className="sl-empty">No words match.</div>
+                : shownWords.map((w) => {
+                  const n = (refsByWord.get(w.id) ?? []).length;
+                  return (
+                    <button key={w.id} type="button" className={`wb-row${wordSel === w.id ? " on" : ""}`} onClick={() => setWordSel(w.id)}>
+                      <span style={{ minWidth: 0, flex: 1 }}>
+                        <div className="tm">{w.term}</div>
+                        <div className="sb">{[w.original, w.strongs, w.language ? LANG_LABEL[w.language] : ""].filter(Boolean).join(" · ") || "—"}</div>
+                      </span>
+                      <span className="pl">{n} {n === 1 ? "place" : "places"}</span>
+                    </button>
+                  );
+                })}
             </>
           )}
           {view === "books" && (
@@ -523,9 +604,21 @@ export function StudyLibrary({
         </div>
       )}
 
-      <div className={`sl-cols${bible ? " wide" : ""}`}>
-        <div className="sl-left">{left}</div>
-        <div id="sec-workspace" className="sl-right">
+      <div className={`sl-cols${bible ? " wide" : ""}${view === "words" && !folderView && !bible ? " words" : ""}${selectedWord ? " wordsel" : ""}`}>
+        <div className="sl-left">{selectedWord ? (
+          <div className="sl-wordmobile">
+            <button type="button" className="sl-back" onClick={() => setWordSel(null)}>← Words</button>
+            <div className="wb-card"><WordCard userId={uid} word={selectedWord} onOpenRef={(r) => void openStudy(r.workspace_item_id, r.id)} onDeleted={() => setWordSel(null)} /></div>
+          </div>
+        ) : null}
+          <div className="sl-leftlist">{left}</div>
+        </div>
+        {selectedWord && (
+          <div className="sl-wordpane">
+            <div className="wb-card"><WordCard userId={uid} word={selectedWord} onOpenRef={(r) => void openStudy(r.workspace_item_id, r.id)} onDeleted={() => setWordSel(null)} /></div>
+          </div>
+        )}
+        <div id="sec-workspace" className="sl-right" style={selectedWord ? { display: "none" } : undefined}>
           {userId && (
             <WorkspaceSection
               mode="studies"

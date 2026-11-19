@@ -984,6 +984,7 @@ export type Database = {
           id: string
           kind: string
           quote: string
+          reference: string | null
           resolved_at: string | null
           updated_at: string
           user_id: string
@@ -996,6 +997,7 @@ export type Database = {
           id?: string
           kind: string
           quote?: string
+          reference?: string | null
           resolved_at?: string | null
           updated_at?: string
           user_id: string
@@ -1008,6 +1010,7 @@ export type Database = {
           id?: string
           kind?: string
           quote?: string
+          reference?: string | null
           resolved_at?: string | null
           updated_at?: string
           user_id?: string
@@ -2159,6 +2162,54 @@ export type Database = {
           created_at?: string
           id?: string
           tag?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      word_studies: {
+        Row: {
+          created_at: string
+          id: string
+          language: string | null
+          meaning: string
+          notes: Json | null
+          notes_text: string
+          original: string
+          original_script: string | null
+          part_of_speech: string | null
+          strongs: string | null
+          term: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          meaning?: string
+          notes?: Json | null
+          notes_text?: string
+          original?: string
+          original_script?: string | null
+          part_of_speech?: string | null
+          strongs?: string | null
+          term: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          meaning?: string
+          notes?: Json | null
+          notes_text?: string
+          original?: string
+          original_script?: string | null
+          part_of_speech?: string | null
+          strongs?: string | null
+          term?: string
           updated_at?: string
           user_id?: string
         }

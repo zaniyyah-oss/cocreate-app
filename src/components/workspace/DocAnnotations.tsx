@@ -10,11 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { Button } from "@/components/ui/button";
 import { positionAnnotationCards } from "@/lib/annotation-layout";
+import { useNavigate } from "@tanstack/react-router";
+import { useWordStudies, type WordStudy, type WordRef } from "@/lib/word-bank";
+import { WordSheet, WordCardPanel } from "./WordStudy";
 import { ANNO_CIRCLE, annoPluginKey, annotationRanges, type AnnoKind, type AnnoRange } from "./annotation-mark";
 
 export type AnnoRow = {
   id: string; user_id: string; workspace_item_id: string; kind: AnnoKind;
   quote: string; body: string; resolved_at: string | null; created_at: string;
+  word_study_id?: string | null; reference?: string | null;
 };
 
 const LABEL: Record<AnnoKind, string> = { note: "Note", question: "Question", word: "Word study" };
@@ -99,6 +103,12 @@ const STYLES = `
 .an-sheet h3{margin:0 0 10px;font-size:14px;color:#181A4D;display:flex;justify-content:space-between;align-items:center;}
 .an-sheet h3 button{background:none;border:none;font-size:18px;color:#181A4D;cursor:pointer;}
 .an-sheet .an-card{position:relative;margin-top:10px;}
+.an-wterm{font-size:15px;font-weight:700;color:#181A4D;margin-top:6px;overflow-wrap:anywhere;}
+.an-wsub{font-size:11.5px;color:rgba(24,26,77,0.55);margin-top:1px;}
+.an-wmean{font-size:13px;line-height:1.45;color:#181A4D;margin-top:5px;white-space:pre-wrap;}
+.an-wmean.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.an-wlink{display:inline-block;background:none;border:none;padding:0;margin-top:6px;font:inherit;font-size:12px;font-weight:700;color:#8a5a00;cursor:pointer;}
+.an-wlink:hover{text-decoration:underline;}
 `;
 
 function useStored<T extends string>(key: string, fallback: T, allowed: readonly T[]) {
@@ -169,6 +179,15 @@ export function AnnotationLayer({
   const [hotId, setHotId] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
+  const [wordSheetId, setWordSheetId] = useState<string | null>(null);
+  const [wordCardId, setWordCardId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const wordsData = useWordStudies(userId).data;
+  const wordById = useMemo(() => new Map((wordsData ?? []).map((w) => [w.id, w])), [wordsData]);
+  const openRef = (r: WordRef) => {
+    if (r.workspace_item_id === itemId) { scrollTo(r.id); return; }
+    void navigate({ to: "/read", search: { open: r.workspace_item_id, anno: r.id } as any });
+  };
 
   const rowById = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
   const rangeById = useMemo(() => new Map(ranges.map((r) => [r.id, r])), [ranges]);
@@ -214,7 +233,9 @@ export function AnnotationLayer({
       removeMark(id);
       setRows((r) => r.filter((x) => x.id !== id));
       toast.error("Couldn't add that margin note. Try again.");
+      return;
     }
+    if (kind === "word") { setEditingId(null); setWordSheetId(id); }
   };
   createRef.current = create;
 
@@ -345,6 +366,8 @@ export function AnnotationLayer({
           onDelete={() => { setConfirmDel(row.id); setMenuId(null); }}
           onSave={(body) => patch(row.id, { body })}
           onDone={() => setEditingId(null)}
+          word={row.word_study_id ? wordById.get(row.word_study_id) : undefined}
+          onWord={() => { if (row.word_study_id && wordById.has(row.word_study_id)) setWordCardId(row.word_study_id); else setWordSheetId(row.id); }}
         />
       </div>
     );
@@ -410,9 +433,16 @@ export function AnnotationLayer({
           <div data-annotation-card={row.id} className={`an-strip${activeId === row.id ? " active" : ""}${row.resolved_at ? " res" : ""}`} style={{ background: STRIP_BG[row.kind] }} onClick={() => { if (!editing) { setActiveId(row.id); setEditingId(row.id); } }}>
             <div className="an-head">
               <span className="an-num" style={{ background: ANNO_CIRCLE[row.kind] }}>{r.n}</span>
-              <span className="an-lab">{LABEL[row.kind]}</span>
+              <span className="an-lab">{row.kind === "word" && row.word_study_id && wordById.get(row.word_study_id)
+                ? ["Word", wordById.get(row.word_study_id)!.term, wordById.get(row.word_study_id)!.original].filter(Boolean).join(" · ")
+                : LABEL[row.kind]}</span>
             </div>
-            {row.kind === "word" && row.quote && <WordQuote quote={row.quote} />}
+            {row.kind === "word" && row.quote && !row.word_study_id && <WordQuote quote={row.quote} />}
+            {row.kind === "word" && (
+              <button type="button" className="an-wlink" onClick={(e) => { e.stopPropagation(); if (row.word_study_id && wordById.has(row.word_study_id)) setWordCardId(row.word_study_id); else setWordSheetId(row.id); }}>
+                {row.word_study_id ? "In your word bank →" : "Add to word bank →"}
+              </button>
+            )}
             {editing ? (
               <>
                 <MiniRichEditor key={row.id} row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} onExpand={() => openBig(row.id)} />
@@ -470,6 +500,14 @@ export function AnnotationLayer({
         );
       })()}
 
+      {wordSheetId && (() => {
+        const row = rows.find((x) => x.id === wordSheetId);
+        if (!row) return null;
+        return <WordSheet userId={userId} anno={row} onClose={() => setWordSheetId(null)}
+          onLinked={(wid) => setRows((rs) => rs.map((x) => (x.id === row.id ? { ...x, word_study_id: wid } : x)))} />;
+      })()}
+      {wordCardId && <WordCardPanel userId={userId} wordId={wordCardId} onClose={() => setWordCardId(null)} onOpenRef={openRef} />}
+
       <DeleteConfirmModal
         open={!!confirmDel}
         title="Delete this margin note?"
@@ -481,8 +519,8 @@ export function AnnotationLayer({
   );
 }
 
-function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand, onResolve, onDelete, onSave, onDone }: {
-  onExpand: () => void;
+function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand, onResolve, onDelete, onSave, onDone, word, onWord }: {
+  onExpand: () => void; word?: WordStudy; onWord: () => void;
   row: AnnoRow; n: number | null; editing: boolean; clamp: boolean; menuOpen: boolean;
   onMenu: () => void; onEdit: () => void; onResolve: () => void; onDelete: () => void;
   onSave: (b: string) => void; onDone: () => void;
@@ -491,7 +529,7 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand,
     <>
       <div className="an-head">
         <span className="an-num" style={{ background: ANNO_CIRCLE[row.kind] }}>{n ?? "–"}</span>
-        <span className="an-lab">{LABEL[row.kind]}</span>
+        <span className="an-lab">{row.kind === "word" && word ? "Word study" : LABEL[row.kind]}</span>
         <button type="button" className="an-more" aria-label="Margin note options" onClick={(e) => { e.stopPropagation(); onMenu(); }}>⋯</button>
       </div>
       {menuOpen && (
@@ -502,8 +540,15 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand,
           <button type="button" className="del" onClick={onDelete}>Delete</button>
         </div>
       )}
-      {row.quote && (row.kind === "word" ? <WordQuote quote={row.quote} /> : <div className="an-quote" title={row.quote}>“{row.quote}”</div>)}
-      {editing ? (
+      {row.kind === "word" && word ? (
+        <>
+          <div className="an-wterm">{word.term}</div>
+          {(word.original || word.strongs) && <div className="an-wsub">{[word.original, word.strongs].filter(Boolean).join(" · ")}</div>}
+          {word.meaning && <div className={`an-wmean${clamp ? " clamp" : ""}`}>{word.meaning}</div>}
+          <button type="button" className="an-wlink" onClick={(e) => { e.stopPropagation(); onWord(); }}>In your word bank →</button>
+        </>
+      ) : row.quote && (row.kind === "word" ? <><WordQuote quote={row.quote} /><button type="button" className="an-wlink" onClick={(e) => { e.stopPropagation(); onWord(); }}>Add to word bank →</button></> : <div className="an-quote" title={row.quote}>“{row.quote}”</div>)}
+      {row.kind === "word" && word && !editing && !row.body ? null : editing ? (
         <MiniRichEditor key={row.id} row={row} onSave={onSave} onDone={onDone} onExpand={onExpand} />
       ) : (
         <div className={`an-body${clamp ? " clamp" : ""}${row.body ? "" : " empty"}`}>

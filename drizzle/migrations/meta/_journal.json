@@ -64,6 +64,13 @@
       "when": 1794965982003,
       "tag": "0008_create_doc_annotations",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795120354358,
+      "tag": "0009_create_word_studies",
+      "breakpoints": true
     }
   ]
 }

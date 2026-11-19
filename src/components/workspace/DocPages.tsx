@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceEditor } from "./WorkspaceEditor";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { annotationIdsInJSON } from "./annotation-mark";
+import { onAnnoJump, takeAnnoJump } from "@/lib/anno-jump";
 import { StudyOverview } from "./StudyOverview";
 import { studyOverviewPage } from "@/lib/study-overview";
 import { addPage, deletePage, mirrorFields, movePage, outlineOf, pagesFromItem, type DocPage } from "@/lib/doc-pages";
@@ -152,6 +153,20 @@ export function DocPages({
     }, 50);
     return () => { clearInterval(timer); if (highlightTimer) clearTimeout(highlightTimer); };
   }, [annotationJump, activeId]);
+
+  // Jump requests from the word bank ("Open →").
+  useEffect(() => {
+    const run = (id: string) => {
+      if (id !== item.id) return;
+      const anno = takeAnnoJump(item.id); if (!anno) return;
+      const page = pagesRef.current.find((p) => { const ids = new Set<string>(); annotationIdsInJSON(p.body, ids); return ids.has(anno); });
+      setAnnotationJump(null);
+      if (page) pickPage(page.id);
+      requestAnimationFrame(() => setAnnotationJump(anno));
+    };
+    run(item.id);
+    return onAnnoJump(run);
+  }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tree = (
     <>
