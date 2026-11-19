@@ -415,7 +415,7 @@ export function AnnotationLayer({
             {row.kind === "word" && row.quote && <WordQuote quote={row.quote} />}
             {editing ? (
               <>
-                <BodyEditor row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} onExpand={() => openBig(row.id)} />
+                <MiniRichEditor key={row.id} row={row} onSave={(b) => patch(row.id, { body: b })} onDone={() => setEditingId(null)} onExpand={() => openBig(row.id)} />
                 <div className="an-strip-acts" onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()}>
                   <button type="button" onClick={(e) => { e.stopPropagation(); setEditingId(null); }}>Done</button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); toggleResolve(row); }}>{row.resolved_at ? "Unresolve" : "Resolve"}</button>
@@ -504,7 +504,7 @@ function CardInner({ row, n, editing, clamp, menuOpen, onMenu, onEdit, onExpand,
       )}
       {row.quote && (row.kind === "word" ? <WordQuote quote={row.quote} /> : <div className="an-quote" title={row.quote}>“{row.quote}”</div>)}
       {editing ? (
-        <BodyEditor row={row} onSave={onSave} onDone={onDone} onExpand={onExpand} />
+        <MiniRichEditor key={row.id} row={row} onSave={onSave} onDone={onDone} onExpand={onExpand} />
       ) : (
         <div className={`an-body${clamp ? " clamp" : ""}${row.body ? "" : " empty"}`}>
           {row.body ? <RichBody text={row.body} /> : (row.kind === "question" ? "Write your question…" : "Write a note…")}
@@ -552,6 +552,7 @@ export function RichBody({ text }: { text: string }) {
 /* ── side-panel rich editor: reads/writes the same stored mini-markdown ── */
 
 function mdToHtml(md: string): string {
+  md = (md || "").replace(/\*{4}|_{4}/g, "");
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = (s: string) =>
     esc(s)
@@ -605,7 +606,7 @@ function docToMd(doc: Record<string, any>): string {
   return lines.join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
-function MiniRichEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void }) {
+function MiniRichEditor({ row, onSave, onDone, onExpand }: { row: AnnoRow; onSave: (b: string) => void; onDone: () => void; onExpand?: () => void }) {
   const onSaveRef = useRef(onSave); onSaveRef.current = onSave;
   const onDoneRef = useRef(onDone); onDoneRef.current = onDone;
   const last = useRef(row.body);
@@ -649,6 +650,7 @@ function MiniRichEditor({ row, onSave, onDone }: { row: AnnoRow; onSave: (b: str
         <button type="button" aria-label="Italic" className={active?.italic ? "on" : ""} onClick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
         <button type="button" aria-label="Underline" className={active?.underline ? "on" : ""} onClick={() => editor?.chain().focus().toggleUnderline().run()}><u>U</u></button>
         <button type="button" aria-label="Bullet list" className={active?.bullet ? "on" : ""} onClick={() => editor?.chain().focus().toggleBulletList().run()}>•</button>
+        {onExpand && <button type="button" aria-label="Open in side panel" title="Open in side panel" style={{ marginLeft: "auto" }} onClick={() => { if (editor) flush(editor); onExpand(); }}>⤢</button>}
       </div>
       <div className="an-rich" onClick={(e) => e.stopPropagation()}>
         <EditorContent editor={editor} />
