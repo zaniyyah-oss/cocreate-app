@@ -20,6 +20,19 @@ export type RecurringTask = {
   start_time: string | null;
   end_time: string | null;
   is_active: boolean;
+  /** One-off skips/moves for single occurrences. */
+  exceptions?: RecurringException[];
+  /** Set on an expanded occurrence: the date it originally fell on. */
+  occurrence_date?: string;
+};
+
+export type RecurringException = {
+  task_id: string;
+  original_date: string;
+  action: "skip" | "move";
+  new_date: string | null;
+  new_start_time: string | null;
+  new_end_time: string | null;
 };
 
 export const RECURRENCE_LABEL: Record<RecurrenceFrequency, string> = {
@@ -73,8 +86,33 @@ export function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-/** True when a recurring task lands on the given date. */
+/** True when a recurring task lands on the given date (honouring skips and moves). */
 export function occursOn(task: RecurringTask, date: Date): boolean {
+  return occurrenceOn(task, date) !== null;
+}
+
+/**
+ * The occurrence of a task shown on `date`, or null. A moved occurrence appears on
+ * its new date with its new times; a skipped or moved-away date shows nothing.
+ */
+export function occurrenceOn(task: RecurringTask, date: Date): RecurringTask | null {
+  if (!task.is_active) return null;
+  const iso = isoDate(date);
+  const ex = task.exceptions ?? [];
+  const movedIn = ex.find(e => e.action === "move" && e.new_date === iso);
+  if (movedIn) {
+    return {
+      ...task,
+      occurrence_date: movedIn.original_date,
+      start_time: movedIn.new_start_time,
+      end_time: movedIn.new_end_time,
+    };
+  }
+  if (ex.some(e => e.original_date === iso)) return null;
+  return baseOccursOn(task, date) ? { ...task, occurrence_date: iso } : null;
+}
+
+function baseOccursOn(task: RecurringTask, date: Date): boolean {
   if (!task.is_active) return false;
   const iso = isoDate(date);
   if (iso < task.start_date) return false;
@@ -116,7 +154,7 @@ export function expandOccurrences(
   const end = parseISO(endISO);
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const iso = isoDate(d);
-    const hits = tasks.filter(t => occursOn(t, d));
+    const hits = tasks.map(t => occurrenceOn(t, d)).filter((t): t is RecurringTask => !!t);
     if (hits.length) {
       hits.sort((a, b) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
       map.set(iso, hits);
@@ -136,8 +174,18 @@ export function useRecurringTasks(userId: string | null) {
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
+      const { data: exData, error: exErr } = await supabase
+        .from("recurring_task_exceptions")
+        .select("task_id,original_date,action,new_date,new_start_time,new_end_time")
+        .eq("user_id", userId!);
+      if (exErr) throw exErr;
+      const byTask = new Map<string, RecurringException[]>();
+      for (const e of (exData ?? []) as RecurringException[]) {
+        byTask.set(e.task_id, [...(byTask.get(e.task_id) ?? []), e]);
+      }
       return ((data ?? []) as unknown as RecurringTask[]).map(t => ({
         ...t,
+        exceptions: byTask.get(t.id) ?? [],
         item_kind: (t.item_kind === "event" ? "event" : "task") as RecurringKind,
         weekdays: (t.weekdays ?? []).map(Number),
         month_days: (t.month_days ?? []).map(Number),
@@ -194,4 +242,27 @@ export async function toggleRecurringCompletion(
       .eq("occurrence_date", occurrenceDate);
     if (error) throw error;
   }
+}
+
+/** Remove just one occurrence of a recurring item. */
+export async function skipOccurrence(userId: string, taskId: string, originalDate: string) {
+  const { error } = await supabase.from("recurring_task_exceptions").upsert(
+    { user_id: userId, task_id: taskId, original_date: originalDate, action: "skip",
+      new_date: null, new_start_time: null, new_end_time: null },
+    { onConflict: "task_id,original_date" },
+  );
+  if (error) throw error;
+}
+
+/** Move just one occurrence to another date and/or time. */
+export async function moveOccurrence(
+  userId: string, taskId: string, originalDate: string,
+  newDate: string, startTime: string | null, endTime: string | null,
+) {
+  const { error } = await supabase.from("recurring_task_exceptions").upsert(
+    { user_id: userId, task_id: taskId, original_date: originalDate, action: "move",
+      new_date: newDate, new_start_time: startTime, new_end_time: endTime },
+    { onConflict: "task_id,original_date" },
+  );
+  if (error) throw error;
 }

@@ -7,6 +7,8 @@ import {
   RECURRING_COLORS,
   WEEKDAY_LABELS,
   isoDate,
+  moveOccurrence,
+  skipOccurrence,
   type RecurrenceFrequency,
   type RecurringKind,
   type RecurringTask,
@@ -46,11 +48,17 @@ export function RecurringTaskDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Set when opened from a specific day: lets the user change just this one.
+  const occDate = isEdit ? task?.occurrence_date ?? null : null;
+  const [occNewDate, setOccNewDate] = useState("");
+  const [ask, setAsk] = useState<null | "save" | "delete">(null);
   const categories: EventCategory[] = useEventCategories(userId).data ?? [];
 
   useEffect(() => {
     if (!open) return;
     setErr(null);
+    setAsk(null);
+    setOccNewDate(task?.occurrence_date ?? "");
     if (task) {
       setKind(task.item_kind === "event" ? "event" : "task");
       setTitle(task.title);
@@ -86,6 +94,27 @@ export function RecurringTaskDialog({
   const toggle = (arr: number[], v: number) =>
     arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v].sort((a, b) => a - b);
 
+  const saveThisOne = async () => {
+    if (!userId || !task || !occDate) return;
+    if (!occNewDate) { setErr("Pick a date for this occurrence."); return; }
+    setSaving(true); setErr(null);
+    try {
+      await moveOccurrence(userId, task.id, occDate, occNewDate, startTime || null, endTime || null);
+      onSaved(); onOpenChange(false);
+    } catch (e: any) { setErr(e?.message ?? "Couldn't save."); }
+    finally { setSaving(false); setAsk(null); }
+  };
+
+  const deleteThisOne = async () => {
+    if (!userId || !task || !occDate) return;
+    setDeleting(true); setErr(null);
+    try {
+      await skipOccurrence(userId, task.id, occDate);
+      onSaved(); onOpenChange(false);
+    } catch (e: any) { setErr(e?.message ?? "Couldn't delete."); }
+    finally { setDeleting(false); setAsk(null); }
+  };
+
   const save = async () => {
     if (!userId) { setErr("Please sign in to save."); return; }
     if (!title.trim()) { setErr(kind === "event" ? "Give this event a name." : "Give this task a name."); return; }
@@ -109,6 +138,7 @@ export function RecurringTaskDialog({
       end_time: endTime || null,
       is_active: isActive,
     };
+    setAsk(null);
     const { error } = isEdit && task
       ? await supabase.from("recurring_tasks" as any).update(payload).eq("id", task.id)
       : await supabase.from("recurring_tasks" as any).insert({ user_id: userId, ...payload });
@@ -120,7 +150,7 @@ export function RecurringTaskDialog({
 
   const remove = async () => {
     if (!task) return;
-    if (!confirm(`Delete this recurring ${kind} and all of its occurrences?`)) return;
+    setAsk(null);
     setDeleting(true); setErr(null);
     const { error } = await supabase.from("recurring_tasks" as any).delete().eq("id", task.id);
     setDeleting(false);
@@ -141,6 +171,17 @@ export function RecurringTaskDialog({
         </DialogHeader>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {occDate && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 12, background: "#F6F3EA", border: "1px solid #E4DFCF" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6, ...LABEL }}>
+                This occurrence's date
+                <input type="date" value={occNewDate} onChange={e => setOccNewDate(e.target.value)} style={FIELD} />
+              </label>
+              <div style={{ fontSize: 11.5, color: "#8a8678" }}>
+                Change the date or time below, then choose “Just this one” to move only this occurrence.
+              </div>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={LABEL}>This is a</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -322,12 +363,44 @@ export function RecurringTaskDialog({
             </label>
           )}
 
+          {ask && (
+            <div role="alertdialog" aria-label={ask === "delete" ? "Delete which occurrences?" : "Apply changes to?"}
+              style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: 14, background: ask === "delete" ? "#FFF1EF" : "#F6F3EA", border: `1.5px solid ${ask === "delete" ? "#F3B4AC" : "#E4DFCF"}` }}>
+              <div style={{ fontWeight: 700, color: "#181A4D", fontSize: 14 }}>
+                {ask === "delete"
+                  ? occDate ? `Delete this recurring ${kind}?` : `Delete this recurring ${kind} and all of its occurrences?`
+                  : "Save changes to…"}
+              </div>
+              {ask === "save" && (
+                <div style={{ fontSize: 11.5, color: "#8a8678" }}>“Just this one” moves this occurrence to the date and time above. “All” updates the whole series.</div>
+              )}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {occDate && (
+                  <button type="button" disabled={saving || deleting}
+                    onClick={() => { void (ask === "delete" ? deleteThisOne() : saveThisOne()); }}
+                    style={{ padding: "9px 14px", borderRadius: 999, border: "none", background: ask === "delete" ? "#FF3B30" : "#181A4D", color: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 13 }}>
+                    Just this one
+                  </button>
+                )}
+                <button type="button" disabled={saving || deleting}
+                  onClick={() => { void (ask === "delete" ? remove() : save()); }}
+                  style={{ padding: "9px 14px", borderRadius: 999, border: `1.5px solid ${ask === "delete" ? "#FF3B30" : "#181A4D"}`, background: "#fff", color: ask === "delete" ? "#FF3B30" : "#181A4D", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 13 }}>
+                  {occDate ? "All occurrences" : "Delete"}
+                </button>
+                <button type="button" onClick={() => setAsk(null)}
+                  style={{ padding: "9px 14px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", color: "#181A4D", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
 
           <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
             <div>
               {isEdit && (
-                <button type="button" onClick={remove} disabled={deleting || saving}
+                <button type="button" onClick={() => setAsk("delete")} disabled={deleting || saving}
                   style={{ padding: "10px 16px", borderRadius: 999, border: "1.5px solid #FF3B30", background: "#fff", color: "#FF3B30", cursor: deleting ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
                   {deleting ? "Deleting…" : "Delete"}
                 </button>
@@ -338,7 +411,7 @@ export function RecurringTaskDialog({
                 style={{ padding: "10px 16px", borderRadius: 999, border: "1px solid #E4DFCF", background: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, color: "#181A4D" }}>
                 Cancel
               </button>
-              <button type="button" onClick={save} disabled={saving || deleting}
+              <button type="button" onClick={() => (occDate ? setAsk("save") : save())} disabled={saving || deleting}
                 style={{ padding: "10px 18px", borderRadius: 999, border: "none", background: "#181A4D", color: "#fff", cursor: saving ? "wait" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
                 {saving ? "Saving…" : isEdit ? "Save changes" : "Create task"}
               </button>

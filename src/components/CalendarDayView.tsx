@@ -8,6 +8,7 @@ import { setFocusDone, useFocusDone } from "@/lib/focus-tasks";
 import { PlanDayBanner } from "@/components/PlanDayBanner";
 import {
   occursOn,
+  occurrenceOn,
   toggleRecurringCompletion,
   useRecurringCompletions,
   useRecurringTasks,
@@ -234,7 +235,7 @@ export function CalendarDayView({ userId, initialDate, defaultTemplateId, onDate
   const recurQ = useRecurringTasks(userId);
   const recurDone = useRecurringCompletions(userId, weekStartISO, weekEndISO);
   const recurAllToday = useMemo(
-    () => (recurQ.data ?? []).filter(t => occursOn(t, selected)),
+    () => (recurQ.data ?? []).map(t => occurrenceOn(t, selected)).filter((t): t is RecurringTask => !!t),
     [recurQ.data, selectedISO],
   );
   const recurToday = useMemo(

@@ -1685,6 +1685,53 @@ export type Database = {
           },
         ]
       }
+      recurring_task_exceptions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_date: string | null
+          new_end_time: string | null
+          new_start_time: string | null
+          original_date: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_date?: string | null
+          new_end_time?: string | null
+          new_start_time?: string | null
+          original_date: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_date?: string | null
+          new_end_time?: string | null
+          new_start_time?: string | null
+          original_date?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_task_exceptions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_tasks: {
         Row: {
           color: string

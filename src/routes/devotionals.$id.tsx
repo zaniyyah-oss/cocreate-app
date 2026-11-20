@@ -2139,7 +2139,14 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
   });
 }
 
-/** One-off events plus recurring events expanded over the range (ids "recur:<taskId>"). */
+/** Resolve a "recur:<taskId>@<originalDate>" event id to that occurrence. */
+function recurFromId(id: string, tasksById: Map<string, RecurringTask>): RecurringTask | null {
+  const [tid, od] = id.slice(6).split("@");
+  const t = tid ? tasksById.get(tid) : undefined;
+  return t ? { ...t, ...(od ? { occurrence_date: od } : {}) } : null;
+}
+
+/** One-off events plus recurring events expanded over the range (ids "recur:<taskId>@<originalDate>"). */
 function useEventsWithRecurring(userId: string | null, startISO: string, endISO: string) {
   const eventsQ = useUserEvents(userId, startISO, endISO);
   const recurQ = useRecurringTasks(userId);
@@ -2155,7 +2162,7 @@ function useEventsWithRecurring(userId: string | null, startISO: string, endISO:
     for (const [iso, tasks] of expandOccurrences(evTasks, startISO, endISO)) {
       const arr = out.get(iso) ?? [];
       for (const t of tasks) arr.push({
-        id: `recur:${t.id}`, event_date: iso, event_type: "other", title: t.title, color: t.color,
+        id: `recur:${t.id}@${t.occurrence_date ?? iso}`, event_date: iso, event_type: "other", title: t.title, color: t.color,
         notes: t.notes, item_type: "event", start_time: t.start_time, end_time: t.end_time,
       } as unknown as UserEvent);
       arr.sort((a: any, b: any) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
@@ -2574,7 +2581,7 @@ function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
   const setEditEvent = (ev: UserEvent | null) => {
     if (ev && ev.id.startsWith("holiday:")) return;
-    if (ev && ev.id.startsWith("recur:")) { setRecurEdit(tasksById.get(ev.id.slice(6)) ?? null); return; }
+    if (ev && ev.id.startsWith("recur:")) { setRecurEdit(recurFromId(ev.id, tasksById)); return; }
     setEditEventRaw(ev);
   };
   const onSaved = () => qc.invalidateQueries({ queryKey: ["user-events"] });
@@ -2930,7 +2937,7 @@ export function MonthCalendarView({ templateId, userId }: { templateId: string; 
   const openEv = (ev: UserEvent) => {
     const id = String(ev.id);
     if (id.startsWith("holiday:")) return;
-    if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
+    if (id.startsWith("recur:")) { const t = recurFromId(id, tasksById); if (t) setRecurEdit(t); return; }
     setEditEvent(ev);
   };
   const todoDueQ = useTodoDueDates(userId, rangeStartISO, rangeEndISO);
@@ -3162,7 +3169,7 @@ export function WeekListView({ templateId, userId }: { templateId: string; userI
   const openEv = (ev: UserEvent) => {
     const id = String(ev.id);
     if (id.startsWith("holiday:")) return;
-    if (id.startsWith("recur:")) { const t = tasksById.get(id.slice(6)); if (t) setRecurEdit(t); return; }
+    if (id.startsWith("recur:")) { const t = recurFromId(id, tasksById); if (t) setRecurEdit(t); return; }
     setEditEvent(ev);
   };
   const todoDueQ = useTodoDueDates(userId, isoDate(anchor), isoDate(endD));
