@@ -359,7 +359,7 @@ export function WorkspaceEditor({
       {editable && (
         <BubbleMenu
           editor={editor}
-          options={{ placement: annotate && narrow ? "bottom" : "top" }}
+          options={{ placement: narrow ? "bottom" : "top" }}
           shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
         >
           <MobileBubble editor={editor} onAnnotate={annotate ? (k) => annoCreateRef.current?.(k) : undefined} />
