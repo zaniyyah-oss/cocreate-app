@@ -83,7 +83,7 @@ export function InfoBar({ currentSeries, now }: { currentSeries?: SeriesRow | nu
       <div className="wrap">
         <span>{today}</span>
         {s && (
-          <Link to="/collections/$slug" params={{ slug: s.slug }} className="series">
+          <Link to="/series/$slug" params={{ slug: s.slug }} className="series">
             This month: {s.title}{I.arrow(14)}
           </Link>
         )}
@@ -106,4 +106,21 @@ export function useCurrentSeries() {
       return s && s.series_month?.slice(0, 7) === first.slice(0, 7) ? s : null;
     },
   });
+}
+
+export function Footer() {
+  return (
+    <footer className="wrap ch-foot">
+      <Logo size={17} />
+      <nav aria-label="Footer">
+        <Link to="/about">About</Link>
+        <Link to="/mission">Mission</Link>
+        <Link to="/shop">Shop</Link>
+        <Link to="/contact">Contact</Link>
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/terms">Terms</Link>
+      </nav>
+      <span style={{ fontSize: 12.5, color: "var(--cs-muted)" }}>© {new Date().getFullYear()} CoCreate</span>
+    </footer>
+  );
 }

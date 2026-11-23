@@ -474,6 +474,67 @@ export type Database = {
           },
         ]
       }
+      content_progress: {
+        Row: {
+          content_id: string | null
+          day_number: number | null
+          finished_at: string | null
+          id: string
+          progress: number
+          response: string | null
+          started_at: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_id?: string | null
+          day_number?: number | null
+          finished_at?: string | null
+          id?: string
+          progress?: number
+          response?: string | null
+          started_at?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          content_id?: string | null
+          day_number?: number | null
+          finished_at?: string | null
+          id?: string
+          progress?: number
+          response?: string | null
+          started_at?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_progress_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_topics: {
         Row: {
           content_id: string
@@ -1983,6 +2044,74 @@ export type Database = {
         }
         Relationships: []
       }
+      release_reminders: {
+        Row: {
+          collection_item_id: string | null
+          content_id: string | null
+          created_at: string
+          day_number: number | null
+          id: string
+          remind_at: string | null
+          sent_at: string | null
+          template_id: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          collection_item_id?: string | null
+          content_id?: string | null
+          created_at?: string
+          day_number?: number | null
+          id?: string
+          remind_at?: string | null
+          sent_at?: string | null
+          template_id?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Update: {
+          collection_item_id?: string | null
+          content_id?: string | null
+          created_at?: string
+          day_number?: number | null
+          id?: string
+          remind_at?: string | null
+          sent_at?: string | null
+          template_id?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_reminders_collection_item_id_fkey"
+            columns: ["collection_item_id"]
+            isOneToOne: false
+            referencedRelation: "collection_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_reminders_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_reminders_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_reminders_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_items: {
         Row: {
           content_item_id: string | null
@@ -2031,6 +2160,35 @@ export type Database = {
             columns: ["devotional_template_id"]
             isOneToOne: false
             referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series_follows: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_follows_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
             referencedColumns: ["id"]
           },
         ]
@@ -2640,7 +2798,7 @@ export type Database = {
         }
         Insert: {
           author_name?: string | null
-          body?: string | null
+          body?: never
           cover_image_url?: string | null
           created_at?: string | null
           duration_seconds?: number | null
@@ -2668,7 +2826,7 @@ export type Database = {
         }
         Update: {
           author_name?: string | null
-          body?: string | null
+          body?: never
           cover_image_url?: string | null
           created_at?: string | null
           duration_seconds?: number | null
@@ -2707,6 +2865,7 @@ export type Database = {
     }
     Functions: {
       compute_user_recommendations: { Args: never; Returns: undefined }
+      deliver_release_notifications: { Args: never; Returns: undefined }
       detect_bible_book: { Args: { _txt: string }; Returns: string }
       get_facilitator_group_preview: {
         Args: { _code: string }
@@ -2759,6 +2918,13 @@ export type Database = {
           email: string
           name: string
           user_id: string
+        }[]
+      }
+      most_read_week: {
+        Args: { _now?: string }
+        Returns: {
+          content_id: string
+          n: number
         }[]
       }
       owns_plan: {

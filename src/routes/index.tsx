@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { HOME_CSS } from "@/components/content/home-css";
-import { Header, InfoBar, Logo } from "@/components/content/SiteHeader";
+import { Header, InfoBar, Footer } from "@/components/content/SiteHeader";
 import { useUpNext, saveForLater, useInvalidateUpNext } from "@/lib/up-next";
 import { todayISO } from "@/lib/active-devotional";
 import {
@@ -520,22 +520,5 @@ function Newsletter({ copy, preview }: { copy: Record<string, string>; preview: 
         </form>
       </div>
     </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="wrap ch-foot">
-      <Logo size={17} />
-      <nav aria-label="Footer">
-        <Link to="/about">About</Link>
-        <Link to="/mission">Mission</Link>
-        <Link to="/shop">Shop</Link>
-        <Link to="/contact">Contact</Link>
-        <Link to="/privacy">Privacy</Link>
-        <Link to="/terms">Terms</Link>
-      </nav>
-      <span style={{ fontSize: 12.5, color: "var(--cs-muted)" }}>© {new Date().getFullYear()} CoCreate</span>
-    </footer>
   );
 }

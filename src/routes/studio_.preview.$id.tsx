@@ -69,7 +69,7 @@ function StagedPreview() {
   const src = (() => {
     if (!piece || !at) return null;
     if (tab === "piece") return `${publicHref(piece.kind, piece.id, piece.slug)}${publicHref(piece.kind, piece.id, piece.slug).includes("?") ? "&" : "?"}${qs}`;
-    if (tab === "series") return series ? `/collections/${series.slug}?${qs}` : null;
+    if (tab === "series") return series ? `/series/${series.slug}?${qs}` : null;
     if (tab === "home") return `/?feed=1&${qs}`;
     return null;
   })();

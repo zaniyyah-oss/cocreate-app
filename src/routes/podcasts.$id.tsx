@@ -1,30 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MediaDetail } from "@/components/MediaDetail";
+import { ArticlePage } from "@/components/content/ArticlePage";
+import { validateStageSearch } from "@/lib/content-pages";
 
 export const Route = createFileRoute("/podcasts/$id")({
-  component: () => {
-    const { id } = Route.useParams();
-    return <MediaDetail id={id} kind="podcast" />;
-  },
-  errorComponent: ({ error }) => (
-    <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins, sans-serif", padding: 80, textAlign: "center" }}>
-      <h1 style={{ color: "#181A4D", fontWeight: 900 }}>This episode didn't load</h1>
-      <p style={{ color: "#8a8678" }}>{error instanceof Error ? error.message : String(error)}</p>
-      <Link to="/" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Home</Link>
-    </div>
-  ),
-  notFoundComponent: () => (
-    <div style={{ minHeight: "100vh", background: "#eee9d9", fontFamily: "Poppins, sans-serif", padding: 80, textAlign: "center" }}>
-      <h1 style={{ color: "#181A4D", fontWeight: 900 }}>Episode not found</h1>
-      <Link to="/" style={{ color: "#181A4D", fontWeight: 700 }}>Back to Home</Link>
-    </div>
-  ),
+  validateSearch: validateStageSearch,
+  component: Page,
+  errorComponent: ({ error }) => <div style={{ padding: 60, textAlign: "center", fontFamily: "Instrument Sans, sans-serif" }}><p>{error instanceof Error ? error.message : String(error)}</p><Link to="/" search={{ feed: 1 }}>Back to home</Link></div>,
+  notFoundComponent: () => <div style={{ padding: 60, textAlign: "center" }}>Not found. <Link to="/" search={{ feed: 1 }}>Back to home</Link></div>,
   head: () => ({
     meta: [
       { title: "Podcast — CoCreate" },
-      { name: "description", content: "Listen to this podcast episode on CoCreate." },
+      { name: "description", content: "Listen to this CoCreate podcast episode." },
       { property: "og:title", content: "Podcast — CoCreate" },
-      { property: "og:type", content: "music.song" },
+      { property: "og:description", content: "Listen to this CoCreate podcast episode." },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
 });
+
+function Page() {
+  const { id } = Route.useParams();
+  const search = Route.useSearch();
+  return <ArticlePage param={id} kinds={["podcast"]} search={search} />;
+}
