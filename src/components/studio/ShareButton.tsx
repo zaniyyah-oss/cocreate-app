@@ -12,7 +12,7 @@ export function publicHref(kind: string, id: string, slug?: string | null) {
   return `/essays/${id}`;
 }
 
-export function ShareButton({ table, id, variant = "light" }: { table: "content" | "devotional"; id: string; variant?: "light" | "dark" }) {
+export function ShareButton({ table, id, variant = "light" }: { table: "content" | "devotional" | "series"; id: string; variant?: "light" | "dark" }) {
   const [open, setOpen] = useState(false);
   const [tokens, setTokens] = useState<{ id: string; created_at: string; expires_at: string; revoked_at: string | null }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -52,7 +52,7 @@ export function ShareButton({ table, id, variant = "light" }: { table: "content"
       </button>
       {open && (
         <div className="st-pop" style={{ right: 0, top: 46, width: 320, padding: 14, display: "flex", flexDirection: "column", gap: 10, color: C.INK }}>
-          <span style={{ fontSize: 13.5, lineHeight: 1.5 }}>Anyone with the link can read this piece without signing in. Links expire after 14 days.</span>
+          <span style={{ fontSize: 13.5, lineHeight: 1.5 }}>{table === "series" ? "Anyone with the link can see this series page — including parts that aren’t out yet — without signing in." : "Anyone with the link can read this piece without signing in."} Links expire after 14 days.</span>
           <button type="button" className="st-btn primary" onClick={create} disabled={busy}>{busy ? "Creating…" : "Create & copy new link"}</button>
           {active.length > 0 && <span className="st-h3" style={{ margin: "6px 0 0" }}>Active links</span>}
           {active.map((t) => (

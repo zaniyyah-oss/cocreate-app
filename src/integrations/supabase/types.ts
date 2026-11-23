@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       admin_invites: {
@@ -124,6 +119,79 @@ export type Database = {
         }
         Relationships: []
       }
+      clips: {
+        Row: {
+          alt_text: string | null
+          caption: string
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          id: string
+          position: number
+          poster_path: string | null
+          release_at: string | null
+          series_id: string | null
+          source_content_id: string | null
+          source_seconds: number | null
+          updated_at: string
+          video_path: string
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          id?: string
+          position?: number
+          poster_path?: string | null
+          release_at?: string | null
+          series_id?: string | null
+          source_content_id?: string | null
+          source_seconds?: number | null
+          updated_at?: string
+          video_path: string
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          id?: string
+          position?: number
+          poster_path?: string | null
+          release_at?: string | null
+          series_id?: string | null
+          source_content_id?: string | null
+          source_seconds?: number | null
+          updated_at?: string
+          video_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clips_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clips_source_content_id_fkey"
+            columns: ["source_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clips_source_content_id_fkey"
+            columns: ["source_content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_items: {
         Row: {
           added_at: string
@@ -139,6 +207,7 @@ export type Database = {
           position: number
           release_at: string | null
           release_week: number | null
+          show_title_publicly: boolean
           sort_order: number | null
           template_id: string | null
           updated_at: string
@@ -157,6 +226,7 @@ export type Database = {
           position?: number
           release_at?: string | null
           release_week?: number | null
+          show_title_publicly?: boolean
           sort_order?: number | null
           template_id?: string | null
           updated_at?: string
@@ -175,6 +245,7 @@ export type Database = {
           position?: number
           release_at?: string | null
           release_week?: number | null
+          show_title_publicly?: boolean
           sort_order?: number | null
           template_id?: string | null
           updated_at?: string
@@ -212,6 +283,7 @@ export type Database = {
       }
       collections: {
         Row: {
+          about_doc: Json | null
           banner_url: string | null
           cover_image_url: string | null
           created_at: string
@@ -226,11 +298,15 @@ export type Database = {
           intro_video_content_id: string | null
           is_featured: boolean
           published_at: string | null
+          rhythm_time: string | null
+          rhythm_weekday: number | null
           series_month: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
           summary: string | null
           tag_color: string | null
+          taught_by: string[]
+          themes: string[]
           title: string
           updated_at: string
           week_number: number | null
@@ -238,6 +314,7 @@ export type Database = {
           writeup_title: string | null
         }
         Insert: {
+          about_doc?: Json | null
           banner_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -252,11 +329,15 @@ export type Database = {
           intro_video_content_id?: string | null
           is_featured?: boolean
           published_at?: string | null
+          rhythm_time?: string | null
+          rhythm_weekday?: number | null
           series_month?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
           summary?: string | null
           tag_color?: string | null
+          taught_by?: string[]
+          themes?: string[]
           title: string
           updated_at?: string
           week_number?: number | null
@@ -264,6 +345,7 @@ export type Database = {
           writeup_title?: string | null
         }
         Update: {
+          about_doc?: Json | null
           banner_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -278,11 +360,15 @@ export type Database = {
           intro_video_content_id?: string | null
           is_featured?: boolean
           published_at?: string | null
+          rhythm_time?: string | null
+          rhythm_weekday?: number | null
           series_month?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
           summary?: string | null
           tag_color?: string | null
+          taught_by?: string[]
+          themes?: string[]
           title?: string
           updated_at?: string
           week_number?: number | null
@@ -3187,6 +3273,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      series_stats: { Args: { _collection_id: string }; Returns: Json }
       subscribe_email: {
         Args: {
           _email: string
@@ -3372,3 +3459,4 @@ export const Constants = {
     },
   },
 } as const
+

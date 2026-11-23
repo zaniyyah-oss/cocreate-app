@@ -154,6 +154,13 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
   const needAuth = () => navigate({ to: "/auth" });
   const url = typeof window !== "undefined" ? window.location.href.split("?")[0]! : "";
 
+  const [startAt, setStartAt] = useState<number | null>(null);
+  const mediaRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const read = () => { const m = window.location.hash.match(/t=(\d+)/); setStartAt(m ? Number(m[1]) : null); };
+    read(); window.addEventListener("hashchange", read); return () => window.removeEventListener("hashchange", read);
+  }, []);
+  useEffect(() => { if (startAt != null) setTimeout(() => mediaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 150); }, [startAt, pq.data]);
   if (!v.ready || pq.isLoading) return <PageFrame signedIn={signedIn} staged={v.staged} now={v.now}><div className="wrap" style={{ padding: "80px 32px", color: "var(--mut)" }}>Loading…</div></PageFrame>;
   if (!piece) {
     return (
@@ -209,6 +216,7 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
   const mediaSrc = piece.video_url || piece.media_url;
   const topics = topicsQ.data ?? [];
   const toCard = (it: { piece: any; reason: string }): CardItem => ({ key: it.piece.id, id: it.piece.id, type: it.piece.type, title: it.piece.title ?? "", at: it.piece.release_at, img: photo(it.piece), fd: it.piece.hero_focal_desktop, fm: it.piece.hero_focal_mobile, reason: it.reason });
+  const seek = (e: React.SyntheticEvent<HTMLMediaElement>) => { if (startAt != null) { e.currentTarget.currentTime = startAt; void e.currentTarget.play().catch(() => {}); } };
   const onMedia = (e: React.SyntheticEvent<HTMLMediaElement>) => { const m = e.currentTarget; if (m.duration && m.currentTime / m.duration >= 0.9) void finish(); };
   const lookup = (gid: string) => {
     const hit = parts.find((x) => x.piece?.id === gid)?.piece ?? relQ.data?.latest.find((x) => x.piece.id === gid)?.piece ?? relQ.data?.topic.find((x) => x.piece.id === gid)?.piece;
@@ -247,8 +255,8 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
             )}
             <div className="ca-actions-m">{iconButtons}</div>
             {isMedia && mediaSrc ? (
-              piece.type === "podcast" && !yt ? <audio controls src={mediaSrc} preload="metadata" style={{ width: "100%", marginTop: 26 }} onTimeUpdate={onMedia} />
-              : <div className="ca-media">{yt ? <iframe src={`https://www.youtube.com/embed/${yt}`} title={piece.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video src={mediaSrc} controls playsInline onTimeUpdate={onMedia} />}</div>
+              piece.type === "podcast" && !yt ? <div ref={mediaRef}><audio key={startAt ?? 0} controls src={mediaSrc} preload="metadata" style={{ width: "100%", marginTop: 26 }} onTimeUpdate={onMedia} onLoadedMetadata={seek} /></div>
+              : <div className="ca-media" ref={mediaRef}>{yt ? <iframe key={startAt ?? 0} src={`https://www.youtube.com/embed/${yt}${startAt != null ? `?start=${startAt}&autoplay=1` : ""}`} title={piece.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video key={startAt ?? 0} src={mediaSrc} controls playsInline onTimeUpdate={onMedia} onLoadedMetadata={seek} />}</div>
             ) : photo(piece) ? (
               <div className="ci-ph ca-hero" style={focalStyle(piece.hero_focal_desktop, piece.hero_focal_mobile)}><img src={photo(piece)!} alt="" /></div>
             ) : null}

@@ -115,6 +115,16 @@ export function PartLink({ part, children, className, style }: { part: SeriesPar
   return <div className={className} style={style} data-piece-id={part.piece?.id}>{children}</div>;
 }
 
+/** Public-page styles without the site header/footer — for Studio's in-place series preview and share links. */
+export function ContentScope({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: HOME_CSS + PIECE_CSS + INNER_CSS }} />
+      <div className={`content-site ch ci${className ? ` ${className}` : ""}`}>{children}</div>
+    </>
+  );
+}
+
 /** Series card used in the article rail and devotional rail. */
 export function SeriesRail({ series, parts, currentKey, signedIn, explored, following, reminded, onFollow, onRemind }: {
   series: SeriesInfo; parts: SeriesPart[]; currentKey?: string | null; signedIn: boolean; explored: number;

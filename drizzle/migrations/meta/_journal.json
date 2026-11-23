@@ -134,6 +134,27 @@
       "when": 1795474186962,
       "tag": "0018_site_settings_admin_read",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795474312180,
+      "tag": "0019_series_builder_clips",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795474318789,
+      "tag": "0020_preview_tokens_series_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795474955915,
+      "tag": "0021_collection_items_allow_planned_slots",
+      "breakpoints": true
     }
   ]
 }

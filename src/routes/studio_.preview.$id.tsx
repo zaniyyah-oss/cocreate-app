@@ -12,6 +12,7 @@ import { ShareButton, publicHref } from "@/components/studio/ShareButton";
 
 export const Route = createFileRoute("/studio_/preview/$id")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>): { tab?: "piece" | "series" | "home" | "newsletter" } => (s.tab === "piece" || s.tab === "series" || s.tab === "home" || s.tab === "newsletter" ? { tab: s.tab } : {}),
   component: () => <StudioGate><StagedPreview /></StudioGate>,
   head: () => ({ meta: [{ title: "Staged preview — CoCreate Studio" }, { name: "description", content: "See the site as it will look on release day." }, { property: "og:title", content: "Staged preview — CoCreate Studio" }, { property: "og:description", content: "See the site as it will look on release day." }, { name: "robots", content: "noindex,nofollow" }] }),
 });
@@ -57,7 +58,8 @@ function StagedPreview() {
   const invalidate = useInvalidateStudio();
   const piece = studio.data?.pieces.find((p) => p.id === id) ?? null;
   const series = piece?.seriesId ? studio.data?.series.find((s) => s.id === piece.seriesId) ?? null : null;
-  const [tab, setTab] = useState<TabKey>("home");
+  const initialTab = Route.useSearch().tab;
+  const [tab, setTab] = useState<TabKey>(initialTab ?? "home");
   const [viewer, setViewer] = useState<"out" | "in">("out");
   const [at, setAt] = useState<string | null>(null);
   useEffect(() => { if (piece && !at) setAt(piece.releaseAt ?? new Date().toISOString()); }, [piece, at]);

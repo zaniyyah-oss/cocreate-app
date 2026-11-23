@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import GlobalBrandLoader from "../components/GlobalBrandLoader";
 import { initNativeShell } from "../lib/native";
+import { isStudioHost, studioHostRedirect } from "../lib/studio-host";
+import { useRouterState } from "@tanstack/react-router";
 
 
 function NotFoundComponent() {
@@ -144,6 +146,16 @@ function RootComponent() {
   useEffect(() => {
     void initNativeShell();
   }, []);
+  const loc = useRouterState({ select: (s) => s.location.href });
+  useEffect(() => {
+    if (!isStudioHost(window.location.hostname)) return;
+    if (!document.querySelector('meta[name="robots"][data-studio]')) {
+      const m = document.createElement("meta"); m.name = "robots"; m.content = "noindex"; m.setAttribute("data-studio", "1"); document.head.appendChild(m);
+    }
+    const to = studioHostRedirect(window.location.pathname, window.location.search);
+    if (to === "/studio") window.location.replace("/studio");
+    else if (to) window.location.replace(to);
+  }, [loc]);
 
   return (
     <QueryClientProvider client={queryClient}>

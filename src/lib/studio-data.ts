@@ -15,10 +15,12 @@ export const NEW_KINDS: { kind: StudioKind; label: string; desc: string }[] = [
   { kind: "devotional", label: "Devotional", desc: "One tab per day" },
 ];
 
-export type SeriesItem = { id: string; collection_id: string; content_id: string | null; template_id: string | null; position: number; planned_title: string | null; planned_kind: string | null; planned_at: string | null };
+export type SeriesItem = { id: string; collection_id: string; content_id: string | null; template_id: string | null; position: number; planned_title: string | null; planned_kind: string | null; planned_at: string | null; show_title_publicly?: boolean };
 export type StudioSeries = {
   id: string; slug: string; title: string; series_month: string | null; summary: string | null; status: string;
   banner_url: string | null; cover_image_url: string | null; hero_focal_desktop: string | null; hero_focal_mobile: string | null;
+  eyebrow: string | null; writeup_title: string | null; writeup_body: string | null; description: string | null; about_doc: unknown;
+  themes: string[]; taught_by: string[]; rhythm_weekday: number | null; rhythm_time: string | null; devotional_template_id: string | null;
   items: SeriesItem[];
 };
 export type StudioPiece = {
@@ -42,13 +44,13 @@ export async function fetchStudioData(): Promise<StudioData> {
   const [cR, dR, sR, tR] = await Promise.all([
     supabase.from("content_items").select("id, type, title, summary, excerpt, status, release_at, hero_url, cover_image_url, thumbnail_url, hero_focal_desktop, hero_focal_mobile, is_standalone, body, body_doc, video_url, media_url, feature_new_this_month, updated_at, slug, content_topics(topic_id)").eq("is_seed", false).order("updated_at", { ascending: false }),
     supabase.from("devotional_templates").select("id, title, description, status, release_at, hero_url, hero_focal_desktop, hero_focal_mobile, is_standalone, feature_new_this_month, updated_at, slug, devotional_topics(topic_id), devotional_days(id, scripture_reference, scripture_passage, reflection_doc, preview_reflect)").eq("is_default", false).eq("is_seed", false).order("updated_at", { ascending: false }),
-    supabase.from("collections").select("id, slug, title, series_month, summary, status, banner_url, cover_image_url, hero_focal_desktop, hero_focal_mobile, collection_items(id, collection_id, content_id, template_id, position, planned_title, planned_kind, planned_at)").order("series_month", { ascending: true, nullsFirst: false }),
+    supabase.from("collections").select("id, slug, title, series_month, summary, status, banner_url, cover_image_url, hero_focal_desktop, hero_focal_mobile, eyebrow, writeup_title, writeup_body, description, about_doc, themes, taught_by, rhythm_weekday, rhythm_time, devotional_template_id, collection_items(id, collection_id, content_id, template_id, position, planned_title, planned_kind, planned_at, show_title_publicly)").order("series_month", { ascending: true, nullsFirst: false }),
     supabase.from("topics").select("id, name, display_name").order("sort_order", { ascending: true }),
   ]);
   if (cR.error) throw cR.error;
   if (dR.error) throw dR.error;
   if (sR.error) throw sR.error;
-  const series = (sR.data ?? []).map((s: any) => ({ ...s, items: (s.collection_items ?? []) as SeriesItem[] })) as StudioSeries[];
+  const series = (sR.data ?? []).map((s: any) => ({ ...s, themes: s.themes ?? [], taught_by: s.taught_by ?? [], items: (s.collection_items ?? []) as SeriesItem[] })) as StudioSeries[];
   const where = (m: (i: SeriesItem) => boolean) => {
     for (const s of series) {
       const part = partOf(s.items, m);

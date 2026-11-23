@@ -1,3 +1,4 @@
+import { useStudioClips } from "@/lib/clips";
 import { useCommentsReviewCount } from "@/lib/comments-review";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -64,7 +65,7 @@ function Releases() {
 
 function entryHref(e: CalEntry) {
   if (e.piece) return { to: "/studio/pieces/$id" as const, params: { id: e.piece.id } };
-  return { to: "/studio/series" as const, search: e.seriesId ? { id: e.seriesId } : {} };
+  return e.seriesId ? { to: "/studio/series/$id" as const, params: { id: e.seriesId } } : { to: "/studio/series" as const };
 }
 
 function NextCard({ e }: { e: CalEntry }) {
@@ -183,6 +184,7 @@ function BoardView({ d }: { d: StudioData }) {
 
 function NeedsAttention({ d }: { d: StudioData }) {
   const reviewN = useCommentsReviewCount().data ?? 0;
+  const clipsN = (useStudioClips().data ?? []).filter((c) => !c.caption.trim()).length;
   const open = d.pieces.filter((p) => p.status !== "live");
   const miss = (k: string) => open.filter((p) => !p.checks.find((c) => c.key === k)?.done).length;
   const emptySeries = d.series.filter((s) => s.items.length === 0).length;
@@ -192,7 +194,7 @@ function NeedsAttention({ d }: { d: StudioData }) {
     { icon: Clock, n: miss("release"), text: (n: number) => `${n} ${n === 1 ? "piece" : "pieces"} with no release time`, to: { to: "/studio/pieces", search: { attn: "release" } } },
     { icon: Layers, n: emptySeries, text: (n: number) => `${n} ${n === 1 ? "series" : "series"} with no pieces`, to: { to: "/studio/series" } },
     { icon: MessageSquare, n: reviewN, text: (n: number) => `${n} ${n === 1 ? "comment" : "comments"} flagged for review`, to: { to: "/studio/comments" } },
-    { icon: Film, n: 0, text: () => "0 clips without captions", to: { to: "/studio/clips" } },
+    { icon: Film, n: clipsN, text: (n: number) => `${n} ${n === 1 ? "clip needs a caption" : "clips need captions"}`, to: { to: "/studio/clips" } },
   ];
   return (
     <div>
@@ -220,7 +222,7 @@ function SeriesProgress({ d }: { d: StudioData }) {
         const released = s.items.filter((i) => (i.content_id && live.has(i.content_id)) || (i.template_id && live.has(i.template_id))).length;
         const pct = total ? Math.round((released / total) * 100) : 0;
         return (
-          <Link key={s.id} to="/studio/series" search={{ id: s.id }} style={{ display: "block", padding: "14px 0", borderTop: `1px solid ${C.LINE}` }}>
+          <Link key={s.id} to="/studio/series/$id" params={{ id: s.id }} style={{ display: "block", padding: "14px 0", borderTop: `1px solid ${C.LINE}` }}>
             <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <span style={{ fontFamily: "Poppins", fontSize: 15, fontWeight: 600, color: C.INK }}>{s.title}</span>
               <StatusPill status={released > 0 ? "live" : "notstarted"} />

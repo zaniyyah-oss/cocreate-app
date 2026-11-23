@@ -1,5 +1,7 @@
+import { parseTimestamp } from "@/lib/studio-host";
 import type { CSSProperties, ReactNode } from "react";
 import type { DocNode } from "@/lib/piece-doc";
+import { ClipEmbed } from "@/components/content/ClipPlayer";
 
 /**
  * ONE shared renderer for a piece: used by the Studio editor preview, share links and
@@ -83,9 +85,10 @@ export function DocView({ node, lookup }: { node: DocNode; lookup?: GoDeeperLook
       const title = hit?.title ?? node.attrs?.title;
       if (!title) return null;
       const inner = (<><span style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}><span className="k">Go deeper · {hit?.kind ?? node.attrs?.kind ?? ""}</span><span className="t">{title}</span>{node.attrs?.timestamp ? <span className="s">From {fmtTs(node.attrs.timestamp)}</span> : null}</span><span aria-hidden>→</span></>);
-      return hit?.href ? <a className="pc-deeper" href={hit.href}>{inner}</a> : <div className="pc-deeper">{inner}</div>;
+      const sec = parseTimestamp(node.attrs?.timestamp);
+      return hit?.href ? <a className="pc-deeper" href={sec ? `${hit.href}#t=${sec}` : hit.href}>{inner}</a> : <div className="pc-deeper">{inner}</div>;
     }
-    case "clip": return <div className="pc-clip"><span>Clip</span>{node.attrs?.caption ? <span>{node.attrs.caption}</span> : null}</div>;
+    case "clip": return node.attrs?.clipId ? <ClipEmbed clipId={node.attrs.clipId} /> : null;
     default: return <>{kids}</>;
   }
 }

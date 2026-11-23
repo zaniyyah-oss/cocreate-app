@@ -1,0 +1,2 @@
+ALTER TABLE public.preview_tokens DROP CONSTRAINT IF EXISTS preview_tokens_scope_check;
+ALTER TABLE public.preview_tokens ADD CONSTRAINT preview_tokens_scope_check CHECK (scope IN ('content','devotional','series'));

@@ -1,3 +1,4 @@
+import { STUDIO_ORIGIN } from "@/lib/studio-host";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -142,9 +143,16 @@ const SHELL_CSS = `
 }
 `;
 
+/** Studio subdomain only for the live main domain (where it's connected); elsewhere (previews) the same-domain /studio. */
+function studioHref() {
+  if (typeof window === "undefined") return "/studio";
+  const h = window.location.hostname;
+  return h === "justcocreate.com" || h === "www.justcocreate.com" ? `${STUDIO_ORIGIN}/studio` : "/studio";
+}
+
 function OpenStudioItem({ onClick }: { onClick: () => void }) {
   return (
-    <a href="/studio" target="_blank" rel="noopener" className="app-topbar-menu-item app-studio-item" role="menuitem" onClick={onClick}>
+    <a href={studioHref()} target="_blank" rel="noopener" className="app-topbar-menu-item app-studio-item" role="menuitem" onClick={onClick}>
       <span className="sq"><svg viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg></span>
       <span className="tx"><span>Open Studio</span><small>studio.justcocreate.com</small></span>
       <svg className="ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
@@ -260,7 +268,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
                   </Link>
                   <NotificationBell />
                   {isAdmin && (
-                    <a href="/studio" target="_blank" rel="noopener" className="app-side-studio" aria-label="Open Studio (new tab)" title="Open Studio">
+                    <a href={studioHref()} target="_blank" rel="noopener" className="app-side-studio" aria-label="Open Studio (new tab)" title="Open Studio">
                       <svg viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
                     </a>
                   )}

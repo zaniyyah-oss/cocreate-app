@@ -55,6 +55,7 @@ export type SeriesInfo = {
   id: string; slug: string; title: string; summary: string | null; description: string | null; writeup_title: string | null; writeup_body: string | null;
   banner_url: string | null; cover_image_url: string | null; hero_focal_desktop: string | null; hero_focal_mobile: string | null;
   series_month: string | null; devotional_template_id: string | null; eyebrow: string | null;
+  themes?: string[] | null; taught_by?: string[] | null; about_doc?: unknown;
 };
 export type SeriesPart = {
   key: string; kind: string; title: string; releaseAt: string | null; released: boolean;
@@ -64,11 +65,11 @@ export type SeriesPart = {
 const PCOLS = "id, type, title, release_at, hero_url, cover_image_url, thumbnail_url, hero_focal_desktop, hero_focal_mobile, duration_seconds, read_time_minutes, summary, excerpt, slug, author_name, topic_id";
 
 export async function fetchSeries(by: { id?: string; slug?: string }, now: Date): Promise<{ series: SeriesInfo; parts: SeriesPart[] } | null> {
-  let q = supabase.from("collections").select("id, slug, title, summary, description, writeup_title, writeup_body, banner_url, cover_image_url, hero_focal_desktop, hero_focal_mobile, series_month, devotional_template_id, eyebrow").eq("status", "published");
+  let q = supabase.from("collections").select("id, slug, title, summary, description, writeup_title, writeup_body, banner_url, cover_image_url, hero_focal_desktop, hero_focal_mobile, series_month, devotional_template_id, eyebrow, themes, taught_by, about_doc").eq("status", "published");
   q = by.id ? q.eq("id", by.id) : q.eq("slug", by.slug ?? "");
   const { data: s } = await q.maybeSingle();
   if (!s) return null;
-  const { data: links } = await supabase.from("collection_items").select("id, content_id, template_id, position, sort_order, release_at, planned_title, planned_kind, planned_at").eq("collection_id", s.id);
+  const { data: links } = await supabase.from("collection_items").select("id, content_id, template_id, position, sort_order, release_at, planned_title, planned_kind, planned_at, show_title_publicly").eq("collection_id", s.id);
   const L = (links ?? []) as any[];
   const cids = L.map((l) => l.content_id).filter(Boolean);
   const tids = L.map((l) => l.template_id).filter(Boolean);
@@ -88,8 +89,8 @@ export async function fetchSeries(by: { id?: string; slug?: string }, now: Date)
       parts.push({ key: l.id, kind: "devotional", title: t.title, releaseAt: t.release_at, released: isReleased(t.release_at, now), piece: null, templateId: t.id, collectionItemId: l.id, thumb: t.hero_url, summary: t.summary || t.description, length: t.duration_days ? `${t.duration_days} days` : "" });
     } else if (l.planned_title || l.planned_at) {
       const at = l.planned_at ?? l.release_at;
-      if (isReleased(at, now) && at) continue; // a planned slot never stands in for a released piece
-      parts.push({ key: l.id, kind: l.planned_kind ?? "essay", title: l.planned_title ?? "", releaseAt: at, released: false, piece: null, templateId: null, collectionItemId: l.id, thumb: null, summary: null, length: "" });
+      if (!at || isReleased(at, now)) continue; // public: only "Coming [date]" for dated slots; never stands in for a released piece
+      parts.push({ key: l.id, kind: l.planned_kind ?? "essay", title: l.show_title_publicly ? l.planned_title ?? "" : "", releaseAt: at, released: false, piece: null, templateId: null, collectionItemId: l.id, thumb: null, summary: null, length: "" });
     }
   }
   const ord = (k: string) => { const l = L.find((x) => x.id === k); return l?.sort_order ?? l?.position ?? 0; };

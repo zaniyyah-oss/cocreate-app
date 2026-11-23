@@ -10,3 +10,9 @@
 - [x] Comments, replies, agree, edit/delete, flag, auto-hide, admin hide/unhide/delete
 - [x] Old discussion comments brought over
 - [x] Studio Comments page, sidebar badge, Releases attention row, piece Comments panel
+
+# Phase 5 — series builder + clips
+- [x] Series builder at /studio/series/$id (rhythm, ordered pieces + planned slots, clips strip, in-place page editing, autosave)
+- [x] Clips library, upload with progress, poster frame, private bucket + signed URLs for released clips
+- [x] Public "Inside the series" player, Clip block from library, Needs-attention caption count
+- [x] Stats tab, series share links

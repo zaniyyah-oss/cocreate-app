@@ -5,6 +5,7 @@ import { LayoutGrid, Layers, FileText, Film, Home, MessageSquare, Users, Plus, E
 import { useAdminGate } from "@/components/admin/shell";
 import { STUDIO_CSS, C } from "./ui";
 import { NewPieceMenu } from "./NewPiece";
+import { MAIN_ORIGIN } from "@/lib/studio-host";
 import { useCommentsReviewCount } from "@/lib/comments-review";
 
 const NAV = [
@@ -31,7 +32,7 @@ function Gate({ children }: { children: ReactNode }) {
   );
   if (!ready) return box("CoCreate Studio", "Checking access…", null);
   if (!userId) return box("Sign in to Studio", "Studio is for the CoCreate team. Sign in with your team account.", <Link to="/auth" className="st-btn primary">Sign in</Link>);
-  if (!isAdmin) return box("No Studio access", "Your account isn't on the Studio team. Ask an admin to add you.", <Link to="/devotionals" className="st-btn">Back to my workspace</Link>);
+  if (!isAdmin) return box("No Studio access", "This account doesn't have admin access to Studio. Ask an admin to add you.", <a href={MAIN_ORIGIN} className="st-btn">Go to justcocreate.com</a>);
   return <>{children}</>;
 }
 
@@ -78,15 +79,15 @@ export function StudioLayout() {
             })}
           </nav>
           <div className="st-foot">
-            <a href="/?feed=1" target="_blank" rel="noopener" style={{ fontWeight: 600, color: C.INK }}><ExternalLink size={15} strokeWidth={1.7} />View live site</a>
-            <Link to="/devotionals" style={{ color: C.MUTED }}><ArrowLeft size={15} strokeWidth={1.7} />Back to my workspace</Link>
+            <a href={MAIN_ORIGIN} target="_blank" rel="noopener" style={{ fontWeight: 600, color: C.INK }}><ExternalLink size={15} strokeWidth={1.7} />View live site</a>
+            <a href={workspaceHref()} style={{ color: C.MUTED }}><ArrowLeft size={15} strokeWidth={1.7} />Back to my workspace</a>
           </div>
         </aside>
         <div className="st-main"><Outlet /></div>
         <div className="st-phone">
           <b style={{ fontFamily: "Poppins", fontSize: 20 }}>CoCreate Studio</b>
           <span style={{ color: C.MUTED, fontSize: 15, lineHeight: 1.5 }}>Studio works best on a larger screen. Open it on a laptop or desktop.</span>
-          <Link to="/devotionals" className="st-btn">Back to my workspace</Link>
+          <a href={workspaceHref()} className="st-btn">Back to my workspace</a>
         </div>
       </div>
     </StudioGate>
@@ -96,4 +97,10 @@ export function StudioLayout() {
 export function useGoPiece() {
   const navigate = useNavigate();
   return (id: string) => navigate({ to: "/studio/pieces/$id", params: { id } });
+}
+
+/** Workspace lives on the main domain; on the main domain itself stay relative. */
+function workspaceHref() {
+  if (typeof window !== "undefined" && window.location.hostname.startsWith("studio.")) return `${MAIN_ORIGIN}/devotionals`;
+  return "/devotionals";
 }

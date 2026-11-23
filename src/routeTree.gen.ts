@@ -58,7 +58,6 @@ import { Route as StudioIndexRouteImport } from './routes/studio.index'
 import { Route as StudioClipsRouteImport } from './routes/studio.clips'
 import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
 import { Route as StudioHomepageRouteImport } from './routes/studio.homepage'
-import { Route as StudioSeriesRouteImport } from './routes/studio.series'
 import { Route as StudioTeamRouteImport } from './routes/studio.team'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
@@ -72,6 +71,8 @@ import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
 import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
 import { Route as StudioPiecesIndexRouteImport } from './routes/studio.pieces.index'
 import { Route as StudioPiecesIdRouteImport } from './routes/studio.pieces.$id'
+import { Route as StudioSeriesIndexRouteImport } from './routes/studio.series.index'
+import { Route as StudioSeriesIdRouteImport } from './routes/studio.series.$id'
 import { Route as StudioPreviewIdRouteImport } from './routes/studio_.preview.$id'
 import { Route as DevotionalsIdDayNRouteImport } from './routes/devotionals.$id_.day.$n'
 
@@ -320,11 +321,6 @@ const StudioHomepageRoute = StudioHomepageRouteImport.update({
   path: '/homepage',
   getParentRoute: () => StudioRoute,
 } as any)
-const StudioSeriesRoute = StudioSeriesRouteImport.update({
-  id: '/series',
-  path: '/series',
-  getParentRoute: () => StudioRoute,
-} as any)
 const StudioTeamRoute = StudioTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -390,6 +386,16 @@ const StudioPiecesIdRoute = StudioPiecesIdRouteImport.update({
   path: '/pieces/$id',
   getParentRoute: () => StudioRoute,
 } as any)
+const StudioSeriesIndexRoute = StudioSeriesIndexRouteImport.update({
+  id: '/series/',
+  path: '/series/',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioSeriesIdRoute = StudioSeriesIdRouteImport.update({
+  id: '/series/$id',
+  path: '/series/$id',
+  getParentRoute: () => StudioRoute,
+} as any)
 const StudioPreviewIdRoute = StudioPreviewIdRouteImport.update({
   id: '/studio_/preview/$id',
   path: '/studio/preview/$id',
@@ -448,7 +454,6 @@ export interface FileRoutesByFullPath {
   '/studio/clips': typeof StudioClipsRoute
   '/studio/comments': typeof StudioCommentsRoute
   '/studio/homepage': typeof StudioHomepageRoute
-  '/studio/series': typeof StudioSeriesRoute
   '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
@@ -463,9 +468,11 @@ export interface FileRoutesByFullPath {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio/series/$id': typeof StudioSeriesIdRoute
   '/studio/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/studio/pieces/': typeof StudioPiecesIndexRoute
+  '/studio/series/': typeof StudioSeriesIndexRoute
   '/devotionals/$id/day/$n': typeof DevotionalsIdDayNRoute
 }
 export interface FileRoutesByTo {
@@ -511,7 +518,6 @@ export interface FileRoutesByTo {
   '/studio/clips': typeof StudioClipsRoute
   '/studio/comments': typeof StudioCommentsRoute
   '/studio/homepage': typeof StudioHomepageRoute
-  '/studio/series': typeof StudioSeriesRoute
   '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
@@ -526,9 +532,11 @@ export interface FileRoutesByTo {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio/series/$id': typeof StudioSeriesIdRoute
   '/studio/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
   '/studio/pieces': typeof StudioPiecesIndexRoute
+  '/studio/series': typeof StudioSeriesIndexRoute
   '/devotionals/$id/day/$n': typeof DevotionalsIdDayNRoute
 }
 export interface FileRoutesById {
@@ -579,7 +587,6 @@ export interface FileRoutesById {
   '/studio/clips': typeof StudioClipsRoute
   '/studio/comments': typeof StudioCommentsRoute
   '/studio/homepage': typeof StudioHomepageRoute
-  '/studio/series': typeof StudioSeriesRoute
   '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
@@ -594,9 +601,11 @@ export interface FileRoutesById {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio/series/$id': typeof StudioSeriesIdRoute
   '/studio_/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/studio/pieces/': typeof StudioPiecesIndexRoute
+  '/studio/series/': typeof StudioSeriesIndexRoute
   '/devotionals/$id_/day/$n': typeof DevotionalsIdDayNRoute
 }
 export interface FileRouteTypes {
@@ -648,7 +657,6 @@ export interface FileRouteTypes {
     | '/studio/clips'
     | '/studio/comments'
     | '/studio/homepage'
-    | '/studio/series'
     | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
@@ -663,9 +671,11 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/studio/pieces/$id'
+    | '/studio/series/$id'
     | '/studio/preview/$id'
     | '/admin/collections/'
     | '/studio/pieces/'
+    | '/studio/series/'
     | '/devotionals/$id/day/$n'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -711,7 +721,6 @@ export interface FileRouteTypes {
     | '/studio/clips'
     | '/studio/comments'
     | '/studio/homepage'
-    | '/studio/series'
     | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
@@ -726,9 +735,11 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/studio/pieces/$id'
+    | '/studio/series/$id'
     | '/studio/preview/$id'
     | '/admin/collections'
     | '/studio/pieces'
+    | '/studio/series'
     | '/devotionals/$id/day/$n'
   id:
     | '__root__'
@@ -778,7 +789,6 @@ export interface FileRouteTypes {
     | '/studio/clips'
     | '/studio/comments'
     | '/studio/homepage'
-    | '/studio/series'
     | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
@@ -793,9 +803,11 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/studio/pieces/$id'
+    | '/studio/series/$id'
     | '/studio_/preview/$id'
     | '/admin/collections/'
     | '/studio/pieces/'
+    | '/studio/series/'
     | '/devotionals/$id_/day/$n'
   fileRoutesById: FileRoutesById
 }
@@ -1188,13 +1200,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioHomepageRouteImport
       parentRoute: typeof StudioRoute
     }
-    '/studio/series': {
-      id: '/studio/series'
-      path: '/series'
-      fullPath: '/studio/series'
-      preLoaderRoute: typeof StudioSeriesRouteImport
-      parentRoute: typeof StudioRoute
-    }
     '/studio/team': {
       id: '/studio/team'
       path: '/team'
@@ -1286,6 +1291,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioPiecesIdRouteImport
       parentRoute: typeof StudioRoute
     }
+    '/studio/series/': {
+      id: '/studio/series/'
+      path: '/series'
+      fullPath: '/studio/series/'
+      preLoaderRoute: typeof StudioSeriesIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/series/$id': {
+      id: '/studio/series/$id'
+      path: '/series/$id'
+      fullPath: '/studio/series/$id'
+      preLoaderRoute: typeof StudioSeriesIdRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/studio_/preview/$id': {
       id: '/studio_/preview/$id'
       path: '/studio/preview/$id'
@@ -1374,22 +1393,24 @@ interface StudioRouteChildren {
   StudioClipsRoute: typeof StudioClipsRoute
   StudioCommentsRoute: typeof StudioCommentsRoute
   StudioHomepageRoute: typeof StudioHomepageRoute
-  StudioSeriesRoute: typeof StudioSeriesRoute
   StudioTeamRoute: typeof StudioTeamRoute
   StudioIndexRoute: typeof StudioIndexRoute
   StudioPiecesIdRoute: typeof StudioPiecesIdRoute
+  StudioSeriesIdRoute: typeof StudioSeriesIdRoute
   StudioPiecesIndexRoute: typeof StudioPiecesIndexRoute
+  StudioSeriesIndexRoute: typeof StudioSeriesIndexRoute
 }
 
 const StudioRouteChildren: StudioRouteChildren = {
   StudioClipsRoute: StudioClipsRoute,
   StudioCommentsRoute: StudioCommentsRoute,
   StudioHomepageRoute: StudioHomepageRoute,
-  StudioSeriesRoute: StudioSeriesRoute,
   StudioTeamRoute: StudioTeamRoute,
   StudioIndexRoute: StudioIndexRoute,
   StudioPiecesIdRoute: StudioPiecesIdRoute,
+  StudioSeriesIdRoute: StudioSeriesIdRoute,
   StudioPiecesIndexRoute: StudioPiecesIndexRoute,
+  StudioSeriesIndexRoute: StudioSeriesIndexRoute,
 }
 
 const StudioRouteWithChildren =

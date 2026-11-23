@@ -10,6 +10,8 @@ import { PIECE_CSS } from "@/components/content/PieceRenderer";
 import { uploadStudioPhoto } from "@/lib/studio-data";
 import type { DocNode } from "@/lib/piece-doc";
 import { C } from "./ui";
+import { useStudioClips, fmtDur } from "@/lib/clips";
+import { VerticalClip } from "@/components/content/ClipPlayer";
 
 export type DeeperOption = { id: string; title: string; kind: string };
 
@@ -85,13 +87,25 @@ const GoDeeper = Node.create<{ getPieces: () => DeeperOption[] }>({
   addNodeView() { return ReactNodeViewRenderer(DeeperView); },
 });
 
-function ClipView({ deleteNode }: NodeViewProps) {
+function ClipView({ node, updateAttributes, deleteNode }: NodeViewProps) {
+  const lib = useStudioClips();
+  const id = node.attrs.clipId as string | null;
+  const clip = (lib.data ?? []).find((c) => c.id === id) ?? null;
   return (
-    <NodeViewWrapper className="pc-clip" contentEditable={false}>
-      <Film size={22} strokeWidth={1.7} />
-      <span style={{ fontWeight: 600, color: C.INK }}>Clip</span>
-      <span style={{ textAlign: "center", padding: "0 16px" }}>Pick a clip once the clips library is ready</span>
-      <button type="button" onClick={deleteNode} style={{ border: 0, background: "none", color: C.MUTED, fontSize: 12 }}>Remove</button>
+    <NodeViewWrapper contentEditable={false} style={{ margin: "28px auto", maxWidth: 320, display: "flex", flexDirection: "column", gap: 8 }}>
+      {clip ? (
+        <>
+          <VerticalClip autoPlay={false} clip={{ id: clip.id, caption: clip.caption, videoUrl: clip.videoUrl, posterUrl: clip.posterUrl, duration: clip.duration_seconds, seriesId: clip.series_id, releaseAt: clip.release_at, alt: clip.alt_text, position: clip.position, source: null, sourceSeconds: clip.source_seconds }} />
+          <span style={{ fontSize: 13, color: C.INK }}>{clip.caption || <span style={{ color: C.MUTED }}>Needs a caption</span>}</span>
+        </>
+      ) : <div className="pc-clip" style={{ margin: 0, width: "100%" }}><Film size={22} strokeWidth={1.7} /><span style={{ fontWeight: 600, color: C.INK }}>Clip</span><span style={{ textAlign: "center", padding: "0 16px" }}>{id ? "This clip was removed" : "Pick a clip from the library"}</span></div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <select className="st-input" style={{ minHeight: 32, fontSize: 13 }} value={id ?? ""} onChange={(e) => updateAttributes({ clipId: e.target.value || null, caption: (lib.data ?? []).find((c) => c.id === e.target.value)?.caption ?? "" })} aria-label="Choose clip">
+          <option value="">{lib.isLoading ? "Loading clips…" : (lib.data ?? []).length ? "Choose a clip…" : "No clips yet — upload in Clips & media"}</option>
+          {(lib.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.caption || "(no caption)"}{c.duration_seconds ? ` · ${fmtDur(c.duration_seconds)}` : ""}</option>)}
+        </select>
+        <button type="button" onClick={deleteNode} style={{ border: 0, background: "none", color: C.MUTED, fontSize: 12 }}>Remove</button>
+      </div>
     </NodeViewWrapper>
   );
 }
@@ -111,7 +125,7 @@ const ITEMS = [
   { key: "goDeeper", label: "Go deeper", desc: "Card linking to the teaching or podcast", icon: ArrowUpRight },
   { key: "pullQuote", label: "Pull quote", desc: "Large line that stops the scroll", icon: Quote },
   { key: "image", label: "Image", desc: "Full width or inline, with caption", icon: ImageIcon },
-  { key: "clip", label: "Clip", desc: "Vertical video from the series", icon: Film },
+  { key: "clip", label: "Clip", desc: "Vertical video from the clips library", icon: Film },
 ] as const;
 
 const EDITOR_CSS = `
