@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, Clock, Eye, Check, ChevronDown, Plus, X, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,7 +195,7 @@ function Editor({ loaded }: { loaded: LoadedPiece }) {
               <TopicsField topics={topics} ids={topicIds} onAdd={addTopic} onRemove={removeTopic} />
               <ReleaseField value={draft.release_at} onChange={(v) => patch({ release_at: v }, true)} />
               <ToggleRow label="Feature in “New this month”" help="Shows on the homepage in its release month" on={draft.feature_new_this_month} onChange={(v) => patch({ feature_new_this_month: v }, true)} />
-              <ToggleRow label="Comments" help="Readers can comment once comments launch" on={draft.comments_enabled} onChange={(v) => patch({ comments_enabled: v }, true)} />
+              <ToggleRow label="Comments" help="Signed-in readers with a confirmed email can comment" on={draft.comments_enabled} onChange={(v) => patch({ comments_enabled: v }, true)} />
               <HeroPhotoField url={draft.hero_url} fd={draft.hero_focal_desktop} fm={draft.hero_focal_mobile} onChange={(p) => patch({ ...(p.url !== undefined ? { hero_url: p.url } : {}), ...(p.fd !== undefined ? { hero_focal_desktop: p.fd } : {}), ...(p.fm !== undefined ? { hero_focal_mobile: p.fm } : {}) })} />
               {table === "content" && draft.hero_url && (
                 <div className="st-field"><span className="st-label">Hero caption</span><input className="st-input" value={draft.hero_caption ?? ""} onChange={(e) => patch({ hero_caption: e.target.value })} placeholder="Optional" /></div>
@@ -391,8 +392,20 @@ function Placement({ id, draft, inSeries, seriesTitle, part, total }: { id: stri
     { on: inSeries, label: "Series panel", help: inSeries ? `${seriesTitle}${part ? ` · Part ${part} of ${total}` : ""}` : "Not in a series" },
     { on: inSeries, label: "Up next", help: inSeries ? "Suggested after the previous part" : "Only for series pieces" },
   ];
+  const cq = useQuery({ queryKey: ["studio-piece-comments", id], queryFn: async () => {
+    const col = draft.kind === "devotional" ? "template_id" : "content_id";
+    const [all, rev] = await Promise.all([
+      (supabase.from as any)("comments").select("id", { count: "exact", head: true }).eq(col, id),
+      (supabase.from as any)("comments").select("id", { count: "exact", head: true }).eq(col, id).is("reviewed_at", null).or("flag_count.gt.0,hidden_by.eq.auto"),
+    ]);
+    return { all: (all.count ?? 0) as number, review: (rev.count ?? 0) as number };
+  } });
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ border: `1px solid ${C.LINE}`, borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <span style={{ display: "flex", flexDirection: "column" }}><span style={{ fontSize: 14, fontWeight: 600, color: C.INK }}>Comments</span><span className="st-help">{draft.comments_enabled ? `${cq.data?.all ?? 0} comments${cq.data?.review ? ` · ${cq.data.review} need review` : ""}` : "Turned off for this piece"}</span></span>
+        <Link to="/studio/comments" search={{ piece: id }} className="st-btn sm">View</Link>
+      </div>
       <span className="st-help" style={{ marginBottom: 8 }}>Where this piece will appear{draft.release_at ? ` from ${etLabel(draft.release_at)} ET` : ""}.</span>
       {rows.map((r) => (
         <div key={r.label} style={{ display: "flex", gap: 10, padding: "10px 0", borderTop: `1px solid ${C.LINE}` }}>

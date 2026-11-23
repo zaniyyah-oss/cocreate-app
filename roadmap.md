@@ -5,3 +5,8 @@
 - [x] Article/teaching/podcast page, series page (/collections redirects), devotional day page
 - [x] Shared related-content function + tests
 - [x] Progress, follows, reminders
+
+# Phase 4 — comments + moderation
+- [x] Comments, replies, agree, edit/delete, flag, auto-hide, admin hide/unhide/delete
+- [x] Old discussion comments brought over
+- [x] Studio Comments page, sidebar badge, Releases attention row, piece Comments panel

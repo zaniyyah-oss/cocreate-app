@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DocView } from "@/components/content/PieceRenderer";
 import { docHasContent } from "@/lib/piece-doc";
+import { Conversation } from "@/components/content/Conversation";
 import { getRelated } from "@/lib/related.functions";
 import { resolveDayEntry } from "@/lib/day-entry";
 import { subscribeToDevotional } from "@/lib/devotional-start";
@@ -65,7 +66,7 @@ function DayPage() {
   const tq = useQuery({
     queryKey: ["devo-day-template", param, v.realUserId], enabled: v.ready,
     queryFn: async () => {
-      let q = supabase.from("devotional_templates").select("id, title, slug, description, summary, hero_url, hero_focal_desktop, hero_focal_mobile, duration_days, release_at, status");
+      let q = supabase.from("devotional_templates").select("id, title, slug, description, summary, hero_url, hero_focal_desktop, hero_focal_mobile, duration_days, release_at, status, comments_enabled");
       q = UUID_RE.test(param) ? q.eq("id", param) : q.eq("slug", param);
       const { data: t } = await q.maybeSingle();
       if (!t) return null;
@@ -270,7 +271,7 @@ function DayPage() {
               <button type="button" className="pill big" onClick={() => addToToday(false)}>{Ico.plus(15)}Add to today’s workspace</button>
               <button type="button" className="pill big" onClick={() => shareLink(t.title, url, (m) => toast.success(m))}>{Ico.share(15)}Share</button>
             </div>
-            <div id="conversation" />
+            {t.comments_enabled && <Conversation target={{ templateId: t.id, dayNumber: n }} userId={v.userId} isAdmin={v.isAdmin && !v.staged} />}
           </main>
           <aside className="cd-right">
             {pairs.length > 0 && (

@@ -322,6 +322,168 @@ export type Database = {
           },
         ]
       }
+      comment_agrees: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_agrees_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_agrees_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comment_flags: {
+        Row: {
+          comment_id: string
+          created_at: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_flags_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_flags_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          agree_count: number
+          author_name: string | null
+          body: string
+          content_id: string | null
+          created_at: string
+          day_number: number | null
+          edited_at: string | null
+          flag_count: number
+          hidden_at: string | null
+          hidden_by: string | null
+          id: string
+          parent_id: string | null
+          reviewed_at: string | null
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agree_count?: number
+          author_name?: string | null
+          body: string
+          content_id?: string | null
+          created_at?: string
+          day_number?: number | null
+          edited_at?: string | null
+          flag_count?: number
+          hidden_at?: string | null
+          hidden_by?: string | null
+          id?: string
+          parent_id?: string | null
+          reviewed_at?: string | null
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          agree_count?: number
+          author_name?: string | null
+          body?: string
+          content_id?: string | null
+          created_at?: string
+          day_number?: number | null
+          edited_at?: string | null
+          flag_count?: number
+          hidden_at?: string | null
+          hidden_by?: string | null
+          id?: string
+          parent_id?: string | null
+          reviewed_at?: string | null
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -2241,6 +2403,24 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       sticky_notes: {
         Row: {
           body: string
@@ -2767,6 +2947,59 @@ export type Database = {
       }
     }
     Views: {
+      comments_public: {
+        Row: {
+          agree_count: number | null
+          author_name: string | null
+          body: string | null
+          content_id: string | null
+          created_at: string | null
+          day_number: number | null
+          edited_at: string | null
+          id: string | null
+          is_hidden: boolean | null
+          parent_id: string | null
+          template_id: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items_public: {
         Row: {
           author_name: string | null
@@ -2864,6 +3097,7 @@ export type Database = {
       }
     }
     Functions: {
+      comments_review_count: { Args: never; Returns: number }
       compute_user_recommendations: { Args: never; Returns: undefined }
       deliver_release_notifications: { Args: never; Returns: undefined }
       detect_bible_book: { Args: { _txt: string }; Returns: string }
@@ -2958,6 +3192,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      viewer_is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

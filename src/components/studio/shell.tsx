@@ -5,6 +5,7 @@ import { LayoutGrid, Layers, FileText, Film, Home, MessageSquare, Users, Plus, E
 import { useAdminGate } from "@/components/admin/shell";
 import { STUDIO_CSS, C } from "./ui";
 import { NewPieceMenu } from "./NewPiece";
+import { useCommentsReviewCount } from "@/lib/comments-review";
 
 const NAV = [
   { to: "/studio", label: "Releases", icon: LayoutGrid, exact: true },
@@ -44,6 +45,7 @@ export function StudioGate({ children }: { children: ReactNode }) {
 }
 
 export function StudioLayout() {
+  const reviewN = useCommentsReviewCount().data ?? 0;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [newOpen, setNewOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -70,7 +72,7 @@ export function StudioLayout() {
               return (
                 <Link key={n.to} to={n.to} className={active(n.to, "exact" in n) ? "active" : ""}>
                   <Icon size={18} strokeWidth={1.7} />{n.label}
-                  {"badge" in n && n.badge > 0 ? <span className="st-badge">{n.badge}</span> : null}
+                  {(() => { const b: number = n.to === "/studio/comments" ? reviewN : Number((n as any).badge ?? 0); return b > 0 ? <span className="st-badge">{b}</span> : null; })()}
                 </Link>
               );
             })}

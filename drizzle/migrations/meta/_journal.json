@@ -106,6 +106,27 @@
       "when": 1795472989566,
       "tag": "0014_fix_devotional_days_public_read",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795473283605,
+      "tag": "0015_comments_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795473292336,
+      "tag": "0016_revoke_anon_has_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795473519392,
+      "tag": "0017_comments_view_viewer_admin",
+      "breakpoints": true
     }
   ]
 }

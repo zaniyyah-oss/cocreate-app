@@ -1,3 +1,4 @@
+import { useCommentsReviewCount } from "@/lib/comments-review";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, AlertTriangle, ChevronLeft, ChevronRight, ImageOff, Tags, Clock, Layers, MessageSquare, Film } from "lucide-react";
@@ -181,6 +182,7 @@ function BoardView({ d }: { d: StudioData }) {
 }
 
 function NeedsAttention({ d }: { d: StudioData }) {
+  const reviewN = useCommentsReviewCount().data ?? 0;
   const open = d.pieces.filter((p) => p.status !== "live");
   const miss = (k: string) => open.filter((p) => !p.checks.find((c) => c.key === k)?.done).length;
   const emptySeries = d.series.filter((s) => s.items.length === 0).length;
@@ -189,7 +191,7 @@ function NeedsAttention({ d }: { d: StudioData }) {
     { icon: Tags, n: miss("topics"), text: (n: number) => `${n} ${n === 1 ? "piece" : "pieces"} missing topics`, to: { to: "/studio/pieces", search: { attn: "topics" } } },
     { icon: Clock, n: miss("release"), text: (n: number) => `${n} ${n === 1 ? "piece" : "pieces"} with no release time`, to: { to: "/studio/pieces", search: { attn: "release" } } },
     { icon: Layers, n: emptySeries, text: (n: number) => `${n} ${n === 1 ? "series" : "series"} with no pieces`, to: { to: "/studio/series" } },
-    { icon: MessageSquare, n: 0, text: () => "0 flagged comments", to: { to: "/studio/comments" } },
+    { icon: MessageSquare, n: reviewN, text: (n: number) => `${n} ${n === 1 ? "comment" : "comments"} flagged for review`, to: { to: "/studio/comments" } },
     { icon: Film, n: 0, text: () => "0 clips without captions", to: { to: "/studio/clips" } },
   ];
   return (

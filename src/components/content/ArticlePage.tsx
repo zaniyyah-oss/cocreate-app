@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DocView } from "@/components/content/PieceRenderer";
 import { textToDoc, docHasContent } from "@/lib/piece-doc";
+import { Conversation, useCommentCount } from "@/components/content/Conversation";
 import { getRelated } from "@/lib/related.functions";
 import { saveForLater, removeSaved, markFinished, createReflectionNote } from "@/lib/up-next";
 import { trackEvent } from "@/lib/track";
@@ -56,12 +57,12 @@ type FullPiece = {
   id: string; type: string; title: string; summary: string | null; excerpt: string | null; body: string | null; body_doc: any;
   hero_url: string | null; cover_image_url: string | null; thumbnail_url: string | null; hero_caption: string | null;
   hero_focal_desktop: string | null; hero_focal_mobile: string | null; author_name: string | null; release_at: string | null;
-  read_time_minutes: number | null; duration_seconds: number | null; video_url: string | null; media_url: string | null; topic_id: string | null; slug: string | null;
+  read_time_minutes: number | null; duration_seconds: number | null; video_url: string | null; media_url: string | null; topic_id: string | null; slug: string | null; comments_enabled: boolean;
 };
 
 async function loadPiece(param: string, kinds: string[]) {
   const by = UUID_RE.test(param) ? { col: "id", val: param } : { col: "slug", val: param };
-  const full = await supabase.from("content_items").select("id, type, title, summary, excerpt, body, body_doc, hero_url, cover_image_url, thumbnail_url, hero_caption, hero_focal_desktop, hero_focal_mobile, author_name, release_at, read_time_minutes, duration_seconds, video_url, media_url, topic_id, slug")
+  const full = await supabase.from("content_items").select("id, type, title, summary, excerpt, body, body_doc, hero_url, cover_image_url, thumbnail_url, hero_caption, hero_focal_desktop, hero_focal_mobile, author_name, release_at, read_time_minutes, duration_seconds, video_url, media_url, topic_id, slug, comments_enabled")
     .eq(by.col, by.val).in("type", kinds as any).limit(1).maybeSingle();
   if (full.data) return { full: full.data as unknown as FullPiece, teaser: null };
   // Not readable (unreleased for this viewer, or missing). The teaser view never carries a body before release.
@@ -112,10 +113,7 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
     queryKey: ["saved", "piece", v.userId, piece?.id], enabled: !!v.userId && !!piece,
     queryFn: async () => (await supabase.from("saved_items").select("id").eq("user_id", v.userId!).eq("content_item_id", piece!.id).maybeSingle()).data?.id ?? null,
   });
-  const commentsQ = useQuery({
-    queryKey: ["comment-count", piece?.id], enabled: !!piece && !!v.realUserId,
-    queryFn: async () => (await supabase.from("discussion_comments").select("id", { count: "exact", head: true }).eq("essay_id", piece!.id)).count ?? 0,
-  });
+  const commentsQ = useCommentCount(piece && piece.comments_enabled ? { contentId: piece.id } : null);
   const follows = useFollows(v.userId);
   const reminders = useReminders(v.userId);
   const actions = useContentActions(v.userId);
@@ -221,7 +219,7 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
     <>
       <button type="button" className={`iconbtn${saved ? " on" : ""}`} aria-label={saved ? "Saved" : "Save"} onClick={toggleSave}>{Ico.bookmark(!!saved)}</button>
       <button type="button" className="iconbtn" aria-label="Share" onClick={share}>{Ico.share()}</button>
-      <a href="#conversation" className="iconbtn" aria-label="Jump to conversation" style={{ flexDirection: "column" }}>{Ico.chat()}</a>
+      {piece.comments_enabled && <a href="#conversation" className="iconbtn" aria-label="Jump to conversation" style={{ flexDirection: "column" }}>{Ico.chat()}</a>}
       {commentsQ.data ? <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mut)", marginTop: -8 }}>{commentsQ.data}</span> : null}
       {signedIn && <button type="button" className="iconbtn" aria-label="Add to my workspace" onClick={addToWorkspace}>{Ico.plus()}</button>}
     </>
@@ -295,7 +293,7 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
             )}
 
             {!signedIn && upcoming && <SubscribeBox date={upcoming.releaseAt} line={copy.data?.["subscribe_subline"] ?? ""} preview={preview} />}
-            <div id="conversation" />
+            {piece.comments_enabled && <Conversation target={{ contentId: piece.id }} userId={v.userId} isAdmin={v.isAdmin && !v.staged} />}
           </main>
           <aside className="ca-right">
             {series && parts.length > 0 && <SeriesRail series={series} parts={parts} currentKey={parts[idx]?.key} signedIn={signedIn} explored={explored} following={following} reminded={isReminded} onFollow={follow} onRemind={remind} />}
