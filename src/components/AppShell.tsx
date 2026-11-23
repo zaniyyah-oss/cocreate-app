@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -153,7 +154,7 @@ function OpenStudioItem({ onClick }: { onClick: () => void }) {
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
 
-export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, hideTopbar }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean; /** The page renders its own mobile masthead. */ hideTopbar?: boolean }) {
+export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, hideTopbar, hideBottomNav }: { current?: NavKey; children: ReactNode; hideSideWhenSignedOut?: boolean; hideSide?: boolean; /** The page renders its own mobile masthead. */ hideTopbar?: boolean; hideBottomNav?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [collapsed] = useState<boolean>(true);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -321,7 +322,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
         </div>
       </div>
 
-      {userId && <MobileBottomNav />}
+      {userId && !hideBottomNav && <MobileBottomNav />}
     </div>
   );
 }

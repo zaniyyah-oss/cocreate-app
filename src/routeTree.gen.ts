@@ -51,8 +51,14 @@ import { Route as EssaysIdRouteImport } from './routes/essays.$id'
 import { Route as ExploreDevotionalsRouteImport } from './routes/explore_.devotionals'
 import { Route as PlansNewRouteImport } from './routes/plans.new'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
+import { Route as PreviewTokenRouteImport } from './routes/preview.$token'
 import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
 import { Route as StudioIndexRouteImport } from './routes/studio.index'
+import { Route as StudioClipsRouteImport } from './routes/studio.clips'
+import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
+import { Route as StudioHomepageRouteImport } from './routes/studio.homepage'
+import { Route as StudioSeriesRouteImport } from './routes/studio.series'
+import { Route as StudioTeamRouteImport } from './routes/studio.team'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
@@ -64,6 +70,8 @@ import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.foc
 import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
 import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
 import { Route as StudioPiecesIndexRouteImport } from './routes/studio.pieces.index'
+import { Route as StudioPiecesIdRouteImport } from './routes/studio.pieces.$id'
+import { Route as StudioPreviewIdRouteImport } from './routes/studio_.preview.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -275,6 +283,11 @@ const PodcastsIdRoute = PodcastsIdRouteImport.update({
   path: '/podcasts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewTokenRoute = PreviewTokenRouteImport.update({
+  id: '/preview/$token',
+  path: '/preview/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReadAbbrRoute = ReadAbbrRouteImport.update({
   id: '/$abbr',
   path: '/$abbr',
@@ -283,6 +296,31 @@ const ReadAbbrRoute = ReadAbbrRouteImport.update({
 const StudioIndexRoute = StudioIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioClipsRoute = StudioClipsRouteImport.update({
+  id: '/clips',
+  path: '/clips',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioCommentsRoute = StudioCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioHomepageRoute = StudioHomepageRouteImport.update({
+  id: '/homepage',
+  path: '/homepage',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioSeriesRoute = StudioSeriesRouteImport.update({
+  id: '/series',
+  path: '/series',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioTeamRoute = StudioTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => StudioRoute,
 } as any)
 const TeachingsIdRoute = TeachingsIdRouteImport.update({
@@ -340,6 +378,16 @@ const StudioPiecesIndexRoute = StudioPiecesIndexRouteImport.update({
   path: '/pieces/',
   getParentRoute: () => StudioRoute,
 } as any)
+const StudioPiecesIdRoute = StudioPiecesIdRouteImport.update({
+  id: '/pieces/$id',
+  path: '/pieces/$id',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioPreviewIdRoute = StudioPreviewIdRouteImport.update({
+  id: '/studio_/preview/$id',
+  path: '/studio/preview/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -382,7 +430,13 @@ export interface FileRoutesByFullPath {
   '/explore/devotionals': typeof ExploreDevotionalsRoute
   '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/preview/$token': typeof PreviewTokenRoute
   '/read/$abbr': typeof ReadAbbrRoute
+  '/studio/clips': typeof StudioClipsRoute
+  '/studio/comments': typeof StudioCommentsRoute
+  '/studio/homepage': typeof StudioHomepageRoute
+  '/studio/series': typeof StudioSeriesRoute
+  '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -395,6 +449,8 @@ export interface FileRoutesByFullPath {
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
+  '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/studio/pieces/': typeof StudioPiecesIndexRoute
 }
@@ -435,7 +491,13 @@ export interface FileRoutesByTo {
   '/explore/devotionals': typeof ExploreDevotionalsRoute
   '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/preview/$token': typeof PreviewTokenRoute
   '/read/$abbr': typeof ReadAbbrRoute
+  '/studio/clips': typeof StudioClipsRoute
+  '/studio/comments': typeof StudioCommentsRoute
+  '/studio/homepage': typeof StudioHomepageRoute
+  '/studio/series': typeof StudioSeriesRoute
+  '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -448,6 +510,8 @@ export interface FileRoutesByTo {
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
+  '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
   '/studio/pieces': typeof StudioPiecesIndexRoute
 }
@@ -493,7 +557,13 @@ export interface FileRoutesById {
   '/explore_/devotionals': typeof ExploreDevotionalsRoute
   '/plans/new': typeof PlansNewRoute
   '/podcasts/$id': typeof PodcastsIdRoute
+  '/preview/$token': typeof PreviewTokenRoute
   '/read/$abbr': typeof ReadAbbrRoute
+  '/studio/clips': typeof StudioClipsRoute
+  '/studio/comments': typeof StudioCommentsRoute
+  '/studio/homepage': typeof StudioHomepageRoute
+  '/studio/series': typeof StudioSeriesRoute
+  '/studio/team': typeof StudioTeamRoute
   '/teachings/$id': typeof TeachingsIdRoute
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -506,6 +576,8 @@ export interface FileRoutesById {
   '/devotionals/focus/$id': typeof DevotionalsFocusIdRoute
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
+  '/studio/pieces/$id': typeof StudioPiecesIdRoute
+  '/studio_/preview/$id': typeof StudioPreviewIdRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/studio/pieces/': typeof StudioPiecesIndexRoute
 }
@@ -552,7 +624,13 @@ export interface FileRouteTypes {
     | '/explore/devotionals'
     | '/plans/new'
     | '/podcasts/$id'
+    | '/preview/$token'
     | '/read/$abbr'
+    | '/studio/clips'
+    | '/studio/comments'
+    | '/studio/homepage'
+    | '/studio/series'
+    | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
@@ -565,6 +643,8 @@ export interface FileRouteTypes {
     | '/devotionals/focus/$id'
     | '/plans/$id/edit'
     | '/plans/focus/$date'
+    | '/studio/pieces/$id'
+    | '/studio/preview/$id'
     | '/admin/collections/'
     | '/studio/pieces/'
   fileRoutesByTo: FileRoutesByTo
@@ -605,7 +685,13 @@ export interface FileRouteTypes {
     | '/explore/devotionals'
     | '/plans/new'
     | '/podcasts/$id'
+    | '/preview/$token'
     | '/read/$abbr'
+    | '/studio/clips'
+    | '/studio/comments'
+    | '/studio/homepage'
+    | '/studio/series'
+    | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin'
@@ -618,6 +704,8 @@ export interface FileRouteTypes {
     | '/devotionals/focus/$id'
     | '/plans/$id/edit'
     | '/plans/focus/$date'
+    | '/studio/pieces/$id'
+    | '/studio/preview/$id'
     | '/admin/collections'
     | '/studio/pieces'
   id:
@@ -662,7 +750,13 @@ export interface FileRouteTypes {
     | '/explore_/devotionals'
     | '/plans/new'
     | '/podcasts/$id'
+    | '/preview/$token'
     | '/read/$abbr'
+    | '/studio/clips'
+    | '/studio/comments'
+    | '/studio/homepage'
+    | '/studio/series'
+    | '/studio/team'
     | '/teachings/$id'
     | '/topics/$slug'
     | '/admin/'
@@ -675,6 +769,8 @@ export interface FileRouteTypes {
     | '/devotionals/focus/$id'
     | '/plans/$id/edit'
     | '/plans/focus/$date'
+    | '/studio/pieces/$id'
+    | '/studio_/preview/$id'
     | '/admin/collections/'
     | '/studio/pieces/'
   fileRoutesById: FileRoutesById
@@ -714,10 +810,12 @@ export interface RootRouteChildren {
   ExploreDevotionalsRoute: typeof ExploreDevotionalsRoute
   PlansNewRoute: typeof PlansNewRoute
   PodcastsIdRoute: typeof PodcastsIdRoute
+  PreviewTokenRoute: typeof PreviewTokenRoute
   TeachingsIdRoute: typeof TeachingsIdRoute
   TopicsSlugRoute: typeof TopicsSlugRoute
   PlansIdEditRoute: typeof PlansIdEditRoute
   PlansFocusDateRoute: typeof PlansFocusDateRoute
+  StudioPreviewIdRoute: typeof StudioPreviewIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1016,6 +1114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PodcastsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/preview/$token': {
+      id: '/preview/$token'
+      path: '/preview/$token'
+      fullPath: '/preview/$token'
+      preLoaderRoute: typeof PreviewTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/read/$abbr': {
       id: '/read/$abbr'
       path: '/$abbr'
@@ -1028,6 +1133,41 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/studio/'
       preLoaderRoute: typeof StudioIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/clips': {
+      id: '/studio/clips'
+      path: '/clips'
+      fullPath: '/studio/clips'
+      preLoaderRoute: typeof StudioClipsRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/comments': {
+      id: '/studio/comments'
+      path: '/comments'
+      fullPath: '/studio/comments'
+      preLoaderRoute: typeof StudioCommentsRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/homepage': {
+      id: '/studio/homepage'
+      path: '/homepage'
+      fullPath: '/studio/homepage'
+      preLoaderRoute: typeof StudioHomepageRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/series': {
+      id: '/studio/series'
+      path: '/series'
+      fullPath: '/studio/series'
+      preLoaderRoute: typeof StudioSeriesRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/team': {
+      id: '/studio/team'
+      path: '/team'
+      fullPath: '/studio/team'
+      preLoaderRoute: typeof StudioTeamRouteImport
       parentRoute: typeof StudioRoute
     }
     '/teachings/$id': {
@@ -1107,6 +1247,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioPiecesIndexRouteImport
       parentRoute: typeof StudioRoute
     }
+    '/studio/pieces/$id': {
+      id: '/studio/pieces/$id'
+      path: '/pieces/$id'
+      fullPath: '/studio/pieces/$id'
+      preLoaderRoute: typeof StudioPiecesIdRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio_/preview/$id': {
+      id: '/studio_/preview/$id'
+      path: '/studio/preview/$id'
+      fullPath: '/studio/preview/$id'
+      preLoaderRoute: typeof StudioPreviewIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1176,12 +1330,24 @@ const ReadRouteChildren: ReadRouteChildren = {
 const ReadRouteWithChildren = ReadRoute._addFileChildren(ReadRouteChildren)
 
 interface StudioRouteChildren {
+  StudioClipsRoute: typeof StudioClipsRoute
+  StudioCommentsRoute: typeof StudioCommentsRoute
+  StudioHomepageRoute: typeof StudioHomepageRoute
+  StudioSeriesRoute: typeof StudioSeriesRoute
+  StudioTeamRoute: typeof StudioTeamRoute
   StudioIndexRoute: typeof StudioIndexRoute
+  StudioPiecesIdRoute: typeof StudioPiecesIdRoute
   StudioPiecesIndexRoute: typeof StudioPiecesIndexRoute
 }
 
 const StudioRouteChildren: StudioRouteChildren = {
+  StudioClipsRoute: StudioClipsRoute,
+  StudioCommentsRoute: StudioCommentsRoute,
+  StudioHomepageRoute: StudioHomepageRoute,
+  StudioSeriesRoute: StudioSeriesRoute,
+  StudioTeamRoute: StudioTeamRoute,
   StudioIndexRoute: StudioIndexRoute,
+  StudioPiecesIdRoute: StudioPiecesIdRoute,
   StudioPiecesIndexRoute: StudioPiecesIndexRoute,
 }
 
@@ -1223,10 +1389,12 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreDevotionalsRoute: ExploreDevotionalsRoute,
   PlansNewRoute: PlansNewRoute,
   PodcastsIdRoute: PodcastsIdRoute,
+  PreviewTokenRoute: PreviewTokenRoute,
   TeachingsIdRoute: TeachingsIdRoute,
   TopicsSlugRoute: TopicsSlugRoute,
   PlansIdEditRoute: PlansIdEditRoute,
   PlansFocusDateRoute: PlansFocusDateRoute,
+  StudioPreviewIdRoute: StudioPreviewIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

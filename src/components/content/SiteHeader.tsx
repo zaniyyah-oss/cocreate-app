@@ -74,9 +74,9 @@ export function Header({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-export function InfoBar({ currentSeries }: { currentSeries?: SeriesRow | null }) {
+export function InfoBar({ currentSeries, now }: { currentSeries?: SeriesRow | null; /** simulated "now" for staged previews */ now?: string }) {
   const [today, setToday] = useState("");
-  useEffect(() => { setToday(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })); }, []);
+  useEffect(() => { setToday((now ? new Date(now) : new Date()).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })); }, [now]);
   const s = currentSeries;
   return (
     <div className="ch-info">

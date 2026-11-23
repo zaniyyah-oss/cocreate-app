@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -14,8 +14,16 @@ import {
 } from "@/lib/content-home";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { feed?: number } =>
-    search.feed ? { feed: 1 } : {},
+  validateSearch: (search: Record<string, unknown>): { feed?: number; at?: string; stage?: string; viewer?: "in" | "out"; golive?: string } => {
+    const o: { feed?: number; at?: string; stage?: string; viewer?: "in" | "out"; golive?: string } = {};
+    if (search.feed) o.feed = 1;
+    // Studio staged preview: render the page "as of" a simulated time, highlighting one piece.
+    if (typeof search.at === "string" && !Number.isNaN(Date.parse(search.at))) o.at = search.at;
+    if (typeof search.stage === "string" && /^[0-9a-f-]{36}$/i.test(search.stage)) o.stage = search.stage;
+    if (search.viewer === "in" || search.viewer === "out") o.viewer = search.viewer;
+    if (typeof search.golive === "string") o.golive = search.golive.slice(0, 20);
+    return o;
+  },
   component: HomePage,
   head: () => ({
     meta: [
@@ -72,14 +80,35 @@ function Photo({ p, ratio, alt }: { p: { hero_url?: string | null; cover_image_u
 
 function PieceLink({ p, className, style, children }: { p: Piece; className?: string; style?: CSSProperties; children: ReactNode }) {
   const id = p.id ?? "";
-  if (p.type === "teaching" || p.type === "clip") return <Link to="/teachings/$id" params={{ id }} className={className} style={style}>{children}</Link>;
-  if (p.type === "podcast") return <Link to="/podcasts/$id" params={{ id }} className={className} style={style}>{children}</Link>;
-  return <Link to="/essays/$id" params={{ id }} className={className} style={style}>{children}</Link>;
+  if (p.type === "teaching" || p.type === "clip") return <Link to="/teachings/$id" params={{ id }} className={className} style={style} data-piece-id={id}>{children}</Link>;
+  if (p.type === "podcast") return <Link to="/podcasts/$id" params={{ id }} className={className} style={style} data-piece-id={id}>{children}</Link>;
+  return <Link to="/essays/$id" params={{ id }} className={className} style={style} data-piece-id={id}>{children}</Link>;
+}
+
+/** Staged preview: outline where the staged piece lands, with a "Goes live" pill. */
+function useStagedHighlight(stage: string | undefined, golive: string | undefined, data: unknown) {
+  useEffect(() => {
+    if (!stage || !data) return;
+    const t = setTimeout(() => {
+      const els = Array.from(document.querySelectorAll<HTMLElement>(`[data-piece-id="${stage}"]`));
+      const groups = new Map<Element, HTMLElement[]>();
+      for (const el of els) { const k = el.closest("section") ?? document.body; groups.set(k, [...(groups.get(k) ?? []), el]); }
+      groups.forEach((list) => {
+        let target: HTMLElement | null = list[0]!;
+        if (list.length > 1) { while (target && !list.every((e) => target!.contains(e))) target = target.parentElement; }
+        else target = (target.closest(".ch-hero") as HTMLElement | null) ?? target.parentElement;
+        if (!target) return;
+        target.classList.add("staged-hl");
+        if (golive) target.setAttribute("data-golive", `Goes live ${golive}`);
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [stage, golive, data]);
 }
 
 function DevoLink({ d, className, style, children }: { d: DevoRow; className?: string; style?: CSSProperties; children: ReactNode }) {
-  if (d.slug) return <Link to="/devotionals/$slug/overview" params={{ slug: d.slug }} className={className} style={style}>{children}</Link>;
-  return <Link to="/explore/devotionals" className={className} style={style}>{children}</Link>;
+  if (d.slug) return <Link to="/devotionals/$slug/overview" params={{ slug: d.slug }} className={className} style={style} data-piece-id={d.id}>{children}</Link>;
+  return <Link to="/explore/devotionals" className={className} style={style} data-piece-id={d.id}>{children}</Link>;
 }
 
 function useSaveForLater(userId: string | null) {
@@ -93,11 +122,14 @@ function useSaveForLater(userId: string | null) {
   };
 }
 
+const STAGED_CSS = `.staged-hl{outline:3px solid #181A4D!important;outline-offset:3px;position:relative;border-radius:6px;}
+.staged-hl[data-golive]::before{content:attr(data-golive);position:absolute;top:8px;left:8px;z-index:5;background:#181A4D;color:#fff;font-family:'Instrument Sans',sans-serif;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}`;
+
 /* ---------- page ---------- */
 
 function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
-  const { feed } = Route.useSearch();
+  const { feed, at, stage, viewer, golive } = Route.useSearch();
   const navigate = useNavigate();
   // Signed-in users land on the daily workspace unless they explicitly opened Explore.
   const [redirecting, setRedirecting] = useState(!feed);
@@ -106,7 +138,7 @@ function HomePage() {
     supabase.auth.getSession().then(({ data }) => {
       const id = data.session?.user.id ?? null;
       setUserId(id);
-      if (id && !feed) navigate({ to: "/devotionals", replace: true });
+      if (id && !feed && !at) navigate({ to: "/devotionals", replace: true });
       else setRedirecting(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
@@ -114,22 +146,24 @@ function HomePage() {
   }, []);
 
   const preview = useIsPreview();
-  const home = useHomeData();
-  const signedIn = !!userId;
+  const simNow = useMemo(() => (at ? new Date(at) : undefined), [at]);
+  const home = useHomeData(simNow, stage);
+  const signedIn = at ? viewer === "in" && !!userId : !!userId;
+  useStagedHighlight(stage, golive, home.data);
 
   if (redirecting) return null;
   const d = home.data;
 
   return (
-    <AppShell current="explore" hideSide={!signedIn} hideTopbar>
-      <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
+    <AppShell current="explore" hideSide={!signedIn || !!at} hideTopbar hideBottomNav={!!at && viewer !== "in"}>
+      <style dangerouslySetInnerHTML={{ __html: HOME_CSS + STAGED_CSS }} />
       <div className="content-site ch">
         <Header signedIn={signedIn} />
-        <InfoBar currentSeries={d?.currentSeries} />
+        <InfoBar currentSeries={d?.currentSeries} now={at ? d?.now : undefined} />
         {d && (
           <>
             <Hero d={d} preview={preview} userId={userId} />
-            {signedIn && userId && <PickUp userId={userId} copy={d.copy} preview={preview} />}
+            {signedIn && userId && !at && <PickUp userId={userId} copy={d.copy} preview={preview} />}
             <NewAndSchedule d={d} preview={preview} userId={userId} />
             <Devotionals d={d} preview={preview} />
             <Watch d={d} />

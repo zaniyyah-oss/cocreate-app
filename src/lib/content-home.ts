@@ -52,7 +52,7 @@ export const photoOf = (p: { hero_url?: string | null; cover_image_url?: string 
 const WATCH = new Set(["teaching", "clip"]);
 const READ = new Set(["essay", "blog"]);
 
-export async function fetchHomeData(nowInput: Date = new Date()): Promise<HomeData> {
+export async function fetchHomeData(nowInput: Date = new Date(), stageId?: string): Promise<HomeData> {
   const now = nowInput;
   const [piecesR, seriesR, devoR, prodR, copyR] = await Promise.all([
     supabase.from("content_items_public").select("*").not("release_at", "is", null).order("release_at", { ascending: false }).limit(120),
@@ -61,9 +61,18 @@ export async function fetchHomeData(nowInput: Date = new Date()): Promise<HomeDa
     supabase.from("shop_products").select("id, slug, title, subtitle, category, cover_image_url, checkout_url").eq("is_active", true).order("sort_order", { ascending: true }).limit(4),
     supabase.from("page_content").select("field_key, field_value").eq("page_key", "home"),
   ]);
-  const pieces = (piecesR.data ?? []) as Piece[];
+  let pieces = (piecesR.data ?? []) as Piece[];
   const series = (seriesR.data ?? []) as SeriesRow[];
-  const devos = (devoR.data ?? []) as unknown as DevoRow[];
+  let devos = (devoR.data ?? []) as unknown as DevoRow[];
+  // Staged preview (Studio admins only — RLS hides drafts from everyone else): include the staged piece as if published.
+  if (stageId) {
+    const { data: sp } = await supabase.from("content_items").select("id, type, title, excerpt, body, scripture_reference, topic_id, shelf, author_name, published_at, thumbnail_url, video_url, duration_seconds, external_url, created_at, release_at, summary, kicker, hero_url, hero_focal_desktop, hero_focal_mobile, feature_new_this_month, is_featured, slug, cover_image_url, read_time_minutes").eq("id", stageId).maybeSingle();
+    if (sp) pieces = [sp as Piece, ...pieces.filter((p) => p.id !== stageId)].sort((a, b) => (b.release_at ?? "").localeCompare(a.release_at ?? ""));
+    else {
+      const { data: sd } = await supabase.from("devotional_templates").select("id, title, slug, description, duration_days, hero_url, hero_focal_desktop, hero_focal_mobile, release_at, feature_new_this_month").eq("id", stageId).maybeSingle();
+      if (sd) devos = [sd as DevoRow, ...devos.filter((d) => d.id !== stageId)];
+    }
+  }
   const copy: Record<string, string> = {};
   for (const r of copyR.data ?? []) copy[r.field_key] = r.field_value ?? "";
 
@@ -91,7 +100,8 @@ export async function fetchHomeData(nowInput: Date = new Date()): Promise<HomeDa
     return out;
   };
 
-  const hero = released.find((p) => p.is_featured && photoOf(p)) ?? released.find((p) => p.is_featured) ?? released.find((p) => photoOf(p)) ?? released[0] ?? null;
+  const chosen = copy["featured_piece_id"] ? released.find((p) => p.id === copy["featured_piece_id"]) : undefined;
+  const hero = chosen ?? released.find((p) => p.is_featured && photoOf(p)) ?? released.find((p) => p.is_featured) ?? released.find((p) => photoOf(p)) ?? released[0] ?? null;
   if (hero?.id) used.add(hero.id);
   const heroSeries = hero?.id && seriesPieceIds.has(hero.id) ? currentSeries : null;
 
@@ -102,7 +112,14 @@ export async function fetchHomeData(nowInput: Date = new Date()): Promise<HomeDa
     ...devos.filter((d) => d.feature_new_this_month && sameMonth(d.release_at, now))
       .map((d) => ({ kind: "devotional" as const, devo: d, at: d.release_at! })),
   ].sort((a, b) => a.at.localeCompare(b.at));
-  let newThisMonth = flagged.slice(0, 3);
+  // Studio "Homepage layout" picks (ordered, max 3) win; c:<id> = piece, d:<id> = devotional.
+  const picks: NewCard[] = [];
+  for (const ref of (copy["new_this_month_ids"] ?? "").split(",").map((x) => x.trim()).filter(Boolean)) {
+    const [k, pid] = ref.split(":");
+    if (k === "c") { const p = pieces.find((x) => x.id === pid); if (p && p.release_at && p.id !== hero?.id) picks.push({ kind: "piece", piece: p, at: p.release_at }); }
+    if (k === "d") { const dv = devos.find((x) => x.id === pid); if (dv) picks.push({ kind: "devotional", devo: dv, at: dv.release_at ?? now.toISOString() }); }
+  }
+  let newThisMonth = picks.length ? picks.slice(0, 3) : flagged.slice(0, 3);
   if (!newThisMonth.length) {
     newThisMonth = released.filter((p) => sameMonth(p.release_at, now) && p.id && !used.has(p.id)).slice(0, 3)
       .map((p) => ({ kind: "piece" as const, piece: p, at: p.release_at! }));
@@ -120,9 +137,9 @@ export async function fetchHomeData(nowInput: Date = new Date()): Promise<HomeDa
   };
 }
 
-export function useHomeData(now?: Date) {
+export function useHomeData(now?: Date, stageId?: string) {
   const key = now ? now.toISOString() : "live";
-  return useQuery({ queryKey: ["content-home", key], queryFn: () => fetchHomeData(now ?? new Date()), staleTime: 60_000 });
+  return useQuery({ queryKey: ["content-home", key, stageId ?? null], queryFn: () => fetchHomeData(now ?? new Date(), stageId), staleTime: 60_000 });
 }
 
 export const TYPE_LABEL: Record<string, string> = {
