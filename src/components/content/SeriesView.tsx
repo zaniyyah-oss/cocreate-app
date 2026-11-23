@@ -30,8 +30,12 @@ const MOBILE: [string, string][] = [
   [".cs-hero .in", "padding:22px;"],
   [".cs-hero h1", "font-size:40px;"],
   [".cs-about", "flex-direction:column;gap:32px;margin-top:48px;"],
-  [".cs-row", "flex-wrap:wrap;gap:12px;"],
-  [".cs-row .th", "width:120px;"],
+  [".cs-row", "gap:12px;align-items:flex-start;padding:14px 0;"],
+  [".cs-row .th", "width:96px;"],
+  [".cs-row .num", "font-size:18px!important;width:22px!important;flex:none;padding-top:2px;"],
+  [".cs-row .rt", "font-size:16px!important;line-height:1.3;"],
+  [".cs-row .k", "font-size:10.5px;letter-spacing:.08em;"],
+  [".cs-about .stats", "gap:22px!important;flex-wrap:wrap;"],
   [".cs-devo", "flex-direction:column;"],
   [".cs-devo .im", "width:100%;"],
   [".vc-tile", "width:150px;"],
@@ -121,7 +125,7 @@ export function SeriesView({ s, parts, clips, devo, topicNames, authors, edit, l
             : about && <div className="pc-body" style={{ marginTop: 20 }}><DocView node={about} /></div>}
         </div>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 28 }}>
-          <div style={{ display: "flex", gap: 28 }}>
+          <div className="stats" style={{ display: "flex", gap: 28 }}>
             <Stat n={String(parts.length)} l="pieces" />
             <Stat n={String(released)} l="out now" />
             {finalDate && <Stat n={monD(finalDate)} l="final release" />}
@@ -182,11 +186,11 @@ export function SeriesView({ s, parts, clips, devo, topicNames, authors, edit, l
           const media = p.kind === "teaching" || p.kind === "podcast" || p.kind === "clip";
           return (
             <div key={p.key} className="cs-row" data-piece-id={p.piece?.id}>
-              <span className="ttl" style={{ fontSize: 26, fontWeight: 700, color: p.released ? "var(--ink)" : "#B5B2A8", width: 40 }}>{i + 1}</span>
+              <span className="ttl num" style={{ fontSize: 26, fontWeight: 700, color: p.released ? "var(--ink)" : "#B5B2A8", width: 40 }}>{i + 1}</span>
               <div className="th"><Ph src={p.thumb} ratio="16/10" gray={!p.released}>{media && p.released ? <PlayBadge /> : null}</Ph></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="k">{p.released ? [kindLabel(p.kind), p.length, monD(p.releaseAt)].filter(Boolean).join(" · ") : `${kindLabel(p.kind)} · Coming ${monD(p.releaseAt)}`}</div>
-                <Wrap p={p}><div className="ttl" style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: p.released ? "var(--ink)" : "var(--mut)" }}>{p.title || `Coming ${monthD(p.releaseAt)}`}</div></Wrap>
+                <Wrap p={p}><div className="ttl rt" style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: p.released ? "var(--ink)" : "var(--mut)" }}>{p.title || `Coming ${monthD(p.releaseAt)}`}</div></Wrap>
                 {p.summary && <div style={{ fontSize: 14, color: "var(--mut)", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.summary}</div>}
               </div>
               {rowAction?.(p, i)}

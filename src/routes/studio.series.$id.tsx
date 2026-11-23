@@ -460,7 +460,7 @@ function PagePreview({ s, f, items, pieceOf, clips, patch, firstPieceId }: { s: 
       </div>
       <div style={{ background: "#fff", border: `1px solid ${C.LINE}`, borderRadius: 12, boxShadow: "0 12px 32px rgba(24,26,77,.08)", overflow: "hidden", width: phone ? 390 : "100%", maxWidth: "100%", alignSelf: "center" }}>
         <ContentScope>
-          <div style={{ padding: phone ? "0 0 32px" : "8px 24px 40px" }}>
+          <div style={{ padding: phone ? "0 16px 32px" : "8px 24px 40px" }}>
             <SeriesView s={view} parts={parts} clips={clips.filter((c) => c.caption.trim()).map(toPublicClip)} links={false} phone={phone} edit={edit}
               devo={devoPiece ? { id: devoPiece.id, title: devoPiece.title, hero_url: devoPiece.photo, duration_days: null } : null}
               topicNames={topicNames} authors={[]} heroActions={inert} />
