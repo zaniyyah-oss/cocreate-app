@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       admin_invites: {
@@ -211,12 +206,16 @@ export type Database = {
           devotional_template_id: string | null
           eyebrow: string | null
           featured_clip_content_id: string | null
+          hero_focal_desktop: string | null
+          hero_focal_mobile: string | null
           id: string
           intro_video_content_id: string | null
           is_featured: boolean
           published_at: string | null
+          series_month: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
+          summary: string | null
           tag_color: string | null
           title: string
           updated_at: string
@@ -233,12 +232,16 @@ export type Database = {
           devotional_template_id?: string | null
           eyebrow?: string | null
           featured_clip_content_id?: string | null
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
           id?: string
           intro_video_content_id?: string | null
           is_featured?: boolean
           published_at?: string | null
+          series_month?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           tag_color?: string | null
           title: string
           updated_at?: string
@@ -255,12 +258,16 @@ export type Database = {
           devotional_template_id?: string | null
           eyebrow?: string | null
           featured_clip_content_id?: string | null
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
           id?: string
           intro_video_content_id?: string | null
           is_featured?: boolean
           published_at?: string | null
+          series_month?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           tag_color?: string | null
           title?: string
           updated_at?: string
@@ -345,17 +352,24 @@ export type Database = {
           duration_seconds: number | null
           excerpt: string | null
           external_url: string | null
+          feature_new_this_month: boolean
+          hero_focal_desktop: string | null
+          hero_focal_mobile: string | null
+          hero_url: string | null
           id: string
           is_featured: boolean
           is_seed: boolean
+          kicker: string | null
           media_url: string | null
           published_at: string | null
           read_time_minutes: number | null
+          release_at: string | null
           scheduled_at: string | null
           scripture_reference: string | null
           shelf: Database["public"]["Enums"]["content_shelf"] | null
           slug: string | null
           status: Database["public"]["Enums"]["content_status"]
+          summary: string | null
           thumbnail_url: string | null
           title: string
           topic_id: string | null
@@ -371,17 +385,24 @@ export type Database = {
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
+          feature_new_this_month?: boolean
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string
           is_featured?: boolean
           is_seed?: boolean
+          kicker?: string | null
           media_url?: string | null
           published_at?: string | null
           read_time_minutes?: number | null
+          release_at?: string | null
           scheduled_at?: string | null
           scripture_reference?: string | null
           shelf?: Database["public"]["Enums"]["content_shelf"] | null
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           thumbnail_url?: string | null
           title: string
           topic_id?: string | null
@@ -397,17 +418,24 @@ export type Database = {
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
+          feature_new_this_month?: boolean
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string
           is_featured?: boolean
           is_seed?: boolean
+          kicker?: string | null
           media_url?: string | null
           published_at?: string | null
           read_time_minutes?: number | null
+          release_at?: string | null
           scheduled_at?: string | null
           scripture_reference?: string | null
           shelf?: Database["public"]["Enums"]["content_shelf"] | null
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           thumbnail_url?: string | null
           title?: string
           topic_id?: string | null
@@ -418,6 +446,49 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "content_items_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_topics: {
+        Row: {
+          content_id: string
+          created_at: string
+          position: number
+          topic_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          position?: number
+          topic_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          position?: number
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_topics_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topics_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topics_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
@@ -760,7 +831,11 @@ export type Database = {
           created_at: string
           description: string | null
           duration_days: number | null
+          feature_new_this_month: boolean
           fill_mode: string
+          hero_focal_desktop: string | null
+          hero_focal_mobile: string | null
+          hero_url: string | null
           id: string
           intro_video_url: string | null
           is_default: boolean
@@ -775,6 +850,7 @@ export type Database = {
           pray_items: Json
           pray_prompt: string | null
           reflect_prompt: string | null
+          release_at: string | null
           scheduled_at: string | null
           scripture_focus: string | null
           scripture_items: Json
@@ -794,7 +870,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration_days?: number | null
+          feature_new_this_month?: boolean
           fill_mode?: string
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string
           intro_video_url?: string | null
           is_default?: boolean
@@ -809,6 +889,7 @@ export type Database = {
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
+          release_at?: string | null
           scheduled_at?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
@@ -828,7 +909,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration_days?: number | null
+          feature_new_this_month?: boolean
           fill_mode?: string
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string
           intro_video_url?: string | null
           is_default?: boolean
@@ -843,6 +928,7 @@ export type Database = {
           pray_items?: Json
           pray_prompt?: string | null
           reflect_prompt?: string | null
+          release_at?: string | null
           scheduled_at?: string | null
           scripture_focus?: string | null
           scripture_items?: Json
@@ -1843,6 +1929,7 @@ export type Database = {
       }
       shop_products: {
         Row: {
+          category: string | null
           checkout_url: string | null
           cover_image_url: string | null
           created_at: string
@@ -1857,6 +1944,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           checkout_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -1871,6 +1959,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           checkout_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -2416,14 +2505,25 @@ export type Database = {
         Row: {
           author_name: string | null
           body: string | null
+          cover_image_url: string | null
           created_at: string | null
           duration_seconds: number | null
           excerpt: string | null
           external_url: string | null
+          feature_new_this_month: boolean | null
+          hero_focal_desktop: string | null
+          hero_focal_mobile: string | null
+          hero_url: string | null
           id: string | null
+          is_featured: boolean | null
+          kicker: string | null
           published_at: string | null
+          read_time_minutes: number | null
+          release_at: string | null
           scripture_reference: string | null
           shelf: Database["public"]["Enums"]["content_shelf"] | null
+          slug: string | null
+          summary: string | null
           thumbnail_url: string | null
           title: string | null
           topic_id: string | null
@@ -2433,14 +2533,25 @@ export type Database = {
         Insert: {
           author_name?: string | null
           body?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
+          feature_new_this_month?: boolean | null
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string | null
+          is_featured?: boolean | null
+          kicker?: string | null
           published_at?: string | null
+          read_time_minutes?: number | null
+          release_at?: string | null
           scripture_reference?: string | null
           shelf?: Database["public"]["Enums"]["content_shelf"] | null
+          slug?: string | null
+          summary?: string | null
           thumbnail_url?: string | null
           title?: string | null
           topic_id?: string | null
@@ -2450,14 +2561,25 @@ export type Database = {
         Update: {
           author_name?: string | null
           body?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
+          feature_new_this_month?: boolean | null
+          hero_focal_desktop?: string | null
+          hero_focal_mobile?: string | null
+          hero_url?: string | null
           id?: string | null
+          is_featured?: boolean | null
+          kicker?: string | null
           published_at?: string | null
+          read_time_minutes?: number | null
+          release_at?: string | null
           scripture_reference?: string | null
           shelf?: Database["public"]["Enums"]["content_shelf"] | null
+          slug?: string | null
+          summary?: string | null
           thumbnail_url?: string | null
           title?: string | null
           topic_id?: string | null
@@ -2727,3 +2849,4 @@ export const Constants = {
     },
   },
 } as const
+

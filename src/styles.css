@@ -189,3 +189,29 @@
     font-feature-settings: "ss01", "cv11";
   }
 }
+
+/* Content site (public content pages + Studio): a fixed token set.
+   App skins/themes must never override these. */
+.content-site {
+  --cs-bg: #FFFFFF;
+  --cs-ink: #181A4D;
+  --cs-text: #2A2B33;
+  --cs-muted: #5F5D55;
+  --cs-line: #E6E3DC;
+  --cs-panel: #F6F5F1;
+  --cs-green: #0F4A42;
+  --cs-amber-ink: #8A5E00;
+  --cs-photo-empty: #E9E6DF;
+  --cs-lime: #DCE07A;
+  --cs-amber: #FFAE00;
+  --cs-periwinkle: #8A96E0;
+  --cs-blush: #E990A2;
+  --cs-overlay: rgba(10, 14, 36, 0.32);
+  --cs-font-head: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --cs-font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font-family: var(--cs-font-sans);
+  font-style: normal;
+}
+.content-site * { font-style: normal; }

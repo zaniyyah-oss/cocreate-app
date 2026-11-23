@@ -5,7 +5,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HomeMasthead, HOME_CSS } from "@/routes/index";
+import { HomeMasthead, HOME_CSS } from "@/components/content/LegacyMasthead";
 import { useUpNext } from "@/lib/up-next";
 
 export const Route = createFileRoute("/shop")({

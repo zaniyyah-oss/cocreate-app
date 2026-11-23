@@ -1,21 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { Headphones } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-import { AppShell } from "@/components/AppShell";
-import { NotificationBell } from "@/components/NotificationBell";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SaveButton } from "@/components/SaveButton";
-import { useUpNext, lengthLabel, typeLabel } from "@/lib/up-next";
-import { useActiveDevotional, todayISO } from "@/lib/active-devotional";
-import { usePublishedDevotionals, subscribeToDevotional } from "@/lib/devotional-start";
-import { createContext, useContext } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
-
-import { useIsMobile } from "@/hooks/use-mobile";
-
+import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { HOME_CSS } from "@/components/content/home-css";
+import { useUpNext, saveForLater, useInvalidateUpNext } from "@/lib/up-next";
+import { todayISO } from "@/lib/active-devotional";
+import {
+  useHomeData, photoOf, shortDate, TYPE_LABEL, TYPE_DOT,
+  type Piece, type DevoRow, type NewCard, type HomeData,
+} from "@/lib/content-home";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): { feed?: number } =>
@@ -23,1333 +18,569 @@ export const Route = createFileRoute("/")({
   component: HomePage,
   head: () => ({
     meta: [
-      { title: "CoCreate — Essays, teachings & practices for how you actually live" },
-      { name: "description", content: "A publication for identity, marriage, parenting, ministry, and marketplace — essays, teachings, podcasts, and practices to help you build with him, not just for him." },
-      { property: "og:title", content: "CoCreate" },
-      { property: "og:description", content: "A publication for identity, marriage, parenting, ministry, and marketplace." },
+      { title: "CoCreate — New teachings, articles, podcasts and devotionals every month" },
+      { name: "description", content: "Watch, read and listen to each month's CoCreate series, then live it out with a devotional in your own workspace." },
+      { property: "og:title", content: "CoCreate — New releases every month" },
+      { property: "og:description", content: "Teachings, articles, podcasts and devotionals released in monthly series." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
 });
 
-type ContentPreview = Database["public"]["Views"]["content_items_public"]["Row"];
-type ContentType = Database["public"]["Enums"]["content_type"];
+/* ---------- small helpers ---------- */
 
-const IMG_FALLBACK = (id: string, w = 800, h = 500) => `https://picsum.photos/seed/${id}/${w}/${h}`;
-
-const routeForType = (t: ContentType | null | undefined) =>
-  t === "teaching" ? "/teachings/$id" : t === "podcast" ? "/podcasts/$id" : "/essays/$id";
-
-/* Relative time — "2 hours ago", "Yesterday", "2 days ago", etc. */
-function relTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const then = new Date(iso).getTime();
-  const now = Date.now();
-  const diff = Math.max(0, now - then);
-  const m = Math.floor(diff / 60000);
-  const h = Math.floor(diff / 3600000);
-  const d = Math.floor(diff / 86400000);
-  if (m < 1) return "Just now";
-  if (m < 60) return `${m} minute${m === 1 ? "" : "s"} ago`;
-  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
-  if (d === 1) return "Yesterday";
-  if (d < 7) return `${d} days ago`;
-  if (d < 30) return `${Math.floor(d / 7)} week${Math.floor(d / 7) === 1 ? "" : "s"} ago`;
-  if (d < 365) return `${Math.floor(d / 30)} month${Math.floor(d / 30) === 1 ? "" : "s"} ago`;
-  return `${Math.floor(d / 365)} year${Math.floor(d / 365) === 1 ? "" : "s"} ago`;
-}
-
-/* Take the opening line(s) of the body — first ~180 chars, no markdown symbols. */
-function openingLines(body: string | null | undefined, max = 160): string {
-  if (!body) return "";
-  const clean = body
-    .replace(/[#*_>`~]/g, "")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (clean.length <= max) return clean;
-  return clean.slice(0, max).replace(/\s+\S*$/, "") + "…";
-}
-
-const coverOf = (c: ContentPreview) => (c as any).cover_image_url || c.thumbnail_url || IMG_FALLBACK(c.id ?? "x");
-const readTimeOf = (c: ContentPreview) => {
-  const rt = (c as any).read_time_minutes as number | null | undefined;
-  if (rt && rt > 0) return `${rt} min read`;
-  const words = (((c as any).body as string | undefined) ?? "").split(/\s+/).filter(Boolean).length;
-  if (words > 0) return `${Math.max(1, Math.round(words / 220))} min read`;
-  return "";
-};
-
-/* ---------- Filler / demo content ---------- */
-const DEMO_AUTHORS = ["Ada Blackwell", "Jonah Rivers", "Naomi Cole", "Micah Tran", "Ruth Adeyemi", "Silas Park", "Hannah Osei", "Elias Moreno"];
-const DEMO_TITLES: Record<string, string[]> = {
-  latest: [
-    "The quiet work of becoming: notes from a slow season",
-    "What we mean when we say 'called'",
-    "A liturgy for Monday mornings",
-    "On the friendships that stay",
-    "Rebuilding after the plan fell through",
-    "The gospel in ordinary time",
-  ],
-  identity: [
-    "Daughterhood is not a phase",
-    "Sonship without performance",
-    "The name beneath the name",
-    "Becoming, unhurried",
-    "When healing feels like grief",
-  ],
-  marriage: [
-    "Partnership as practice, not performance",
-    "The fight that changed everything",
-    "Intimacy after the hard year",
-    "Engaged, and terrified, and hopeful",
-    "How we learned to say the hard thing",
-  ],
-  parenting: [
-    "The early years are the small years",
-    "Discipling without control",
-    "Teens, tenderly",
-    "Single parenting and the weight of enough",
-    "A prayer for the child who left",
-  ],
-  ministry: [
-    "Calling is not a spotlight",
-    "Serving from a full cup",
-    "Leadership that lays things down",
-    "Notes on burnout",
-    "The pulpit and the kitchen table",
-  ],
-  streaming: [
-    "The Room: episode 12 — Rest as resistance",
-    "Teaching: on the wilderness season",
-    "Clip: 'You were not made to hustle for love'",
-    "Podcast: raising kids who love the church",
-    "Teaching: what marriage teaches us about God",
-  ],
-  watch: [
-    "Teaching: on the wilderness season",
-    "The Room: episode 12 — Rest as resistance",
-    "Teaching: what marriage teaches us about God",
-    "A conversation about calling and cost",
-    "Teaching: the God who stays",
-  ],
-  shorts: [
-    "Clip: 'You were not made to hustle for love'",
-    "Clip: two minutes on rest",
-    "Clip: the prayer you keep avoiding",
-    "Clip: what grace does to shame",
-    "Clip: a word for the waiting",
-  ],
-  read: [
-    "The quiet work of becoming",
-    "What we mean when we say 'called'",
-    "A liturgy for Monday mornings",
-    "On the friendships that stay",
-    "Rebuilding after the plan fell through",
-  ],
-  listen: [
-    "Podcast: raising kids who love the church",
-    "Podcast: rest as resistance",
-    "Podcast: money, meaning and ministry",
-    "Podcast: the long obedience",
-    "Podcast: friendship in your thirties",
-  ],
-  devotionals: [
-    "Five days in the Psalms",
-    "Three days on rest",
-    "Ten days through Philippians",
-    "A week of gratitude",
-    "Three days on forgiveness",
-  ],
-  guides: [
-    "A guide to praying with your spouse",
-    "How to start a Bible study habit",
-    "A guide to sabbath for busy families",
-    "How to lead a small group well",
-    "A guide to journaling scripture",
-  ],
-  spotlight: [
-    "The essay that started it all",
-    "A letter to my younger self in ministry",
-    "How we practice sabbath now",
-    "On leaving well",
-  ],
-};
-const DEMO_EXCERPT = "A short, warm read on how faith actually shows up in the everyday — the kitchen, the calendar, the conversation you keep avoiding.";
-
-function makeDemo(kind: keyof typeof DEMO_TITLES, count: number, offset = 0, type: ContentType = "essay"): ContentPreview[] {
-  const titles = DEMO_TITLES[kind];
-  return Array.from({ length: count }).map((_, i) => {
-    const seed = `${kind}-${i + offset}`;
-    const title = titles[(i + offset) % titles.length];
-    return {
-      id: `demo-${seed}`,
-      title,
-      excerpt: DEMO_EXCERPT,
-      author_name: DEMO_AUTHORS[(i + offset) % DEMO_AUTHORS.length],
-      published_at: new Date(Date.now() - (i + offset + 1) * 36 * 3600 * 1000).toISOString(),
-      thumbnail_url: IMG_FALLBACK(seed, 800, 500),
-      cover_image_url: IMG_FALLBACK(seed, 800, 500),
-      type,
-      topic_id: null,
-      slug: seed,
-      read_time_minutes: 4 + ((i + offset) % 6),
-      body: null,
-    } as unknown as ContentPreview;
-  });
-}
-const padDemoRaw = (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
-  real.length >= needed ? real : [...real, ...makeDemo(kind, needed - real.length, real.length, type)];
-
-/* Signed-in readers never see filler: shelves show only what's published. */
-type HomeCtxValue = { demo: boolean; userId: string | null; savedMap: Record<string, string> };
-const HomeCtx = createContext<HomeCtxValue>({ demo: true, userId: null, savedMap: {} });
-const useHome = () => useContext(HomeCtx);
-function usePad() {
-  const { demo } = useHome();
-  return (real: ContentPreview[], kind: keyof typeof DEMO_TITLES, needed: number, type: ContentType = "essay") =>
-    demo ? padDemoRaw(real, kind, needed, type) : real;
-}
-const isDemo = (c: ContentPreview) => (c.id ?? "").startsWith("demo-");
-
-function CardSave({ c, dark }: { c: ContentPreview; dark?: boolean }) {
-  const { userId, savedMap } = useHome();
-  if (!c.id || isDemo(c)) return null;
-  return <span className="hp-save"><SaveButton contentId={c.id} userId={userId} savedId={savedMap[c.id]} dark={dark} /></span>;
-}
-
-/* ============================================================ */
-/*  CSS                                                          */
-/* ============================================================ */
-export const HOME_CSS = `
-.hp{--navy:#181A4D;--navy-2:#22245e;--lime:#CAC307;--limelight:#DCE07A;--teal:#0F4A42;--amber:#FFAE00;--burgundy:#441B07;--blush:#E990A2;--cream:#FBF8ED;--ink:#20201C;--periwinkle:#6C6FD4;font-family:'Poppins',sans-serif;color:var(--ink);background:var(--cream);}
-.hp a{text-decoration:none;color:inherit;}
-.hp *{box-sizing:border-box;}
-.hp .wrap{max-width:1240px;margin:0 auto;padding:0 24px;}
-@media(min-width:900px){.hp .wrap{padding:0 40px;}}
-
-/* Topic quick-links row */
-.hp-topics{background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);box-shadow:0 1px 3px rgba(24,26,77,0.04);}
-.hp-topics .wrap{display:flex;align-items:center;gap:24px;padding-top:14px;padding-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.hp-topics a{font-size:13.5px;font-weight:600;color:#514c3d;white-space:nowrap;flex-shrink:0;}
-.hp-topics a:hover,.hp-topics a.is-active{color:var(--navy);}
-
-/* Section frames */
-.hp-section{padding:60px 0;}
-.hp-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
-.hp-eyebrow .bar{width:4px;height:18px;background:var(--teal);border-radius:2px;}
-.hp-eyebrow h2{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:0;}
-.hp-eyebrow .see-all{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--teal);white-space:nowrap;}
-
-/* Latest */
-.hp-latest-grid{display:grid;grid-template-columns:1fr;gap:26px;}
-@media(min-width:900px){.hp-latest-grid{grid-template-columns:1.4fr 1fr;}}
-.hp-lead{display:block;}
-.hp-lead .art{border-radius:16px;height:280px;margin-bottom:16px;background-size:cover;background-position:center;background-color:var(--navy);}
-@media(min-width:900px){.hp-lead .art{height:340px;}}
-.hp-lead h3{font-size:22px;font-weight:800;color:var(--navy);line-height:1.25;margin:0 0 8px;}
-@media(min-width:900px){.hp-lead h3{font-size:28px;}}
-.hp-lead p{font-size:15px;color:#4a4638;line-height:1.6;margin:0 0 12px;}
-.hp-lead .readmore{display:inline-block;font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.1em;border-bottom:2px solid var(--limelight);padding-bottom:2px;margin-bottom:10px;}
-.hp-lead:hover .readmore{color:var(--limelight);}
-.hp-meta{font-size:12px;color:#9a9484;font-weight:600;}
-.hp-side{display:flex;flex-direction:column;gap:20px;}
-.hp-side-item{display:flex;gap:14px;align-items:flex-start;}
-.hp-side-item .thumb{width:96px;height:72px;border-radius:10px;flex-shrink:0;background-size:cover;background-position:center;background-color:var(--limelight);}
-.hp-side-item .body{min-width:0;flex:1;}
-.hp-side-item h4{font-size:14.5px;font-weight:700;color:var(--navy);line-height:1.35;margin:0 0 4px;}
-.hp-side-item p{font-size:13px;color:#6b6656;line-height:1.5;margin:0 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.hp-side-item .hp-meta{font-size:11.5px;}
-
-
-/* Topic sections */
-.hp-topic-grid{display:grid;grid-template-columns:1fr;gap:20px;}
-@media(min-width:640px){.hp-topic-grid{grid-template-columns:repeat(2,1fr);}}
-@media(min-width:900px){.hp-topic-grid{grid-template-columns:repeat(3,1fr);}}
-.hp-tcard{display:block;}
-.hp-tcard .art{border-radius:14px;height:168px;margin-bottom:12px;background-size:cover;background-position:center;background-color:var(--limelight);}
-.hp-tcard h4{font-size:16px;font-weight:700;color:var(--navy);margin:0 0 6px;line-height:1.3;}
-.hp-tcard p{font-size:13px;color:#6b6656;line-height:1.55;margin:0 0 8px;}
-
-/* Full-bleed burgundy collection */
-.hp-collection{background:var(--burgundy);padding:68px 0 60px;margin:8px 0 0;}
-.hp-collection-heading{font-size:36px;font-weight:900;color:var(--cream);margin:0 0 10px;letter-spacing:-0.01em;line-height:1.05;}
-@media(min-width:900px){.hp-collection-heading{font-size:46px;}}
-.hp-collection-sub{font-size:15px;color:rgba(255,255,255,0.75);max-width:580px;line-height:1.55;margin:0 0 40px;}
-.hp-col-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-top:1px solid rgba(255,255,255,0.18);padding-top:26px;margin-bottom:26px;flex-wrap:wrap;}
-.hp-col-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;}
-.hp-col-header h3{font-size:22px;font-weight:800;color:#fff;margin:0 0 6px;}
-@media(min-width:900px){.hp-col-header h3{font-size:24px;}}
-.hp-col-header p{font-size:13.5px;color:rgba(255,255,255,0.7);margin:0;max-width:480px;}
-.hp-col-actions{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex-shrink:0;}
-@media(min-width:640px){.hp-col-actions{align-items:flex-end;}}
-.hp-add-btn{background:var(--navy);color:#fff;font-weight:700;font-size:13px;padding:11px 20px;border-radius:999px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;}
-.hp .hp-see-inside{font-size:12.5px;font-weight:600;color:#fff;text-decoration:underline;white-space:nowrap;}
-.hp-col-grid{display:grid;grid-template-columns:1fr;gap:18px;}
-@media(min-width:900px){.hp-col-grid{grid-template-columns:1.4fr 1fr;}}
-.hp-col-left,.hp-col-right{display:flex;flex-direction:column;gap:18px;}
-.hp-col-lead{background:#fff;border-radius:14px;overflow:hidden;display:block;}
-.hp-col-lead .art{height:220px;background-size:cover;background-position:center;background-color:var(--limelight);}
-@media(min-width:900px){.hp-col-lead .art{height:260px;}}
-.hp-col-lead .body{padding:18px 20px;}
-.hp-col-lead h4{font-size:18px;font-weight:700;color:var(--navy);margin:0 0 6px;}
-.hp-col-lead p{font-size:13px;color:#6b6656;line-height:1.5;margin:0;}
-.hp-col-hcard{background:#fff;border-radius:14px;overflow:hidden;display:flex;flex:1;}
-.hp-col-hcard .thumb{width:42%;flex-shrink:0;background-size:cover;background-position:center;background-color:var(--limelight);}
-.hp-col-hcard .body{padding:16px 18px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
-.hp-col-hcard h5{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 6px;line-height:1.35;}
-.hp-col-hcard .byline{font-size:12px;color:#9a9484;font-weight:600;}
-.hp-see-collection-wrap{text-align:center;margin-top:26px;}
-.hp .hp-see-collection-btn{display:inline-block;border:1.5px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;font-size:13.5px;padding:12px 24px;border-radius:999px;}
-
-/* Navy interruption modules */
-.hp-navy{background:var(--navy);padding:52px 0;}
-.hp-navy .hp-eyebrow .bar{background:var(--limelight);}
-.hp-navy .hp-eyebrow h2{color:var(--limelight);}
-.hp-navy .hp-eyebrow .see-all{color:var(--limelight);}
-
-.hp-stream-row{display:grid;grid-template-columns:1fr;gap:20px;}
-@media(min-width:900px){.hp-stream-row{grid-template-columns:1.5fr 1fr;}}
-.hp-stream-feature{position:relative;border-radius:16px;overflow:hidden;height:280px;background-size:cover;background-position:center;background-color:var(--navy-2);display:flex;align-items:flex-end;padding:22px;color:#fff;}
-@media(min-width:900px){.hp-stream-feature{height:320px;}}
-.hp-stream-feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.15),rgba(13,14,46,0.85));}
-.hp-stream-feature .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;z-index:2;}
-.hp-stream-feature .play svg{width:18px;height:18px;fill:var(--navy);}
-.hp-stream-feature .label{position:relative;z-index:2;color:#fff;font-weight:700;font-size:16px;line-height:1.35;}
-.hp-stream-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.hp-stream-mini{border-radius:12px;height:148px;padding:12px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;background-size:cover;background-position:center;background-color:var(--navy-2);position:relative;overflow:hidden;}
-.hp-stream-mini::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(13,14,46,0.82));}
-.hp-stream-mini span{position:relative;z-index:2;font-size:12.5px;font-weight:700;line-height:1.35;}
-
-.hp-spot-row{display:grid;grid-template-columns:1fr;gap:20px;}
-@media(min-width:900px){.hp-spot-row{grid-template-columns:1.5fr 1fr;}}
-.hp-spot-feature{position:relative;border-radius:16px;overflow:hidden;height:280px;background-size:cover;background-position:center;background-color:var(--navy-2);display:flex;flex-direction:column;justify-content:flex-end;padding:24px;color:#fff;cursor:pointer;}
-@media(min-width:900px){.hp-spot-feature{height:320px;}}
-.hp-spot-feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,26,77,0.1),rgba(13,14,46,0.85));}
-.hp-spot-feature > *{position:relative;z-index:2;}
-.hp-spot-feature .dots{display:flex;gap:5px;margin-bottom:12px;}
-.hp-spot-feature .dots span{width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,0.3);cursor:pointer;transition:background .15s;}
-.hp-spot-feature .dots span.active{background:var(--limelight);}
-.hp-spot-feature h3{font-size:20px;font-weight:800;margin:0 0 4px;line-height:1.3;}
-@media(min-width:900px){.hp-spot-feature h3{font-size:22px;}}
-.hp-spot-feature .meta-light{font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;}
-.hp-spot-list{display:flex;flex-direction:column;gap:0;}
-.hp-spot-list a{display:block;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
-.hp-spot-list a:first-child{padding-top:0;}
-.hp-spot-list a:last-child{border-bottom:none;}
-.hp-spot-list .tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--limelight);margin-bottom:5px;display:block;}
-.hp-spot-list h5{font-size:14px;font-weight:700;color:#fff;margin:0;line-height:1.4;}
-
-/* Footer */
-.hp-footer{background:var(--navy);color:var(--cream);padding-top:44px;}
-.hp-footer-search{display:flex;align-items:center;background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:40px;gap:10px;}
-.hp-footer-search input{border:none;outline:none;flex:1;font-family:'Poppins';font-size:14px;color:var(--ink);background:transparent;}
-.hp-footer-search svg{width:18px;height:18px;color:#9a9484;flex-shrink:0;}
-.hp-footer-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:26px 20px;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,0.12);}
-@media(min-width:640px){.hp-footer-cols{grid-template-columns:repeat(3,1fr);}}
-@media(min-width:1024px){.hp-footer-cols{grid-template-columns:repeat(6,1fr);}}
-.hp-footer-cols h6{font-size:13px;font-weight:700;color:#fff;margin:0 0 14px;}
-.hp-footer-cols a{display:block;font-size:13px;color:rgba(251,248,237,0.65);margin-bottom:10px;}
-.hp-footer-cols a:hover{color:var(--limelight);}
-.hp-footer-brand-row{display:flex;align-items:center;justify-content:space-between;padding:26px 0;gap:20px;flex-wrap:wrap;}
-.hp-brand{display:flex;align-items:center;gap:10px;}
-.hp-brand .badge{width:34px;height:34px;border-radius:9px;background:var(--limelight);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;}
-.hp-brand .word{font-weight:900;font-size:19px;color:#fff;}
-.hp-footer-social{display:flex;gap:14px;align-items:center;}
-.hp-footer-social .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(251,248,237,0.55);margin-right:4px;}
-.hp-icon-circle{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;}
-.hp-icon-circle svg{width:14px;height:14px;fill:#fff;}
-.hp-app-badges{display:flex;gap:10px;flex-wrap:wrap;}
-.hp-app-pill{display:flex;align-items:center;gap:6px;border:1px dashed rgba(255,255,255,0.3);border-radius:8px;padding:7px 12px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.7);}
-.hp-footer-legal{display:flex;justify-content:space-between;align-items:center;padding:18px 0 28px;font-size:12px;color:rgba(251,248,237,0.5);flex-wrap:wrap;gap:10px;}
-.hp-footer-legal .links{display:flex;gap:18px;flex-wrap:wrap;}
-.hp-footer-legal a:hover{color:var(--limelight);}
-
-/* skeletons */
-.hp-skel{background:#fff;border-radius:12px;height:120px;position:relative;overflow:hidden;}
-.hp-skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.04),transparent);animation:hp-shim 1.4s infinite;}
-@keyframes hp-shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
-
-/* Full-width masthead (signed-out) */
-.hp-masthead{background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);}
-.hp-masthead .wrap{display:flex;align-items:center;gap:20px;padding-top:18px;padding-bottom:18px;}
-.hp-mast-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
-.hp-mast-brand .mark{width:32px;height:32px;background:var(--limelight);color:var(--navy);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;}
-.hp-mast-brand .word{font-weight:900;font-size:20px;color:var(--navy);letter-spacing:-0.02em;}
-.hp-mast-links{display:flex;flex:1;align-items:center;gap:14px;min-width:0;flex-wrap:nowrap;overflow:hidden;}
-@media(min-width:900px){.hp-mast-links{gap:22px;}}
-.hp-mast-links a{font-size:13px;font-weight:600;color:#514c3d;white-space:nowrap;}
-@media(min-width:900px){.hp-mast-links a{font-size:13.5px;}}
-.hp-mast-links a:hover{color:var(--navy);}
-.hp-mast-links a.mast-link-hide-sm{display:none;}
-@media(min-width:640px){.hp-mast-links a.mast-link-hide-sm{display:inline;}}
-.hp-mast-links a.mast-link-hide-md{display:none;}
-@media(min-width:900px){.hp-mast-links a.mast-link-hide-md{display:inline;}}
-.hp-mast-more{position:relative;flex-shrink:0;}
-.hp-mast-more-btn{background:transparent;border:none;font-family:'Poppins';font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;padding:6px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;}
-.hp-mast-more-btn:hover{background:#FBF8ED;}
-.hp-mast-more-mobile{display:none;}
-@media(max-width:767px){.hp-mast-links{display:none;}.hp-mast-more-desktop{display:none;}.hp-mast-more-mobile{display:inline;}}
-@media(min-width:1100px){.hp-mast-more{display:none;}}
-.hp-mast-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid rgba(24,26,77,0.1);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:8px;min-width:200px;z-index:50;display:flex;flex-direction:column;}
-.hp-mast-more-menu a{font-size:13.5px;font-weight:600;color:var(--navy);padding:10px 12px;border-radius:8px;white-space:nowrap;}
-.hp-mast-more-menu a:hover{background:#FBF8ED;}
-.hp-mast-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.hp-mast-signin{color:var(--navy);font-weight:700;font-size:13px;padding:8px 12px;}
-.hp-mast-subscribe{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:999px;text-decoration:none;}
-.hp-mast-subscribe:hover{background:var(--navy-2);color:#fff !important;}
-/* Signed-in masthead: hide the auth CTAs (icon bar handles nav) but ALWAYS keep the brand */
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-signin,
-.hp-masthead.is-inline .hp-mast-actions .hp-mast-subscribe{display:none;}
-
-.hp-mast-media{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
-.hp-mast-media-link.is-active{background:#F3F6DC;}
-.hp-quickrow a.is-active{text-decoration:underline;text-underline-offset:4px;}
-.hp-mast-media-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#181A4D;padding:6px 10px;border-radius:8px;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;}
-.hp-mast-media-link:hover{background:#FBF8ED;}
-.hp-mast-media-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.hp-mast-media-link--listen svg{color:#3B82F6;}
-.hp-mast-media-dot{width:10px;height:10px;border-radius:50%;background:#FF340C;display:inline-block;}
-.hp-mast-search-form{display:flex;align-items:center;gap:6px;}
-.hp-mast-search-form input{width:160px;background:#fff;border:1px solid rgba(24,26,77,0.15);border-radius:8px;padding:6px 10px;font-family:'Poppins',sans-serif;font-size:13px;color:#181A4D;outline:none;transition:border-color .15s;}
-.hp-mast-search-form input:focus{border-color:#181A4D;}
-.hp-mast-search-form button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#181A4D;color:#fff;border:none;border-radius:8px;cursor:pointer;}
-.hp-mast-search-form button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-@media(max-width:820px){.hp-mast-media-link > span:not(.hp-mast-media-dot):not(.ic){display:none;}.hp-mast-media-link{padding:6px 6px;gap:0;}.hp-mast-search-form input{width:110px;}.hp-masthead .wrap{gap:10px;}.hp-mast-media{gap:2px;}}
-@media(max-width:640px){.hp-mast-subscribe{display:none;}.hp-mast-signin{padding:6px 8px;font-size:12.5px;}.hp-mast-actions{gap:4px;}.hp-mast-more-btn{padding:6px 6px;}.hp-mast-search-form input{width:88px;}.hp-masthead .wrap{padding-left:12px;padding-right:12px;gap:6px;}}
-
-/* Signed-in home: horizontal navy icon bar (replaces the left rail) */
-.hp-tourbar{background:var(--navy);height:68px;display:flex;align-items:center;}
-.hp-tourbar .wrap{display:flex;align-items:center;}
-.hp-tourbar-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px dashed rgba(220,224,122,0.45);border-radius:999px;color:var(--limelight) !important;font-weight:600;font-size:14px;transition:color .15s, border-color .15s;}
-.hp-tourbar-pill:hover{color:#fff !important;border-color:#fff !important;}
-.hp-tourbar-pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.hp-iconbar{background:var(--navy);padding:14px 0;}
-
-.hp-iconbar .wrap{display:flex;align-items:center;justify-content:center;}
-.hp-iconbar-nav{display:flex;align-items:center;justify-content:center;gap:10px;}
-.hp-iconbar a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;transition:background .15s,color .15s;}
-.hp-iconbar a:hover{background:rgba(255,255,255,0.08);color:#fff;}
-.hp-iconbar a.active{background:var(--limelight);color:var(--navy);}
-.hp-iconbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.hp-iconbar-avatar{color:#fff !important;}
-.hp-iconbar-avatar:hover{background:rgba(255,255,255,0.08);color:#fff !important;}
-.hp-iconbar-bell{display:inline-flex;align-items:center;justify-content:center;}
-.hp-iconbar-bell .nb-btn{color:#fff !important;width:40px;height:40px;background:transparent !important;border-radius:10px;}
-.hp-iconbar-bell .nb-btn:hover{background:rgba(255,255,255,0.08) !important;}
-.hp-iconbar-bell .nb-btn svg{width:20px;height:20px;}
-.hp-iconbar-bell .nb-badge{box-shadow:0 0 0 2px var(--navy);}
-.hp-iconbar-disabled{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:#fff;opacity:.55;cursor:default;}
-/* Blue icon bar is mobile-only now; desktop uses the hamburger side menu */
-@media (min-width:1024px){.hp-iconbar{display:none;}}
-
-/* Hamburger + slide-in side menu (home page) */
-.hp-mast-burger{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--navy);flex-shrink:0;transition:background .15s;}
-.hp-mast-burger:hover{background:#FBF8ED;}
-.hp-mast-burger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.hp-drawer-scrim{position:fixed;inset:0;background:rgba(20,20,20,0.32);z-index:80;}
-.hp-drawer{position:fixed;top:0;left:0;bottom:0;width:250px;background:#fff;border-right:1px solid rgba(20,20,20,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.16);z-index:81;display:flex;flex-direction:column;padding:18px 12px;font-family:'Poppins',sans-serif;}
-.hp-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;margin-bottom:20px;gap:8px;}
-.hp-drawer-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.hp-drawer-logo .mark{width:30px;height:30px;background:var(--limelight);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:900;}
-.hp-drawer-logo .word{font-weight:900;font-size:19px;color:var(--navy);letter-spacing:-0.02em;}
-.hp-drawer-close{background:transparent;border:none;cursor:pointer;color:#8a8678;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;}
-.hp-drawer-close:hover{background:#FBF8ED;color:var(--navy);}
-.hp-drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.hp-drawer-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:#8a8678;text-decoration:none;margin-bottom:2px;transition:background .15s,color .15s;}
-.hp-drawer-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.hp-drawer-item:hover{background:#FBF8ED;color:var(--navy);}
-.hp-drawer-item.active{background:var(--limelight);color:var(--navy);}
-.hp-drawer-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(20,20,20,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.hp-drawer-signin{background:var(--navy);color:#fff !important;font-weight:800;font-size:12.5px;padding:8px 16px;border-radius:20px;text-decoration:none;}
-
-
-/* Photo-overlay cards must stay white even though they are <a> tags. */
-.hp .hp-spot-feature,.hp .hp-spot-feature h3,.hp .hp-stream-feature,.hp .hp-stream-mini,.hp .hp-stream-mini span{color:#fff;}
-
-/* Signed-in masthead quick links */
-.hp-mast-quick{display:flex;align-items:center;gap:2px;}
-.hp-mast-quick svg,.hp-mast-upnext svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.hp-mast-divider{width:1px;height:22px;background:rgba(24,26,77,0.14);margin:0 6px;flex-shrink:0;}
-.hp-mast-media{margin-left:0;}
-.hp-mast-upnext .ic{position:relative;display:inline-flex;}
-.hp-count{position:absolute;top:-7px;right:-9px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--limelight);color:var(--navy);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;}
-.hp-mast-upnext-m{display:none;}
-.hp-quickrow{display:none;}
-@media(max-width:767px){
-  .hp-mast-quick,.hp-mast-divider{display:none;}
-  .hp-mast-upnext-m{display:inline-flex;}
-  .hp-quickrow{display:flex;gap:22px;background:#fff;border-bottom:1px solid rgba(24,26,77,0.08);padding:12px 16px;overflow-x:auto;}
-  .hp-quickrow a{font-size:13.5px;font-weight:700;color:var(--navy);white-space:nowrap;}
-}
-.hp-eyebrow-sub{font-size:13.5px;color:#6f6b5e;margin:0 0 18px 14px;}
-.hp-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.hp-save{display:inline-flex;flex-shrink:0;}
-.hp-save-corner{position:absolute;top:12px;right:12px;z-index:3;}
-/* Continue */
-.hp-cont-wrap{display:grid;grid-template-columns:1fr;gap:20px;}
-@media(min-width:1000px){.hp-cont-wrap.has-plan{grid-template-columns:2fr 1fr;align-items:end;}}
-.hp-cont-grid{display:grid;grid-template-columns:1fr;gap:12px;}
-@media(min-width:640px){.hp-cont-grid{grid-template-columns:repeat(3,1fr);}}
-.hp-cont-card{background:#fff;border:1px solid rgba(24,26,77,0.08);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;}
-.hp-cont-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.05);}
-.hp-cont-card .tag{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6f6b5e;}
-.hp-cont-card .dot{width:7px;height:7px;border-radius:50%;}
-.hp-cont-card .ttl{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.hp-plan-card{background:var(--navy);color:var(--cream);border-radius:16px;padding:20px;}
-.hp-plan-card .eb{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--limelight);margin-bottom:6px;}
-.hp-plan-card h3{margin:0 0 6px;font-size:19px;font-weight:800;color:#fff;}
-.hp-plan-card p{margin:0 0 14px;font-size:13.5px;color:rgba(251,248,237,0.78);line-height:1.5;}
-.hp-lime-btn{display:inline-flex;align-items:center;background:var(--limelight);color:var(--navy) !important;font-weight:800;font-size:13px;padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;}
-.hp-lime-btn:hover{background:var(--lime);}
-.hp-lime-btn:disabled{opacity:.6;}
-/* Up next row */
-.hp-upnext-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
-.hp-un-extra{display:none;}
-.hp-un-card .art{height:130px;border-radius:12px;background-size:cover;background-position:center;background-color:var(--limelight);margin-bottom:10px;}
-.hp-un-card h4{font-size:14.5px;font-weight:700;color:var(--navy);margin:0 0 4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-@media(max-width:899px){
-  .hp-upnext-row{display:flex;overflow-x:auto;gap:14px;scrollbar-width:none;padding-bottom:4px;}
-  .hp-upnext-row::-webkit-scrollbar{display:none;}
-  .hp-un-card{flex:0 0 200px;}
-  .hp-un-extra{display:block;}
-}
-/* Devotionals band */
-.hp-dev-grid{display:grid;grid-template-columns:1fr;gap:16px;}
-@media(min-width:900px){.hp-dev-grid{grid-template-columns:repeat(3,1fr);}}
-.hp-dev-card{background:var(--navy-2);border-top:4px solid var(--acc);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
-.hp-dev-card .meta{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(251,248,237,0.6);}
-.hp-dev-card h3{margin:0;font-size:18px;font-weight:800;color:#fff;}
-.hp-dev-card p{margin:0 0 6px;font-size:13px;color:rgba(251,248,237,0.75);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
-.hp-dev-create{border:1.5px dashed rgba(220,224,122,0.5);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:160px;}
-.hp-dev-create:hover{border-color:var(--limelight);}
-.hp-dev-create .plus{font-size:24px;color:var(--limelight);font-weight:700;line-height:1;}
-.hp-dev-create .t{font-size:16px;font-weight:800;color:#fff;}
-.hp-dev-create .s{font-size:13px;color:rgba(251,248,237,0.7);line-height:1.5;}
-.hp-footer-cols--4{grid-template-columns:repeat(2,1fr);}
-@media(min-width:900px){.hp-footer-cols--4{grid-template-columns:repeat(4,1fr);}}
-.hp-stream-mini > .hp-save-corner{z-index:3;}
-
-`;
-
-/* ============================================================ */
-/*  Data                                                         */
-/* ============================================================ */
-
-type TopicRow = Database["public"]["Tables"]["topics"]["Row"] & {
-  display_name?: string | null;
-  sort_order?: number | null;
-};
-
-function useTopics() {
-  return useQuery({
-    queryKey: ["hp-topics"],
-    queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("topics").select("*").order("sort_order").order("name");
-      if (error) throw error;
-      return (data ?? []) as TopicRow[];
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
-function useLatest(limit = 5) {
-  return useQuery({
-    queryKey: ["hp-latest", limit],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("content_items_public")
-        .select("*")
-        .order("published_at", { ascending: false, nullsFirst: false })
-        .limit(limit);
-      if (error) throw error;
-      return (data ?? []) as ContentPreview[];
-    },
-  });
-}
-
-function useByTopic(topicId: string | undefined, limit = 3) {
-  return useQuery({
-    queryKey: ["hp-topic", topicId, limit],
-    enabled: !!topicId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("content_items_public")
-        .select("*")
-        .eq("topic_id", topicId!)
-        .order("published_at", { ascending: false, nullsFirst: false })
-        .limit(limit);
-      if (error) throw error;
-      return (data ?? []) as ContentPreview[];
-    },
-  });
-}
-
-type ShelfKey = "watch" | "shorts" | "read" | "listen" | "devotionals" | "guides";
-
-const SHELF_TYPE_FALLBACK: Record<ShelfKey, ContentType[]> = {
-  watch: ["teaching"],
-  shorts: ["clip"],
-  read: ["essay", "blog"],
-  listen: ["podcast"],
-  devotionals: [],
-  guides: [],
-};
-
-function useShelf(shelf: ShelfKey, limit = 5) {
-  return useQuery({
-    queryKey: ["hp-shelf", shelf, limit],
-    queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("content_items_public")
-        .select("*")
-        .eq("shelf", shelf)
-        .order("published_at", { ascending: false, nullsFirst: false })
-        .limit(limit);
-      if (error) throw error;
-      let rows = (data ?? []) as ContentPreview[];
-      const fallbackTypes = SHELF_TYPE_FALLBACK[shelf];
-      if (rows.length < limit && fallbackTypes.length) {
-        const { data: extra } = await (supabase.from as any)("content_items_public")
-          .select("*")
-          .in("type", fallbackTypes)
-          .is("shelf", null)
-          .order("published_at", { ascending: false, nullsFirst: false })
-          .limit(limit);
-        const seen = new Set(rows.map((r) => r.id));
-        rows = [...rows, ...(((extra ?? []) as ContentPreview[]).filter((r) => !seen.has(r.id)))].slice(0, limit);
-      }
-      return rows;
-    },
-    staleTime: 60_000,
-  });
-}
-
-/* ============================================================ */
-/*  Sections                                                     */
-/* ============================================================ */
-
-function HomeIconBar() {
-  const items = [
-    { to: "/", label: "Home", active: true, icon: <svg viewBox="0 0 24 24"><path d="M4 12l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg> },
-    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
-    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
-    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
-    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
-  ];
-  return (
-    <div className="hp-iconbar">
-      <div className="wrap">
-        <div className="hp-iconbar-nav">
-          {items.map((it) => (
-            <Fragment key={it.to}>
-              {(it as any).prepend}
-              <Link to={it.to} className={it.active ? "active" : ""} aria-label={it.label} title={it.label}>
-                {it.icon}
-              </Link>
-            </Fragment>
-          ))}
-          <span className="hp-iconbar-bell"><NotificationBell /></span>
-          <Link to="/profile" className="hp-iconbar-avatar" aria-label="Profile" title="Profile">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HomeTourBar() {
-  return (
-    <div className="hp-tourbar">
-      <div className="wrap">
-        <Link to="/tour" className="hp-tourbar-pill">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <span>Tour the Workspace</span>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-
-function HomeSideDrawer({ signedIn, onClose }: { signedIn: boolean; onClose: () => void }) {
-  const items = [
-    { to: "/devotionals", label: "Workspace", icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg> },
-    { to: "/read", label: "Read", icon: <svg viewBox="0 0 24 24"><path d="M3 5.5c2-1.2 4.3-1.5 6.5-.9 1 .27 1.9.7 2.5 1.4v13c-.6-.7-1.5-1.13-2.5-1.4-2.2-.6-4.5-.3-6.5.9z"/><path d="M21 5.5c-2-1.2-4.3-1.5-6.5-.9-1 .27-1.9.7-2.5 1.4v13c.6-.7 1.5-1.13 2.5-1.4 2.2-.6 4.5-.3 6.5.9z"/></svg> },
-    { to: "/calendar", label: "Calendar", icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg> },
-    { to: "/notes", label: "Notes", icon: <svg viewBox="0 0 24 24"><path d="M4 20.5l3.2-.9L18.8 8a1.4 1.4 0 0 0 0-2l-1.3-1.3a1.4 1.4 0 0 0-2 0L4.9 16.3z"/><path d="M4 20.5V17"/></svg> },
-  ];
+/** Bracketed placeholders only show in development/preview, never on the live site. */
+function useIsPreview() {
+  const [p, setP] = useState(false);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  return (
-    <>
-      <div className="hp-drawer-scrim" onClick={onClose} />
-      <aside className="hp-drawer" aria-label="Primary">
-        <div className="hp-drawer-head">
-          <Link to="/" className="hp-drawer-logo" onClick={onClose}>
-            <div className="mark">C</div><div className="word">CoCreate</div>
-          </Link>
-          <button type="button" className="hp-drawer-close" onClick={onClose} aria-label="Close menu">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        {items.map((it) => (
-          <Link key={it.to} to={it.to} className={`hp-drawer-item${it.to === "/" ? " active" : ""}`} onClick={onClose}>
-            {it.icon}<span>{it.label}</span>
-          </Link>
-        ))}
-        <div className="hp-drawer-foot">
-          {signedIn ? (
-            <>
-              <Link to="/profile" className="hp-drawer-item" onClick={onClose} style={{ marginBottom: 0 }}>
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
-                <span>Profile</span>
-              </Link>
-              <button
-                type="button"
-                onClick={async () => { await supabase.auth.signOut(); onClose(); }}
-                style={{ background: "transparent", border: "1.5px solid rgba(20,20,20,0.12)", color: "#20201c", fontWeight: 700, fontSize: 12, padding: "7px 13px", borderRadius: 16, fontFamily: "'Poppins',sans-serif", cursor: "pointer" }}
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <Link to="/auth" className="hp-drawer-signin" onClick={onClose}>Sign in</Link>
-          )}
-        </div>
-      </aside>
-    </>
-  );
+    const h = window.location.hostname;
+    setP(import.meta.env.DEV || /id-preview|lovableproject|localhost|127\.0\.0\.1/.test(h));
+  }, []);
+  return p;
+}
+function Ph({ show, children }: { show: boolean; children: ReactNode }) {
+  return show ? <span className="ph">{children}</span> : null;
 }
 
-const BOOKMARK_SVG = <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>;
-const BOOK_SVG = <svg viewBox="0 0 24 24"><path d="M12 6c-2-1.2-4.5-2-8-2v14c3.5 0 6 .8 8 2 2-1.2 4.5-2 8-2V4c-3.5 0-6 .8-8 2zM12 6v14" /></svg>;
-const BAG_SVG = <svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
-
-export function HomeMasthead({ signedIn, upNextCount, active }: { signedIn: boolean; upNextCount: number; active?: "shop" }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  return (
-    <>
-    <div className={`hp-masthead${signedIn ? " is-inline" : ""}`}>
-      <div className="wrap">
-        <Link to="/" search={{ feed: 1 } as any} className="hp-mast-brand">
-          <div className="mark">C</div>
-          <div className="word">CoCreate</div>
-        </Link>
-        <button
-          type="button"
-          className="hp-mast-burger"
-          aria-label="Open menu"
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(true)}
-        >
-          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-        </button>
-        {menuOpen && <HomeSideDrawer signedIn={signedIn} onClose={() => setMenuOpen(false)} />}
-        <div style={{ flex: 1 }} />
-        <div className="hp-mast-actions">
-          {!signedIn && (
-            <>
-              <Link to="/auth" className="hp-mast-signin">Sign in</Link>
-              <Link to="/subscribe" className="hp-mast-subscribe">Subscribe</Link>
-            </>
-          )}
-        </div>
-        {signedIn && (
-          <>
-            <nav className="hp-mast-quick" aria-label="Your content">
-              <Link to="/explore/devotionals" className="hp-mast-media-link">{BOOK_SVG}<span>Devotionals</span></Link>
-              <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext">
-                <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
-                <span>Up next</span>
-              </Link>
-              <Link to="/shop" className={`hp-mast-media-link${active === "shop" ? " is-active" : ""}`} aria-current={active === "shop" ? "page" : undefined}>{BAG_SVG}<span>Shop</span></Link>
-            </nav>
-            <span className="hp-mast-divider" aria-hidden />
-          </>
-        )}
-        <MediaNav />
-        {signedIn && (
-          <Link to="/up-next" className="hp-mast-media-link hp-mast-upnext hp-mast-upnext-m" aria-label="Up next">
-            <span className="ic">{BOOKMARK_SVG}{upNextCount > 0 && <span className="hp-count">{upNextCount}</span>}</span>
-          </Link>
-        )}
-      </div>
-    </div>
-    {signedIn && (
-      <div className="hp-quickrow">
-        <Link to="/explore/devotionals">Devotionals</Link>
-        <Link to="/up-next">Up next ({upNextCount})</Link>
-        <Link to="/shop" className={active === "shop" ? "is-active" : undefined}>Shop</Link>
-      </div>
-    )}
-    </>
-  );
-}
-
-function MediaNav() {
-  const navigate = useNavigate({ from: "/" });
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const s = query.trim();
-    if (!s) return;
-    navigate({ to: "/search", search: { q: s } as any });
-    setSearchOpen(false);
-    setQuery("");
-  };
-  return (
-    <div className="hp-mast-media">
-      <Link to="/watch" className="hp-mast-media-link" aria-label="Watch">
-        <span className="hp-mast-media-dot" />
-        <span>Watch</span>
-      </Link>
-      <Link to="/listen" className="hp-mast-media-link hp-mast-media-link--listen" aria-label="Listen">
-        <Headphones size={18} />
-        <span>Listen</span>
-      </Link>
-      {searchOpen ? (
-        <form className="hp-mast-search-form" onSubmit={submit} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && !query.trim()) setSearchOpen(false); }}>
-          <input
-            type="text"
-            placeholder="Search…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-          />
-          <button type="submit" aria-label="Search">
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </form>
-      ) : (
-        <button
-          type="button"
-          className="hp-mast-media-link"
-          onClick={() => setSearchOpen(true)}
-          aria-label="Search"
-        >
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <span>Search</span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-
-function LatestSection() {
-  const q = useLatest(5);
-  const real = q.data ?? [];
-  const padDemo = usePad();
-  const { demo } = useHome();
-  const items = padDemo(real, "latest", 5);
-  if (!demo && !q.isLoading && items.length === 0) return null;
-  const lead = items[0];
-  const sides = items.slice(1, 5);
-
-  return (
-    <div className="wrap hp-section" style={{ paddingTop: 56, paddingBottom: 40 }}>
-
-      <div className="hp-eyebrow">
-        <div className="bar" />
-        <h2>Latest</h2>
-      </div>
-      {q.isLoading ? (
-        <div className="hp-latest-grid">
-          <div className="hp-skel" style={{ height: 340 }} />
-          <div className="hp-side">
-            {[0, 1, 2, 3].map((i) => <div key={i} className="hp-skel" style={{ height: 72 }} />)}
-          </div>
-        </div>
-      ) : items.length === 0 ? (
-        <div className="hp-meta">No articles yet.</div>
-      ) : (
-        <div className="hp-latest-grid">
-          {lead && (
-            <Link
-              to={routeForType(lead.type) as any}
-              params={{ id: lead.id! } as any}
-              className="hp-lead"
-            >
-              <div className="art" style={{ backgroundImage: `url(${coverOf(lead)})` }} />
-              <h3>{lead.title}</h3>
-              {(() => {
-                const text = openingLines((lead as any).body as string | undefined, 160);
-                return text ? <p>{text}</p> : null;
-              })()}
-              <span className="readmore">Read more →</span>
-              <div className="hp-meta hp-meta-row">
-                <span>{(lead.author_name ?? "CoCreate") + " · " + relTime(lead.published_at)}</span>
-                <CardSave c={lead} />
-              </div>
-            </Link>
-          )}
-          <div className="hp-side">
-            {sides.map((s) => {
-              const preview = openingLines(((s as any).body as string | undefined) ?? s.excerpt, 120);
-              return (
-                <Link key={s.id ?? ""} to={routeForType(s.type) as any} params={{ id: s.id! } as any} className="hp-side-item">
-                  <div className="thumb" style={{ backgroundImage: `url(${coverOf(s)})` }} />
-                  <div className="body">
-                    <h4>{s.title}</h4>
-                    {preview && <p>{preview}</p>}
-                    <div className="hp-meta hp-meta-row"><span>{relTime(s.published_at)}</span><CardSave c={s} /></div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* Shelf grid section */
-function ShelfSection({ shelf, label, seeAll, style }: { shelf: ShelfKey; label: string; seeAll?: string; style?: React.CSSProperties }) {
-  const q = useShelf(shelf, 3);
-  const padDemo = usePad();
-  const items = padDemo(q.data ?? [], shelf, 3, shelf === "listen" ? "podcast" : shelf === "watch" ? "teaching" : "essay");
-  if (items.length === 0) return null;
-  return (
-    <div className="wrap hp-section" id={shelf} style={style}>
-      <div className="hp-eyebrow">
-        <div className="bar" />
-        <h2>{label}</h2>
-        {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
-      </div>
-      <div className="hp-topic-grid">
-        {items.map((c) => (
-          <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-tcard">
-            <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-            <h4>{c.title}</h4>
-            <p>{openingLines(((c as any).body as string | undefined) ?? c.excerpt)}</p>
-            <div className="hp-meta hp-meta-row"><span>{readTimeOf(c)}</span><CardSave c={c} /></div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* Media shelf (navy feature + mini grid) */
-function MediaShelfSection({ shelf, label, seeAll }: { shelf: ShelfKey; label: string; seeAll?: string }) {
-  const q = useShelf(shelf, 5);
-  const padDemo = usePad();
-  const items = padDemo(q.data ?? [], shelf, 5, shelf === "listen" ? "podcast" : "teaching");
-  if (!q.isLoading && items.length === 0) return null;
-  const feature = items[0];
-  const grid = items.slice(1, 5);
-  return (
-    <div className="hp-navy">
-      <div className="wrap">
-        <div className="hp-eyebrow">
-          <div className="bar" />
-          <h2>{label}</h2>
-          {seeAll && <Link to={seeAll as any} className="see-all">See all →</Link>}
-        </div>
-        <div className="hp-stream-row" style={grid.length === 0 ? { gridTemplateColumns: "1fr" } : undefined}>
-          {feature ? (
-            <Link
-              to={routeForType(feature.type) as any}
-              params={{ id: feature.id! } as any}
-              className="hp-stream-feature"
-              style={{ backgroundImage: `url(${coverOf(feature)})` }}
-            >
-              <div className="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z" /></svg></div>
-              <span className="label">{feature.title}</span>
-              <span className="hp-save-corner"><CardSave c={feature} dark /></span>
-            </Link>
-          ) : <div className="hp-skel" style={{ height: 320 }} />}
-          {grid.length > 0 && <div className="hp-stream-mini-grid">
-            {grid.map((c) => (
-              <Link
-                key={c.id ?? ""}
-                to={routeForType(c.type) as any}
-                params={{ id: c.id! } as any}
-                className="hp-stream-mini"
-                style={{ backgroundImage: `url(${coverOf(c)})` }}
-              >
-                <span>{c.title}</span>
-                <span className="hp-save-corner"><CardSave c={c} dark /></span>
-              </Link>
-            ))}
-          </div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Featured Collection */
-type CollectionRow = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  description_md: string | null;
-  cover_image_url: string | null;
-  banner_url: string | null;
-  is_featured?: boolean | null;
+const I = {
+  search: (s = 19) => <svg className="ico" width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>,
+  arrow: (s = 15, c = "currentColor") => <svg className="ico" width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
+  play: (s = 16, c = "currentColor") => <svg className="ico" width={s} height={s} viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z" fill={c} /></svg>,
+  bookmark: (s = 16) => <svg className="ico" width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>,
+  menu: (s = 22) => <svg className="ico" width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>,
 };
 
-function FeaturedCollectionSection() {
-  const q = useQuery({
-    queryKey: ["hp-featured-collection"],
-    queryFn: async () => {
-      // Prefer is_featured; fall back to most recent published.
-      const { data: featData } = await (supabase.from as any)("collections")
-        .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
-        .eq("status", "published")
-        .eq("is_featured", true)
-        .limit(1);
-      let col = (featData ?? [])[0] as CollectionRow | undefined;
-      if (!col) {
-        const { data: recent } = await (supabase.from as any)("collections")
-          .select("id,slug,title,description,description_md,cover_image_url,banner_url,is_featured")
-          .eq("status", "published")
-          .order("published_at", { ascending: false, nullsFirst: false })
-          .limit(1);
-        col = (recent ?? [])[0];
-      }
-      if (!col) return null;
-      const { data: itemsData } = await (supabase.from as any)("collection_items")
-        .select("position, layout_slot, content:content_items_public(*)")
-        .eq("collection_id", col.id)
-        .order("position", { ascending: true })
-        .limit(6);
-      const items = ((itemsData ?? []) as Array<{ position: number; layout_slot: string; content: ContentPreview | null }>)
-        .map((r) => r.content)
-        .filter((c): c is ContentPreview => !!c);
-      return { collection: col, items };
-    },
-  });
+const focal = (d?: string | null, m?: string | null) =>
+  ({ ["--fd" as any]: d || "center", ["--fm" as any]: m || d || "center" }) as CSSProperties;
 
-  const demoCollection: CollectionRow = {
-    id: "demo-collection",
-    slug: "abide-in-the-ordinary",
-    title: "Abide in the Ordinary",
-    description: "Six pieces on finding God in the middle of a regular Tuesday — the commute, the laundry, the quiet after the kids finally sleep.",
-    description_md: null,
-    cover_image_url: IMG_FALLBACK("collection-cover", 1200, 700),
-    banner_url: null,
-    is_featured: true,
-  };
-  const { demo } = useHome();
-  const demoItems = makeDemo("latest", 5, 20);
-  const collection = q.data?.collection ?? (demo ? demoCollection : null);
-  const items = !demo
-    ? (q.data?.items ?? []).slice(0, 5)
-    : q.data && q.data.items.length >= 5 ? q.data.items : [...(q.data?.items ?? []), ...demoItems].slice(0, 5);
-  if (!collection || q.isLoading || items.length === 0) return null;
-  const lead = items[0];
-  const paired = items[1];
-  const rest = items.slice(2, 5);
-  const cover = collection.cover_image_url || collection.banner_url;
+function Img({ src, alt, fd, fm }: { src: string | null; alt: string; fd?: string | null; fm?: string | null }) {
+  if (!src) return null;
+  return <img src={src} alt={alt} loading="lazy" style={focal(fd, fm)} />;
+}
 
-
+function Photo({ p, ratio, alt }: { p: { hero_url?: string | null; cover_image_url?: string | null; thumbnail_url?: string | null; hero_focal_desktop?: string | null; hero_focal_mobile?: string | null }; ratio: string; alt: string }) {
   return (
-    <div className="hp-collection">
-      <div className="wrap">
-        <h2 className="hp-collection-heading">Featured Collection</h2>
-        <p className="hp-collection-sub">
-          A handful of pieces released together, circling one question from a few different angles. No order to follow, nothing to finish.
-        </p>
-
-        <div className="hp-col-header">
-          <div>
-            <div className="hp-col-eyebrow">Featured Now</div>
-            <h3>{collection.title}</h3>
-            {(collection.description || collection.description_md) && (
-              <p>{collection.description || collection.description_md}</p>
-            )}
-          </div>
-          <div className="hp-col-actions">
-            <button className="hp-add-btn" type="button">+ Add to my Abide</button>
-            <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-inside">
-              See what's inside →
-            </Link>
-          </div>
-        </div>
-
-        <div className="hp-col-grid">
-          <div className="hp-col-left">
-            {lead && (
-              <Link to={routeForType(lead.type) as any} params={{ id: lead.id! } as any} className="hp-col-lead">
-                <div className="art" style={{ backgroundImage: `url(${coverOf(lead) || (cover ?? "")})` }} />
-                <div className="body">
-                  <h4>{lead.title}</h4>
-                  {(lead.excerpt || (lead as any).body) && <p>{openingLines(lead.excerpt ?? ((lead as any).body as string | undefined), 140)}</p>}
-                  <div style={{ marginTop: 10 }}><CardSave c={lead} /></div>
-                </div>
-              </Link>
-            )}
-            {paired && (
-              <Link to={routeForType(paired.type) as any} params={{ id: paired.id! } as any} className="hp-col-hcard">
-                <div className="thumb" style={{ backgroundImage: `url(${coverOf(paired)})` }} />
-                <div className="body">
-                  <h5>{paired.title}</h5>
-                  <div className="byline hp-meta-row"><span>{paired.author_name ?? ""}</span><CardSave c={paired} /></div>
-                </div>
-              </Link>
-            )}
-          </div>
-          <div className="hp-col-right">
-            {rest.map((c) => (
-              <Link key={c.id ?? ""} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className="hp-col-hcard">
-                <div className="thumb" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-                <div className="body">
-                  <h5>{c.title}</h5>
-                  <div className="byline hp-meta-row"><span>{c.author_name ?? ""}</span><CardSave c={c} /></div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="hp-see-collection-wrap">
-          <Link to="/collections/$slug" params={{ slug: collection.slug }} className="hp-see-collection-btn">
-            See all pieces from this collection →
-          </Link>
-        </div>
+    <div style={{ borderRadius: 6, overflow: "hidden" }}>
+      <div className="cs-photo" style={{ aspectRatio: ratio }}>
+        <Img src={photoOf(p)} alt={alt} fd={p.hero_focal_desktop} fm={p.hero_focal_mobile} />
       </div>
     </div>
   );
 }
 
-/* ---------- Signed-in feed sections ---------- */
-function useDefaultTemplateId() {
-  return useQuery({
-    queryKey: ["platform-default-template-id-home"],
-    queryFn: async () => {
-      const { data } = await supabase.from("devotional_templates").select("id")
-        .eq("is_default" as any, true).eq("status", "published").maybeSingle();
-      return data?.id ?? null;
-    },
-    staleTime: 5 * 60_000,
-  });
+function PieceLink({ p, className, style, children }: { p: Piece; className?: string; style?: CSSProperties; children: ReactNode }) {
+  const id = p.id ?? "";
+  if (p.type === "teaching" || p.type === "clip") return <Link to="/teachings/$id" params={{ id }} className={className} style={style}>{children}</Link>;
+  if (p.type === "podcast") return <Link to="/podcasts/$id" params={{ id }} className={className} style={style}>{children}</Link>;
+  return <Link to="/essays/$id" params={{ id }} className={className} style={style}>{children}</Link>;
 }
 
-const fmtShort = (iso: string) => {
-  const d = iso.length === 10 ? new Date(`${iso}T12:00:00`) : new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-};
-
-function ContinueCards({ userId }: { userId: string }) {
-  const defQ = useDefaultTemplateId();
-  const today = todayISO();
-  const q = useQuery({
-    queryKey: ["hp-continue", userId, today],
-    queryFn: async () => {
-      const [entry, study, note] = await Promise.all([
-        supabase.from("devotional_entries").select("id, template_id, entry_date, updated_at")
-          .eq("user_id", userId).eq("entry_date", today).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
-        (supabase.from("workspace_items") as any).select("id, title, updated_at")
-          .eq("user_id", userId).eq("kind", "study").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
-        (supabase.from("workspace_items") as any).select("id, title, updated_at")
-          .eq("user_id", userId).eq("kind", "note").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
-      ]);
-      return { entry: entry.data as any, study: study.data as any, note: note.data as any };
-    },
-  });
-  const d = q.data;
-  const def = defQ.data;
-  const cards: { key: string; label: string; color: string; title: string; meta: string; to: any }[] = [];
-  if (d?.entry?.template_id) cards.push({
-    key: "ws", label: "Workspace", color: "#0F4A42", title: `Today's entry · ${fmtShort(today)}`,
-    meta: `Edited ${relTime(d.entry.updated_at).toLowerCase()}`,
-    to: { to: "/devotionals/$id", params: { id: d.entry.template_id }, search: { date: today } },
-  });
-  if (d?.study && def) cards.push({
-    key: "study", label: "Study", color: "#FFAE00", title: d.study.title?.trim() || "Untitled study",
-    meta: `Edited ${relTime(d.study.updated_at).toLowerCase()}`,
-    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.study.id } },
-  });
-  if (d?.note && def) cards.push({
-    key: "note", label: "Note", color: "#6C6FD4", title: d.note.title?.trim() || "Untitled note",
-    meta: `Edited ${relTime(d.note.updated_at).toLowerCase()}`,
-    to: { to: "/devotionals/$id", params: { id: def }, search: { ws: d.note.id } },
-  });
-  if (q.isLoading) return <div className="hp-skel" style={{ height: 110 }} />;
-  if (!cards.length) return null;
-  return (
-    <div>
-      <div className="hp-eyebrow"><div className="bar" /><h2>Continue where you left off</h2></div>
-      <div className="hp-cont-grid">
-        {cards.map((c) => (
-          <Link key={c.key} {...c.to} className="hp-cont-card">
-            <div className="tag"><span className="dot" style={{ background: c.color }} />{c.label}</div>
-            <div className="ttl">{c.title}</div>
-            <div className="hp-meta">{c.meta}</div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+function DevoLink({ d, className, style, children }: { d: DevoRow; className?: string; style?: CSSProperties; children: ReactNode }) {
+  if (d.slug) return <Link to="/devotionals/$slug/overview" params={{ slug: d.slug }} className={className} style={style}>{children}</Link>;
+  return <Link to="/explore/devotionals" className={className} style={style}>{children}</Link>;
 }
 
-function ActiveDevotionalCard({ userId }: { userId: string }) {
-  const q = useActiveDevotional(userId);
-  const a = q.data;
-  if (!a) return null;
-  return (
-    <div className="hp-plan-card">
-      <div className="eb">Your devotional · Day {a.day} of {a.total}</div>
-      <h3>{a.title}</h3>
-      <p>Today's read, pray and do are waiting in your workspace.</p>
-      {a.templateId
-        ? <Link to="/devotionals/$id" params={{ id: a.templateId }} search={{ date: todayISO() } as any} className="hp-lime-btn">Open today's in workspace →</Link>
-        : <Link to="/devotionals" className="hp-lime-btn">Open today's in workspace →</Link>}
-    </div>
-  );
-}
-
-function ContinueSection({ userId }: { userId: string }) {
-  const active = useActiveDevotional(userId);
-  return (
-    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
-      <div className={`hp-cont-wrap${active.data ? " has-plan" : ""}`}>
-        <ContinueCards userId={userId} />
-        <ActiveDevotionalCard userId={userId} />
-      </div>
-    </div>
-  );
-}
-
-function UpNextRowSection({ userId }: { userId: string }) {
-  const q = useUpNext(userId);
-  const rows = (q.data ?? []).filter((r) => !r.kept);
-  if (!rows.length) return null;
-  return (
-    <div className="wrap hp-section" style={{ paddingTop: 40, paddingBottom: 8 }}>
-      <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
-        <div className="bar" />
-        <h2>Up next</h2>
-        <Link to="/up-next" className="see-all">See all {rows.length} →</Link>
-      </div>
-      <p className="hp-eyebrow-sub">What you saved to come back to</p>
-      <div className="hp-upnext-row">
-        {rows.slice(0, 8).map((r, i) => {
-          const c = r.content;
-          return (
-            <Link key={r.savedId} to={routeForType(c.type) as any} params={{ id: c.id! } as any} className={`hp-un-card${i >= 4 ? " hp-un-extra" : ""}`}>
-              <div className="art" style={{ backgroundImage: `url(${coverOf(c)})` }} />
-              <h4>{c.title}</h4>
-              <div className="hp-meta">{[typeLabel(c.type), lengthLabel(c)].filter(Boolean).join(" · ")}</div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function DevotionalsBand({ userId }: { userId: string }) {
+function useSaveForLater(userId: string | null) {
   const navigate = useNavigate();
-  const pub = usePublishedDevotionals(2);
-  const [busy, setBusy] = useState<string | null>(null);
-  const items = (pub.data ?? []).slice(0, 2);
-  const start = async (id: string) => {
-    setBusy(id);
-    try {
-      await subscribeToDevotional(userId, id);
-      navigate({ to: "/devotionals/$id", params: { id }, search: { date: todayISO() } as any });
-    } catch (e: any) { toast.error(e?.message ?? "Could not start this devotional."); setBusy(null); }
+  const invalidate = useInvalidateUpNext();
+  return async (contentId: string | null | undefined) => {
+    if (!contentId) return;
+    if (!userId) { navigate({ to: "/auth" }); return; }
+    try { await saveForLater(userId, contentId); invalidate(); toast.success("Saved for later"); }
+    catch { toast.error("Couldn't save that. Please try again."); }
   };
-  return (
-    <div className="hp-navy">
-      <div className="wrap">
-        <div className="hp-eyebrow" style={{ marginBottom: 4 }}>
-          <div className="bar" />
-          <h2>Devotionals</h2>
-          <Link to="/explore/devotionals" className="see-all">See all →</Link>
-        </div>
-        <p className="hp-eyebrow-sub" style={{ color: "rgba(251,248,237,0.72)" }}>Read it here, live it in your workspace</p>
-        <div className="hp-dev-grid">
-          {items.map((t) => (
-            <div key={t.id} className="hp-dev-card" style={{ ["--acc" as any]: t.accent_color || "#DCE07A" }}>
-              <div className="meta">{t.duration_days ? `${t.duration_days}-day devotional` : "Devotional"}</div>
-              <Link to="/devotionals/$slug/overview" params={{ slug: t.slug || t.id }}><h3>{t.title}</h3></Link>
-              {t.description && <p>{t.description}</p>}
-              <button type="button" className="hp-lime-btn" disabled={busy === t.id} onClick={() => start(t.id)}>+ Start in my workspace</button>
-            </div>
-          ))}
-          <Link to="/plans/new" search={{ length: 3 } as any} className="hp-dev-create">
-            <span className="plus">+</span>
-            <span className="t">Create your own devotional</span>
-            <span className="s">Pick 1, 3, 5 or 10 days and shape each day's read, pray and do.</span>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
 }
 
-/* ============================================================ */
-/*  Page                                                         */
-/* ============================================================ */
+const NAV = [
+  { label: "Read", to: "/explore" },
+  { label: "Watch", to: "/watch" },
+  { label: "Listen", to: "/listen" },
+  { label: "Devotionals", to: "/explore/devotionals" },
+  { label: "Shop", to: "/shop" },
+] as const;
+
+/* ---------- page ---------- */
+
 function HomePage() {
-  const [signedIn, setSignedIn] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const { feed } = Route.useSearch();
-  const homeNavigate = useNavigate();
-  // Signed-in users land on the daily workspace unless they explicitly opened the feed.
+  const navigate = useNavigate();
+  // Signed-in users land on the daily workspace unless they explicitly opened Explore.
   const [redirecting, setRedirecting] = useState(!feed);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       const id = data.session?.user.id ?? null;
-      setSignedIn(!!id);
       setUserId(id);
-      if (id && !feed) homeNavigate({ to: "/devotionals", replace: true });
+      if (id && !feed) navigate({ to: "/devotionals", replace: true });
       else setRedirecting(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setSignedIn(!!s?.user.id); setUserId(s?.user.id ?? null); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user.id ?? null));
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const upNext = useUpNext(userId);
-  const savedMap = useMemo(() => {
-    const m: Record<string, string> = {};
-    (upNext.data ?? []).forEach((r) => { if (r.content.id) m[r.content.id] = r.savedId; });
-    return m;
-  }, [upNext.data]);
-  const upNextCount = (upNext.data ?? []).filter((r) => !r.kept).length;
-  const ctx = useMemo(() => ({ demo: !signedIn, userId, savedMap }), [signedIn, userId, savedMap]);
+  const preview = useIsPreview();
+  const home = useHomeData();
+  const signedIn = !!userId;
 
   if (redirecting) return null;
+  const d = home.data;
 
   return (
     <AppShell current="explore" hideSide={!signedIn} hideTopbar>
       <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
-      <HomeCtx.Provider value={ctx}>
-      <div className="hp">
-        {signedIn ? null : <HomeTourBar />}
-        <HomeMasthead signedIn={signedIn} upNextCount={upNextCount} />
-        {signedIn && userId && <ContinueSection userId={userId} />}
-        {signedIn && userId && <UpNextRowSection userId={userId} />}
-        <LatestSection />
-
-        <MediaShelfSection shelf="watch" label="Watch" seeAll="/watch" />
-        <FeaturedCollectionSection />
-        <MediaShelfSection shelf="shorts" label="Shorts" seeAll="/watch" />
-        <ShelfSection shelf="read" label="Read" seeAll="/explore" style={{ paddingTop: 80, paddingBottom: 44 }} />
-        <ShelfSection shelf="listen" label="Listen" seeAll="/listen" style={{ paddingTop: 44, paddingBottom: 44 }} />
-        {signedIn && userId
-          ? <div style={{ margin: "36px 0" }}><DevotionalsBand userId={userId} /></div>
-          : <ShelfSection shelf="devotionals" label="Devotionals" seeAll="/explore/devotionals" style={{ paddingTop: 44, paddingBottom: 44 }} />}
-        <ShelfSection shelf="guides" label="Guides" seeAll="/explore" style={{ paddingTop: 44, paddingBottom: 80 }} />
-
-        <SiteFooter />
+      <div className="content-site ch">
+        <Header signedIn={signedIn} />
+        <InfoBar d={d} />
+        {d && (
+          <>
+            <Hero d={d} preview={preview} userId={userId} />
+            {signedIn && userId && <PickUp userId={userId} copy={d.copy} preview={preview} />}
+            <NewAndSchedule d={d} preview={preview} userId={userId} />
+            <Devotionals d={d} preview={preview} />
+            <Watch d={d} />
+            <Columns d={d} />
+            <Newsletter copy={d.copy} preview={preview} />
+          </>
+        )}
+        <Footer />
       </div>
-      </HomeCtx.Provider>
     </AppShell>
+  );
+}
+
+function Logo({ tile = true, size = 19 }: { tile?: boolean; size?: number }) {
+  return (
+    <Link to="/" search={{ feed: 1 }} aria-label="CoCreate home" className="ch-logo">
+      {tile && <span className="tile">C</span>}
+      <span className="word" style={{ fontSize: size }}>CoCreate</span>
+    </Link>
+  );
+}
+
+function Header({ signedIn }: { signedIn: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const on = () => setDesktop(mq.matches);
+    on(); mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+  return (
+    <header className="ch-head">
+      <div className="wrap bar">
+        <Logo tile={!(signedIn && desktop)} />
+        <nav aria-label="Content" className="ch-nav">
+          {NAV.map((n) => <Link key={n.to} to={n.to}>{n.label}</Link>)}
+        </nav>
+        <div className="ch-actions" ref={ref}>
+          {!signedIn && <Link to="/subscribe" className="ch-sub" style={{ order: 3 }}>Subscribe</Link>}
+          <Link to="/search" aria-label="Search" className="ch-iconbtn" style={{ order: 1 }}>{I.search()}</Link>
+          {!signedIn && <Link to="/auth" className="ch-signin" style={{ order: 2 }}>Sign in</Link>}
+          <button type="button" className="ch-iconbtn ch-menu" aria-label="Menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} style={{ order: 4 }}>{I.menu()}</button>
+          {open && (
+            <div className="ch-menu-panel" role="menu">
+              {!signedIn && <Link to="/auth" role="menuitem">Sign in</Link>}
+              <Link to="/about" role="menuitem">About</Link>
+              <Link to="/mission" role="menuitem">Mission</Link>
+              <Link to="/contact" role="menuitem">Contact</Link>
+            </div>
+          )}
+        </div>
+      </div>
+      <nav aria-label="Content" className="ch-nav2">
+        {NAV.map((n) => <Link key={n.to} to={n.to}>{n.label}</Link>)}
+      </nav>
+    </header>
+  );
+}
+
+function InfoBar({ d }: { d: HomeData | undefined }) {
+  const [today, setToday] = useState("");
+  useEffect(() => { setToday(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })); }, []);
+  const s = d?.currentSeries;
+  return (
+    <div className="ch-info">
+      <div className="wrap">
+        <span>{today}</span>
+        {s && (
+          <Link to="/collections/$slug" params={{ slug: s.slug }} className="series">
+            This month: {s.title}{I.arrow(14)}
+          </Link>
+        )}
+        <span>New releases every month</span>
+      </div>
+    </div>
+  );
+}
+
+function Hero({ d, preview, userId }: { d: HomeData; preview: boolean; userId: string | null }) {
+  const h = d.hero;
+  const save = useSaveForLater(userId);
+  if (!h) {
+    if (!preview) return null;
+    return (
+      <section className="wrap ch-hero-sec" style={{ paddingTop: 32 }}>
+        <div className="ch-hero empty"><div className="txt"><h1 className="ph">[Featured release]</h1><p className="ph">[Mark a published piece as featured to fill this space.]</p></div></div>
+      </section>
+    );
+  }
+  const photo = photoOf(h);
+  const kicker = h.kicker || [`New ${(TYPE_LABEL[h.type ?? ""] ?? "release").toLowerCase()}`, d.heroSeries?.title].filter(Boolean).join(" · ");
+  const line = h.summary || h.excerpt;
+  const isWatch = h.type === "teaching" || h.type === "clip";
+  return (
+    <section className="wrap ch-hero-sec" style={{ paddingTop: 32 }}>
+      <div className={`ch-hero${photo ? "" : " empty"}`}>
+        <Img src={photo} alt={h.title ?? ""} fd={h.hero_focal_desktop} fm={h.hero_focal_mobile} />
+        {photo && <div className="shade" />}
+        <div className="txt">
+          {kicker && <span className="ch-pill">{kicker}</span>}
+          <h1>{h.title}</h1>
+          {line ? <p>{line}</p> : <Ph show={preview}><p>[One line about this piece, in your words.]</p></Ph>}
+          <div className="ch-btns">
+            <PieceLink p={h} className="ch-btn-w">{isWatch ? <>{I.play(16, "var(--cs-ink)")}Watch now</> : h.type === "podcast" ? <>{I.play(16, "var(--cs-ink)")}Listen now</> : <>Read now</>}</PieceLink>
+            <button type="button" className="ch-btn-o" onClick={() => save(h.id)}>{I.bookmark(16)}Save for later</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PickUp({ userId, copy, preview }: { userId: string; copy: Record<string, string>; preview: boolean }) {
+  const upNext = useUpNext(userId);
+  const today = todayISO();
+  const todos = useQuery({
+    queryKey: ["home-today-todos", userId, today],
+    queryFn: async () => {
+      const { data } = await supabase.from("devotional_entries").select("todo_items").eq("user_id", userId).eq("entry_date", today);
+      let open = 0;
+      for (const r of data ?? []) for (const t of (Array.isArray(r.todo_items) ? r.todo_items : []) as any[]) if (t && !t.done && !t.completed) open++;
+      return open;
+    },
+  });
+  const study = useQuery({
+    queryKey: ["home-recent-study", userId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("workspace_items") as any)
+        .select("id, title, updated_at, folder_id, study_folders(name)").eq("user_id", userId).eq("kind", "study")
+        .order("updated_at", { ascending: false }).limit(1);
+      return (data?.[0] ?? null) as { id: string; title: string | null; updated_at: string; study_folders?: { name: string | null } | null } | null;
+    },
+  });
+  const saved = (upNext.data ?? []).filter((r) => !r.finished_at);
+  const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const sub = copy["workspace_card_subline"];
+  const s = study.data;
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 40 }}>
+      <div className="ch-h2row"><h2 className="ch-h2"><span className="ch-dot" style={{ background: "var(--cs-lime)" }} />Pick up where you left off</h2></div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+        <Link to="/devotionals" className="ch-pick">
+          <span className="ch-kick w">Today’s workspace</span>
+          <span className="t">{dateLabel}</span>
+          <span className="s">{todos.data ? `${todos.data} to-do${todos.data === 1 ? "" : "s"} open · ` : ""}{sub || <Ph show={preview}>[Workspace card line]</Ph>}</span>
+          <span className="ch-cta" style={{ marginTop: 6 }}>Open today’s workspace{I.arrow(15)}</span>
+        </Link>
+        {s ? (
+          <Link to="/read" search={{ open: s.id }} className="ch-pick">
+            <span className="ch-kick w">Study{s.study_folders?.name ? ` · ${s.study_folders.name}` : ""}</span>
+            <span className="t">{s.title || "Untitled study"}</span>
+            <span className="s">Edited {relTime(s.updated_at)}</span>
+            <span className="ch-cta" style={{ marginTop: 6 }}>Continue the study{I.arrow(15)}</span>
+          </Link>
+        ) : (
+          <Link to="/read" className="ch-pick">
+            <span className="ch-kick w">Study</span>
+            <span className="t">Start a study</span>
+            <span className="s">Your studies will show up here.</span>
+            <span className="ch-cta" style={{ marginTop: 6 }}>Go to Read{I.arrow(15)}</span>
+          </Link>
+        )}
+        <Link to="/up-next" className="ch-pick">
+          <span className="ch-kick w">Up next</span>
+          <span className="t">{saved.length} saved for later</span>
+          <span className="s">{saved[0] ? `${saved[0].content.title}${saved.length > 1 ? `, and ${saved.length - 1} more` : ""}` : "Nothing saved yet."}</span>
+          <span className="ch-cta" style={{ marginTop: 6 }}>See what you saved{I.arrow(15)}</span>
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function relTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000), h = Math.floor(m / 60), dd = Math.floor(h / 24);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  if (dd === 1) return "yesterday";
+  if (dd < 30) return `${dd} days ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function NewCardView({ c, d, userId }: { c: NewCard; d: HomeData; userId: string | null }) {
+  const save = useSaveForLater(userId);
+  const released = new Date(c.at).getTime() <= new Date(d.now).getTime();
+  if (c.kind === "devotional") {
+    const v = c.devo;
+    return (
+      <article className="ch-card">
+        <DevoLink d={v}><Photo p={v} ratio="4 / 5" alt={v.title} /></DevoLink>
+        <span className="ch-kick"><span className="ch-dot" style={{ width: 7, height: 7, background: TYPE_DOT.devotional }} />Devotional · {shortDate(c.at)}</span>
+        <h3><DevoLink d={v}>{v.title}</DevoLink></h3>
+        <div><DevoLink d={v} className="ch-cta">Start in your workspace{I.arrow(15)}</DevoLink></div>
+      </article>
+    );
+  }
+  const p = c.piece;
+  const t = p.type ?? "";
+  const cta = !released ? "Save for later" : t === "podcast" ? "Listen now" : t === "teaching" || t === "clip" ? "Watch now" : "Read now";
+  return (
+    <article className="ch-card">
+      {released ? <PieceLink p={p}><Photo p={p} ratio="4 / 5" alt={p.title ?? ""} /></PieceLink> : <Photo p={p} ratio="4 / 5" alt={p.title ?? ""} />}
+      <span className="ch-kick"><span className="ch-dot" style={{ width: 7, height: 7, background: TYPE_DOT[t] ?? "var(--cs-ink)" }} />{TYPE_LABEL[t] ?? "Release"} · {shortDate(c.at)}</span>
+      <h3>{released ? <PieceLink p={p}>{p.title}</PieceLink> : p.title}</h3>
+      <div>
+        {released
+          ? <PieceLink p={p} className="ch-cta">{cta}{I.arrow(15)}</PieceLink>
+          : <button type="button" className="ch-cta" onClick={() => save(p.id)}>{cta}{I.arrow(15)}</button>}
+      </div>
+    </article>
+  );
+}
+
+function NewAndSchedule({ d, preview, userId }: { d: HomeData; preview: boolean; userId: string | null }) {
+  const s = d.currentSeries;
+  const n = d.nextSeries;
+  const nextMonth = n?.series_month ? new Date(n.series_month + "T12:00:00").toLocaleDateString(undefined, { month: "long" }) : "";
+  if (!d.newThisMonth.length && !d.schedule.length && !n && !preview) return null;
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 72 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 48 }}>
+        <div style={{ flex: "3 1 560px", minWidth: 0 }}>
+          <div className="ch-h2row">
+            <h2 className="ch-h2"><span className="ch-dot" style={{ background: "var(--cs-amber)" }} />New this month</h2>
+            <Link to="/watch" className="ch-more">All releases{I.arrow(15)}</Link>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+            {d.newThisMonth.map((c) => <NewCardView key={c.kind === "piece" ? c.piece.id : c.devo.id} c={c} d={d} userId={userId} />)}
+            {!d.newThisMonth.length && <Ph show={preview}>[No releases this month yet. Turn on “Feature in New this month” on up to 3 pieces.]</Ph>}
+          </div>
+        </div>
+        <aside style={{ flex: "1 1 280px", minWidth: 0 }}>
+          <div className="ch-h2row"><h2 className="ch-h2"><span className="ch-dot" style={{ background: "var(--cs-ink)" }} />Release schedule</h2></div>
+          {d.schedule.length ? (
+            <ul className="ch-sched">
+              {d.schedule.map(({ piece, released }) => (
+                <li key={piece.id}>
+                  <span className="d" style={{ color: released ? "var(--cs-green)" : "var(--cs-amber-ink)" }}>{shortDate(piece.release_at)}</span>
+                  <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span className="k">{TYPE_LABEL[piece.type ?? ""] ?? "Release"} · {released ? "Out now" : "Coming"}</span>
+                    {released ? <PieceLink p={piece}>{piece.title}</PieceLink> : <span style={{ fontFamily: "var(--cs-font-head)", fontSize: 15.5, fontWeight: 500, lineHeight: 1.35, color: "var(--cs-ink)" }}>{piece.title}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Ph show={preview}>{s ? "[Add pieces to this month’s series to build the schedule.]" : "[Set a series month on a series to show its schedule.]"}</Ph>
+          )}
+          {n ? (
+            <div className="ch-next">
+              <span className="ch-kick w" style={{ letterSpacing: "0.14em" }}>Next series{nextMonth ? ` · ${nextMonth}` : ""}</span>
+              <span className="t">{n.title}</span>
+              <Link to="/subscribe" className="ch-cta">Get notified{I.arrow(15)}</Link>
+            </div>
+          ) : preview ? (
+            <div className="ch-next"><span className="ph">[Next series — set a later series month on a series.]</span></div>
+          ) : null}
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+function Devotionals({ d, preview }: { d: HomeData; preview: boolean }) {
+  const c = d.copy;
+  if (!d.devotionals.length && !preview) return null;
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 96 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 40, alignItems: "flex-end", marginBottom: 28 }}>
+        <div style={{ flex: "1 1 420px", minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+          <span className="ch-kick w" style={{ color: "var(--cs-green)" }}>Devotionals</span>
+          {c["devotionals_headline"] ? <h2 className="ch-big-h2" style={{ margin: 0, fontFamily: "var(--cs-font-head)", fontSize: 40, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--cs-ink)" }}>{c["devotionals_headline"]}</h2> : <Ph show={preview}>[Devotionals headline]</Ph>}
+          {c["devotionals_subline"] ? <p style={{ margin: 0, fontFamily: "var(--cs-font-head)", fontSize: 17, fontWeight: 300, lineHeight: 1.55, color: "var(--cs-text)" }}>{c["devotionals_subline"]}</p> : <Ph show={preview}>[Devotionals subline]</Ph>}
+        </div>
+        <div style={{ flex: "0 1 auto", display: "flex", flexDirection: "column", gap: 6 }}>
+          <Link to="/plans/new" search={{ length: 3 }} style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", minHeight: 46, padding: "0 22px", borderRadius: 999, border: "1.5px solid var(--cs-ink)", color: "var(--cs-ink)", fontSize: 14, fontWeight: 600 }}>Create your own devotional</Link>
+          {c["devotionals_create_note"] ? <span style={{ fontSize: 13, color: "var(--cs-muted)" }}>{c["devotionals_create_note"]}</span> : null}
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+        {d.devotionals.map((v) => {
+          const photo = photoOf(v);
+          return (
+            <DevoLink key={v.id} d={v} className={`ch-overcard${photo ? "" : " empty"}`} style={{ flex: "0 1 calc((100% - 40px) / 3)", minWidth: 220, aspectRatio: "3 / 4" }}>
+              <Img src={photo} alt={v.title} fd={v.hero_focal_desktop} fm={v.hero_focal_mobile} />
+              <span className="shade" />
+              <span className="txt">
+                {v.duration_days ? <span className="k">{v.duration_days} day{v.duration_days === 1 ? "" : "s"}</span> : null}
+                <span className="t">{v.title}</span>
+                <span className="c">Start in your workspace{I.arrow(15)}</span>
+              </span>
+            </DevoLink>
+          );
+        })}
+        {!d.devotionals.length && <Ph show={preview}>[Publish a devotional to show it here.]</Ph>}
+      </div>
+    </section>
+  );
+}
+
+function Watch({ d }: { d: HomeData }) {
+  const [big, ...rest] = d.watch;
+  if (!big) return null;
+  const photo = photoOf(big);
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 96 }}>
+      <div className="ch-h2row">
+        <h2 className="ch-h2"><span className="ch-dot" style={{ background: "var(--cs-amber)" }} />Watch</h2>
+        <Link to="/watch" className="ch-more">All teachings{I.arrow(15)}</Link>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
+        <div style={{ flex: "2 1 520px", minWidth: 0, display: "flex" }}>
+          <PieceLink p={big} className={`ch-overcard big${photo ? "" : " empty"}`} style={{ flex: "1 1 100%", minWidth: 0, aspectRatio: "16 / 10" }}>
+            <Img src={photo} alt={big.title ?? ""} fd={big.hero_focal_desktop} fm={big.hero_focal_mobile} />
+            <span className="shade" />
+            <span className="txt">
+              <span className="k">{TYPE_LABEL[big.type ?? ""] ?? "Teaching"}</span>
+              <span className="t">{big.title}</span>
+              <span className="c">Watch now{I.arrow(15)}</span>
+            </span>
+          </PieceLink>
+        </div>
+        {rest.length > 0 && (
+          <div style={{ flex: "1 1 300px", minWidth: 0, borderTop: "1px solid var(--cs-line)" }}>
+            {rest.map((p) => (
+              <PieceLink key={p.id} p={p} className="ch-wrow">
+                <span className="ch-wthumb">
+                  <Img src={photoOf(p)} alt={p.title ?? ""} fd={p.hero_focal_desktop} fm={p.hero_focal_mobile} />
+                  <span className="play">{I.play(13, "var(--cs-ink)")}</span>
+                </span>
+                <span style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+                  <span className="ch-kick w">{TYPE_LABEL[p.type ?? ""] ?? "Teaching"}</span>
+                  <span className="t">{p.title}</span>
+                </span>
+              </PieceLink>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Columns({ d }: { d: HomeData }) {
+  const cols: ReactNode[] = [];
+  const pieceCol = (label: string, dot: string, list: Piece[]) => {
+    const [lead, ...more] = list;
+    if (!lead) return null;
+    return (
+      <div key={label} className="ch-col" style={{ flex: "1 1 260px", minWidth: 0 }}>
+        <div className="ch-h2row"><h2 className="ch-h2"><span className="ch-dot" style={{ background: dot }} />{label}</h2></div>
+        <PieceLink p={lead}><Photo p={lead} ratio="4 / 3" alt={lead.title ?? ""} /></PieceLink>
+        <div style={{ margin: "14px 0 6px" }}><span className="ch-kick w">{TYPE_LABEL[lead.type ?? ""] ?? label}</span></div>
+        <PieceLink p={lead} className="lead">{lead.title}</PieceLink>
+        {more.length > 0 && <ul>{more.map((p) => <li key={p.id}><PieceLink p={p}>{p.title}</PieceLink></li>)}</ul>}
+      </div>
+    );
+  };
+  cols.push(pieceCol("Read", "var(--cs-green)", d.read));
+  cols.push(pieceCol("Listen", "var(--cs-periwinkle)", d.listen));
+  const [lead, ...more] = d.products;
+  if (lead) {
+    const ProdLink = ({ p, className, children }: { p: typeof lead; className?: string; children: ReactNode }) =>
+      p.checkout_url ? <a href={p.checkout_url} className={className} target="_blank" rel="noreferrer">{children}</a> : <Link to="/shop" className={className}>{children}</Link>;
+    cols.push(
+      <div key="shop" className="ch-col" style={{ flex: "1 1 260px", minWidth: 0 }}>
+        <div className="ch-h2row"><h2 className="ch-h2"><span className="ch-dot" style={{ background: "var(--cs-blush)" }} />Shop</h2></div>
+        <ProdLink p={lead}><Photo p={lead} ratio="4 / 3" alt={lead.title} /></ProdLink>
+        {lead.category && <div style={{ margin: "14px 0 6px" }}><span className="ch-kick w">{lead.category}</span></div>}
+        <ProdLink p={lead} className="lead">{lead.title}</ProdLink>
+        {more.length > 0 && <ul>{more.map((p) => <li key={p.id}><ProdLink p={p}>{p.title}</ProdLink></li>)}</ul>}
+      </div>,
+    );
+  }
+  if (!cols.some(Boolean)) return null;
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 96 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 40 }}>{cols}</div>
+    </section>
+  );
+}
+
+function Newsletter({ copy, preview }: { copy: Record<string, string>; preview: boolean }) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const img = copy["newsletter_image_url"] || null;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || v.length > 254) { toast.error("Please enter a valid email."); return; }
+    setBusy(true);
+    const { error } = await (supabase.rpc as any)("subscribe_email", { _email: v, _first_name: null, _tags: ["everything"], _season: null, _source: "home_newsletter" });
+    setBusy(false);
+    if (error) { toast.error("That didn't go through. Please try again."); return; }
+    setDone(true);
+  };
+  return (
+    <section className="wrap ch-sec" style={{ paddingTop: 104 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 48, alignItems: "center", paddingTop: 56, borderTop: "1px solid var(--cs-line)" }}>
+        <div style={{ flex: "1 1 360px", minWidth: 0, borderRadius: 6, overflow: "hidden" }}>
+          <div className="cs-photo" style={{ aspectRatio: "4 / 3" }}>{img && <img src={img} alt="" loading="lazy" />}</div>
+        </div>
+        <form className="ch-nl" onSubmit={submit} style={{ flex: "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+          {copy["newsletter_headline"] ? <h2>{copy["newsletter_headline"]}</h2> : <Ph show={preview}>[Newsletter headline]</Ph>}
+          {copy["newsletter_subline"] ? <p style={{ margin: "0 0 8px", fontSize: 15, lineHeight: 1.55, color: "var(--cs-muted)" }}>{copy["newsletter_subline"]}</p> : null}
+          {done ? (
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--cs-green)" }}>You’re subscribed. Watch your inbox.</p>
+          ) : (
+            <>
+              <label htmlFor="nl-email-0" style={{ fontSize: 13, fontWeight: 600, color: "var(--cs-ink)" }}>Email</label>
+              <input id="nl-email-0" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} required />
+              <button type="submit" disabled={busy}>{busy ? "Subscribing…" : "Subscribe"}</button>
+            </>
+          )}
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="wrap ch-foot">
+      <Logo size={17} />
+      <nav aria-label="Footer">
+        <Link to="/about">About</Link>
+        <Link to="/mission">Mission</Link>
+        <Link to="/shop">Shop</Link>
+        <Link to="/contact">Contact</Link>
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/terms">Terms</Link>
+      </nav>
+      <span style={{ fontSize: 12.5, color: "var(--cs-muted)" }}>© {new Date().getFullYear()} CoCreate</span>
+    </footer>
   );
 }
