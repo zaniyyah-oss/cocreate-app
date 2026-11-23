@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Settings are public" ON public.site_settings;
+CREATE POLICY "Admins can read settings" ON public.site_settings FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));

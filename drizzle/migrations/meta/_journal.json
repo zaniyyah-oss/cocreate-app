@@ -127,6 +127,13 @@
       "when": 1795473519392,
       "tag": "0017_comments_view_viewer_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795474186962,
+      "tag": "0018_site_settings_admin_read",
+      "breakpoints": true
     }
   ]
 }
