@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, ArrowUp, ArrowDown, X } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown, X, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioData, useInvalidateStudio, KIND_LABEL, type StudioSeries } from "@/lib/studio-data";
 import { HeroPhotoField } from "@/components/studio/CropFrames";
@@ -52,8 +52,11 @@ function SeriesPage() {
 function SeriesForm({ s }: { s: StudioSeries }) {
   const studio = useStudioData();
   const invalidate = useInvalidateStudio();
+  const navigate = useNavigate();
   const [f, setF] = useState({ title: s.title, month: s.series_month?.slice(0, 7) ?? "", summary: s.summary ?? "", banner_url: s.banner_url ?? s.cover_image_url, fd: s.hero_focal_desktop, fm: s.hero_focal_mobile, status: s.status });
   const [busy, setBusy] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => setF({ title: s.title, month: s.series_month?.slice(0, 7) ?? "", summary: s.summary ?? "", banner_url: s.banner_url ?? s.cover_image_url, fd: s.hero_focal_desktop, fm: s.hero_focal_mobile, status: s.status }), [s.id]);
   const items = [...s.items].sort((a, b) => a.position - b.position);
   const pieceOf = (i: (typeof items)[number]) => studio.data?.pieces.find((p) => p.id === (i.content_id ?? i.template_id)) ?? null;
@@ -76,6 +79,15 @@ function SeriesForm({ s }: { s: StudioSeries }) {
     if (error) toast.error(error.message); else invalidate();
   };
   const inSeries = new Set(items.map((i) => i.content_id ?? i.template_id));
+  const deleteSeries = async () => {
+    setDeleting(true);
+    const { error } = await supabase.from("collections").delete().eq("id", s.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Series deleted");
+    invalidate();
+    navigate({ to: "/studio/series", search: {} });
+  };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <label className="st-field"><span className="st-label">Name</span><input className="st-input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
@@ -106,6 +118,20 @@ function SeriesForm({ s }: { s: StudioSeries }) {
           <option value="">+ Add a piece</option>
           {(studio.data?.pieces ?? []).filter((p) => !inSeries.has(p.id)).map((p) => <option key={p.id} value={p.id}>{KIND_LABEL[p.kind]} · {p.title}{p.seriesTitle ? ` (in ${p.seriesTitle})` : ""}</option>)}
         </select>
+      </section>
+      <section style={{ borderTop: `1px solid ${C.LINE}`, paddingTop: 18 }}>
+        {confirmingDelete ? (
+          <div style={{ border: "1px solid #E5B8B8", background: "#FBF1F1", borderRadius: 10, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <b style={{ fontFamily: "Poppins", fontSize: 14 }}>Delete “{s.title}”?</b>
+            <span style={{ fontSize: 13, color: C.MUTED }}>The series and its part list will be removed. The pieces themselves stay in your library. This can't be undone.</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <Btn onClick={() => setConfirmingDelete(false)} disabled={deleting}>Keep series</Btn>
+              <Btn onClick={deleteSeries} disabled={deleting} style={{ background: "#B3261E", color: "#fff", borderColor: "#B3261E" }}>{deleting ? "Deleting…" : "Yes, delete it"}</Btn>
+            </div>
+          </div>
+        ) : (
+          <Btn onClick={() => setConfirmingDelete(true)} style={{ color: "#B3261E" }}><Trash2 size={15} strokeWidth={1.7} />Delete series</Btn>
+        )}
       </section>
     </div>
   );
