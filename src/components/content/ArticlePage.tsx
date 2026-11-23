@@ -252,7 +252,7 @@ export function ArticlePage({ param, kinds, search }: { param: string; kinds: st
               piece.type === "podcast" && !yt ? <audio controls src={mediaSrc} preload="metadata" style={{ width: "100%", marginTop: 26 }} onTimeUpdate={onMedia} />
               : <div className="ca-media">{yt ? <iframe src={`https://www.youtube.com/embed/${yt}`} title={piece.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video src={mediaSrc} controls playsInline onTimeUpdate={onMedia} />}</div>
             ) : photo(piece) ? (
-              <div className="ph ca-hero" style={focalStyle(piece.hero_focal_desktop, piece.hero_focal_mobile)}><img src={photo(piece)!} alt="" /></div>
+              <div className="ci-ph ca-hero" style={focalStyle(piece.hero_focal_desktop, piece.hero_focal_mobile)}><img src={photo(piece)!} alt="" /></div>
             ) : null}
             {piece.hero_caption && <div style={{ marginTop: 8, fontSize: 12, color: "var(--mut)" }}>{piece.hero_caption}</div>}
             {isMedia && signedIn && yt && !finishedIds.includes(piece.id) && <button type="button" className="pill sm" style={{ marginTop: 12 }} onClick={() => void finish()}>{Ico.check(14)}Mark as finished</button>}

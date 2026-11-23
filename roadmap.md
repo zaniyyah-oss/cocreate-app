@@ -1,9 +1,7 @@
-# Study Overview
-- [x] Add a read-only cross-page annotation index with filters, search, grouping, and passage jumps.
-- [x] Keep existing study pages, overview writing, annotations, and save behavior intact.
-- [x] Verify the Overview on desktop and phone and test data-preservation rules.
-
-# Margin-note focus
-- [x] Activate numbered notes, condense other cards, and cap expanded bodies with internal scrolling.
-- [x] Show studied words in margin cards, phone strips, and the larger side panel without changing saved data.
-- [x] Verify desktop and phone interactions and save the changes.
+# Phase 3 — inner pages
+- [x] Lock unreleased pieces/devotional days in the data layer; "Coming [date]" for the public
+- [x] Topic/series notifications at release time (hourly job), not at scheduling
+- [x] Staged preview "Signed out reader" on piece + series tabs
+- [x] Article/teaching/podcast page, series page (/collections redirects), devotional day page
+- [x] Shared related-content function + tests
+- [x] Progress, follows, reminders

@@ -338,7 +338,7 @@ async function syncJournalNote(userId: string, templateId: string, title: string
   const body = { type: "doc", content: content.length ? content : [{ type: "paragraph" }] };
   const { data: existing } = await (supabase.from as any)("workspace_items").select("id").eq("user_id", userId).eq("kind", "note").contains("tags", [tag]).limit(1).maybeSingle();
   if (existing) {
-    await (supabase.from as any)("workspace_items").update({ body, body_text: text.trim(), pages: null }).eq("id", existing.id);
+    await (supabase.from as any)("workspace_items").update({ body, body_text: text.trim() }).eq("id", existing.id);
   } else if (sections.length) {
     await (supabase.from as any)("workspace_items").insert({ user_id: userId, kind: "note", title: `${title} · Responses`, body, body_text: text.trim(), tags: [tag] });
   }

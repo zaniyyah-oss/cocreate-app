@@ -250,6 +250,11 @@ function OverviewPage() {
     navigate({ to: "/devotionals/$id", params: { id: t.id }, search: {} as any });
   };
 
+  // The devotional landing now opens the reader's current day (or day 1).
+  useEffect(() => {
+    if (t?.id) navigate({ to: "/devotionals/$id/day/$n", params: { id: t.id, n: "today" }, replace: true });
+  }, [t?.id]);
+
   if (q.isLoading) {
     return (
       <AppShell current="devotionals">

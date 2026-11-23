@@ -99,6 +99,13 @@
       "when": 1795472376195,
       "tag": "0013_content_pages_phase3",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795472989566,
+      "tag": "0014_fix_devotional_days_public_read",
+      "breakpoints": true
     }
   ]
 }

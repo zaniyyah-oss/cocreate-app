@@ -212,7 +212,7 @@ function SeriesPage() {
             <div className="cs-clips">
               {extrasQ.data!.clips.map((c) => (
                 <Link key={c.id} to="/teachings/$id" params={{ id: c.id }} style={{ width: 200, flex: "none" }}>
-                  <div className="ph" style={{ aspectRatio: "9/16", borderRadius: 10 }}>
+                  <div className="ci-ph" style={{ aspectRatio: "9/16", borderRadius: 10 }}>
                     {(c.thumbnail_url || c.hero_url) && <img src={c.thumbnail_url || c.hero_url} alt="" />}
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,transparent 50%,rgba(10,14,36,.75))" }} />
                     {c.duration_seconds ? <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,.45)", color: "#fff", fontSize: 11.5, fontWeight: 600, borderRadius: 999, padding: "3px 8px" }}>{Math.floor(c.duration_seconds / 60)}:{String(c.duration_seconds % 60).padStart(2, "0")}</span> : null}

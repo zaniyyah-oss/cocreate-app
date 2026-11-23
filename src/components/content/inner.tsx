@@ -10,7 +10,7 @@ import { useCurrentSeries, kindLabel, monD, pieceRoute, type CalendarItem, type 
 export const INNER_CSS = `
 .ci{--ink:#181A4D;--txt:#2A2B33;--mut:#5F5D55;--line:#E6E3DC;--soft:#F6F5F1;--ph:#E9E6DF;color:var(--txt);font-family:'Instrument Sans',sans-serif;}
 .ci *{font-style:normal;}
-.ci a{color:inherit;text-decoration:none;}
+:where(.ci) a{color:inherit;text-decoration:none;}
 .ci .k{font-family:'Instrument Sans',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);}
 .ci .crumb{font-size:13px;color:var(--mut);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .ci .crumb .sl{color:#B5B2A8;}
@@ -23,15 +23,15 @@ export const INNER_CSS = `
 .ci .sh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 18px;}
 .ci .sh h2{margin:0;font-family:Poppins,sans-serif;font-size:20px;font-weight:600;color:var(--ink);}
 .ci .sh a{font-size:13.5px;font-weight:600;color:var(--ink);}
-.ci .ph{position:relative;overflow:hidden;background:var(--ph);}
-.ci .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--fd,center);}
-@media(max-width:760px){.ci .ph img{object-position:var(--fm,var(--fd,center));}}
+.ci .ci-ph{position:relative;overflow:hidden;background:var(--ph);}
+.ci .ci-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--fd,center);}
+@media(max-width:760px){.ci .ci-ph img{object-position:var(--fm,var(--fd,center));}}
 .ci .ttl{font-family:Poppins,sans-serif;color:var(--ink);}
 .ci .iconbtn{width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;}
 .ci .iconbtn.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .ci .playb{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#fff;color:var(--ink);}
 .ci .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-.ci .card .ph{aspect-ratio:16/10;border-radius:6px;}
+.ci .card .ci-ph{aspect-ratio:16/10;border-radius:6px;}
 .ci .card .ct{margin-top:8px;font-family:Poppins,sans-serif;font-size:16.5px;font-weight:600;color:var(--ink);line-height:1.3;}
 .ci .card .why{margin-top:4px;font-size:12px;color:var(--mut);}
 .ci .rail-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;}
@@ -39,7 +39,7 @@ export const INNER_CSS = `
 .ci .bar>i{display:block;height:100%;background:var(--ink);}
 .ci .prow{display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;}
 .ci .prow.cur{background:var(--soft);}
-.ci .tile{width:46px;height:50px;flex:none;border-radius:8px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ci .ci-tile{width:46px;height:50px;flex:none;border-radius:8px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ci .linkbtn{background:none;border:0;padding:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
 .ci .coming{padding:80px 0;text-align:center;}
 @media(max-width:760px){.ci .cards3{grid-template-columns:1fr;}}
@@ -60,7 +60,7 @@ export const focalStyle = (d?: string | null, m?: string | null) => ({ ["--fd" a
 
 export function Ph({ src, ratio, radius = 6, fd, fm, children, style, gray }: { src: string | null | undefined; ratio: string; radius?: number; fd?: string | null; fm?: string | null; children?: ReactNode; style?: CSSProperties; gray?: boolean }) {
   return (
-    <div className="ph" style={{ aspectRatio: ratio, borderRadius: radius, ...focalStyle(fd, fm), ...style }}>
+    <div className="ci-ph" style={{ aspectRatio: ratio, borderRadius: radius, ...focalStyle(fd, fm), ...style }}>
       {src ? <img src={src} alt="" loading="lazy" style={gray ? { filter: "grayscale(.6)", opacity: .75 } : undefined} /> : null}
       {children}
     </div>
@@ -123,7 +123,7 @@ export function SeriesRail({ series, parts, currentKey, signedIn, explored, foll
   const pct = parts.length ? Math.round((explored / parts.length) * 100) : 0;
   return (
     <div className="rail-card">
-      <div className="ph" style={{ aspectRatio: "16/9", ...focalStyle(series.hero_focal_desktop, series.hero_focal_mobile) }}>
+      <div className="ci-ph" style={{ aspectRatio: "16/9", ...focalStyle(series.hero_focal_desktop, series.hero_focal_mobile) }}>
         {series.banner_url || series.cover_image_url ? <img src={(series.banner_url || series.cover_image_url)!} alt="" /> : null}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 30%, rgba(10,14,36,.7))" }} />
         <div style={{ position: "absolute", left: 16, bottom: 14, right: 16 }}>
@@ -172,7 +172,7 @@ export function CalendarRail({ items }: { items: CalendarItem[] }) {
           const d = new Date(c.at);
           const inner = (
             <>
-              <span className="tile"><span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mut)", letterSpacing: ".08em" }}>{d.toLocaleDateString(undefined, { month: "short" }).toUpperCase()}</span><span className="ttl" style={{ fontSize: 18, fontWeight: 600 }}>{d.getDate()}</span></span>
+              <span className="ci-tile"><span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mut)", letterSpacing: ".08em" }}>{d.toLocaleDateString(undefined, { month: "short" }).toUpperCase()}</span><span className="ttl" style={{ fontSize: 18, fontWeight: 600 }}>{d.getDate()}</span></span>
               <span style={{ minWidth: 0 }}><span className="k" style={{ fontSize: 10.5, display: "block" }}>{c.kicker}</span><span className="ttl" style={{ fontSize: 14.5, fontWeight: 500, lineHeight: 1.3 }}>{c.title}</span></span>
             </>
           );
