@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       admin_invites: {
@@ -133,6 +128,9 @@ export type Database = {
           created_at: string
           id: string
           layout_slot: string
+          planned_at: string | null
+          planned_kind: string | null
+          planned_title: string | null
           position: number
           release_at: string | null
           release_week: number | null
@@ -148,6 +146,9 @@ export type Database = {
           created_at?: string
           id?: string
           layout_slot?: string
+          planned_at?: string | null
+          planned_kind?: string | null
+          planned_title?: string | null
           position?: number
           release_at?: string | null
           release_week?: number | null
@@ -163,6 +164,9 @@ export type Database = {
           created_at?: string
           id?: string
           layout_slot?: string
+          planned_at?: string | null
+          planned_kind?: string | null
+          planned_title?: string | null
           position?: number
           release_at?: string | null
           release_week?: number | null
@@ -352,18 +356,22 @@ export type Database = {
         Row: {
           author_name: string | null
           body: string | null
+          body_doc: Json | null
+          comments_enabled: boolean
           cover_image_url: string | null
           created_at: string
           duration_seconds: number | null
           excerpt: string | null
           external_url: string | null
           feature_new_this_month: boolean
+          hero_caption: string | null
           hero_focal_desktop: string | null
           hero_focal_mobile: string | null
           hero_url: string | null
           id: string
           is_featured: boolean
           is_seed: boolean
+          is_standalone: boolean
           kicker: string | null
           media_url: string | null
           published_at: string | null
@@ -385,18 +393,22 @@ export type Database = {
         Insert: {
           author_name?: string | null
           body?: string | null
+          body_doc?: Json | null
+          comments_enabled?: boolean
           cover_image_url?: string | null
           created_at?: string
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
           feature_new_this_month?: boolean
+          hero_caption?: string | null
           hero_focal_desktop?: string | null
           hero_focal_mobile?: string | null
           hero_url?: string | null
           id?: string
           is_featured?: boolean
           is_seed?: boolean
+          is_standalone?: boolean
           kicker?: string | null
           media_url?: string | null
           published_at?: string | null
@@ -418,18 +430,22 @@ export type Database = {
         Update: {
           author_name?: string | null
           body?: string | null
+          body_doc?: Json | null
+          comments_enabled?: boolean
           cover_image_url?: string | null
           created_at?: string
           duration_seconds?: number | null
           excerpt?: string | null
           external_url?: string | null
           feature_new_this_month?: boolean
+          hero_caption?: string | null
           hero_focal_desktop?: string | null
           hero_focal_mobile?: string | null
           hero_url?: string | null
           id?: string
           is_featured?: boolean
           is_seed?: boolean
+          is_standalone?: boolean
           kicker?: string | null
           media_url?: string | null
           published_at?: string | null
@@ -565,8 +581,11 @@ export type Database = {
           preview_carry: string | null
           preview_read: string | null
           preview_reflect: string | null
+          questions: Json
           reflect_prompt: string | null
+          reflection_doc: Json | null
           scripture_note: string | null
+          scripture_passage: string | null
           scripture_reference: string | null
           template_id: string
           title: string
@@ -584,8 +603,11 @@ export type Database = {
           preview_carry?: string | null
           preview_read?: string | null
           preview_reflect?: string | null
+          questions?: Json
           reflect_prompt?: string | null
+          reflection_doc?: Json | null
           scripture_note?: string | null
+          scripture_passage?: string | null
           scripture_reference?: string | null
           template_id: string
           title: string
@@ -603,8 +625,11 @@ export type Database = {
           preview_carry?: string | null
           preview_read?: string | null
           preview_reflect?: string | null
+          questions?: Json
           reflect_prompt?: string | null
+          reflection_doc?: Json | null
           scripture_note?: string | null
+          scripture_passage?: string | null
           scripture_reference?: string | null
           template_id?: string
           title?: string
@@ -833,6 +858,7 @@ export type Database = {
         Row: {
           accent_color: string | null
           apply_prompt: string | null
+          comments_enabled: boolean
           created_at: string
           description: string | null
           duration_days: number | null
@@ -846,6 +872,7 @@ export type Database = {
           is_default: boolean
           is_featured: boolean
           is_seed: boolean
+          is_standalone: boolean
           overview_aim: string | null
           overview_belief: string | null
           overview_intro: string | null
@@ -861,6 +888,7 @@ export type Database = {
           scripture_items: Json
           slug: string | null
           status: Database["public"]["Enums"]["content_status"]
+          summary: string | null
           title: string
           todo_items_pool: Json
           topic_id: string | null
@@ -872,6 +900,7 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           apply_prompt?: string | null
+          comments_enabled?: boolean
           created_at?: string
           description?: string | null
           duration_days?: number | null
@@ -885,6 +914,7 @@ export type Database = {
           is_default?: boolean
           is_featured?: boolean
           is_seed?: boolean
+          is_standalone?: boolean
           overview_aim?: string | null
           overview_belief?: string | null
           overview_intro?: string | null
@@ -900,6 +930,7 @@ export type Database = {
           scripture_items?: Json
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           title: string
           todo_items_pool?: Json
           topic_id?: string | null
@@ -911,6 +942,7 @@ export type Database = {
         Update: {
           accent_color?: string | null
           apply_prompt?: string | null
+          comments_enabled?: boolean
           created_at?: string
           description?: string | null
           duration_days?: number | null
@@ -924,6 +956,7 @@ export type Database = {
           is_default?: boolean
           is_featured?: boolean
           is_seed?: boolean
+          is_standalone?: boolean
           overview_aim?: string | null
           overview_belief?: string | null
           overview_intro?: string | null
@@ -939,6 +972,7 @@ export type Database = {
           scripture_items?: Json
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
+          summary?: string | null
           title?: string
           todo_items_pool?: Json
           topic_id?: string | null
@@ -950,6 +984,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "devotional_templates_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devotional_topics: {
+        Row: {
+          created_at: string
+          position: number
+          template_id: string
+          topic_id: string
+        }
+        Insert: {
+          created_at?: string
+          position?: number
+          template_id: string
+          topic_id: string
+        }
+        Update: {
+          created_at?: string
+          position?: number
+          template_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_topics_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "devotional_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devotional_topics_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
@@ -1710,6 +1780,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      preview_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          scope: string
+          target_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          scope: string
+          target_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          scope?: string
+          target_id?: string
+          token_hash?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -2649,6 +2752,15 @@ export type Database = {
         Args: { _code: string }
         Returns: string
       }
+      list_admins: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          email: string
+          name: string
+          user_id: string
+        }[]
+      }
       owns_plan: {
         Args: { _plan_id: string; _user_id: string }
         Returns: boolean
@@ -2854,3 +2966,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { HOME_CSS } from "@/components/content/home-css";
+import { Header, InfoBar, Logo } from "@/components/content/SiteHeader";
 import { useUpNext, saveForLater, useInvalidateUpNext } from "@/lib/up-next";
 import { todayISO } from "@/lib/active-devotional";
 import {
@@ -92,14 +93,6 @@ function useSaveForLater(userId: string | null) {
   };
 }
 
-const NAV = [
-  { label: "Read", to: "/explore" },
-  { label: "Watch", to: "/watch" },
-  { label: "Listen", to: "/listen" },
-  { label: "Devotionals", to: "/explore/devotionals" },
-  { label: "Shop", to: "/shop" },
-] as const;
-
 /* ---------- page ---------- */
 
 function HomePage() {
@@ -132,7 +125,7 @@ function HomePage() {
       <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
       <div className="content-site ch">
         <Header signedIn={signedIn} />
-        <InfoBar d={d} />
+        <InfoBar currentSeries={d?.currentSeries} />
         {d && (
           <>
             <Hero d={d} preview={preview} userId={userId} />
@@ -150,78 +143,6 @@ function HomePage() {
   );
 }
 
-function Logo({ tile = true, size = 19 }: { tile?: boolean; size?: number }) {
-  return (
-    <Link to="/" search={{ feed: 1 }} aria-label="CoCreate home" className="ch-logo">
-      {tile && <span className="tile">C</span>}
-      <span className="word" style={{ fontSize: size }}>CoCreate</span>
-    </Link>
-  );
-}
-
-function Header({ signedIn }: { signedIn: boolean }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [desktop, setDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const on = () => setDesktop(mq.matches);
-    on(); mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
-  return (
-    <header className="ch-head">
-      <div className="wrap bar">
-        <Logo tile={!(signedIn && desktop)} />
-        <nav aria-label="Content" className="ch-nav">
-          {NAV.map((n) => <Link key={n.to} to={n.to}>{n.label}</Link>)}
-        </nav>
-        <div className="ch-actions" ref={ref}>
-          {!signedIn && <Link to="/subscribe" className="ch-sub" style={{ order: 3 }}>Subscribe</Link>}
-          <Link to="/search" aria-label="Search" className="ch-iconbtn" style={{ order: 1 }}>{I.search()}</Link>
-          {!signedIn && <Link to="/auth" className="ch-signin" style={{ order: 2 }}>Sign in</Link>}
-          <button type="button" className="ch-iconbtn ch-menu" aria-label="Menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} style={{ order: 4 }}>{I.menu()}</button>
-          {open && (
-            <div className="ch-menu-panel" role="menu">
-              {!signedIn && <Link to="/auth" role="menuitem">Sign in</Link>}
-              <Link to="/about" role="menuitem">About</Link>
-              <Link to="/mission" role="menuitem">Mission</Link>
-              <Link to="/contact" role="menuitem">Contact</Link>
-            </div>
-          )}
-        </div>
-      </div>
-      <nav aria-label="Content" className="ch-nav2">
-        {NAV.map((n) => <Link key={n.to} to={n.to}>{n.label}</Link>)}
-      </nav>
-    </header>
-  );
-}
-
-function InfoBar({ d }: { d: HomeData | undefined }) {
-  const [today, setToday] = useState("");
-  useEffect(() => { setToday(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })); }, []);
-  const s = d?.currentSeries;
-  return (
-    <div className="ch-info">
-      <div className="wrap">
-        <span>{today}</span>
-        {s && (
-          <Link to="/collections/$slug" params={{ slug: s.slug }} className="series">
-            This month: {s.title}{I.arrow(14)}
-          </Link>
-        )}
-        <span>New releases every month</span>
-      </div>
-    </div>
-  );
-}
 
 function Hero({ d, preview, userId }: { d: HomeData; preview: boolean; userId: string | null }) {
   const h = d.hero;

@@ -31,6 +31,7 @@ import { Route as ReadRouteImport } from './routes/read'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as SubscribeRouteImport } from './routes/subscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TourRouteImport } from './routes/tour'
@@ -51,6 +52,7 @@ import { Route as ExploreDevotionalsRouteImport } from './routes/explore_.devoti
 import { Route as PlansNewRouteImport } from './routes/plans.new'
 import { Route as PodcastsIdRouteImport } from './routes/podcasts.$id'
 import { Route as ReadAbbrRouteImport } from './routes/read.$abbr'
+import { Route as StudioIndexRouteImport } from './routes/studio.index'
 import { Route as TeachingsIdRouteImport } from './routes/teachings.$id'
 import { Route as TopicsSlugRouteImport } from './routes/topics.$slug'
 import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
@@ -61,6 +63,7 @@ import { Route as DevotionalsSlugOverviewRouteImport } from './routes/devotional
 import { Route as DevotionalsFocusIdRouteImport } from './routes/devotionals.focus.$id'
 import { Route as PlansIdEditRouteImport } from './routes/plans.$id.edit'
 import { Route as PlansFocusDateRouteImport } from './routes/plans.focus.$date'
+import { Route as StudioPiecesIndexRouteImport } from './routes/studio.pieces.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -172,6 +175,11 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubscribeRoute = SubscribeRouteImport.update({
   id: '/subscribe',
   path: '/subscribe',
@@ -272,6 +280,11 @@ const ReadAbbrRoute = ReadAbbrRouteImport.update({
   path: '/$abbr',
   getParentRoute: () => ReadRoute,
 } as any)
+const StudioIndexRoute = StudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudioRoute,
+} as any)
 const TeachingsIdRoute = TeachingsIdRouteImport.update({
   id: '/teachings/$id',
   path: '/teachings/$id',
@@ -322,6 +335,11 @@ const PlansFocusDateRoute = PlansFocusDateRouteImport.update({
   path: '/plans/focus/$date',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioPiecesIndexRoute = StudioPiecesIndexRouteImport.update({
+  id: '/pieces/',
+  path: '/pieces/',
+  getParentRoute: () => StudioRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -346,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/studio': typeof StudioRouteWithChildren
   '/subscribe': typeof SubscribeRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
@@ -368,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
+  '/studio/': typeof StudioIndexRoute
   '/admin/collections/$id': typeof AdminCollectionsIdRoute
   '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
@@ -376,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
+  '/studio/pieces/': typeof StudioPiecesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -419,6 +440,7 @@ export interface FileRoutesByTo {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin': typeof AdminIndexRoute
   '/devotionals': typeof DevotionalsIndexRoute
+  '/studio': typeof StudioIndexRoute
   '/admin/collections/$id': typeof AdminCollectionsIdRoute
   '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
@@ -427,6 +449,7 @@ export interface FileRoutesByTo {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
+  '/studio/pieces': typeof StudioPiecesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -452,6 +475,7 @@ export interface FileRoutesById {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/studio': typeof StudioRouteWithChildren
   '/subscribe': typeof SubscribeRoute
   '/terms': typeof TermsRoute
   '/tour': typeof TourRoute
@@ -474,6 +498,7 @@ export interface FileRoutesById {
   '/topics/$slug': typeof TopicsSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/devotionals/': typeof DevotionalsIndexRoute
+  '/studio/': typeof StudioIndexRoute
   '/admin/collections/$id': typeof AdminCollectionsIdRoute
   '/admin/collections/new': typeof AdminCollectionsNewRoute
   '/admin/edit/$id': typeof AdminEditIdRoute
@@ -482,6 +507,7 @@ export interface FileRoutesById {
   '/plans/$id/edit': typeof PlansIdEditRoute
   '/plans/focus/$date': typeof PlansFocusDateRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
+  '/studio/pieces/': typeof StudioPiecesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -508,6 +534,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/shop'
+    | '/studio'
     | '/subscribe'
     | '/terms'
     | '/tour'
@@ -530,6 +557,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin/'
     | '/devotionals/'
+    | '/studio/'
     | '/admin/collections/$id'
     | '/admin/collections/new'
     | '/admin/edit/$id'
@@ -538,6 +566,7 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections/'
+    | '/studio/pieces/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -581,6 +610,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin'
     | '/devotionals'
+    | '/studio'
     | '/admin/collections/$id'
     | '/admin/collections/new'
     | '/admin/edit/$id'
@@ -589,6 +619,7 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections'
+    | '/studio/pieces'
   id:
     | '__root__'
     | '/'
@@ -613,6 +644,7 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/shop'
+    | '/studio'
     | '/subscribe'
     | '/terms'
     | '/tour'
@@ -635,6 +667,7 @@ export interface FileRouteTypes {
     | '/topics/$slug'
     | '/admin/'
     | '/devotionals/'
+    | '/studio/'
     | '/admin/collections/$id'
     | '/admin/collections/new'
     | '/admin/edit/$id'
@@ -643,6 +676,7 @@ export interface FileRouteTypes {
     | '/plans/$id/edit'
     | '/plans/focus/$date'
     | '/admin/collections/'
+    | '/studio/pieces/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -668,6 +702,7 @@ export interface RootRouteChildren {
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRoute
+  StudioRoute: typeof StudioRouteWithChildren
   SubscribeRoute: typeof SubscribeRoute
   TermsRoute: typeof TermsRoute
   TourRoute: typeof TourRoute
@@ -841,6 +876,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subscribe': {
       id: '/subscribe'
       path: '/subscribe'
@@ -981,6 +1023,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadAbbrRouteImport
       parentRoute: typeof ReadRoute
     }
+    '/studio/': {
+      id: '/studio/'
+      path: '/'
+      fullPath: '/studio/'
+      preLoaderRoute: typeof StudioIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/teachings/$id': {
       id: '/teachings/$id'
       path: '/teachings/$id'
@@ -1051,6 +1100,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlansFocusDateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio/pieces/': {
+      id: '/studio/pieces/'
+      path: '/pieces'
+      fullPath: '/studio/pieces/'
+      preLoaderRoute: typeof StudioPiecesIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
   }
 }
 
@@ -1119,6 +1175,19 @@ const ReadRouteChildren: ReadRouteChildren = {
 
 const ReadRouteWithChildren = ReadRoute._addFileChildren(ReadRouteChildren)
 
+interface StudioRouteChildren {
+  StudioIndexRoute: typeof StudioIndexRoute
+  StudioPiecesIndexRoute: typeof StudioPiecesIndexRoute
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioIndexRoute: StudioIndexRoute,
+  StudioPiecesIndexRoute: StudioPiecesIndexRoute,
+}
+
+const StudioRouteWithChildren =
+  StudioRoute._addFileChildren(StudioRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -1142,6 +1211,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRoute,
+  StudioRoute: StudioRouteWithChildren,
   SubscribeRoute: SubscribeRoute,
   TermsRoute: TermsRoute,
   TourRoute: TourRoute,

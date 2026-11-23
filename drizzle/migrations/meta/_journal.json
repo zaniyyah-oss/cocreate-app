@@ -85,6 +85,13 @@
       "when": 1795469715143,
       "tag": "0011_content_home_groundwork",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795470734711,
+      "tag": "0012_studio_core",
+      "breakpoints": true
     }
   ]
 }

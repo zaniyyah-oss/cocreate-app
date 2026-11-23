@@ -5,8 +5,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HomeMasthead, HOME_CSS } from "@/components/content/LegacyMasthead";
-import { useUpNext } from "@/lib/up-next";
+import { HOME_CSS } from "@/components/content/home-css";
+import { Header, InfoBar, useCurrentSeries } from "@/components/content/SiteHeader";
 
 export const Route = createFileRoute("/shop")({
   component: ShopPage,
@@ -80,8 +80,7 @@ function ShopPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setUserId(data.session?.user.id ?? null); setSignedIn(!!data.session); });
   }, []);
-  const upNext = useUpNext(userId);
-  const upNextCount = (upNext.data ?? []).filter((r) => !r.kept).length;
+  const currentSeries = useCurrentSeries();
 
   const product = useQuery({
     queryKey: ["shop-product", "abide-fall-winter"],
@@ -98,7 +97,7 @@ function ShopPage() {
   return (
     <AppShell current="explore" hideSide={!signedIn} hideTopbar>
       <style dangerouslySetInnerHTML={{ __html: HOME_CSS + CSS }} />
-      <HomeMasthead signedIn={signedIn} upNextCount={upNextCount} active="shop" />
+      <div className="content-site ch" style={{ minHeight: 0 }}><Header signedIn={signedIn} /><InfoBar currentSeries={currentSeries.data} /></div>
       <div className="sh">
         <div className="sh-eyebrow">Explore · Shop</div>
         <h1>Shop</h1>

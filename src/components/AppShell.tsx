@@ -124,6 +124,13 @@ const SHELL_CSS = `
 }
 
 
+.app-studio-item .sq{width:30px;height:30px;border-radius:8px;background:#181A4D;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.app-studio-item .sq svg{stroke:#fff;width:16px;height:16px;}
+.app-studio-item .tx{display:flex;flex-direction:column;flex:1;line-height:1.2;}
+.app-studio-item small{font-size:11.5px;font-weight:500;color:#8a8678;}
+.app-studio-item svg.ext{width:15px;height:15px;stroke:#8a8678;}
+.app-side-studio{width:36px;height:36px;border-radius:9px;background:#181A4D;display:flex;align-items:center;justify-content:center;}
+.app-side-studio svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 .app-topbar-brand-wrap{display:flex;align-items:center;gap:6px;}
 
 /* Signed-out home: hide desktop rail entirely so content is full-bleed */
@@ -133,6 +140,16 @@ const SHELL_CSS = `
   .app-shell.no-side .app-topbar{display:none;}
 }
 `;
+
+function OpenStudioItem({ onClick }: { onClick: () => void }) {
+  return (
+    <a href="/studio" target="_blank" rel="noopener" className="app-topbar-menu-item app-studio-item" role="menuitem" onClick={onClick}>
+      <span className="sq"><svg viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg></span>
+      <span className="tx"><span>Open Studio</span><small>studio.justcocreate.com</small></span>
+      <svg className="ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+    </a>
+  );
+}
 
 const STORAGE_KEY = "cocreate:sidebar-collapsed";
 
@@ -162,6 +179,16 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
 
 
   const signOut = async () => { await supabase.auth.signOut(); };
+  const adminQ = useQuery({
+    queryKey: ["is-admin", userId],
+    enabled: !!userId,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", { _user_id: userId!, _role: "admin" });
+      return !!data;
+    },
+  });
+  const isAdmin = !!adminQ.data;
 
   const isActive = (item: { key: NavKey; to: string; matchPaths?: string[] }) => {
     if (current) return item.key === current || (item.key === "library" && (current === "saved" || current === "notes"));
@@ -231,6 +258,11 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
                     {ICON.profile}
                   </Link>
                   <NotificationBell />
+                  {isAdmin && (
+                    <a href="/studio" target="_blank" rel="noopener" className="app-side-studio" aria-label="Open Studio (new tab)" title="Open Studio">
+                      <svg viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+                    </a>
+                  )}
                 </div>
                 <button className="app-signout" onClick={signOut}>Sign out</button>
               </>
@@ -270,6 +302,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
                           <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
                           <span>Notifications</span>
                         </Link>
+                        {isAdmin && <OpenStudioItem onClick={() => setMenuOpen(false)} />}
                         <button type="button" className="app-topbar-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); signOut(); }}>
                           <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
                           <span>Sign out</span>
@@ -288,7 +321,7 @@ export function AppShell({ current, children, hideSideWhenSignedOut, hideSide, h
         </div>
       </div>
 
-      <MobileBottomNav />
+      {userId && <MobileBottomNav />}
     </div>
   );
 }
