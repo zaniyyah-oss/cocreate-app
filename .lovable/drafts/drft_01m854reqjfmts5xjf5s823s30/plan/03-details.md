@@ -30,15 +30,19 @@
 
 ## Risks
 
-- Signed-out users currently can't read full `body`; the new public article page must deliberately expose published bodies — confirm this is intended.
+- Signed-out users currently can't read full `body`; published bodies will be exposed through the public view (confirmed).
 - Converting old plain-text bodies to blocks is lossy for odd formatting; converted lazily and the original is kept.
 - Staged preview of the homepage requires all homepage queries to accept a "now" — built in from Phase 1 to avoid rework.
 - The studio subdomain shares sign-in storage per domain; admins sign in once on studio.* separately.
 
-## Decisions needed from you
+## Decisions (confirmed)
 
-1. Should signed-out visitors read full articles (vs. preview + sign-in prompt)?
-2. Release time zone: always ET, displayed to readers in their own time or ET?
-3. Who can comment — any signed-in user, or only after email confirmation? Default flag threshold 3 OK?
-4. "Team" in Studio: just a list of admins for now, or invite editors with a separate editor role?
-5. Fonts: OK to load Poppins + Instrument Sans from Google Fonts?
+1. Signed-out visitors read full published articles.
+2. Releases are scheduled in ET; readers see release times in their own time zone.
+3. Comments only for signed-in users with a confirmed email; auto-hide at 3 flags.
+4. Studio Team = admins only for now.
+5. Poppins + Instrument Sans load from Google Fonts.
+
+## Delivery
+
+Each phase is built only when you send it as its own message, so each can be reviewed before the next starts.
