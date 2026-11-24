@@ -2252,6 +2252,7 @@ export type Database = {
           end_date: string | null
           end_time: string | null
           frequency: string
+          hide_from_workspace: boolean
           id: string
           is_active: boolean
           item_kind: string
@@ -2270,6 +2271,7 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           frequency: string
+          hide_from_workspace?: boolean
           id?: string
           is_active?: boolean
           item_kind?: string
@@ -2288,6 +2290,7 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           frequency?: string
+          hide_from_workspace?: boolean
           id?: string
           is_active?: boolean
           item_kind?: string
@@ -2741,6 +2744,7 @@ export type Database = {
           end_time: string | null
           event_date: string
           event_type: string
+          hide_from_workspace: boolean
           id: string
           item_type: string
           notes: string | null
@@ -2755,6 +2759,7 @@ export type Database = {
           end_time?: string | null
           event_date: string
           event_type: string
+          hide_from_workspace?: boolean
           id?: string
           item_type?: string
           notes?: string | null
@@ -2769,6 +2774,7 @@ export type Database = {
           end_time?: string | null
           event_date?: string
           event_type?: string
+          hide_from_workspace?: boolean
           id?: string
           item_type?: string
           notes?: string | null

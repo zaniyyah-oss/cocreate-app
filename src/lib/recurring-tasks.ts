@@ -20,6 +20,7 @@ export type RecurringTask = {
   start_time: string | null;
   end_time: string | null;
   is_active: boolean;
+  hide_from_workspace?: boolean;
   /** One-off skips/moves for single occurrences. */
   exceptions?: RecurringException[];
   /** Set on an expanded occurrence: the date it originally fell on. */
@@ -170,7 +171,7 @@ export function useRecurringTasks(userId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("recurring_tasks" as any)
-        .select("id,item_kind,title,notes,color,frequency,weekdays,month_days,start_date,end_date,start_time,end_time,is_active")
+        .select("id,item_kind,title,notes,color,frequency,weekdays,month_days,start_date,end_date,start_time,end_time,is_active,hide_from_workspace")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;

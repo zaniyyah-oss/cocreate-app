@@ -1,0 +1,2 @@
+ALTER TABLE public.user_events ADD COLUMN IF NOT EXISTS hide_from_workspace boolean NOT NULL DEFAULT false;
+ALTER TABLE public.recurring_tasks ADD COLUMN IF NOT EXISTS hide_from_workspace boolean NOT NULL DEFAULT false;

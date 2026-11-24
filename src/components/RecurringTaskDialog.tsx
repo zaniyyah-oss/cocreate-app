@@ -45,6 +45,7 @@ export function RecurringTaskDialog({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [hideWs, setHideWs] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -72,6 +73,7 @@ export function RecurringTaskDialog({
       setStartTime((task.start_time ?? "").slice(0, 5));
       setEndTime((task.end_time ?? "").slice(0, 5));
       setIsActive(task.is_active);
+      setHideWs(!!task.hide_from_workspace);
     } else {
       const d = new Date(today + "T00:00:00");
       setKind("task");
@@ -86,6 +88,7 @@ export function RecurringTaskDialog({
       setStartTime("");
       setEndTime("");
       setIsActive(true);
+      setHideWs(false);
     }
   }, [open, task, today]);
 
@@ -137,6 +140,7 @@ export function RecurringTaskDialog({
       start_time: startTime || null,
       end_time: endTime || null,
       is_active: isActive,
+      hide_from_workspace: kind === "event" && hideWs,
     };
     setAsk(null);
     const { error } = isEdit && task
@@ -355,6 +359,13 @@ export function RecurringTaskDialog({
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
               style={{ ...FIELD, resize: "vertical" }} />
           </label>
+
+          {kind === "event" && (
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, ...LABEL }}>
+              <input type="checkbox" checked={hideWs} onChange={e => setHideWs(e.target.checked)} style={{ marginTop: 3 }} />
+              <span>Hide from workspace<span style={{ display: "block", fontSize: 11.5, fontWeight: 400, opacity: 0.7 }}>Shows on the calendar only — not in the “things today” row.</span></span>
+            </label>
+          )}
 
           {isEdit && (
             <label style={{ display: "flex", alignItems: "center", gap: 8, ...LABEL }}>

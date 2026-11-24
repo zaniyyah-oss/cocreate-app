@@ -2057,6 +2057,7 @@ export type UserEvent = {
   item_type?: UserEventItemType;
   start_time?: string | null;
   end_time?: string | null;
+  hide_from_workspace?: boolean;
 };
 
 const EVENT_TYPE_META: Record<Exclude<UserEventType, "other">, { label: string; color: string }> = {
@@ -2122,7 +2123,7 @@ function useUserEvents(userId: string | null, startISO: string, endISO: string) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_events" as any)
-        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time")
+        .select("id,event_date,event_type,title,color,notes,item_type,start_time,end_time,hide_from_workspace")
         .eq("user_id", userId!)
         .gte("event_date", startISO)
         .lte("event_date", endISO)
@@ -2163,7 +2164,7 @@ function useEventsWithRecurring(userId: string | null, startISO: string, endISO:
       const arr = out.get(iso) ?? [];
       for (const t of tasks) arr.push({
         id: `recur:${t.id}@${t.occurrence_date ?? iso}`, event_date: iso, event_type: "other", title: t.title, color: t.color,
-        notes: t.notes, item_type: "event", start_time: t.start_time, end_time: t.end_time,
+        notes: t.notes, item_type: "event", start_time: t.start_time, end_time: t.end_time, hide_from_workspace: !!t.hide_from_workspace,
       } as unknown as UserEvent);
       arr.sort((a: any, b: any) => (a.start_time ?? "zz").localeCompare(b.start_time ?? "zz"));
       out.set(iso, arr);
@@ -2198,6 +2199,7 @@ export function AddEventDialog({
   const [notes, setNotes] = useState("");
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
+  const [hideWs, setHideWs] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -2230,7 +2232,9 @@ export function AddEventDialog({
       setNotes(event.notes ?? "");
       setStartTime((event.start_time ?? "").slice(0, 5));
       setEndTime((event.end_time ?? "").slice(0, 5));
+      setHideWs(!!event.hide_from_workspace);
     } else {
+      setHideWs(false);
       setCatId(null);
       setDate(defaultDate);
       setItemType(defaultItemType ?? "event");
@@ -2265,6 +2269,7 @@ export function AddEventDialog({
       item_type: itemType,
       start_time: startTime || null,
       end_time: endTime || null,
+      hide_from_workspace: !isFocus && hideWs,
     };
     let error;
     let savedId: string | null = event?.id ?? null;
@@ -2530,6 +2535,13 @@ export function AddEventDialog({
               style={{ padding: "10px 12px", border: "1px solid #E4DFCF", borderRadius: 10, fontFamily: "inherit", fontSize: 14, resize: "vertical" }} />
           </label>
 
+          {!isFocus && (
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, fontWeight: 600, color: "#181A4D", cursor: "pointer" }}>
+              <input type="checkbox" checked={hideWs} onChange={(e) => setHideWs(e.target.checked)} style={{ marginTop: 3 }} />
+              <span>Hide from workspace<span style={{ display: "block", fontSize: 11.5, fontWeight: 400, color: "#68655C" }}>Shows on the calendar only — not in the “things today” row.</span></span>
+            </label>
+          )}
+
           {err && <div style={{ color: "#FF3B30", fontSize: 13 }}>{err}</div>}
 
           <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 4, flexWrap: "wrap" }}>
@@ -2575,7 +2587,7 @@ export function AddEventDialog({
 function TodayEventsBanner({ userId, dateISO }: { userId: string | null; dateISO: string }) {
   const qc = useQueryClient();
   const { map: evMap, tasksById } = useEventsWithRecurring(userId, dateISO, dateISO);
-  const events = (evMap.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event");
+  const events = (evMap.get(dateISO) ?? []).filter(e => (e.item_type ?? "event") === "event" && !e.hide_from_workspace);
   const [addOpen, setAddOpen] = useState(false);
   const [editEvent, setEditEventRaw] = useState<UserEvent | null>(null);
   const [recurEdit, setRecurEdit] = useState<RecurringTask | null>(null);
