@@ -123,7 +123,7 @@ export function TodoChecklist({
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="tdc-list">
         {items.map((it, idx) => (
-          <ChecklistRow key={it.id} item={it} onUpdate={(p) => onUpdate(idx, p)} onMore={() => setOpenId(it.id)} />
+          <ChecklistRow key={it.id} item={it} readOnlyText={!!it.recurring_id} onUpdate={(p) => onUpdate(idx, p)} onMore={() => setOpenId(it.id)} />
         ))}
         <div className="tdc-add">
           <span className="plus" aria-hidden="true">+</span>
@@ -204,6 +204,7 @@ export function TaskDetailsBody({ item, day, todayISO, onClose, onUpdate, onMove
   };
   const written = item.written_on ?? day;
   const writtenLabel = new Date(`${written}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const isRecur = !!item.recurring_id;
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -211,18 +212,22 @@ export function TaskDetailsBody({ item, day, todayISO, onClose, onUpdate, onMove
       <div className="tds-body">
         <div className="tds-titlerow">
           <input type="checkbox" checked={done} onChange={(e) => onUpdate({ done: e.target.checked, status: e.target.checked ? "done" : "not_started" })} aria-label="Done" />
-          <AutoText className="tds-title" done={done} value={item.text} onChange={(v) => onUpdate({ text: v })} />
+          {isRecur
+            ? <div className={`tds-title${done ? " done" : ""}`}>{item.text}</div>
+            : <AutoText className="tds-title" done={done} value={item.text} onChange={(v) => onUpdate({ text: v })} />}
         </div>
-        <div>
-          <div className="tds-lbl">Details</div>
-          <RichTextField
-            key={item.id}
-            className="de-textarea short"
-            placeholder="Notes, next steps, who's involved…"
-            value={item.details ?? ""}
-            onChange={(html) => onUpdate({ details: html })}
-          />
-        </div>
+        {!isRecur && (
+          <div>
+            <div className="tds-lbl">Details</div>
+            <RichTextField
+              key={item.id}
+              className="de-textarea short"
+              placeholder="Notes, next steps, who's involved…"
+              value={item.details ?? ""}
+              onChange={(html) => onUpdate({ details: html })}
+            />
+          </div>
+        )}
         <div>
           <div className="tds-lbl">Day</div>
           <div className="tds-chips">
@@ -241,17 +246,21 @@ export function TaskDetailsBody({ item, day, todayISO, onClose, onUpdate, onMove
             <span>Repeats</span>
             <a href="/calendar">{item.recurring_id ? "Edit in Calendar" : "Doesn't repeat · set up in Calendar"}</a>
           </div>
-          <div className="tds-row">
-            <span>Written on</span>
-            <button type="button" className="tds-link" onClick={() => { onClose(); onGoToDate(written); }}>{writtenLabel}</button>
-          </div>
+          {!isRecur && (
+            <div className="tds-row">
+              <span>Written on</span>
+              <button type="button" className="tds-link" onClick={() => { onClose(); onGoToDate(written); }}>{writtenLabel}</button>
+            </div>
+          )}
         </div>
-        <button type="button" className="tds-del" onClick={() => setConfirmDel(true)}>Delete to-do</button>
+        <button type="button" className="tds-del" onClick={() => setConfirmDel(true)}>{isRecur ? "Remove this occurrence" : "Delete to-do"}</button>
       </div>
       <DeleteConfirmModal
         open={confirmDel}
-        title="Delete this to-do?"
-        message="This to-do and its details will be removed. This can't be undone."
+        title={isRecur ? "Remove just this one?" : "Delete this to-do?"}
+        message={isRecur
+          ? "Only this occurrence is removed. The recurring task stays and future ones still show up."
+          : "This to-do and its details will be removed. This can't be undone."}
         onCancel={() => setConfirmDel(false)}
         onConfirm={() => { onRemove(); setConfirmDel(false); onClose(); }}
       />

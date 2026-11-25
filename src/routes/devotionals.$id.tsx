@@ -11,7 +11,7 @@ import {
   type EventCategory,
 } from "@/lib/event-categories";
 import { deleteStudyOnly } from "@/lib/study-delete";
-import { useRecurringOccurrences, useRecurringTasks, expandOccurrences, type RecurringTask } from "@/lib/recurring-tasks";
+import { useRecurringOccurrences, useRecurringTasks, useRecurringCompletions, expandOccurrences, occurrenceOn, toggleRecurringCompletion, skipOccurrence, moveOccurrence, type RecurringTask } from "@/lib/recurring-tasks";
 import { RecurringTaskDialog } from "@/components/RecurringTaskDialog";
 import { useShowHolidays, holidaysInRange } from "@/lib/us-holidays";
 import type { Database } from "@/integrations/supabase/types";
@@ -803,6 +803,33 @@ function EntryPage() {
   const [prayText, setPrayText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
+
+  // Recurring tasks appear in the day's to-do list as virtual rows — they are
+  // never written into todo_items, so they can't roll over or duplicate.
+  // Checking one off records a completion for that occurrence only.
+  const recurTasksQ = useRecurringTasks(userId ?? null);
+  const recurDoneQ = useRecurringCompletions(userId ?? null, selectedDate, selectedDate);
+  const recurringTodos = useMemo<TodoItem[]>(() => {
+    const day = new Date(`${selectedDate}T12:00:00`);
+    const doneSet = recurDoneQ.data ?? new Set<string>();
+    const out: TodoItem[] = [];
+    for (const t of recurTasksQ.data ?? []) {
+      if (t.item_kind !== "task" || t.hide_from_workspace) continue;
+      const occ = occurrenceOn(t, day);
+      if (!occ) continue;
+      const occDate = occ.occurrence_date ?? selectedDate;
+      const done = doneSet.has(`${t.id}|${occDate}`);
+      out.push({
+        id: `recur:${t.id}@${occDate}`,
+        text: occ.title,
+        done,
+        status: done ? "done" : "not_started",
+        due_date: selectedDate,
+        recurring_id: t.id,
+      });
+    }
+    return out;
+  }, [recurTasksQ.data, recurDoneQ.data, selectedDate]);
   const [bookOfBible, setBookOfBible] = useState<string | null>(null);
   const [bookSource, setBookSource] = useState<"manual" | "auto" | null>(null);
   const [bookConfirmed, setBookConfirmed] = useState<boolean>(false);
@@ -1259,6 +1286,55 @@ function EntryPage() {
     qc.invalidateQueries({ queryKey: ["dev-entries", id, userId] });
   };
 
+  // The checklist shows the day's own to-dos followed by that day's recurring
+  // tasks. Recurring rows are virtual: check-off, move and delete act on the
+  // single occurrence (never on todo_items), titles are edited from Calendar.
+  const checklistItems = useMemo(() => [...todoItems, ...recurringTodos], [todoItems, recurringTodos]);
+  const refreshRecurring = () => {
+    qc.invalidateQueries({ queryKey: ["recurring-tasks"] });
+    qc.invalidateQueries({ queryKey: ["recurring-task-completions"] });
+  };
+  const updateChecklistItem = (idx: number, patch: Partial<TodoItem>) => {
+    const it = checklistItems[idx];
+    if (!it) return;
+    if (it.recurring_id) {
+      if ((patch.done !== undefined || patch.status !== undefined) && userId) {
+        const occDate = it.id.split("@")[1] ?? selectedDate;
+        const done = patch.status ? patch.status === "done" : !!patch.done;
+        void toggleRecurringCompletion(userId, it.recurring_id, occDate, done)
+          .then(refreshRecurring, (e) => console.error("recurring check-off failed", e));
+      }
+      return;
+    }
+    updateTodoItem(idx, patch);
+  };
+  const removeChecklistItem = (idx: number) => {
+    const it = checklistItems[idx];
+    if (!it) return;
+    if (it.recurring_id) {
+      if (userId) {
+        const occDate = it.id.split("@")[1] ?? selectedDate;
+        void skipOccurrence(userId, it.recurring_id, occDate)
+          .then(refreshRecurring, (e) => console.error("skip occurrence failed", e));
+      }
+      return;
+    }
+    removeTodoItem(idx);
+  };
+  const moveChecklistItem = (idx: number, date: string) => {
+    const it = checklistItems[idx];
+    if (!it) return;
+    if (it.recurring_id) {
+      if (userId) {
+        const occDate = it.id.split("@")[1] ?? selectedDate;
+        void moveOccurrence(userId, it.recurring_id, occDate, date, null, null)
+          .then(refreshRecurring, (e) => console.error("move occurrence failed", e));
+      }
+      return;
+    }
+    void moveTodoItem(idx, date);
+  };
+
 
   // Guest preview mode: unauthenticated visitors see the full workspace and can
   // interact locally (typing, todos, focus mode). Nothing is written to Supabase.
@@ -1567,14 +1643,14 @@ function EntryPage() {
                         {statusRow("todo_text")}
                       </>
                     )}
-                    <TodoChecklist
-                      items={todoItems}
+                     <TodoChecklist
+                      items={checklistItems}
                       selectedDate={selectedDate}
                       todayISO={todayISO()}
-                      onUpdate={updateTodoItem}
+                      onUpdate={updateChecklistItem}
                       onAdd={addTodoWithText}
-                      onRemove={removeTodoItem}
-                      onMove={moveTodoItem}
+                      onRemove={removeChecklistItem}
+                      onMove={moveChecklistItem}
                       onGoToDate={(d) => goToDate(d)}
                     />
 
