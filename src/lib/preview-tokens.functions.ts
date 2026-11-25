@@ -107,7 +107,7 @@ async function seriesPreview(admin: any, id: string): Promise<SeriesPreview | nu
   const { data: cl } = await admin.from("clips").select("id, caption, video_path, poster_path, duration_seconds, alt_text, position, release_at").eq("series_id", id).neq("caption", "").order("position");
   const clipRows = (cl ?? []) as any[];
   const paths = clipRows.flatMap((r) => [r.video_path, r.poster_path].filter(Boolean));
-  const { data: signed } = paths.length ? await admin.storage.from("clips").createSignedUrls(paths, 60 * 60 * 6) : { data: [] };
+  const { data: signed } = paths.length ? await admin.storage.from("clips").createSignedUrls(paths, 60 * 15) : { data: [] };
   const url = new Map(((signed ?? []) as any[]).map((x) => [x.path, x.signedUrl]));
   const clips = clipRows.map((r) => ({ id: r.id, caption: r.caption, videoUrl: url.get(r.video_path) ?? null, posterUrl: r.poster_path ? url.get(r.poster_path) ?? null : null, duration: r.duration_seconds, seriesId: id, releaseAt: r.release_at, alt: r.alt_text, position: r.position, source: null, sourceSeconds: null }));
   let devo = null;

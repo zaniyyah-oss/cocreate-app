@@ -1,5 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** Refuse local, private and non-web destinations so the server can't be pointed at internal hosts. */
+function isSafeTarget(raw: string): boolean {
+  let u: URL;
+  try { u = new URL(raw); } catch { return false; }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  if (u.port && u.port !== "80" && u.port !== "443") return false;
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (!h.includes(".") || h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return false;
+  if (h.includes(":")) return false; // raw IPv6
+  const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if (a === 10 || a === 127 || a === 0 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)) return false;
+  }
+  return true;
+}
 
 const inputSchema = z.object({ url: z.string().url() });
 
@@ -39,6 +57,7 @@ function decodeEntities(s: string): string {
 }
 
 export const fetchOgPreview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => inputSchema.parse(d))
   .handler(async ({ data }): Promise<OgPreview> => {
     const url = data.url;
@@ -48,18 +67,25 @@ export const fetchOgPreview = createServerFn({ method: "GET" })
       url, title: null, description: null, image: null, siteName: null, domain,
     };
 
+    if (!isSafeTarget(url)) return fallback;
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         signal: controller.signal,
         headers: {
           "user-agent": "Mozilla/5.0 (compatible; CoCreateBot/1.0; +https://cocreate.app)",
           accept: "text/html,application/xhtml+xml",
         },
-        redirect: "follow",
+        redirect: "manual",
       });
       clearTimeout(timeout);
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        const next = loc ? new URL(loc, url).toString() : null;
+        if (!next || !isSafeTarget(next)) return fallback;
+        res = await fetch(next, { signal: controller.signal, headers: { accept: "text/html,application/xhtml+xml" }, redirect: "manual" });
+      }
       if (!res.ok) return fallback;
       const ct = res.headers.get("content-type") ?? "";
       if (!ct.includes("text/html")) return fallback;

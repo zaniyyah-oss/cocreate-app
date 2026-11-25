@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useEffect, useRef, useState } from "react";
 import { refreshWorkspaceImages, uploadWorkspaceImage } from "@/lib/workspace-images";
 import { clampSavedHeight, isUserResize } from "@/lib/editor-height";
@@ -41,7 +42,7 @@ export function RichTextField({
     // collapses the caret to the start of the editor.
     if (typeof document !== "undefined" && document.activeElement === el) return;
     if (value !== el.innerHTML && value !== lastValueRef.current) {
-      el.innerHTML = value ?? "";
+      el.innerHTML = DOMPurify.sanitize(value ?? "");
       lastValueRef.current = value ?? "";
       if (allowImages) void refreshWorkspaceImages(el);
     }

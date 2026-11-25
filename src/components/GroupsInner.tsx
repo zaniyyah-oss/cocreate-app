@@ -43,7 +43,9 @@ const CSS = `
 function genInviteCode() {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let out = "";
-  for (let i = 0; i < 8; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  for (let i = 0; i < 10; i++) out += alphabet[bytes[i] % alphabet.length];
   return out;
 }
 

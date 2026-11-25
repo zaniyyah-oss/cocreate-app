@@ -162,6 +162,13 @@
       "when": 1795556093537,
       "tag": "0022_hide_from_workspace",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795572955611,
+      "tag": "0023_security_hardening_profiles_comments_subscribers",
+      "breakpoints": true
     }
   ]
 }
