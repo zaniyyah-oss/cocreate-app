@@ -57,7 +57,7 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-editor-content{padding:14px 0 4px;min-height:56px;outline:none;font-family:'Poppins',sans-serif;font-size:14px;color:#20201C;line-height:1.55;scroll-margin-top:110px;}
 .ws-editor-content p{margin:0 0 8px;}
 .ws-editor-content p:last-child{margin-bottom:0;}
-.ws-editor-content strong{font-weight:700;color:#181A4D;}
+.ws-editor-content strong{font-weight:700;color:inherit;}
 .ws-editor-content em{font-style:italic;}
 .ws-editor-content h1{font-size:20px;font-weight:700;color:#181A4D;margin:14px 0 6px;letter-spacing:-0.005em;}
 .ws-editor-content h2{font-size:17px;font-weight:700;color:#181A4D;margin:12px 0 6px;letter-spacing:-0.005em;}
