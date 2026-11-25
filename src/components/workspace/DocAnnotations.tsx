@@ -279,7 +279,7 @@ export function AnnotationLayer({
       const target = event.target;
       if (!(target instanceof Element)) return;
       const id = target.closest("[data-anno-num]")?.getAttribute("data-anno-num");
-      if (id) { event.preventDefault(); activate(id); }
+      if (id) { event.preventDefault(); activate(id); setEditingId(id); }
     };
     dom.addEventListener("click", click);
     return () => dom.removeEventListener("click", click);
@@ -385,7 +385,7 @@ export function AnnotationLayer({
   );
 
   return (
-    <div className="an-root" ref={rootRef} onClick={(e) => { if (!(e.target as HTMLElement).closest(".an-menu,.an-more")) setMenuId(null); }}>
+    <div className="an-root" ref={rootRef} style={!wide && has ? { paddingBottom: 72 } : undefined} onClick={(e) => { if (!(e.target as HTMLElement).closest(".an-menu,.an-more")) setMenuId(null); }}>
       <style>{STYLES}</style>
       {has && wide && (
         <div className={`an-bar wide${mode === "off" ? " off" : ""}`}>
@@ -656,6 +656,17 @@ function MiniRichEditor({ row, onSave, onDone, onExpand }: { row: AnnoRow; onSav
   const onDoneRef = useRef(onDone); onDoneRef.current = onDone;
   const last = useRef(row.body);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const tapInside = useRef(false);
+  useEffect(() => {
+    const down = (e: Event) => {
+      const t = e.target as Element | null;
+      const card = boxRef.current?.closest("[data-annotation-card],.an-side");
+      tapInside.current = !!(card && t && card.contains(t) && !t.closest(".an-strip-acts"));
+    };
+    document.addEventListener("pointerdown", down, true);
+    return () => document.removeEventListener("pointerdown", down, true);
+  }, []);
   const flush = (ed: Editor) => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     const md = docToMd(ed.getJSON() as Record<string, any>);
@@ -674,7 +685,12 @@ function MiniRichEditor({ row, onSave, onDone, onExpand }: { row: AnnoRow; onSav
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => flush(ed), 600);
     },
-    onBlur: ({ editor: ed }) => { flush(ed); onDoneRef.current(); },
+    onBlur: ({ editor: ed }) => {
+      flush(ed);
+      // Taps inside the note card (padding, header, toolbar) keep it open.
+      if (tapInside.current) { tapInside.current = false; setTimeout(() => { if (!ed.isDestroyed && !ed.isFocused) ed.commands.focus(); }, 0); return; }
+      onDoneRef.current();
+    },
     onCreate: ({ editor: ed }) => { setTimeout(() => { if (!ed.isDestroyed) ed.commands.focus("end"); }, 30); },
   });
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -689,7 +705,7 @@ function MiniRichEditor({ row, onSave, onDone, onExpand }: { row: AnnoRow; onSav
   });
   const keep = (e: React.SyntheticEvent) => { e.preventDefault(); e.stopPropagation(); };
   return (
-    <>
+    <div ref={boxRef}>
       <div className="an-tb" onMouseDown={keep} onPointerDown={keep} onClick={(e) => e.stopPropagation()}>
         <button type="button" aria-label="Bold" className={active?.bold ? "on" : ""} onClick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
         <button type="button" aria-label="Italic" className={active?.italic ? "on" : ""} onClick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
@@ -700,7 +716,7 @@ function MiniRichEditor({ row, onSave, onDone, onExpand }: { row: AnnoRow; onSav
       <div className="an-rich" onClick={(e) => e.stopPropagation()}>
         <EditorContent editor={editor} />
       </div>
-    </>
+    </div>
   );
 }
 
