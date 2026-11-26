@@ -36,7 +36,8 @@ export const WORKSPACE_EDITOR_CSS = `
 .ws-popbtn .ws-poptag{font-family:'Poppins',sans-serif;font-weight:700;font-size:11px;color:rgba(32,32,28,0.35);margin-left:auto;}
 .ws-popdiv{height:1px;background:rgba(32,32,28,0.10);margin:5px 2px;}
 
-.ws-bubble{display:flex;gap:2px;background:#181A4D;color:#fff;border-radius:8px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
+.ws-selection-menu{z-index:1900;max-width:calc(100vw - 24px);}
+.ws-bubble{display:flex;flex-wrap:wrap;max-width:calc(100vw - 24px);gap:2px;background:#181A4D;color:#fff;border-radius:8px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
 @media (hover:none),(max-width:768px){.ws-bubble{flex-wrap:wrap;max-width:calc(100vw - 24px);}}
 .ws-bb-sep{width:1px;align-self:stretch;margin:4px 3px;background:rgba(255,255,255,0.22);}
 .ws-bb-anno{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}

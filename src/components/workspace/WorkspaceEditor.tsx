@@ -349,6 +349,29 @@ export function WorkspaceEditor({
     return () => mq.removeEventListener("change", f);
   }, []);
 
+  // Portalled menus must also follow scrolls in focus views and nested panels.
+  useEffect(() => {
+    if (!editor || !editable) return;
+    let frame = 0;
+    const reposition = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (!editor.isDestroyed && !editor.state.selection.empty) {
+          editor.commands.setMeta("workspaceSelectionMenu", "updatePosition");
+        }
+      });
+    };
+    document.addEventListener("scroll", reposition, true);
+    window.visualViewport?.addEventListener("resize", reposition);
+    window.visualViewport?.addEventListener("scroll", reposition);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("scroll", reposition, true);
+      window.visualViewport?.removeEventListener("resize", reposition);
+      window.visualViewport?.removeEventListener("scroll", reposition);
+    };
+  }, [editor, editable]);
+
   if (!editor) return null;
   const content = <EditorContent editor={editor} />;
 
@@ -359,7 +382,16 @@ export function WorkspaceEditor({
       {editable && (
         <BubbleMenu
           editor={editor}
-          options={{ placement: narrow ? "bottom" : "top" }}
+          pluginKey="workspaceSelectionMenu"
+          className="ws-selection-menu"
+          appendTo={() => document.body}
+          options={{
+            strategy: "fixed",
+            placement: narrow ? "bottom" : "top",
+            offset: 8,
+            flip: { padding: 12 },
+            shift: { padding: 12 },
+          }}
           shouldShow={({ editor, from, to }) => !editor.isActive("image") && from !== to}
         >
           <MobileBubble editor={editor} onAnnotate={annotate ? (k) => annoCreateRef.current?.(k) : undefined} />
